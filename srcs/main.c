@@ -2,8 +2,8 @@
 
 void	init(t_shaderpixel *sp)
 {
-	lg_setFdLevel(LEVEL_DEBUG);
-	//lg_setFdLevel(LEVEL_INFO);
+	//lg_setFdLevel(LEVEL_DEBUG);
+	lg_setFdLevel(LEVEL_INFO);
 
 	if (!glfwInit())
 		LG_ERROR("Couldn\'t init glfw.");
@@ -35,13 +35,13 @@ int	main(void)
 	init(&sp);
 
 	t_obj		obj1;
-	obj_load(&obj1, MODEL_PATH"retrotv.obj");
+	obj_load(&obj1, MODEL_PATH"retrotv/retrotv.obj");
 
 	t_model		model1;
 	new_model(&model1, &obj1);
 
 	t_shader	shader1;
-	new_shader(&shader1, "model.vs", "model.fs");
+	new_shader(&shader1, SHADER_PATH"simple.vs", SHADER_PATH"simple.fs");
 
 	t_entity	entity1;
 	new_entity(&entity1);
@@ -50,6 +50,8 @@ int	main(void)
 	while (!glfwWindowShouldClose(sp.win))
 	{
 		glfwPollEvents();
+		if (glfwGetKey(sp.win, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+			glfwSetWindowShouldClose(sp.win, GLFW_TRUE);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
 		glfwSwapBuffers(sp.win);

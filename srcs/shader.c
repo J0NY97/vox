@@ -11,7 +11,7 @@ int	create_shader(GLuint *shader, const char *content, GLenum type)
 	glCompileShader(shdr);
 	glGetShaderiv(shdr, GL_COMPILE_STATUS, &status);
 	glGetShaderInfoLog(shdr, 512, NULL, buffer);
-	if (status == GL_TRUE)
+	if (status != GL_TRUE)
 	{     
 		LG_WARN("Compilation error => %s", buffer);
 		return (0);

@@ -3,9 +3,10 @@
 int	new_texture(GLuint *texture, const char *image_file)
 {
 	t_bimgf	image;
+	char	buffer[256];
 
 	if (!bimgf_load(&image, image_file))
-	{
+	{	
 		LG_WARN("Couldnt load image <%s>", image_file);
 		return (0);
 	}

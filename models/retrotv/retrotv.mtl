@@ -11,7 +11,7 @@ Ni 1.450000
 d 1.000000
 illum 2
 map_Bump retrotv0319_Main_NormalGL.png
-map_Kd resources/retrotv/textures/bmp/retrotv0319_Main_BaseColor.bmp
+map_Kd textures/retrotv0319_Main_BaseColor.bmp
 map_Ns retrotv0319_Main_Roughness.png
 refl retrotv0319_Main_Metallic.png
 
@@ -25,6 +25,6 @@ Ni 1.450000
 d 1.000000
 illum 2
 map_Bump retrotv0319_Screen_NormalGL.png
-map_Kd resources/retrotv/textures/bmp/retrotv0319_Screen_BaseColor.bmp
+map_Kd textures/retrotv0319_Screen_BaseColor.bmp
 map_Ns retrotv0319_Screen_Roughness.png
 refl retrotv0319_Screen_Metallic.png

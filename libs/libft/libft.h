@@ -122,6 +122,7 @@ char				**stringsplit(const char *s, char c, int *nb);
 void				ft_striter(char *s, void (*f)(char *));
 void				ft_striteri(char *s, void (*f)(unsigned int, char *));
 char				*ft_strjoin(char const *s1, char const *s2);
+char				*ft_b_strjoin(char *dest, const char *s1, const char *s2);
 char				*ft_strjoiner(char *first, ...);
 char				*ft_strjoinf(char *s1, const char *s2);
 size_t				ft_strlcat(char *dest, const char *src, size_t size);

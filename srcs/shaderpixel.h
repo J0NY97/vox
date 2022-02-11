@@ -123,6 +123,20 @@ void		new_shader(t_shader *shader, const char *vs, const char *fs);
 int			new_texture(GLuint *texture, const char *image_file);
 
 ///////////////////
+//	CAMERA
+///////////////////
+
+typedef struct s_camera
+{
+	float	pos[VEC3_SIZE];
+	float	front[VEC3_SIZE];
+	float	up[VEC3_SIZE];
+	float	yaw;
+	float	pitch;
+	float	fov;
+}	t_camera;
+
+///////////////////
 //	SHADERPIXEL
 ///////////////////
 

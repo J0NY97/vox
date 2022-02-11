@@ -74,6 +74,7 @@ typedef struct		s_mesh
 
 struct s_obj
 {
+	char			*root_path; // dir of the .obj file location;
 	char			*name;
 	char			*mtllib; // mat file
 
@@ -101,7 +102,7 @@ struct s_obj
 
 int					obj_load(t_obj *obj, const char *obj_file_path);
 void				obj_info(t_obj *obj);
-t_material			*material_load(size_t *mat_amount, const char *mat_file);
+t_material			*material_load(size_t *mat_amount, const char *root_path, const char *mat_file);
 t_material			*get_material(t_material *materials, size_t mats, char *to_find);
 t_mesh				*get_mesh(t_mesh *meshes, size_t mesh_amount, char *name);
 int					get_index_of(t_obj *obj, int v, int vn, int vt);

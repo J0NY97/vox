@@ -7,6 +7,7 @@ CFILES = \
 	model.c \
 	shader.c \
 	texture.c \
+	camera.c \
 	bimgf/bimgf_bmp.c \
 	bimgf/bimgf_help.c \
 	bimgf/bimgf_jpg.c \

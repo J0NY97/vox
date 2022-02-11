@@ -2,6 +2,17 @@
 
 void	element_builder(t_obj *obj, char **arr);
 
+char	*remove_file_name(const char *file)
+{
+	int	len = ft_strlen(file);
+	int	temp = len;
+	while (--temp > 0)
+		if (file[temp] == '/')
+			break ;
+	char *str = ft_strndup(file, temp + 1);	
+	return (str);
+}
+
 int	obj_load(t_obj *obj, const char *obj_file_path)
 {
 	FILE	*fd;
@@ -11,9 +22,11 @@ int	obj_load(t_obj *obj, const char *obj_file_path)
 	t_mesh	*curr_mesh = NULL;
 	t_element	*curr_elem = NULL;
 
-	LG_INFO("[%s] Reading <%s>\n", __FUNCTION__, obj_file_path);
-
+	LG_INFO("Reading <%s>", obj_file_path);
 	memset(obj, 0, sizeof(t_obj));
+
+	obj->root_path = remove_file_name(obj_file_path);
+
 	obj->name = ft_strdup(obj_file_path);
 	obj->obj_vert_value_amount = 3;
 	obj->obj_norm_value_amount = 3;
@@ -43,7 +56,9 @@ int	obj_load(t_obj *obj, const char *obj_file_path)
 	LG_DEBUG("Whole file read.");
 	//lines = ft_strsplit(file_content, '\n'); // TOOO SLOW!
 	int amount = get_elem_amount(file_content, '\n') * 2;
+	LG_DEBUG("moutn got.");
 	int *elem_pos = malloc(sizeof(int) * amount); // remember to free;
+	LG_DEBUG("loc.");
 	fill_elem_pos(elem_pos, file_content, '\n');
 	LG_DEBUG("Splat.");
 	//ft_strdel(&file_content); // Add this to the end;
@@ -171,9 +186,11 @@ int	obj_load(t_obj *obj, const char *obj_file_path)
 		else if (ft_strequ(arr[0], "mtllib"))
 		{
 			obj->mtllib = ft_strdup(arr[1]);
-			LG_DEBUG("[%s] mtllib found : <%s>\n", __FUNCTION__, obj->mtllib);
-			obj->materials = material_load(&obj->material_amount, obj->mtllib);
-			LG_DEBUG("[%s] done reading mats\n", __FUNCTION__);
+			LG_DEBUG("mtllib found : <%s>", obj->mtllib);
+			LG_DEBUG("root_path : %s", obj->root_path);
+			obj->materials = material_load(&obj->material_amount,
+				obj->root_path, obj->mtllib);
+			LG_DEBUG("done reading mats");
 		}
 		else if (ft_strequ(arr[0], "usemtl"))
 		{
@@ -567,49 +584,11 @@ void	element_builder(t_obj *obj, char **arr)
  * Takes in the pointer of the material amount pointer you want it to save the
  * material count in, and the path of the materials file.
  * Returns array of materials loaded.
+ * 
+ * If the mat_file isnt found in direct path, we try with concatting with root path;
 */
-/*
-t_material	*material_load(size_t *mat_amount, const char *mat_file)
-{
-	FILE		*fd;
-	char		**arr;
-	char		*line;
-	size_t		len;
-	ssize_t		nread;
-	t_material	*materials;
-
-	fd = fopen(mat_file, "r");
-	if (!fd)
-	{
-		printf("[%s] Couldn\'t open mat file: <%s>\n", __FUNCTION__, mat_file);
-		return (NULL);
-	}
-	materials = ft_memalloc(sizeof(t_material));
-	line = NULL;
-	len = 0;
-	*mat_amount = 0;
-	while (1)
-	{
-		nread = getline(&line, &len, fd);
-		if (nread == -1)
-			break;
-		arr = ft_strsplit(line, ' ');
-		if (ft_strequ(arr[0], "newmtl"))
-		{
-			*mat_amount += 1;
-			materials = realloc(materials, sizeof(t_material) * *mat_amount);
-			materials[*mat_amount - 1].name = ft_strndup(arr[1], ft_strlen(arr[1]) - 1);
-		}
-		else if (ft_strequ(arr[0], "map_Kd"))
-			materials[*mat_amount - 1].map_Kd = ft_strndup(arr[1], ft_strlen(arr[1]) - 1);
-	}
-	ft_strdel(&line);
-	fclose(fd);
-	printf("[%s] We have found %d materials.\n", __FUNCTION__, *mat_amount);
-	return (materials);
-}
-*/
-t_material	*material_load(size_t *mat_amount, const char *mat_file)
+t_material	*material_load(
+			size_t *mat_amount, const char *root_path, const char *mat_file)
 {
 	char		*file_content;
 	char		line[256];
@@ -620,7 +599,16 @@ t_material	*material_load(size_t *mat_amount, const char *mat_file)
 
 	file_content = get_file_content(mat_file);
 	if (!file_content)
-		return (NULL);
+	{
+		int	root_len = ft_strlen(root_path);
+		int mat_len = ft_strlen(mat_file);
+		ft_strncpy(line, root_path, root_len);
+		ft_strncpy(line + root_len, mat_file, mat_len);
+		line[root_len + mat_len] = 0;
+		file_content = get_file_content(line);
+		if (!file_content)
+			return (NULL);
+	}
 
 	materials = ft_memalloc(sizeof(t_material));
 
