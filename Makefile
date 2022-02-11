@@ -1,14 +1,27 @@
-NAME = scop
-SRCS = main.c \
-	bimgf/*.c \
-	bmath/*.c \
-	bobj/*.c \
-	glad/*.c \
+rwildcard = $(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
 
-CDIR = srcs 
-ODIR = objs
-OBJS = $(addprefix $(ODIR)/, $(SRCS:.c=.o))
-JOHNNY = $(OBJS:.o=.d)
+NAME = sp #shaderpixel
+CFILES = \
+	main.c \
+	entity.c \
+	model.c \
+	shader.c \
+	bimgf/bimgf_bmp.c \
+	bimgf/bimgf_help.c \
+	bimgf/bimgf_jpg.c \
+	bimgf/bimgf.c \
+	bimgf/huffman.c \
+	bmath/bmath.c \
+	bobj/bobj_loader.c \
+	glad/glad.c \
+
+CDIR = srcs
+ODIR = obj
+#SRCS = $(call rwildcard, $(CDIR), *.c)
+#OBJ = $(patsubst $(CDIR)/%.c, $(ODIR)/%.o, $(SRCS))
+OBJ = $(addprefix $(ODIR)/, $(CFILES:.c=.o))
+JOHNNY = $(OBJ:.o=.d)
+
 
 LIB_DIR = ./libs
 
@@ -40,15 +53,18 @@ all: $(ODIR) $(NAME)
 
 $(ODIR):
 	@mkdir -p $@
-
-$(NAME): $(OBJS)
-	@gcc -o $(NAME) $(OBJS) $(INCS) $(LIB_DIRS) $(LIBS) $(FLAGS)
-	@echo "$(NAME) was successfully created."
+	@mkdir -p $@/bimgf
+	@mkdir -p $@/bmath
+	@mkdir -p $@/bobj
+	@mkdir -p $@/glad
 
 $(ODIR)/%.o: $(CDIR)/%.c
-	@gcc -c $< -o $@ -MMD -O3 \
-		$(INCS) $(LIB_DIRS) $(LIBS) $(FLAGS)
+	@gcc -c $< -o $@ -MMD -O3 $(INCS) $(FLAGS)
 	@printf $(YELLOW)"Compiling $<\n"$(RESET)
+
+$(NAME): $(OBJ)
+	@gcc -o $(NAME) $(OBJ) $(INCS) $(LIB_DIRS) $(LIBS) $(FLAGS)
+	@echo "$(NAME) was successfully created."
 
 clean:
 	@rm -rf $(ODIR)
