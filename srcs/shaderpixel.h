@@ -26,6 +26,7 @@
 # define MODEL_PATH ROOT_PATH"models/"
 # define SHADER_PATH ROOT_PATH"shaders/"
 
+typedef struct	s_camera	t_camera;
 typedef struct	s_model		t_model;
 typedef struct	s_shader	t_shader;
 
@@ -36,24 +37,20 @@ typedef struct	s_shader	t_shader;
 typedef struct	s_entity
 {
 	float			pos[VEC3_SIZE];
-	float			rot[VEC3_SIZE];
-	float			scale[VEC3_SIZE];
 	float			rot_x_angle;
 	float			rot_y_angle;
 	float			rot_z_angle;
 	float			scale_value;
 
-	float			orig_pos[VEC3_SIZE];
-	float			orig_rot[VEC3_SIZE];
-	float			orig_scale[VEC3_SIZE];
-	float			orig_rot_x_angle;
-	float			orig_rot_y_angle;
-	float			orig_rot_z_angle;
-	float			orig_scale_value;
+	float			scale[MAT4_SIZE];
+	float			rot[MAT4_SIZE];
+	float			trans[MAT4_SIZE];
+	float			model[MAT4_SIZE];
 }	t_entity;
 
 void				new_entity(t_entity *entity);
-void				render_entity(t_entity *entity, t_model *model, t_shader *shader);
+void				update_entity(t_entity *entity);
+void				render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader *shader);
 
 ///////////////////
 //	MODEL
@@ -126,7 +123,7 @@ int			new_texture(GLuint *texture, const char *image_file);
 //	CAMERA
 ///////////////////
 
-typedef struct s_camera
+struct s_camera
 {
 	float	pos[VEC3_SIZE];
 	float	front[VEC3_SIZE];
@@ -134,7 +131,15 @@ typedef struct s_camera
 	float	yaw;
 	float	pitch;
 	float	fov;
-}	t_camera;
+	int		viewport_w;
+	int		viewport_h;
+
+	float	view[MAT4_SIZE];
+	float	projection[MAT4_SIZE];
+};
+
+void		new_camera(t_camera *camera);
+void		update_camera(t_camera *camera);
 
 ///////////////////
 //	SHADERPIXEL

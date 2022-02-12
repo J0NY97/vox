@@ -12,6 +12,16 @@ void	memset_pattern(void *dest, size_t dest_size, void *src, size_t src_size)
 	}
 }
 
+void	fill_element_info(t_element_info *info, t_element *elem)
+{
+	info->element = *elem;
+
+	glGenBuffers(1, &info->ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, info->ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, info->element.indices_size, &info->element.indices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
 void	fill_mesh_info(t_mesh_info *info, t_mesh *mesh)
 {
 	GLuint	vbo[4];
@@ -55,6 +65,11 @@ void	fill_mesh_info(t_mesh_info *info, t_mesh *mesh)
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+
+	info->elem_info = malloc(sizeof(t_element_info) * info->mesh.element_amount);
+	for (int i = 0; i < info->mesh.element_amount; i++)
+		fill_element_info(&info->elem_info[i], &info->mesh.elements[i]);
 }
 
 void	new_model(t_model *model, t_obj *obj)
@@ -90,4 +105,9 @@ void	new_model(t_model *model, t_obj *obj)
 	model->info = malloc(sizeof(t_mesh_info) * model->info_amount);
 	for (int i = 0; i < model->info_amount; i++)
 		fill_mesh_info(&model->info[i], &obj->meshes[i]);
+}
+
+void	render_model(t_model *model)
+{
+
 }

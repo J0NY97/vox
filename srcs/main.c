@@ -34,6 +34,11 @@ int	main(void)
 	t_shaderpixel	sp;
 	init(&sp);
 
+	t_camera	camera;
+	new_camera(&camera);
+	camera.viewport_w = sp.win_w;
+	camera.viewport_h = sp.win_h;
+
 	t_obj		obj1;
 	obj_load(&obj1, MODEL_PATH"retrotv/retrotv.obj");
 
@@ -54,6 +59,10 @@ int	main(void)
 			glfwSetWindowShouldClose(sp.win, GLFW_TRUE);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
+
+		update_camera(&camera);
+		render_entity(&entity1, &camera, &model1, &shader1);
+
 		glfwSwapBuffers(sp.win);
 	}
 
