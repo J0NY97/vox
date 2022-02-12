@@ -70,4 +70,6 @@ void	new_shader(t_shader *shader, const char *vs, const char *fs)
 	free(fs_cont);
 	glDeleteShader(v_shader);
 	glDeleteShader(f_shader);
+
+	LG_INFO("new shader made.");
 }

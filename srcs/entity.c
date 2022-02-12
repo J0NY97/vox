@@ -9,6 +9,8 @@ void	new_entity(t_entity *entity)
 	entity->rot_y_angle = 0.0f;
 	entity->rot_z_angle = 0.0f;
 	entity->scale_value = 1.0f;
+
+	LG_INFO("new entity made.");
 }
 
 /*

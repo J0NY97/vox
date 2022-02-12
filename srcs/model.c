@@ -105,6 +105,8 @@ void	new_model(t_model *model, t_obj *obj)
 	model->info = malloc(sizeof(t_mesh_info) * model->info_amount);
 	for (int i = 0; i < model->info_amount; i++)
 		fill_mesh_info(&model->info[i], &obj->meshes[i]);
+
+	LG_INFO("new model made.");
 }
 
 void	render_element(t_element_info *elem)

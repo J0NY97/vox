@@ -10,6 +10,8 @@ void	new_camera(t_camera *camera)
 	camera->yaw = -90.0f;
 	camera->viewport_w = 1280;
 	camera->viewport_h = 720;
+
+	LG_INFO("new camera made.");
 }
 
 /*

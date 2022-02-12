@@ -36,6 +36,7 @@ int	main(void)
 
 	t_camera	camera;
 	new_camera(&camera);
+	new_vec3(camera.pos, 0, 0, 5);
 	camera.viewport_w = sp.win_w;
 	camera.viewport_h = sp.win_h;
 
@@ -50,6 +51,7 @@ int	main(void)
 
 	t_entity	entity1;
 	new_entity(&entity1);
+	new_vec3(entity1.pos, 0, 0, -5);
 
 	glfwSwapInterval(0);
 	while (!glfwWindowShouldClose(sp.win))
