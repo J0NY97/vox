@@ -101,6 +101,7 @@ struct	s_model
 };
 
 void		new_model(t_model *model, t_obj *obj);
+void		render_model(t_model *model);
 
 ///////////////////
 //	SHADER

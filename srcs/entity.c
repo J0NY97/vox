@@ -58,8 +58,9 @@ void	render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader 
 
 	glUseProgram(shader->program);
 	glUniformMatrix4fv(glGetUniformLocation(shader->program, "model"), 1, GL_FALSE, &entity->model[0]);
-	glUniformMatrix4fv(glGetUniformLocation(shader->program, "view"), 1, GL_FALSE, &entity->view[0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader->program, "view"), 1, GL_FALSE, &camera->view[0]);
 	glUniformMatrix4fv(glGetUniformLocation(shader->program, "projection"), 1, GL_FALSE, &camera->projection[0]);
+	glUniform3fv(glGetUniformLocation(shader->program, "aViewPos"), 3, &camera->pos[0]);
 
 	render_model(model);
 

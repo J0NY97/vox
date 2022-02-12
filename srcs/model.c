@@ -107,7 +107,35 @@ void	new_model(t_model *model, t_obj *obj)
 		fill_mesh_info(&model->info[i], &obj->meshes[i]);
 }
 
+void	render_element(t_element_info *elem)
+{
+	// 1. activate texture
+	// 2. draw arrays / triangles
+	if (elem->element.indices_size == 0)
+	{
+		// glDrawArrays(GL_TRIANGLE_STRIP, 0, mesh.vertex_amount);
+	}
+	else
+	{
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elem->ebo);
+		glDrawElements(GL_TRIANGLES, elem->element.indices_value_amount, GL_UNSIGNED_INT, 0);
+	}
+}
+
+void	render_mesh(t_mesh_info *mesh)
+{
+	glBindVertexArray(mesh->vao);
+	glEnableVertexAttribArray(0); // pos
+	glEnableVertexAttribArray(1); // col
+	glEnableVertexAttribArray(2); // uvs
+	glEnableVertexAttribArray(3); // nor
+
+	for (int i = 0; i < mesh->mesh.element_amount; i++)
+		render_element(&mesh->elem_info[i]);
+}
+
 void	render_model(t_model *model)
 {
-
+	for (int i = 0; i < model->info_amount; i++)
+		render_mesh(&model->info[i]);
 }
