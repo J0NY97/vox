@@ -3,12 +3,12 @@
 in vec3 inColor;
 in vec3 inNorm;
 in vec2 inTex;
-//in vec3 FragPos;
+in vec3 FragPos;
 
 out vec4 FragColor;
 
 int max_texture_amount = 1;
-uniform int show_normal_map = 1;
+uniform int show_normal_map = 0;
 uniform int texture_amount = 0;
 uniform sampler2D textures[1];
 

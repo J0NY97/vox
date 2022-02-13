@@ -40,7 +40,7 @@ void	fill_mesh_info(t_mesh_info *info, t_mesh *mesh)
 	glGenVertexArrays(1, &info->vao);
 	glBindVertexArray(info->vao);
 
-	glGenBuffers(3, vbo);
+	glGenBuffers(4, vbo);
 	info->vbo_pos = vbo[0];
 	info->vbo_color = vbo[1];
 	info->vbo_tex = vbo[2];
@@ -48,32 +48,33 @@ void	fill_mesh_info(t_mesh_info *info, t_mesh *mesh)
 
 	glBindBuffer(GL_ARRAY_BUFFER, info->vbo_pos);
 	glBufferData(GL_ARRAY_BUFFER, info->mesh.vertices_size, &info->mesh.vertices[0], GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, info->mesh.vertices_size, NULL);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(float) * info->mesh.vertex_value_amount, NULL);
 
 	glBindBuffer(GL_ARRAY_BUFFER, info->vbo_color);
 	glBufferData(GL_ARRAY_BUFFER, info->colors_size, &info->colors[0], GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE, info->colors_size, NULL);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE, sizeof(float) * info->color_value_amount, NULL);
 
 	glBindBuffer(GL_ARRAY_BUFFER, info->vbo_tex);
 	glBufferData(GL_ARRAY_BUFFER, info->mesh.uvs_size, &info->mesh.uvs[0], GL_STATIC_DRAW);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_TRUE, info->mesh.uvs_size, NULL);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_TRUE, sizeof(float) * info->mesh.uv_value_amount, NULL);
 
 	glBindBuffer(GL_ARRAY_BUFFER, info->vbo_norm);
 	glBufferData(GL_ARRAY_BUFFER, info->mesh.normals_size, &info->mesh.normals[0], GL_STATIC_DRAW);
-	glVertexAttribPointer(3, 3, GL_FLOAT, GL_TRUE, info->mesh.normals_size, NULL);
-
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_TRUE, sizeof(float) * info->mesh.normal_value_amount, NULL);
 
 	info->elem_info = malloc(sizeof(t_element_info) * info->mesh.element_amount);
 	for (int i = 0; i < info->mesh.element_amount; i++)
 		fill_element_info(&info->elem_info[i], &info->mesh.elements[i]);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 void	new_model(t_model *model, t_obj *obj)
 {
+	glGetError();
+
 	model->obj = obj;
 
 	if (obj->mesh_amount <= 0)
@@ -106,7 +107,7 @@ void	new_model(t_model *model, t_obj *obj)
 	for (int i = 0; i < model->info_amount; i++)
 		fill_mesh_info(&model->info[i], &obj->meshes[i]);
 
-	LG_INFO("new model made.");
+	LG_INFO("new model made. (%d)", glGetError());
 }
 
 void	render_element(t_element_info *elem)

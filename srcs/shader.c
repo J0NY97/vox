@@ -49,7 +49,9 @@ void	new_shader(t_shader *shader, const char *vs, const char *fs)
 	GLuint	f_shader;
 
 	vs_cont = get_file_content((char *)vs);
+	printf("vs_cont : <<<%s>>>\n", vs_cont);
 	fs_cont = get_file_content((char *)fs);
+	printf("fs_cont : <<<%s>>>\n", fs_cont);
 	if (!vs_cont || !fs_cont)
 	{
 		if (!vs_cont)
@@ -71,5 +73,5 @@ void	new_shader(t_shader *shader, const char *vs, const char *fs)
 	glDeleteShader(v_shader);
 	glDeleteShader(f_shader);
 
-	LG_INFO("new shader made.");
+	LG_INFO("new shader made. (%d)", glGetError());
 }

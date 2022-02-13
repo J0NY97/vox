@@ -8,6 +8,7 @@ CFILES = \
 	shader.c \
 	texture.c \
 	camera.c \
+	fractal.c \
 	bimgf/bimgf_bmp.c \
 	bimgf/bimgf_help.c \
 	bimgf/bimgf_jpg.c \

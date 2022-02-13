@@ -53,6 +53,16 @@ int	main(void)
 	new_entity(&entity1);
 	new_vec3(entity1.pos, 0, 0, -5);
 
+	t_shader	mandelbrot;
+	new_shader(&mandelbrot, SHADER_PATH"mandelbrot.vs", SHADER_PATH"mandelbrot.fs");
+
+	t_fractal2d	fractal;
+	new_fractal2d(&fractal);
+
+	int error = glGetError();
+	if (error)
+		LG_ERROR("gl errors before while : %d", error);
+
 	glfwSwapInterval(0);
 	while (!glfwWindowShouldClose(sp.win))
 	{
@@ -62,10 +72,16 @@ int	main(void)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
 
+		render_fractal2d(&fractal, &mandelbrot);
+
 		update_camera(&camera);
 		render_entity(&entity1, &camera, &model1, &shader1);
 
 		glfwSwapBuffers(sp.win);
+
+		error = glGetError();
+		if (error)
+			LG_ERROR("errors in while : %d", error);
 	}
 
 	uninit(&sp);
