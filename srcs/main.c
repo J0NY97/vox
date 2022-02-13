@@ -70,10 +70,11 @@ int	main(void)
 		if (glfwGetKey(sp.win, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 			glfwSetWindowShouldClose(sp.win, GLFW_TRUE);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		glEnable(GL_DEPTH_TEST);
 
+		glDisable(GL_DEPTH_TEST);
 		render_fractal2d(&fractal, &mandelbrot_shader);
 
+		glEnable(GL_DEPTH_TEST);
 		update_camera(&camera);
 		render_entity(&entity1, &camera, &model1, &shader1);
 
