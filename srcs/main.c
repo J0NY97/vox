@@ -53,8 +53,8 @@ int	main(void)
 	new_entity(&entity1);
 	new_vec3(entity1.pos, 0, 0, -5);
 
-	t_shader	mandelbrot;
-	new_shader(&mandelbrot, SHADER_PATH"mandelbrot.vs", SHADER_PATH"mandelbrot.fs");
+	t_shader	mandelbrot_shader;
+	new_shader(&mandelbrot_shader, SHADER_PATH"mandelbrot.vs", SHADER_PATH"mandelbrot.fs");
 
 	t_fractal2d	fractal;
 	new_fractal2d(&fractal);
@@ -72,7 +72,7 @@ int	main(void)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
 
-		render_fractal2d(&fractal, &mandelbrot);
+		render_fractal2d(&fractal, &mandelbrot_shader);
 
 		update_camera(&camera);
 		render_entity(&entity1, &camera, &model1, &shader1);
