@@ -9,6 +9,8 @@ CFILES = \
 	texture.c \
 	camera.c \
 	fractal.c \
+	player.c \
+	fps.c \
 	bimgf/bimgf_bmp.c \
 	bimgf/bimgf_help.c \
 	bimgf/bimgf_jpg.c \

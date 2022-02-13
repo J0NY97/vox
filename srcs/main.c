@@ -34,11 +34,15 @@ int	main(void)
 	t_shaderpixel	sp;
 	init(&sp);
 
-	t_camera	camera;
-	new_camera(&camera);
-	new_vec3(camera.pos, 0, 0, 5);
-	camera.viewport_w = sp.win_w;
-	camera.viewport_h = sp.win_h;
+	t_fps	fps;
+	new_fps(&fps);
+
+	t_player	player;
+	new_player(&player);
+
+	new_vec3(player.camera.pos, 0, 0, 5);
+	player.camera.viewport_w = sp.win_w;
+	player.camera.viewport_h = sp.win_h;
 
 	t_obj		obj1;
 	obj_load(&obj1, MODEL_PATH"retrotv/retrotv.obj");
@@ -69,14 +73,18 @@ int	main(void)
 		glfwPollEvents();
 		if (glfwGetKey(sp.win, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 			glfwSetWindowShouldClose(sp.win, GLFW_TRUE);
+
+		player_movement(&player, sp.win, &fps);
+		update_fps(&fps);
+
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 		glDisable(GL_DEPTH_TEST);
 		render_fractal2d(&fractal, &mandelbrot_shader);
 
 		glEnable(GL_DEPTH_TEST);
-		update_camera(&camera);
-		render_entity(&entity1, &camera, &model1, &shader1);
+		update_camera(&player.camera);
+		render_entity(&entity1, &player.camera, &model1, &shader1);
 
 		glfwSwapBuffers(sp.win);
 

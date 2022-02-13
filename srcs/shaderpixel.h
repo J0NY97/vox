@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/11 14:27:43 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/02/11 14:27:43 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/02/14 01:55:29 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@
 typedef struct	s_camera	t_camera;
 typedef struct	s_model		t_model;
 typedef struct	s_shader	t_shader;
+typedef struct	s_fps		t_fps;
 
 ///////////////////
 //	ENTITY
@@ -156,6 +157,34 @@ typedef struct s_fractal2d
 
 void		new_fractal2d(t_fractal2d *fractal);
 void		render_fractal2d(t_fractal2d *fractal, t_shader *shader);
+
+///////////////////
+//	PLAYER
+///////////////////
+
+typedef struct s_player
+{
+	t_camera	camera;
+}	t_player;
+
+void		new_player(t_player *player);
+void		player_movement(t_player *player, GLFWwindow *win, t_fps *fps);
+
+///////////////////
+//	FPS
+///////////////////
+
+struct	s_fps
+{
+	float			last_time;
+	float			curr_time;
+	float			delta_time;
+	int				fps;
+	int				count;
+};
+
+void	new_fps(t_fps *fps);
+void	update_fps(t_fps *fps);
 
 ///////////////////
 //	SHADERPIXEL
