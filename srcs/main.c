@@ -74,8 +74,8 @@ int	main(void)
 		if (glfwGetKey(sp.win, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 			glfwSetWindowShouldClose(sp.win, GLFW_TRUE);
 
-		player_movement(&player, sp.win, &fps);
 		update_fps(&fps);
+		player_movement(&player, sp.win, &fps);
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
