@@ -75,7 +75,7 @@ int	main(void)
 		glfwPollEvents();
 		if (glfwGetKey(sp.win, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 			glfwSetWindowShouldClose(sp.win, GLFW_TRUE);
-		
+
 		update_all_keys(keys, sp.win);
 
 		update_fps(&fps);
