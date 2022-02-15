@@ -49,9 +49,7 @@ void	new_shader(t_shader *shader, const char *vs, const char *fs)
 	GLuint	f_shader;
 
 	vs_cont = get_file_content((char *)vs);
-	printf("vs_cont : <<<%s>>>\n", vs_cont);
 	fs_cont = get_file_content((char *)fs);
-	printf("fs_cont : <<<%s>>>\n", fs_cont);
 	if (!vs_cont || !fs_cont)
 	{
 		if (!vs_cont)

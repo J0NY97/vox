@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/11 14:27:43 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/02/14 01:55:29 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/02/15 16:51:08 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,7 @@ typedef struct	s_camera	t_camera;
 typedef struct	s_model		t_model;
 typedef struct	s_shader	t_shader;
 typedef struct	s_fps		t_fps;
+typedef struct	s_key		t_key;
 
 ///////////////////
 //	ENTITY
@@ -165,10 +166,16 @@ void		render_fractal2d(t_fractal2d *fractal, t_shader *shader);
 typedef struct s_player
 {
 	t_camera	camera;
+
+	int			enabled_mouse;
+	double		mouse_pos[2];
+	double		last_mouse_pos[2];
 }	t_player;
 
 void		new_player(t_player *player);
-void		player_movement(t_player *player, GLFWwindow *win, t_fps *fps);
+void		player_events(t_player *player, t_key *keys, GLFWwindow *win);
+void		player_movement(t_player *player, GLFWwindow *win, t_fps fps);
+void		player_looking(t_player *player, GLFWwindow *win, t_fps fps);
 
 ///////////////////
 //	FPS
@@ -183,8 +190,19 @@ struct	s_fps
 	int				count;
 };
 
-void	new_fps(t_fps *fps);
-void	update_fps(t_fps *fps);
+void		new_fps(t_fps *fps);
+void		update_fps(t_fps *fps);
+
+///////////////////
+//	KEYS
+///////////////////
+
+struct	s_key
+{
+	int		state;
+};
+
+void		update_all_keys(t_key *keys, GLFWwindow *win);
 
 ///////////////////
 //	SHADERPIXEL

@@ -34,6 +34,8 @@ int	main(void)
 	t_shaderpixel	sp;
 	init(&sp);
 
+	t_key	keys[GLFW_KEY_LAST];
+
 	t_fps	fps;
 	new_fps(&fps);
 
@@ -73,9 +75,14 @@ int	main(void)
 		glfwPollEvents();
 		if (glfwGetKey(sp.win, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 			glfwSetWindowShouldClose(sp.win, GLFW_TRUE);
+		
+		update_all_keys(keys, sp.win);
 
 		update_fps(&fps);
-		player_movement(&player, sp.win, &fps);
+		player_events(&player, keys, sp.win);
+		player_movement(&player, sp.win, fps);
+		if (player.enabled_mouse)
+			player_looking(&player, sp.win, fps);
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 

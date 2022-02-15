@@ -34,7 +34,7 @@ void	fill_mesh_info(t_mesh_info *info, t_mesh *mesh)
 	info->colors_value_amount = info->color_amount * info->color_value_amount;
 	info->colors_size = sizeof(float) * info->colors_value_amount;
 	info->colors = malloc(info->colors_size);
-	float	temp[3] = {0, 0, 255};
+	float	temp[3] = {0, 255, 0};
 	memset_pattern(info->colors, info->colors_size, temp, sizeof(float) * 3);
 
 	glGenVertexArrays(1, &info->vao);
