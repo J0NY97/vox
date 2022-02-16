@@ -94,8 +94,10 @@ void	new_model(t_model *model, t_obj *obj)
 		{
 			model->mat_info[i].material = &obj->materials[i];
 			glGenTextures(1, &model->mat_info[i].texture);
+			LG_WARN("<%s>", model->mat_info[i].material->map_Kd);
 			if (access(model->mat_info[i].material->map_Kd, F_OK))
 			{
+				LG_WARN("Couldnt find texture. (%d)", glGetError());
 				free(model->mat_info[i].material->map_Kd);
 				model->mat_info[i].material->map_Kd
 					= ft_strjoin(obj->root_path, obj->materials[i].map_Kd);
@@ -103,6 +105,8 @@ void	new_model(t_model *model, t_obj *obj)
 			model->mat_info[i].loaded = new_texture(&model->mat_info[i].texture, model->mat_info[i].material->map_Kd);
 		}
 	}
+
+	LG_INFO("materials created. (%d)", glGetError());
 
 	model->info_amount = obj->mesh_amount;
 	model->info = malloc(sizeof(t_mesh_info) * model->info_amount);

@@ -48,16 +48,21 @@ int	main(void)
 
 	t_obj		obj1;
 	obj_load(&obj1, MODEL_PATH"retrotv/retrotv.obj");
-
 	t_model		model1;
 	new_model(&model1, &obj1);
+	t_entity	entity1;
+	new_entity(&entity1);
+	new_vec3(entity1.pos, 0, 0, -5);
 
 	t_shader	shader1;
 	new_shader(&shader1, SHADER_PATH"simple.vs", SHADER_PATH"simple.fs");
 
-	t_entity	entity1;
-	new_entity(&entity1);
-	new_vec3(entity1.pos, 0, 0, -5);
+	t_obj		dust2_obj;
+	obj_load(&obj1, MODEL_PATH"de_dust2/de_dust2.obj");
+	t_model		dust2_model;
+	new_model(&dust2_model, &dust2_obj);
+	t_entity	dust2;
+	new_entity(&dust2);
 
 	t_shader	mandelbrot_shader;
 	new_shader(&mandelbrot_shader, SHADER_PATH"mandelbrot.vs", SHADER_PATH"mandelbrot.fs");
@@ -92,6 +97,7 @@ int	main(void)
 		glEnable(GL_DEPTH_TEST);
 		update_camera(&player.camera);
 		render_entity(&entity1, &player.camera, &model1, &shader1);
+		render_entity(&dust2, &player.camera, &dust2_model, &shader1);
 
 		glfwSwapBuffers(sp.win);
 
