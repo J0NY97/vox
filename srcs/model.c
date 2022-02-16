@@ -16,6 +16,8 @@ void	fill_element_info(t_element_info *info, t_element *elem)
 {
 	info->element = *elem;
 
+	info->material = NULL;
+
 	glGenBuffers(1, &info->ebo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, info->ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, info->element.indices_size, &info->element.indices[0], GL_STATIC_DRAW);
@@ -105,15 +107,31 @@ void	new_model(t_model *model, t_obj *obj)
 	model->info_amount = obj->mesh_amount;
 	model->info = malloc(sizeof(t_mesh_info) * model->info_amount);
 	for (int i = 0; i < model->info_amount; i++)
+	{
 		fill_mesh_info(&model->info[i], &obj->meshes[i]);
+
+		// Give the mesh elements their corresponding materials; (i know its convoluted);
+		for (int e = 0; e < model->info[i].mesh.element_amount; e++)
+		{
+			for (int t = 0; t < model->mat_info_amount; t++)
+			{
+				if (model->info[i].elem_info[e].element.material == model->mat_info[t].material)
+					model->info[i].elem_info[e].material = &model->mat_info[t];
+			}
+		}
+	}
 
 	LG_INFO("new model made. (%d)", glGetError());
 }
 
 void	render_element(t_element_info *elem)
 {
-	// 1. activate texture
-	// 2. draw arrays / triangles
+	if (elem->material && elem->material->loaded)
+	{
+		glActiveTexture(GL_TEXTURE0 + 0);
+		glBindTexture(GL_TEXTURE_2D, elem->material->texture);
+	}
+
 	if (elem->element.indices_size == 0)
 	{
 		// glDrawArrays(GL_TRIANGLE_STRIP, 0, mesh.vertex_amount);

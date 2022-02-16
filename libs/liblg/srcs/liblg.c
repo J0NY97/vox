@@ -45,11 +45,13 @@ void	lg_setFdLevel(int lvl)
 
 static void lg_write(lg_event *ev)
 {
-	char				buff[100];
+	//char				buff[100];
+	char				*buff = NULL;
 	static const char	*level[] = {"DEBUG", "INFO", "WARN", "ERROR"};
 	static const char	*color[] = {"\x1b[36m", "\x1b[32m", "\x1b[33m", "\x1b[31m"};
 
-	vsnprintf(buff, 100, ev->fmt, ev->ap);
+	buff = malloc(1000);
+	vsnprintf(buff, 1000, ev->fmt, ev->ap);
 	if (ev->lvl >= 0 && ev->lvl >= lg_global.fdlvl)
 	{
 		fprintf(stderr, "%s[%-5s]\x1b[0m \x1b[90m%s:%d\x1b[0m : ", color[ev->lvl], level[ev->lvl], ev->func, ev->line);
@@ -62,6 +64,7 @@ static void lg_write(lg_event *ev)
 		fprintf(lg_global.fp, "\t\t[%s : %s : %d]\n", ev->file, ev->func, ev->line);
 		fflush(lg_global.fp);
 	}
+	free(buff);
 }
 
 void lg_log(int lvl, const char *time, const char *file, const char *func, int line, const char *fmt, ...)

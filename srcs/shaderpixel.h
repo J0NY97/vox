@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/11 14:27:43 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/02/15 16:51:08 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/02/16 18:07:47by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,12 +58,13 @@ void				render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shad
 //	MODEL
 ///////////////////
 
+typedef struct	s_material_info		t_material_info;
+
 typedef struct s_element_info
 {
-	t_element	element;
-	GLuint		ebo;
-	GLuint		texture;
-	int			has_texture;
+	t_element		element;
+	GLuint			ebo;
+	t_material_info	*material;
 }	t_element_info;
 
 typedef struct s_mesh_info
@@ -84,12 +85,12 @@ typedef struct s_mesh_info
 	t_element_info	*elem_info;
 }	t_mesh_info;
 
-typedef struct s_material_info
+struct s_material_info
 {
 	t_material	*material;
 	GLuint		texture;
 	int			loaded;
-}	t_material_info;
+};
 
 struct	s_model
 {
