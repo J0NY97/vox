@@ -22,6 +22,8 @@
 # include "bimgf.h"
 # include "bobj_loader.h"
 
+# define DEBUG 1
+
 # define ROOT_PATH "C:/Users/Jony/source/repos/shaderpixel/"
 # define MODEL_PATH ROOT_PATH"models/"
 # define SHADER_PATH ROOT_PATH"shaders/"

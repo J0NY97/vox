@@ -137,8 +137,10 @@ int	obj_load(t_obj *obj, const char *obj_file_path)
 				// Preallocating an x amount of indices, adjusting size if need be;
 				curr_elem->index_allocated = 8192;
 				curr_elem->indices = malloc(sizeof(uint32_t) * curr_elem->index_allocated);
+				/*
 				LG_DEBUG("Starting element builder. Mallocing %d indices.",
 					curr_elem->index_allocated);
+					*/
 			}
 			else if (curr_elem->index_amount / (curr_elem->index_allocated * 0.75f) > 1.0f)
 			{
@@ -194,7 +196,7 @@ int	obj_load(t_obj *obj, const char *obj_file_path)
 		}
 		else if (ft_strequ(arr[0], "usemtl"))
 		{
-			LG_DEBUG("We have found usemtl : %s\n", arr[1]);
+			//LG_DEBUG("We have found usemtl : %s\n", arr[1]);
 			if (usemtl_found)
 			{
 				curr_mesh->elements
@@ -202,7 +204,7 @@ int	obj_load(t_obj *obj, const char *obj_file_path)
 						* (++curr_mesh->element_amount + 1));
 				curr_elem = &curr_mesh->elements[curr_mesh->element_amount];
 				memset(curr_elem, 0, sizeof(t_element));
-				LG_DEBUG("Created new element #%d\n", curr_mesh->element_amount);
+				//LG_DEBUG("Created new element #%d\n", curr_mesh->element_amount);
 			}
 			usemtl_found = 1;
 			curr_elem->material
@@ -674,7 +676,10 @@ t_material	*material_load(
 	}
 	free(file_content);
 	free(elem_pos);
-	LG_DEBUG("[%s] We have found %d materials.\n", __FUNCTION__, *mat_amount);
+	LG_DEBUG("We have found %d materials.", *mat_amount);
+	if (0) // DEbug
+		for (int i = 0; i < *mat_amount; i++)
+			LG_INFO("#%d : (kd <%s>)", i, materials[i].map_Kd);
 	return (materials);
 }
 
@@ -686,15 +691,8 @@ t_material	*get_material(t_material *materials, size_t mats, char *to_find)
 	i = 0;
 	while (i < mats)
 	{
-		/*
-		printf("[%s] #%d ", __FUNCTION__, i);
-		printf("Checking : <%s> == <%s>\n", materials[i].name, to_find);
-		*/
 		if (ft_strequ(materials[i].name, to_find))
-		{
-			//printf("found\n");
 			return (&materials[i]);
-		}
 		i++;
 	}
 	return (NULL);

@@ -85,6 +85,8 @@ void	new_model(t_model *model, t_obj *obj)
 		return ;
 	}
 
+	LG_INFO("Creating mats. (%d)", glGetError());
+
 	model->mat_info_amount = obj->material_amount;
 	model->mat_info = NULL;
 	if (model->mat_info_amount > 0)
@@ -93,8 +95,8 @@ void	new_model(t_model *model, t_obj *obj)
 		for (int i = 0; i < model->mat_info_amount; i++)
 		{
 			model->mat_info[i].material = &obj->materials[i];
+			LG_INFO("#%d <%s>", i, obj->materials[i].map_Kd);
 			glGenTextures(1, &model->mat_info[i].texture);
-			LG_WARN("<%s>", model->mat_info[i].material->map_Kd);
 			if (access(model->mat_info[i].material->map_Kd, F_OK))
 			{
 				LG_WARN("Couldnt find texture. (%d)", glGetError());

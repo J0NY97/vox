@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_get_file_content.c                              :+:      :+:    :+:   */
+/*   get_file_content.c                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nneronin <nneronin@student.hive.fi>        +#+  +:+       +#+        */
+/*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/08 15:39:53 by nneronin          #+#    #+#             */
-/*   Updated: 2021/12/08 15:40:24 by nneronin         ###   ########.fr       */
+/*   Updated: 2022/02/17 03:07:10 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 #include "stdio.h"
 #include "sys/stat.h"
 
-char	*get_file_content(char *file)
+char	*get_file_content(const char *file)
 {
 	char	*final;
 	FILE	*fp;
