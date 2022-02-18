@@ -97,7 +97,7 @@ int	main(void)
 		glEnable(GL_DEPTH_TEST);
 		update_camera(&player.camera);
 		render_entity(&entity1, &player.camera, &model1, &shader1);
-		//render_entity(&dust2, &player.camera, &dust2_model, &shader1);
+		render_entity(&dust2, &player.camera, &dust2_model, &shader1);
 
 		glfwSwapBuffers(sp.win);
 

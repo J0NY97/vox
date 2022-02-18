@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/08 15:39:53 by nneronin          #+#    #+#             */
-/*   Updated: 2022/02/17 03:07:10 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/02/18 02:29:53 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,8 +30,9 @@ char	*get_file_content(const char *file)
 	fd = fileno(fp);
 	fstat(fd, &file_stat);
 	file_len = file_stat.st_size;
-	final = malloc(file_len);
+	final = malloc(file_len + 1);
 	fread(final, file_len, 1, fp);
+	final[file_len] = 0;
 	fclose(fp);
 	return (final);
 }

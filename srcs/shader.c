@@ -50,8 +50,6 @@ void	new_shader(t_shader *shader, const char *vs, const char *fs)
 
 	vs_cont = get_file_content((char *)vs);
 	fs_cont = get_file_content((char *)fs);
-	printf("vs : <<<%s>>>", vs_cont);
-	printf("fs : <<<%s>>>", fs_cont);
 	if (!vs_cont || !fs_cont)
 	{
 		if (!vs_cont)
