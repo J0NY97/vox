@@ -56,6 +56,8 @@ void	update_entity(t_entity *entity)
 
 void	render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader *shader)
 {
+	int error = glGetError();
+
 	update_entity(entity);
 
 	glUseProgram(shader->program);
@@ -70,4 +72,8 @@ void	render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("(%d)", error);
 }

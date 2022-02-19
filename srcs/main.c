@@ -59,7 +59,6 @@ int	main(void)
 
 	t_obj		dust2_obj;
 	obj_load(&dust2_obj, MODEL_PATH"de_dust2/de_dust2.obj");
-
 	t_model		dust2_model;
 	new_model(&dust2_model, &dust2_obj);
 	t_entity	dust2;
@@ -97,8 +96,9 @@ int	main(void)
 
 		glEnable(GL_DEPTH_TEST);
 		update_camera(&player.camera);
-		render_entity(&entity1, &player.camera, &model1, &shader1);
-		//render_entity(&dust2, &player.camera, &dust2_model, &shader1);
+	//	render_entity(&entity1, &player.camera, &model1, &shader1);
+
+		render_entity(&dust2, &player.camera, &dust2_model, &shader1);
 
 		glfwSwapBuffers(sp.win);
 

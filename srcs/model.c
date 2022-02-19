@@ -123,11 +123,13 @@ void	new_model(t_model *model, t_obj *obj)
 		}
 	}
 
-	LG_INFO("new model made. (%d)", glGetError());
+	LG_INFO("new model made from [%s] (%d)", obj->name, glGetError());
 }
 
 void	render_element(t_element_info *elem)
 {
+	int error = glGetError();
+
 	if (elem->material && elem->material->loaded)
 	{
 		glActiveTexture(GL_TEXTURE0 + 0);
@@ -141,20 +143,30 @@ void	render_element(t_element_info *elem)
 	else
 	{
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elem->ebo);
-		glDrawElements(GL_TRIANGLES, elem->element.indices_value_amount, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, elem->element.indices_value_amount, GL_UNSIGNED_INT, NULL);
 	}
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("(%d)", error);
 }
 
 void	render_mesh(t_mesh_info *mesh)
 {
+	int error = glGetError();
+
 	glBindVertexArray(mesh->vao);
 	glEnableVertexAttribArray(0); // pos
 	glEnableVertexAttribArray(1); // col
 	glEnableVertexAttribArray(2); // uvs
-	glEnableVertexAttribArray(3); // nor
+//	glEnableVertexAttribArray(3); // nor
 
 	for (int i = 0; i < mesh->mesh.element_amount; i++)
 		render_element(&mesh->elem_info[i]);
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("(%d)", error);
 }
 
 void	render_model(t_model *model)
