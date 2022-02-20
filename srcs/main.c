@@ -63,6 +63,8 @@ int	main(void)
 	new_model(&dust2_model, &dust2_obj);
 	t_entity	dust2;
 	new_entity(&dust2);
+	dust2.rot_z_angle = -90;
+	dust2.scale_value = 0.005;
 
 	t_shader	mandelbrot_shader;
 	new_shader(&mandelbrot_shader, SHADER_PATH"mandelbrot.vs", SHADER_PATH"mandelbrot.fs");
@@ -96,8 +98,8 @@ int	main(void)
 
 		glEnable(GL_DEPTH_TEST);
 		update_camera(&player.camera);
-	//	render_entity(&entity1, &player.camera, &model1, &shader1);
 
+		render_entity(&entity1, &player.camera, &model1, &shader1);
 		render_entity(&dust2, &player.camera, &dust2_model, &shader1);
 
 		glfwSwapBuffers(sp.win);

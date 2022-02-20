@@ -170,6 +170,9 @@ typedef struct s_player
 {
 	t_camera	camera;
 
+	float		velocity[VEC3_SIZE];
+	float		gravity[VEC3_SIZE];
+
 	int			enabled_mouse;
 	double		mouse_pos[2];
 	double		last_mouse_pos[2];

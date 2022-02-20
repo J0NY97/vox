@@ -42,6 +42,15 @@ void	fill_mesh_info(t_mesh_info *info, t_mesh *mesh)
 	glGenVertexArrays(1, &info->vao);
 	glBindVertexArray(info->vao);
 
+	if (info->mesh.vertices_size > 0)
+		glEnableVertexAttribArray(0); // pos
+	if (info->colors_size > 0)
+		glEnableVertexAttribArray(1); // col
+	if (info->mesh.uvs_size > 0)
+		glEnableVertexAttribArray(2); // uvs
+	if (info->mesh.normals_size > 0)
+		glEnableVertexAttribArray(3); // nor
+
 	glGenBuffers(4, vbo);
 	info->vbo_pos = vbo[0];
 	info->vbo_color = vbo[1];
@@ -156,10 +165,6 @@ void	render_mesh(t_mesh_info *mesh)
 	int error = glGetError();
 
 	glBindVertexArray(mesh->vao);
-	glEnableVertexAttribArray(0); // pos
-	glEnableVertexAttribArray(1); // col
-	glEnableVertexAttribArray(2); // uvs
-//	glEnableVertexAttribArray(3); // nor
 
 	for (int i = 0; i < mesh->mesh.element_amount; i++)
 		render_element(&mesh->elem_info[i]);
