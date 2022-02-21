@@ -12,6 +12,7 @@ CFILES = \
 	player.c \
 	fps.c \
 	key.c \
+	collision.c \
 	bimgf/bimgf_bmp.c \
 	bimgf/bimgf_help.c \
 	bimgf/bimgf_jpg.c \

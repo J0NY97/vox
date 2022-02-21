@@ -91,6 +91,8 @@ int	main(void)
 		if (player.enabled_mouse)
 			player_looking(&player, sp.win, fps);
 
+		ellipsoid_collision(player.camera.pos, &dust2_model.info->mesh);
+
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 		glDisable(GL_DEPTH_TEST);
