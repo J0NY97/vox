@@ -9,6 +9,7 @@ out vec4 FragColor;
 
 uniform int show_normal_map = 0;
 uniform int texture_amount = 1;
+uniform int useColor = 0;
 uniform sampler2D textures[1];
 
 void main()
@@ -17,6 +18,6 @@ void main()
 		FragColor = texture(textures[0], inTex);
 	else if (show_normal_map == 1)
 		FragColor = vec4(inNorm, 1);
-	else
-		FragColor = vec4(inColor, 1);
+	if (useColor == 1)
+		FragColor = mix(FragColor, vec4(inColor, 1), 0.1);
 }

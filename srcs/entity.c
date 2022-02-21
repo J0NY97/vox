@@ -66,6 +66,11 @@ void	render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader 
 	glUniformMatrix4fv(glGetUniformLocation(shader->program, "projection"), 1, GL_FALSE, &camera->projection[0]);
 	glUniform3fv(glGetUniformLocation(shader->program, "aViewPos"), 3, &camera->pos[0]);
 
+	if (vec3_distance(camera->pos, entity->pos) <= 5.0f)
+		glUniform1i(glGetUniformLocation(shader->program, "useColor"), 1);
+	else
+		glUniform1i(glGetUniformLocation(shader->program, "useColor"), 0);
+
 	render_model(model);
 
 	glUseProgram(0);

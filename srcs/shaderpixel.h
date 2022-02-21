@@ -214,7 +214,7 @@ void		update_all_keys(t_key *keys, GLFWwindow *win);
 //	COLLISION
 ///////////////////
 
-int			ellipsoid_collision(float *pos, t_mesh *mesh);
+int			ellipsoid_collision(float *pos, float *velocity, t_mesh *mesh);
 
 ///////////////////
 //	SHADERPIXEL

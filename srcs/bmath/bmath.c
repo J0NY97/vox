@@ -71,6 +71,18 @@ float	*vec3_multiply_f(float *result, float *v0, float f)
 	return result;
 }
 
+float	vec3_distance(float *v0, float *v1)
+{
+	float	a;
+	float	b;
+	float	c;
+
+	a = (v1[0] - v0[0]) * (v1[0] - v0[0]);
+	b = (v1[1] - v0[1]) * (v1[1] - v0[1]);
+	c = (v1[2] - v0[2]) * (v1[2] - v0[2]);
+	return (sqrt(a + b + c));
+}
+
 float	to_radians(float degrees)
 {
 	return (degrees * M_PI / 180.0f);
