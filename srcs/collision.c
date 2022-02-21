@@ -2,11 +2,11 @@
 
 // http://www.peroxide.dk/papers/collision/collision.pdf
 /*
- * Takes in 2 entities and compares if they are colliding;
+ * Takes in position of ellipsoid and the mesh we want to check its colliding;
  * Returns 1 if yes, 0 if no;
  */
-int	entity_collision(t_entity *entity1, t_entity *entity2)
+int	ellipsoid_collision(float *pos, t_mesh *mesh)
 {
-	(void)entity1;
-	(void)entity2;
+	(void)pos;
+	(void)mesh;
 }
