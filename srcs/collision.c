@@ -35,6 +35,7 @@ int	is_point_in_triangle(float *point, float *p1, float *p2, float *p3)
 int	triangle_edge_collision(float *pos, float *velocity, float *p1, float *p2, float *p3)
 {
 	(void)pos;
+	(void)velocity;
 	(void)p1;
 	(void)p2;
 	(void)p3;
@@ -42,11 +43,15 @@ int	triangle_edge_collision(float *pos, float *velocity, float *p1, float *p2, f
 }
 
 /*
+ * Optimization? Check distance to each point with velocity? if thats <= 0???
+*/
+/*
  * Check if pos is colliding with the vertices of a triangle;
  */
 int	triangle_vertex_collision(float *pos, float *velocity, float *p1, float *p2, float *p3)
 {
 	(void)pos;
+	(void)velocity;
 	(void)p1;
 	(void)p2;
 	(void)p3;
@@ -59,12 +64,17 @@ int	triangle_vertex_collision(float *pos, float *velocity, float *p1, float *p2,
 int	triangle_face_collision(float *pos, float *velocity, float *p1, float *p2, float *p3)
 {
 	(void)pos;
+	(void)velocity;
 	(void)p1;
 	(void)p2;
 	(void)p3;
 	return (0);
 }
 
+/*
+ * Could this be used to check if youre looking in the direction of this particular triangle?
+ *	...probably need to somehow have an infinite velocity...
+*/
 /*
  * If the pos with velocity ever intersects the plane of the triangle...
  *	at signed_distance(C(t0)) == 1 and signed_distance(C(t1)) == -1;
@@ -85,10 +95,14 @@ int	triangle_intersection(float *pos, float *velocity, float *p1, float *p2, flo
  */
 int	triangle_collision(float *pos, float *velocity, float *p1, float *p2, float *p3)
 {
-	triangle_intersection(pos, velocity, p1, p2, p3);
-	triangle_face_collision(pos, velocity, p1, p2, p3);
-	triangle_vertex_collision(pos, velocity, p1, p2, p3);
-	triangle_edge_collision(pos, velocity, p1, p2, p3);
+	if (triangle_intersection(pos, velocity, p1, p2, p3))
+	{
+		if (triangle_face_collision(pos, velocity, p1, p2, p3))
+		{
+			triangle_vertex_collision(pos, velocity, p1, p2, p3);
+			triangle_edge_collision(pos, velocity, p1, p2, p3);
+		}
+	}
 	return (0);
 }
 
@@ -113,27 +127,29 @@ int	triangle_collision(float *pos, float *velocity, float *p1, float *p2, float 
  */
 int	ellipsoid_collision(float *pos, float *velocity, t_mesh *mesh)
 {
-	int	found;
+	float	p1[VEC3_SIZE];
+	float	p2[VEC3_SIZE];
+	float	p3[VEC3_SIZE];
+	int		found;
 
 	found = 0;
 	for (int elem = 0; elem < mesh->element_amount; elem++)
 	{
 		for (size_t ind = 0; ind < mesh->elements[elem].index_amount; ind++)
 		{
-			if (triangle_collision(pos, velocity,
-
-				(float [3]){mesh->vertices[mesh->elements[elem].indices[ind * 9 + 0]],
+			new_vec3(p1,
+				mesh->vertices[mesh->elements[elem].indices[ind * 9 + 0]],
 				mesh->vertices[mesh->elements[elem].indices[ind * 9 + 1]],
-				mesh->vertices[mesh->elements[elem].indices[ind * 9 + 2]]},
-
-				(float [3]){mesh->vertices[mesh->elements[elem].indices[ind * 9 + 3]],
+				mesh->vertices[mesh->elements[elem].indices[ind * 9 + 2]]);
+			new_vec3(p2,
+				mesh->vertices[mesh->elements[elem].indices[ind * 9 + 3]],
 				mesh->vertices[mesh->elements[elem].indices[ind * 9 + 4]],
-				mesh->vertices[mesh->elements[elem].indices[ind * 9 + 5]]},
-
-				(float [3]){mesh->vertices[mesh->elements[elem].indices[ind * 9 + 6]],
+				mesh->vertices[mesh->elements[elem].indices[ind * 9 + 5]]);
+			new_vec3(p3,
+				mesh->vertices[mesh->elements[elem].indices[ind * 9 + 6]],
 				mesh->vertices[mesh->elements[elem].indices[ind * 9 + 7]],
-				mesh->vertices[mesh->elements[elem].indices[ind * 9 + 8]]}
-				))
+				mesh->vertices[mesh->elements[elem].indices[ind * 9 + 8]]);	
+			if (triangle_collision(pos, velocity, p1, p2, p3))
 				found = 1;
 		}
 	}
