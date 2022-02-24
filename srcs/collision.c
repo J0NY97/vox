@@ -106,6 +106,17 @@ int	triangle_collision(float *pos, float *velocity, float *p1, float *p2, float 
 	return (0);
 }
 
+/*
+ * Both 'res' and 'src' should be 'float [VEC3_SIZE]';
+ *
+ * Returns 'res';
+ */
+float	*espace_conversion(float *res, float *src)
+{
+	(void)src;
+	return (res);
+}
+
 // http://www.peroxide.dk/papers/collision/collision.pdf
 /*
  * Takes in position of ellipsoid and the mesh we want to check its colliding;
@@ -130,6 +141,7 @@ int	ellipsoid_collision(float *pos, float *velocity, t_mesh *mesh)
 	float	p1[VEC3_SIZE];
 	float	p2[VEC3_SIZE];
 	float	p3[VEC3_SIZE];
+	float	epos[VEC3_SIZE];
 	int		found;
 
 	found = 0;
@@ -149,6 +161,10 @@ int	ellipsoid_collision(float *pos, float *velocity, t_mesh *mesh)
 				mesh->vertices[mesh->elements[elem].indices[ind * 9 + 6]],
 				mesh->vertices[mesh->elements[elem].indices[ind * 9 + 7]],
 				mesh->vertices[mesh->elements[elem].indices[ind * 9 + 8]]);	
+			espace_conversion(p1, p1);
+			espace_conversion(p2, p2);
+			espace_conversion(p3, p3);
+			espace_conversion(epos, pos);
 			if (triangle_collision(pos, velocity, p1, p2, p3))
 				found = 1;
 		}
