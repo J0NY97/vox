@@ -22,6 +22,7 @@ float	*vec3_normalize(float *result, float *v0);
 float	*vec3_cross(float *result, float *v0, float *v1);
 float	vec3_dot(float *v0, float *v1);
 float	vec3_distance(float *v0, float *v1);
+float	*vec3_multiply_mat3(float *res, float *v, float *m);
 
 // VEC4
 float	*vec4_new(float *res, float x, float y, float z, float w);

@@ -83,6 +83,14 @@ float	vec3_distance(float *v0, float *v1)
 	return (sqrt(a + b + c));
 }
 
+float	*vec3_multiply_mat3(float *res, float *v, float *m)
+{
+	res[0] = m[0] * v[0] + m[3] * v[1] + m[6] * v[2];
+	res[1] = m[1] * v[0] + m[4] * v[1] + m[7] * v[2];
+	res[2] = m[2] * v[0] + m[5] * v[1] + m[8] * v[2];
+	return (res);
+}
+
 //////////////////////////
 // VEC4
 //////////////////////////

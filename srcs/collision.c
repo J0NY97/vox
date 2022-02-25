@@ -44,17 +44,8 @@ void	aabb_create(t_aabb *res, float *vertices, size_t vertex_amount)
 */
 void	aabb_transform(t_aabb *a, float *model)
 {
-	float	v_min[VEC4_SIZE];
-	float	v_max[VEC4_SIZE];
-
-	vec4_new(v_min, a->min[0], a->min[1], a->min[2], 1);
-	vec4_new(v_max, a->max[0], a->max[1], a->max[2], 1);
-
-	vec4_multiply_mat4(v_min, v_min, model);
-	vec4_multiply_mat4(v_max, v_max, model);
-
-	new_vec3(a->min, v_min[0], v_min[1], v_min[2]);
-	new_vec3(a->max, v_max[0], v_max[1], v_max[2]);
+	vec3_multiply_mat3(a->min, a->min, model);
+	vec3_multiply_mat3(a->max, a->max, model);
 }
 
 /*
@@ -62,9 +53,10 @@ void	aabb_transform(t_aabb *a, float *model)
 */
 int	aabb_aabb_collision(t_aabb *a, t_aabb *b)
 {
-	(void)a;
-	(void)b;
-	return (0);
+	return (
+		(a->min[0] <= b->max[0] && a->max[0] >= b->min[0]) &&
+		(a->min[1] <= b->max[1] && a->max[1] >= b->min[1]) &&
+		(a->min[2] <= b->max[2] && a->max[2] >= b->min[2]));
 }
 
 void	aabb_print(t_aabb *a)

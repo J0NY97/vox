@@ -51,6 +51,8 @@ typedef struct	s_entity
 	float			rot[MAT4_SIZE];
 	float			trans[MAT4_SIZE];
 	float			model[MAT4_SIZE];
+
+	int				use_color;
 }	t_entity;
 
 void				new_entity(t_entity *entity);
