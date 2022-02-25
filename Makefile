@@ -13,6 +13,7 @@ CFILES = \
 	fps.c \
 	key.c \
 	collision.c \
+	ellipsoid_collision.c \
 	bimgf/bimgf_bmp.c \
 	bimgf/bimgf_help.c \
 	bimgf/bimgf_jpg.c \
@@ -20,6 +21,7 @@ CFILES = \
 	bimgf/huffman.c \
 	bmath/bmath.c \
 	bobj/bobj_loader.c \
+	bobj/bobj_print.c \
 	glad/glad.c \
 
 CDIR = srcs

@@ -262,6 +262,8 @@ int	obj_load(t_obj *obj, const char *obj_file_path)
 			iter_elem->indices_value_amount = iter_elem->index_amount * iter_elem->index_value_amount;
 			iter_elem->indices_size = sizeof(unsigned int) * iter_elem->indices_value_amount;
 
+			iter_elem->face_count = iter_elem->index_amount / 3;
+
 			// Readjusting indices size;
 			iter_elem->index_allocated = iter_elem->index_amount * iter_elem->index_value_amount;
 			iter_elem->indices = realloc(iter_elem->indices, iter_elem->indices_size);

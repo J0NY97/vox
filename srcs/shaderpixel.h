@@ -21,6 +21,7 @@
 # include "bmath.h"
 # include "bimgf.h"
 # include "bobj_loader.h"
+# include "collision.h"
 
 # define DEBUG 1
 

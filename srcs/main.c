@@ -93,6 +93,11 @@ int	main(void)
 
 		ellipsoid_collision(player.camera.pos, player.velocity, &retrotv_model.info->mesh);
 
+		t_aabb aabb;
+		aabb_create(&aabb, retrotv_model.info->mesh.vertices, retrotv_model.info->mesh.vertex_amount);
+		aabb_transform(&aabb, retrotv.model);
+		aabb_print(&aabb);
+
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 		glDisable(GL_DEPTH_TEST);

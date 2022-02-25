@@ -25,6 +25,10 @@ typedef struct s_material
 	char			*map_Ns;	// specular highlight component
 }	t_material;
 
+/*
+ * face_count	= index_amount / (indices_per_face * index_value_amount);
+ * 				= index_amount / (3 * 3) = index_amount / 9;
+*/
 typedef struct s_element
 {
 	unsigned int	*indices;
@@ -33,13 +37,30 @@ typedef struct s_element
 	size_t			index_amount;
 	size_t			index_value_amount;
 
+	size_t			face_count;
+
 	t_material		*material; // address of the material you should use;
 	
 	// Allocation amount;
 	int				index_allocated;
 }	t_element;
 
-
+/*
+ * Vertices / uvs / normals / indices, all follow these rules;
+ *
+ * vertices : array with the vertex coordinates; 3 values per vertex_amount;
+ * vertices_size : the size of the vertices array in bytes; 
+ * vertices_value_amount : amount of values in the vertices array;
+ * vertex_amount : amount of vertices in the array;
+ * vertex_value_amount : amount of values per vertex;
+ * 
+ * ex:
+ * 	vertex_value_amount = 3 (x, y, z)
+ * 	vertex_amount = 6 (2 triangles)
+ *  vertices_value_amount = vertex_value_amount * vertex_amount (3 * 6 = 18)
+ *  vertices_size = vertices_value_amount * sizeof(float) (18 * 4 = 72 bytes)
+ *  vertices = { 18 floats (6 vertices (3 values per vertex)) };
+ */
 typedef struct		s_mesh
 {
 	char			*name;
@@ -106,5 +127,8 @@ t_material			*material_load(size_t *mat_amount, const char *root_path, const cha
 t_material			*get_material(t_material *materials, size_t mats, char *to_find);
 t_mesh				*get_mesh(t_mesh *meshes, size_t mesh_amount, char *name);
 int					get_index_of(t_obj *obj, int v, int vn, int vt);
+
+// Print
+void				bobj_element_print(t_element *elem);
 
 #endif

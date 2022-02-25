@@ -1,175 +1,78 @@
-#include "shaderpixel.h"
+#include "collision.h"
+#include "bmath.h"
 
 /*
- * Pretty self explanatory;
- * (what the function does, not the code)
- */
-int	is_point_in_triangle(float *point, float *p1, float *p2, float *p3)
-{
-	float	e0[VEC3_SIZE];
-	float	e1[VEC3_SIZE];
-
-	vec3_subtract(e0, p2, p1);
-	vec3_subtract(e1, p3, p1);
-
-	float a = vec3_dot(e0, e0);
-	float b = vec3_dot(e0, e1);
-	float c = vec3_dot(e1, e1);
-	float ac_bb = (a * c) + (b * b);
-
-	float vp[VEC3_SIZE];
-	new_vec3(vp, point[0] - p1[0], point[1] - p1[1], point[2] - p1[2]);
-
-	float d = vec3_dot(vp, e0);
-	float e = vec3_dot(vp, e1);
-	float x = (d * c) - (e * b);
-	float y = (e * a) - (d * b);
-	float z = x + y - ac_bb;
-
-	return (((uint32_t)z & ~((uint32_t)x | (uint32_t)y)) & 0x80000000);
-}
-
-/*
- * Check if pos is colliding with the edges of a triangle;
- */
-int	triangle_edge_collision(float *pos, float *velocity, float *p1, float *p2, float *p3)
-{
-	(void)pos;
-	(void)velocity;
-	(void)p1;
-	(void)p2;
-	(void)p3;
-	return (0);
-}
-
-/*
- * Optimization? Check distance to each point with velocity? if thats <= 0???
+ * We are taking a pause on the ellipsoid on triangle collision detection,
+ * and we are now trying to implement the AABB detection... so that we can have
+ * something to work with, its been so long since ive made some progress.
+ * Ill implement the more complicated thing later when i know more.
 */
-/*
- * Check if pos is colliding with the vertices of a triangle;
- */
-int	triangle_vertex_collision(float *pos, float *velocity, float *p1, float *p2, float *p3)
-{
-	(void)pos;
-	(void)velocity;
-	(void)p1;
-	(void)p2;
-	(void)p3;
-	return (0);
-}
 
+/*NOTE*/
 /*
- * Check if pos is colliding with the face of a triangle;
- */
-int	triangle_face_collision(float *pos, float *velocity, float *p1, float *p2, float *p3)
-{
-	(void)pos;
-	(void)velocity;
-	(void)p1;
-	(void)p2;
-	(void)p3;
-	return (0);
-}
-
-/*
- * Could this be used to check if youre looking in the direction of this particular triangle?
- *	...probably need to somehow have an infinite velocity...
+ * This detection type probably only works on objects, not really terrain....
 */
-/*
- * If the pos with velocity ever intersects the plane of the triangle...
- *	at signed_distance(C(t0)) == 1 and signed_distance(C(t1)) == -1;
- *	at t0 the pos it at the front side of triangle, and at t1 its at the back;
- */
-int	triangle_intersection(float *pos, float *velocity, float *p1, float *p2, float *p3)
-{
-	(void)pos;
-	(void)velocity;
-	(void)p1;
-	(void)p2;
-	(void)p3;
-	return (0);
-}
 
 /*
- * p1-3 are the 3 points of the triangle.
- */
-int	triangle_collision(float *pos, float *velocity, float *p1, float *p2, float *p3)
+ * amount of values in vertices should be vertex_amount * 3 (xyz per vertex);
+*/
+void	aabb_create(t_aabb *res, float *vertices, size_t vertex_amount)
 {
-	if (triangle_intersection(pos, velocity, p1, p2, p3))
+	res->min[0] = INFINITY;
+	res->min[1] = INFINITY;
+	res->min[2] = INFINITY;
+
+	res->max[0] = -INFINITY;
+	res->max[1] = -INFINITY;
+	res->max[2] = -INFINITY;
+
+	for (size_t i = 0; i < vertex_amount; i++)
 	{
-		if (triangle_face_collision(pos, velocity, p1, p2, p3))
-		{
-			triangle_vertex_collision(pos, velocity, p1, p2, p3);
-			triangle_edge_collision(pos, velocity, p1, p2, p3);
-		}
+		res->min[0] = fmin(res->min[0], vertices[i * 3 + 0]);
+		res->min[1] = fmin(res->min[1], vertices[i * 3 + 1]);
+		res->min[2] = fmin(res->min[2], vertices[i * 3 + 2]);
+
+		res->max[0] = fmin(res->max[0], vertices[i * 3 + 0]);
+		res->max[1] = fmin(res->max[1], vertices[i * 3 + 1]);
+		res->max[2] = fmin(res->max[2], vertices[i * 3 + 2]);
 	}
-	return (0);
 }
 
 /*
- * Both 'res' and 'src' should be 'float [VEC3_SIZE]';
+ * Transforms the aabb with the given model matrix;
+ * Probably to world space, dont know if this has any other use;
+*/
+void	aabb_transform(t_aabb *a, float *model)
+{
+	float	v_min[VEC4_SIZE];
+	float	v_max[VEC4_SIZE];
+
+	vec4_new(v_min, a->min[0], a->min[1], a->min[2], 1);
+	vec4_new(v_max, a->max[0], a->max[1], a->max[2], 1);
+
+	vec4_multiply_mat4(v_min, v_min, model);
+	vec4_multiply_mat4(v_max, v_max, model);
+
+	new_vec3(a->min, v_min[0], v_min[1], v_min[2]);
+	new_vec3(a->max, v_max[0], v_max[1], v_max[2]);
+}
+
+/*
  *
- * Returns 'res';
- */
-float	*espace_conversion(float *res, float *src)
+*/
+int	aabb_aabb_collision(t_aabb *a, t_aabb *b)
 {
-	(void)src;
-	return (res);
+	(void)a;
+	(void)b;
+	return (0);
 }
 
-// http://www.peroxide.dk/papers/collision/collision.pdf
-/*
- * Takes in position of ellipsoid and the mesh we want to check its colliding;
- * Returns 1 if yes, 0 if no;
- * 
- * NOTE: The coordinates for pos and mesh triangle vertex pos need to be in the
- *  same coordinate space. (just so you dont forget)
- * 
- * velocity is basically just the length of the line you want to 'cast' in front
- * and check if it hits a mesh;
- * 
- * STEPS:
- * Convert to eSpace, both pos and mesh triangle vertices;
- * check if sphere...
- * 1st ... ever intersects the infinite plane of the triangle;
- * 2nd ... collides with face of triangle;
- * 3rd ... collides with vertices of triangle;
- * 4th ... collides with edges of triangle;
- */
-int	ellipsoid_collision(float *pos, float *velocity, t_mesh *mesh)
+void	aabb_print(t_aabb *a)
 {
-	float	p1[VEC3_SIZE];
-	float	p2[VEC3_SIZE];
-	float	p3[VEC3_SIZE];
-	float	epos[VEC3_SIZE];
-	int		found;
+	printf("[%s]\n", __FUNCTION__);
+	for (int i = 0; i < 3; i++)
+		printf("\tmin[%d] = %.2f;\n", i, a->min[i]);
+	for (int i = 0; i < 3; i++)
+		printf("\tmax[%d] = %.2f;\n", i, a->max[i]);
 
-	found = 0;
-	for (int elem = 0; elem < mesh->element_amount; elem++)
-	{
-		for (size_t ind = 0; ind < mesh->elements[elem].index_amount; ind++)
-		{
-			new_vec3(p1,
-				mesh->vertices[mesh->elements[elem].indices[ind * 9 + 0]],
-				mesh->vertices[mesh->elements[elem].indices[ind * 9 + 1]],
-				mesh->vertices[mesh->elements[elem].indices[ind * 9 + 2]]);
-			new_vec3(p2,
-				mesh->vertices[mesh->elements[elem].indices[ind * 9 + 3]],
-				mesh->vertices[mesh->elements[elem].indices[ind * 9 + 4]],
-				mesh->vertices[mesh->elements[elem].indices[ind * 9 + 5]]);
-			new_vec3(p3,
-				mesh->vertices[mesh->elements[elem].indices[ind * 9 + 6]],
-				mesh->vertices[mesh->elements[elem].indices[ind * 9 + 7]],
-				mesh->vertices[mesh->elements[elem].indices[ind * 9 + 8]]);	
-			espace_conversion(p1, p1);
-			espace_conversion(p2, p2);
-			espace_conversion(p3, p3);
-			espace_conversion(epos, pos);
-			if (triangle_collision(pos, velocity, p1, p2, p3))
-				found = 1;
-		}
-	}
-	if (found)
-		LG_INFO("Collision detected.");
-	return (found);
 }

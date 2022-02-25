@@ -23,6 +23,10 @@ float	*vec3_cross(float *result, float *v0, float *v1);
 float	vec3_dot(float *v0, float *v1);
 float	vec3_distance(float *v0, float *v1);
 
+// VEC4
+float	*vec4_new(float *res, float x, float y, float z, float w);
+float	*vec4_multiply_mat4(float *res, float *v, float *m);
+
 // HELP
 float	to_radians(float degrees);
 float	to_degrees(float radians);

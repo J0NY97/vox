@@ -83,6 +83,28 @@ float	vec3_distance(float *v0, float *v1)
 	return (sqrt(a + b + c));
 }
 
+//////////////////////////
+// VEC4
+//////////////////////////
+
+float	*vec4_new(float *res, float x, float y, float z, float w)
+{
+	res[0] = x;
+	res[1] = y;
+	res[2] = z;
+	res[3] = w;
+	return (res);
+}
+
+float	*vec4_multiply_mat4(float *res, float *v, float *m)
+{
+	res[0] = m[0] * v[0] + m[4] * v[1] + m[8] * v[2] + m[12] * v[3];
+	res[1] = m[1] * v[0] + m[5] * v[1] + m[9] * v[2] + m[13] * v[3];
+	res[2] = m[2] * v[0] + m[6] * v[1] + m[10] * v[2] + m[14] * v[3];
+	res[3] = m[3] * v[0] + m[7] * v[1] + m[11] * v[2] + m[15] * v[3];
+	return (res);
+}
+
 float	to_radians(float degrees)
 {
 	return (degrees * M_PI / 180.0f);
