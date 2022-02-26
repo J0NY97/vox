@@ -107,7 +107,7 @@ int	main(void)
 		update_camera(&player.camera);
 
 		render_entity(&retrotv, &player.camera, &retrotv_model, &shader1);
-		//render_entity(&dust2, &player.camera, &dust2_model, &shader1);
+		render_entity(&dust2, &player.camera, &dust2_model, &shader1);
 
 		glfwSwapBuffers(sp.win);
 

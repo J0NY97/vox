@@ -79,6 +79,27 @@ int	point_aabb_collision(float *point, t_aabb *b)
 		1);
 }
 
+void	aabb_render(t_aabb *a)
+{
+	float	vertices[] = {
+		// front
+		a->min[0], a->max[1], a->max[2], // top left
+		a->max[0], a->max[1], a->max[2], // top right
+		a->min[0], a->min[1], a->max[2], // bot left
+		a->max[0], a->min[1], a->max[2], // bot right
+
+		// back
+		a->min[0], a->max[1], a->min[2], // top left
+		a->max[0], a->max[1], a->min[2], // top right
+		a->min[0], a->min[1], a->min[2], // bot left
+		a->max[0], a->min[1], a->min[2] // bot right
+	};
+	// vao
+	// vbo
+	// ebo
+	// program
+}
+
 void	aabb_print(t_aabb *a)
 {
 	printf("[%s]\n", __FUNCTION__);
