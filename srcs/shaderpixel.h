@@ -39,6 +39,9 @@ typedef struct	s_key		t_key;
 //	ENTITY
 ///////////////////
 
+/*
+ * model in the entity is currently only needed in the collision detection;
+*/
 typedef struct	s_entity
 {
 	float			pos[VEC3_SIZE];
@@ -47,17 +50,20 @@ typedef struct	s_entity
 	float			rot_z_angle;
 	float			scale_value;
 
-	float			scale[MAT4_SIZE];
-	float			rot[MAT4_SIZE];
-	float			trans[MAT4_SIZE];
-	float			model[MAT4_SIZE];
+	float			scale_mat[MAT4_SIZE];
+	float			rot_mat[MAT4_SIZE];
+	float			trans_mat[MAT4_SIZE];
+	float			model_mat[MAT4_SIZE];
 
-	int				use_color;
+	int				collision;
+
+	t_model			*model;
 }	t_entity;
 
 void				new_entity(t_entity *entity);
 void				update_entity(t_entity *entity);
 void				render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader *shader);
+void				entity_collision_detection(t_list *entity_list, float *point);
 
 ///////////////////
 //	MODEL

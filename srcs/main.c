@@ -34,6 +34,8 @@ int	main(void)
 	t_shaderpixel	sp;
 	init(&sp);
 
+	t_list	*entity_collision_list = NULL;
+
 	t_key	keys[GLFW_KEY_LAST];
 
 	t_fps	fps;
@@ -52,7 +54,10 @@ int	main(void)
 	new_model(&retrotv_model, &retrotv_obj);
 	t_entity	retrotv;
 	new_entity(&retrotv);
+	retrotv.model = &retrotv_model;
 	new_vec3(retrotv.pos, 0, 0, -5);
+
+	add_to_list(&entity_collision_list, &retrotv, 0);
 
 	t_shader	shader1;
 	new_shader(&shader1, SHADER_PATH"simple.vs", SHADER_PATH"simple.fs");
@@ -91,20 +96,7 @@ int	main(void)
 		if (player.enabled_mouse)
 			player_looking(&player, sp.win, fps);
 
-///////////
-		// Collision detection;
-///////////
-		//ellipsoid_collision(player.camera.pos, player.velocity, &retrotv_model.info->mesh);
-		//update_entity(&retrotv);
-
-		t_aabb aabb;
-		aabb_create(&aabb, retrotv_model.info->mesh.vertices, retrotv_model.info->mesh.vertex_amount);
-		aabb_transform(&aabb, retrotv.model);
-
-		retrotv.use_color = point_aabb_collision(player.camera.pos, &aabb);
-///////////
-		// End of coldet
-///////////
+		entity_collision_detection(entity_collision_list, player.camera.pos);
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
