@@ -27,6 +27,7 @@ float	*vec3_multiply_mat3(float *res, float *v, float *m);
 // VEC4
 float	*vec4_new(float *res, float x, float y, float z, float w);
 float	*vec4_multiply_mat4(float *res, float *v, float *m);
+float	*vec4_to_vec3(float *res, float *v4);
 
 // HELP
 float	to_radians(float degrees);
@@ -35,6 +36,7 @@ float	to_degrees(float radians);
 // MAT3
 float	*mat3_identity(float *result);
 float	*mat3_assign(float *result, float *m0);
+float	*mat4_to_mat3(float *res, float *m4);
 
 // MAT4
 float	*mat4_assign(float *result, float *m0);

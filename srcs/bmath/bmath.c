@@ -85,9 +85,36 @@ float	vec3_distance(float *v0, float *v1)
 
 float	*vec3_multiply_mat3(float *res, float *v, float *m)
 {
-	res[0] = m[0] * v[0] + m[3] * v[1] + m[6] * v[2];
-	res[1] = m[1] * v[0] + m[4] * v[1] + m[7] * v[2];
-	res[2] = m[2] * v[0] + m[5] * v[1] + m[8] * v[2];
+	float	xyz[VEC3_SIZE];
+
+	xyz[0] = v[0];
+	xyz[1] = v[1];
+	xyz[2] = v[2];
+	res[0] = m[0] * xyz[0] + m[3] * xyz[1] + m[6] * xyz[2];
+	res[1] = m[1] * xyz[0] + m[4] * xyz[1] + m[7] * xyz[2];
+	res[2] = m[2] * xyz[0] + m[5] * xyz[1] + m[8] * xyz[2];
+	return (res);
+}
+
+float	*vec4_to_vec3(float *res, float *v4)
+{
+	res[0] = v4[0];
+	res[1] = v4[1];
+	res[2] = v4[2];
+	return (res);
+}
+
+float	*mat4_to_mat3(float *res, float *m4)
+{
+	res[0] = m4[0];
+	res[1] = m4[1];
+	res[2] = m4[2];
+	res[3] = m4[4];
+	res[4] = m4[5];
+	res[5] = m4[6];
+	res[6] = m4[8];
+	res[7] = m4[9];
+	res[8] = m4[10];
 	return (res);
 }
 
@@ -106,10 +133,16 @@ float	*vec4_new(float *res, float x, float y, float z, float w)
 
 float	*vec4_multiply_mat4(float *res, float *v, float *m)
 {
-	res[0] = m[0] * v[0] + m[4] * v[1] + m[8] * v[2] + m[12] * v[3];
-	res[1] = m[1] * v[0] + m[5] * v[1] + m[9] * v[2] + m[13] * v[3];
-	res[2] = m[2] * v[0] + m[6] * v[1] + m[10] * v[2] + m[14] * v[3];
-	res[3] = m[3] * v[0] + m[7] * v[1] + m[11] * v[2] + m[15] * v[3];
+	float	xyzw[VEC4_SIZE];
+
+	xyzw[0] = v[0];
+	xyzw[1] = v[1];
+	xyzw[2] = v[2];
+	xyzw[3] = v[3];
+	res[0] = m[0] * xyzw[0] + m[4] * xyzw[1] + m[8] * xyzw[2] + m[12] * xyzw[3];
+	res[1] = m[1] * xyzw[0] + m[5] * xyzw[1] + m[9] * xyzw[2] + m[13] * xyzw[3];
+	res[2] = m[2] * xyzw[0] + m[6] * xyzw[1] + m[10] * xyzw[2] + m[14] * xyzw[3];
+	res[3] = m[3] * xyzw[0] + m[7] * xyzw[1] + m[11] * xyzw[2] + m[15] * xyzw[3];
 	return (res);
 }
 

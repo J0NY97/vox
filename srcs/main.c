@@ -94,29 +94,14 @@ int	main(void)
 ///////////
 		// Collision detection;
 ///////////
-
 		//ellipsoid_collision(player.camera.pos, player.velocity, &retrotv_model.info->mesh);
+		//update_entity(&retrotv);
 
 		t_aabb aabb;
 		aabb_create(&aabb, retrotv_model.info->mesh.vertices, retrotv_model.info->mesh.vertex_amount);
 		aabb_transform(&aabb, retrotv.model);
 
-		t_aabb player_aabb;
-		new_vec3(player_aabb.min, -1, -1, -1);
-		new_vec3(player_aabb.max, 1, 1, 1);
-		float player_trans[MAT4_SIZE];
-		mat4_identity(player_trans);
-		mat4_translate(player_trans, player_trans, player.camera.pos);
-		vec3_multiply_mat3(player_aabb.min, player_aabb.min, player_trans);
-		vec3_multiply_mat3(player_aabb.max, player_aabb.max, player_trans);
-
-		retrotv.use_color = aabb_aabb_collision(&aabb, &player_aabb);
-
-		if (retrotv.use_color)
-			LG_INFO("we are inside");
-		
-		aabb_print(&aabb);
-		aabb_print(&player_aabb);
+		retrotv.use_color = point_aabb_collision(player.camera.pos, &aabb);
 ///////////
 		// End of coldet
 ///////////

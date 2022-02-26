@@ -32,9 +32,9 @@ void	aabb_create(t_aabb *res, float *vertices, size_t vertex_amount)
 		res->min[1] = fmin(res->min[1], vertices[i * 3 + 1]);
 		res->min[2] = fmin(res->min[2], vertices[i * 3 + 2]);
 
-		res->max[0] = fmin(res->max[0], vertices[i * 3 + 0]);
-		res->max[1] = fmin(res->max[1], vertices[i * 3 + 1]);
-		res->max[2] = fmin(res->max[2], vertices[i * 3 + 2]);
+		res->max[0] = fmax(res->max[0], vertices[i * 3 + 0]);
+		res->max[1] = fmax(res->max[1], vertices[i * 3 + 1]);
+		res->max[2] = fmax(res->max[2], vertices[i * 3 + 2]);
 	}
 }
 
@@ -44,19 +44,39 @@ void	aabb_create(t_aabb *res, float *vertices, size_t vertex_amount)
 */
 void	aabb_transform(t_aabb *a, float *model)
 {
-	vec3_multiply_mat3(a->min, a->min, model);
-	vec3_multiply_mat3(a->max, a->max, model);
+	float	v4[VEC4_SIZE];
+
+	vec4_new(v4, a->min[0], a->min[1], a->min[2], 1);
+	vec4_multiply_mat4(v4, v4, model);
+	vec4_to_vec3(a->min, v4);
+
+	vec4_new(v4, a->max[0], a->max[1], a->max[2], 1);
+	vec4_multiply_mat4(v4, v4, model);
+	vec4_to_vec3(a->max, v4);
 }
 
 /*
- *
+ * Checks if aabb is inside aabb;
 */
 int	aabb_aabb_collision(t_aabb *a, t_aabb *b)
 {
 	return (
 		(a->min[0] <= b->max[0] && a->max[0] >= b->min[0]) &&
 		(a->min[1] <= b->max[1] && a->max[1] >= b->min[1]) &&
-		(a->min[2] <= b->max[2] && a->max[2] >= b->min[2]));
+		(a->min[2] <= b->max[2] && a->max[2] >= b->min[2]) &&
+		1);
+}
+
+/*
+ * Checks if point is inside aabb;
+*/
+int	point_aabb_collision(float *point, t_aabb *b)
+{
+	return (
+		(point[0] >= b->min[0] && point[0] <= b->max[0]) &&
+		(point[1] >= b->min[1] && point[1] <= b->max[1]) &&
+		(point[2] >= b->min[2] && point[2] <= b->max[2]) &&
+		1);
 }
 
 void	aabb_print(t_aabb *a)
@@ -66,5 +86,4 @@ void	aabb_print(t_aabb *a)
 		printf("\tmin[%d] = %.2f;\n", i, a->min[i]);
 	for (int i = 0; i < 3; i++)
 		printf("\tmax[%d] = %.2f;\n", i, a->max[i]);
-
 }
