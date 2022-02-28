@@ -77,7 +77,7 @@ void	render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader 
 	render_model(model);
 
 	glUniform1i(glGetUniformLocation(shader->program, "useColor"), 1);
-	aabb_render(&entity->aabb);
+	render_box(entity->aabb.min, entity->aabb.max);
 
 	glUseProgram(0);
 	glBindVertexArray(0);
@@ -114,3 +114,103 @@ void	entity_collision_detection(t_list *entity_list, float *point)
 		curr = curr->next;
 	}
 }
+
+// TODO: Move this to some place that makes more sense;
+// Improvement?: Have the vbo, vao, ebo in a static;
+/*
+ * Pretty self-explanatory; 
+ * 
+ * Renders box immediately;
+ * Creates temporary vao, vbo, ebo that gets deleted after used;
+ * 
+ * NOTE: you have to glUseProgram before calling this function, with attribs:
+ * 	0 = pos,
+ * 	1 = col,
+*/
+void	render_box(float *min, float *max)
+{
+	float	vertices[] = {
+		// front
+		min[0], max[1], max[2], // top left		0
+		max[0], max[1], max[2], // top right	1
+		min[0], min[1], max[2], // bot left		2
+		max[0], min[1], max[2], // bot right	3
+
+		// back
+		min[0], max[1], min[2], // top left		4
+		max[0], max[1], min[2], // top right	5
+		min[0], min[1], min[2], // bot left		6
+		max[0], min[1], min[2] // bot right		7
+	};
+
+	float	colors[8 * 3];
+	float	temp[3] = {255, 0, 0};
+	memset_pattern(colors, 8 * 3 * sizeof(float), temp, sizeof(float) * 3);
+
+	unsigned int	indices[] = {
+		// front
+			//ftl, ftr, fbl,
+			//ftr, fbr, fbl
+			0, 1, 2,
+			1, 3, 2,
+		// right
+			//ftr, btr, fbr,
+			//btr, bbr, fbr,
+			1, 5, 3,
+			5, 7, 3,
+		// back
+			//btl, btr, bbl,
+			//btr, bbr, bbl,
+			4, 5, 6,
+			5, 7, 6,
+		// left
+			//btl, ftl, bbl,
+			//ftl, fbl, bbl,
+			4, 0, 6,
+			0, 2, 6,
+		// top
+			//btl, btr, ftl,
+			//btr, ftr, ftl,
+			4, 5, 0,
+			5, 1, 0,
+		// bot
+			//bbl, bbr, fbl,
+			//bbr, fbr, fbl
+			6, 7, 2,
+			7, 3, 2
+	};
+
+	GLuint	vao;
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+
+	GLuint	vbo;
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
+
+	GLuint	vbo_col;
+	glGenBuffers(1, &vbo_col);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_col);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(colors), &colors[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
+
+	GLuint	ebo;
+	glGenBuffers(1, &ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &indices[0], GL_STATIC_DRAW);
+
+	glDrawElements(GL_LINE_LOOP, sizeof(indices) / sizeof(unsigned int), GL_UNSIGNED_INT, NULL);
+
+	glDeleteVertexArrays(1, &vao);
+	glDeleteBuffers(1, &vbo);
+	glDeleteBuffers(1, &ebo);
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+

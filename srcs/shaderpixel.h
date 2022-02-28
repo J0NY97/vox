@@ -66,6 +66,8 @@ void				update_entity(t_entity *entity);
 void				render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader *shader);
 void				entity_collision_detection(t_list *entity_list, float *point);
 
+void				render_box(float *min, float *max); // TODO: Move this
+
 ///////////////////
 //	MODEL
 ///////////////////

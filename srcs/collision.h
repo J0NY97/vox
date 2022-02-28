@@ -17,7 +17,6 @@ void		aabb_create(t_aabb *res, float *vertices, size_t vertex_amount);
 void		aabb_transform(t_aabb *a, float *model);
 int			aabb_aabb_collision(t_aabb *a, t_aabb *b);
 int			point_aabb_collision(float *point, t_aabb *b);
-void		aabb_render(t_aabb *a);
 
 void		aabb_print(t_aabb *a);
 
