@@ -83,6 +83,11 @@ float	vec3_distance(float *v0, float *v1)
 	return (sqrt(a + b + c));
 }
 
+float	vec3_length(float *v0)
+{
+	return sqrt(v0[0] * v0[0] + v0[1] * v0[1] + v0[2] * v0[2]);
+}
+
 float	*vec3_multiply_mat3(float *res, float *v, float *m)
 {
 	float	xyz[VEC3_SIZE];
