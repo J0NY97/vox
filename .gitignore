@@ -1,6 +1,10 @@
 *.exe
+*.out
 *.o
 *.a
 *.d
+sp
+shaderpixel
 obj/
+.DS_Store
 models/retrotv/uploads_files_2941243_retrotv0319_textures_free.zip

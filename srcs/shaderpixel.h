@@ -23,9 +23,9 @@
 # include "bobj_loader.h"
 # include "collision.h"
 
-# define DEBUG 1
+# define DEBUG 0
 
-# define ROOT_PATH "C:/Users/Jony/source/repos/shaderpixel/"
+# define ROOT_PATH "./"
 # define MODEL_PATH ROOT_PATH"models/"
 # define SHADER_PATH ROOT_PATH"shaders/"
 
@@ -55,6 +55,7 @@ typedef struct	s_entity
 	float			trans_mat[MAT4_SIZE];
 	float			model_mat[MAT4_SIZE];
 
+	t_aabb			aabb;
 	int				collision;
 
 	t_model			*model;
@@ -235,5 +236,11 @@ typedef struct	s_shaderpixel
 	int			win_w;
 	int			win_h;
 }	t_shaderpixel;
+
+///////////////////
+//	HELP
+///////////////////
+
+void		memset_pattern(void *dest, size_t dest_size, void *src, size_t src_size);
 
 #endif
