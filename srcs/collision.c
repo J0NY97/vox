@@ -87,13 +87,13 @@ void	aabb_render(t_aabb *a)
 		a->min[0], a->max[1], a->max[2], // top left	0
 		a->max[0], a->max[1], a->max[2], // top right	1
 		a->min[0], a->min[1], a->max[2], // bot left	2
-		a->max[0], a->min[1], a->max[2], // bot right	4
+		a->max[0], a->min[1], a->max[2], // bot right	3
 
 		// back
-		a->min[0], a->max[1], a->min[2], // top left	5
-		a->max[0], a->max[1], a->min[2], // top right	6
-		a->min[0], a->min[1], a->min[2], // bot left	7
-		a->max[0], a->min[1], a->min[2] // bot right	8
+		a->min[0], a->max[1], a->min[2], // top left	4
+		a->max[0], a->max[1], a->min[2], // top right	5
+		a->min[0], a->min[1], a->min[2], // bot left	6
+		a->max[0], a->min[1], a->min[2] // bot right	7
 	};
 
 	float	colors[8 * 3];
@@ -105,32 +105,32 @@ void	aabb_render(t_aabb *a)
 			//ftl, ftr, fbl,
 			//ftr, fbr, fbl
 			0, 1, 2,
-			1, 4, 2,
+			1, 3, 2,
 		// right
 			//ftr, btr, fbr,
 			//btr, bbr, fbr,
-			1, 6, 4,
-			6, 8, 4,
+			1, 5, 3,
+			5, 7, 3,
 		// back
 			//btl, btr, bbl,
 			//btr, bbr, bbl,
-			5, 6, 7,
-			6, 8, 7,
+			4, 5, 6,
+			5, 7, 6,
 		// left
 			//btl, ftl, bbl,
 			//ftl, fbl, bbl,
-			5, 0, 7,
-			0, 2, 7,
+			4, 0, 6,
+			0, 2, 6,
 		// top
 			//btl, btr, ftl,
 			//btr, ftr, ftl,
-			5, 6, 0,
-			6, 1, 0,
+			4, 5, 0,
+			5, 1, 0,
 		// bot
 			//bbl, bbr, fbl,
 			//bbr, fbr, fbl
-			7, 8, 2,
-			8, 4, 2
+			6, 7, 2,
+			7, 3, 2
 	};
 
 //	printf("vertices size : %d * %d * %d = %d == %d\n", sizeof(float), 8, 3, sizeof(float) * 8 * 3, sizeof(vertices));
@@ -160,11 +160,7 @@ void	aabb_render(t_aabb *a)
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &indices[0], GL_STATIC_DRAW);
 
-	GLint	prev_polygon_mode;
-	glGetIntegerv(GL_POLYGON_MODE, &prev_polygon_mode);
-
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(unsigned int), GL_UNSIGNED_INT, NULL);
+	glDrawElements(GL_LINE_LOOP, sizeof(indices) / sizeof(unsigned int), GL_UNSIGNED_INT, NULL);
 
 	glDeleteVertexArrays(1, &vao);
 	glDeleteBuffers(1, &vbo);
@@ -172,7 +168,6 @@ void	aabb_render(t_aabb *a)
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	glPolygonMode(GL_FRONT_AND_BACK, prev_polygon_mode);
 }
 
 void	aabb_print(t_aabb *a)
