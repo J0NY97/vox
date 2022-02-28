@@ -9,7 +9,7 @@ char	*remove_file_name(const char *file)
 	while (--temp > 0)
 		if (file[temp] == '/')
 			break ;
-	char *str = ft_strndup(file, temp + 1);	
+	char *str = ft_strndup(file, temp + 1);
 	return (str);
 }
 
@@ -49,20 +49,16 @@ int	obj_load(t_obj *obj, const char *obj_file_path)
 	curr_elem->index_value_amount = 3;
 	usemtl_found = 0;
 
-	char	*file_content;
+	LG_DEBUG("Banana");
 	char	line[256];
-	LG_DEBUG("Reading whole file.");
-	file_content = get_file_content(obj_file_path);
-	LG_DEBUG("Whole file read.");
-	//lines = ft_strsplit(file_content, '\n'); // TOOO SLOW!
-	int amount = get_elem_amount(file_content, '\n') * 2;
-	LG_DEBUG("moutn got.");
-	int *elem_pos = malloc(sizeof(int) * amount); // remember to free;
-	LG_DEBUG("loc.");
+	char	*file_content = get_file_content(obj_file_path);
+	if (!file_content)
+		LG_ERROR("Couldnt read <%s>", obj_file_path);
+	int		amount = get_elem_amount(file_content, '\n') * 2;
+	int		*elem_pos = malloc(sizeof(int) * amount); // remember to free;
 	fill_elem_pos(elem_pos, file_content, '\n');
-	LG_DEBUG("Splat.");
-	//ft_strdel(&file_content); // Add this to the end;
-	LG_DEBUG("Dill DAll DOll.");
+	LG_DEBUG("Split");
+
 	int ding = 0;
 
 	////////////
@@ -106,7 +102,7 @@ int	obj_load(t_obj *obj, const char *obj_file_path)
 		ft_strncpy(line, &file_content[elem_pos[ding]], elem_pos[ding + 1]);
 		line[elem_pos[ding + 1]] = 0;
 
-		arr = ft_strsplit(line, ' ');	
+		arr = ft_strsplit(line, ' ');
 		if (line[0] == 'v') // vertices, uvs, normals
 		{
 			if (line[1] == 't') // uvs
@@ -344,7 +340,7 @@ int	ft_strlentodelim(char *str, int c)
 char	**ft_strsplitdup(char *str, char delim)
 {
 	char	**arr;
-	int		wc;	
+	int		wc;
 	int		i;
 	int		wl;
 
@@ -503,7 +499,7 @@ void	new_index(t_obj *obj, int v, int vt, int vn)
 /*
  * NOTE:
  * 	This function is specifically made for the index getter.
- * 
+ *
  * We always malloc 3 places for the indices.
  * 	If there is no vt and/or no vn we just place an empty char * there;
 */
@@ -588,7 +584,7 @@ void	element_builder(t_obj *obj, char **arr)
  * Takes in the pointer of the material amount pointer you want it to save the
  * material count in, and the path of the materials file.
  * Returns array of materials loaded.
- * 
+ *
  * If the mat_file isnt found in direct path, we try with concatting with root path;
 */
 t_material	*material_load(

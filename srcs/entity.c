@@ -27,7 +27,7 @@ void	update_entity(t_entity *entity)
 	mat4_identity(entity->scale_mat);
 	mat4_scale(entity->scale_mat, entity->scale_mat,
 		new_vec3(temp, entity->scale_value, entity->scale_value, entity->scale_value));
-	
+
 
 	mat4_identity(entity->rot_mat);
 
@@ -78,6 +78,9 @@ void	render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader 
 
 	render_model(model);
 
+	glUniform1i(glGetUniformLocation(shader->program, "useColor"), 1);
+	aabb_render(&entity->aabb);
+
 	glUseProgram(0);
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -105,8 +108,9 @@ void	entity_collision_detection(t_list *entity_list, float *point)
 	while (curr)
 	{
 		entity = curr->content;
-		aabb_create(&aabb, entity->model->info->mesh.vertices,
+		aabb_create(&entity->aabb, entity->model->info->mesh.vertices,
 			entity->model->info->mesh.vertex_amount);
+		aabb = entity->aabb;
 		aabb_transform(&aabb, entity->model_mat);
 		entity->collision = point_aabb_collision(point, &aabb);
 		curr = curr->next;

@@ -1,4 +1,5 @@
 rwildcard = $(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
+SHELL_NAME = $(shell uname -s)
 
 NAME = sp #shaderpixel
 CFILES = \
@@ -14,6 +15,7 @@ CFILES = \
 	key.c \
 	collision.c \
 	ellipsoid_collision.c \
+	help.c \
 	bimgf/bimgf_bmp.c \
 	bimgf/bimgf_help.c \
 	bimgf/bimgf_jpg.c \
@@ -38,13 +40,13 @@ INCS = \
 	-I$(LIB_DIR)/libft \
 	-I$(LIB_DIR)/libpf \
 	-I$(LIB_DIR)/liblg \
-	-I$(LIB_DIR)/GLFW \
 	-I$(CDIR)/ \
 	-I$(CDIR)/bobj \
 	-I$(CDIR)/bmath \
 	-I$(CDIR)/bimgf \
 	-I$(CDIR)/glad \
 	-I$(CDIR)/KHR \
+	-I$(LIB_DIR)/GLFW \
 
 LIB_DIRS = \
 	-L$(LIB_DIR)/libft \
@@ -52,7 +54,13 @@ LIB_DIRS = \
 	-L$(LIB_DIR)/liblg \
 	-L$(LIB_DIR)/GLFW \
 
-LIBS = -lpf -lft -llg -lglfw3 -lOpenGl32 -lgdi32 -lpthread
+
+LIBS = -lpf -lft -llg -lglfw3 -lpthread
+ifeq ($(SHELL_NAME), Darwin)
+LIBS += -framework OpenGL -framework Cocoa -framework IOKit
+else
+LIBS += -lOpenGl32 -lgdi32
+endif
 
 FLAGS = -Wall -Wextra -Wno-unused-variable
 

@@ -7,14 +7,29 @@ void	init(t_shaderpixel *sp)
 
 	if (!glfwInit())
 		LG_ERROR("Couldn\'t init glfw.");
+
+#ifdef __APPLE__
+	glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 2);
+	glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#else
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+#endif
+
 	sp->win_w = 1280;
 	sp->win_h = 720;
 	sp->win = glfwCreateWindow(sp->win_w, sp->win_h, "Shader Pixel", NULL, NULL);
+
+	char *buffer;
 	if (!sp->win)
-		LG_ERROR("Couldn\'t create window.");
+	{
+		glfwGetError(&buffer);
+		LG_ERROR("Couldn\'t create window. (%s)", buffer);
+	}
+
 	glfwMakeContextCurrent(sp->win);
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 		LG_ERROR("Couldn\'t load glad.");
@@ -44,7 +59,7 @@ int	main(void)
 	t_player	player;
 	new_player(&player);
 
-	new_vec3(player.camera.pos, 0, 0, 5);
+	new_vec3(player.camera.pos, 0, 0, 2.5);
 	player.camera.viewport_w = sp.win_w;
 	player.camera.viewport_h = sp.win_h;
 
@@ -55,7 +70,7 @@ int	main(void)
 	t_entity	retrotv;
 	new_entity(&retrotv);
 	retrotv.model = &retrotv_model;
-	new_vec3(retrotv.pos, 0, 0, -5);
+	new_vec3(retrotv.pos, 0, 0, -2.5);
 
 	add_to_list(&entity_collision_list, &retrotv, 0);
 
@@ -107,7 +122,7 @@ int	main(void)
 		update_camera(&player.camera);
 
 		render_entity(&retrotv, &player.camera, &retrotv_model, &shader1);
-		render_entity(&dust2, &player.camera, &dust2_model, &shader1);
+		//render_entity(&dust2, &player.camera, &dust2_model, &shader1);
 
 		glfwSwapBuffers(sp.win);
 

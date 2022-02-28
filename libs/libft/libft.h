@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   libft.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
+/*   By: jsalmi <jsalmi@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/18 11:56:18 by nneronin          #+#    #+#             */
-/*   Updated: 2022/02/17 03:07:20 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/02/27 09:22:00 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -166,5 +166,7 @@ double				ft_timer_end(void);
 void				ft_timer_start(void);
 void				ft_lstdelone_nonfree(t_list **lst, t_list *del);
 char				*get_file_content(const char *file);
+void				fill_elem_pos(int *elem_pos, char *str, char delim);
+int					get_elem_amount(const char *str, char delim);
 
 #endif

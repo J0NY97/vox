@@ -79,25 +79,100 @@ int	point_aabb_collision(float *point, t_aabb *b)
 		1);
 }
 
+#include "shaderpixel.h"
 void	aabb_render(t_aabb *a)
 {
 	float	vertices[] = {
 		// front
-		a->min[0], a->max[1], a->max[2], // top left
-		a->max[0], a->max[1], a->max[2], // top right
-		a->min[0], a->min[1], a->max[2], // bot left
-		a->max[0], a->min[1], a->max[2], // bot right
+		a->min[0], a->max[1], a->max[2], // top left	0
+		a->max[0], a->max[1], a->max[2], // top right	1
+		a->min[0], a->min[1], a->max[2], // bot left	2
+		a->max[0], a->min[1], a->max[2], // bot right	4
 
 		// back
-		a->min[0], a->max[1], a->min[2], // top left
-		a->max[0], a->max[1], a->min[2], // top right
-		a->min[0], a->min[1], a->min[2], // bot left
-		a->max[0], a->min[1], a->min[2] // bot right
+		a->min[0], a->max[1], a->min[2], // top left	5
+		a->max[0], a->max[1], a->min[2], // top right	6
+		a->min[0], a->min[1], a->min[2], // bot left	7
+		a->max[0], a->min[1], a->min[2] // bot right	8
 	};
-	// vao
-	// vbo
-	// ebo
-	// program
+
+	float	colors[8 * 3];
+	float	temp[3] = {255, 0, 0};
+	memset_pattern(colors, 8 * 3 * sizeof(float), temp, sizeof(float) * 3);
+
+	unsigned int	indices[] = {
+		// front
+			//ftl, ftr, fbl,
+			//ftr, fbr, fbl
+			0, 1, 2,
+			1, 4, 2,
+		// right
+			//ftr, btr, fbr,
+			//btr, bbr, fbr,
+			1, 6, 4,
+			6, 8, 4,
+		// back
+			//btl, btr, bbl,
+			//btr, bbr, bbl,
+			5, 6, 7,
+			6, 8, 7,
+		// left
+			//btl, ftl, bbl,
+			//ftl, fbl, bbl,
+			5, 0, 7,
+			0, 2, 7,
+		// top
+			//btl, btr, ftl,
+			//btr, ftr, ftl,
+			5, 6, 0,
+			6, 1, 0,
+		// bot
+			//bbl, bbr, fbl,
+			//bbr, fbr, fbl
+			7, 8, 2,
+			8, 4, 2
+	};
+
+//	printf("vertices size : %d * %d * %d = %d == %d\n", sizeof(float), 8, 3, sizeof(float) * 8 * 3, sizeof(vertices));
+//	printf("indices size : %d * %d * %d = %d == %d\n", sizeof(unsigned int), 12, 3, sizeof(unsigned int) * 12 * 3, sizeof(indices));
+
+	GLuint	vao;
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+
+	GLuint	vbo;
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
+
+	GLuint	vbo_col;
+	glGenBuffers(1, &vbo_col);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_col);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(colors), &colors[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
+
+	GLuint	ebo;
+	glGenBuffers(1, &ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &indices[0], GL_STATIC_DRAW);
+
+	GLint	prev_polygon_mode;
+	glGetIntegerv(GL_POLYGON_MODE, &prev_polygon_mode);
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(unsigned int), GL_UNSIGNED_INT, NULL);
+
+	glDeleteVertexArrays(1, &vao);
+	glDeleteBuffers(1, &vbo);
+	glDeleteBuffers(1, &ebo);
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glPolygonMode(GL_FRONT_AND_BACK, prev_polygon_mode);
 }
 
 void	aabb_print(t_aabb *a)
