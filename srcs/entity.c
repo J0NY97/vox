@@ -3,8 +3,6 @@
 void	new_entity(t_entity *entity)
 {
 	new_vec3(entity->pos, 0.0f, 0.0f, 0.0f);
-	new_vec3(entity->rot_mat, 1.0f, 1.0f, 1.0f);
-	new_vec3(entity->scale_mat, 1.0f, 1.0f, 1.0f);
 	entity->rot_x_angle = 0.0f;
 	entity->rot_y_angle = 0.0f;
 	entity->rot_z_angle = 0.0f;
