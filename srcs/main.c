@@ -140,6 +140,7 @@ int	main(void)
 		//render_entity(&dust2, &player.camera, &dust2_model, &shader1);
 
 //// 2D / UI /////
+		glDisable(GL_DEPTH_TEST);
 		render_2d_line((float []){-1, 0.5, 0}, (float []){0, 0, 0}, (float []){1, 1, 1});
 
 		glfwSwapBuffers(sp.win);

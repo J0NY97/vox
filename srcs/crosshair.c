@@ -89,12 +89,26 @@ void	render_2d_line(float *p1, float *p2, float *col)
 		info.vertices[i] = p1[i];
 	for (; i < 6; i++)
 		info.vertices[i] = p2[i - 3];
+
+	for (int j = 0; j < 6; j++)
+		ft_printf("%.2f ", info.vertices[j]);
+	ft_printf("\n");
+	for (int j = 0; j < 3; j++)
+		ft_printf("%.2f ", col[j]);
+	ft_printf("\n");
+
 	glBindVertexArray(info.vao);
 	glBindBuffer(GL_ARRAY_BUFFER, info.vbo_pos);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6, &info.vertices[0], GL_DYNAMIC_DRAW);
 	glUniform3fv(glGetUniformLocation(info.shader.program, "inColor"), 1, col);
 
+	glDrawArrays(GL_LINES, 0, 2);
+
 	int error = glGetError();
 	if (error)
 		LG_WARN("(%d)", error);
+
+	glUseProgram(0);
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
