@@ -130,6 +130,8 @@ struct	s_shader
 };
 
 void		new_shader(t_shader *shader, const char *vs, const char *fs);
+int			create_shader(GLuint *shader, const char *content, GLenum type);
+void		check_program_errors(GLuint program);
 
 ///////////////////
 //	TEXTURE
@@ -193,6 +195,7 @@ typedef struct s_player
 void		new_player(t_player *player);
 void		player_events(t_player *player, t_key *keys, GLFWwindow *win);
 void		player_movement(t_player *player, GLFWwindow *win, t_fps fps);
+void		player_apply_velocity(t_player *player);
 void		player_looking(t_player *player, GLFWwindow *win, t_fps fps);
 
 ///////////////////
@@ -244,5 +247,17 @@ typedef struct	s_shaderpixel
 ///////////////////
 
 void		memset_pattern(void *dest, size_t dest_size, void *src, size_t src_size);
+
+///////////////////
+//	Crosshair
+///////////////////
+
+void		new_crosshair_shader(t_shader *shader);
+
+///////////////////
+// Line Draw
+///////////////////
+
+void		render_2d_line(float *p1, float *p2, float *col);
 
 #endif

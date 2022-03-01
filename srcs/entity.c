@@ -118,11 +118,11 @@ void	entity_collision_detection(t_list *entity_list, float *point)
 // TODO: Move this to some place that makes more sense;
 // Improvement?: Have the vbo, vao, ebo in a static;
 /*
- * Pretty self-explanatory; 
- * 
+ * Pretty self-explanatory;
+ *
  * Renders box immediately;
  * Creates temporary vao, vbo, ebo that gets deleted after used;
- * 
+ *
  * NOTE: you have to glUseProgram before calling this function, with attribs:
  * 	0 = pos,
  * 	1 = col,
@@ -204,7 +204,12 @@ void	render_box(float *min, float *max)
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &indices[0], GL_STATIC_DRAW);
 
-	glDrawElements(GL_LINE_LOOP, sizeof(indices) / sizeof(unsigned int), GL_UNSIGNED_INT, NULL);
+	GLint	prev_pol_mode;
+	glGetIntegerv(GL_POLYGON_MODE, &prev_pol_mode);
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(unsigned int), GL_UNSIGNED_INT, NULL);
+	glPolygonMode(GL_FRONT_AND_BACK, prev_pol_mode);
 
 	glDeleteVertexArrays(1, &vao);
 	glDeleteBuffers(1, &vbo);

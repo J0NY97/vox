@@ -16,7 +16,7 @@ float	*new_vec3(float *src, float x, float y, float z);
 float	*vec3_cpy(float *dest, float *src);
 void	vec3_string(float *v);
 float	*vec3_add(float *result, float *v0, float *v1);
-float	*vec3_subtract(float *result, float *v0, float *v1);
+float	*vec3_sub(float *result, float *v0, float *v1);
 float	*vec3_multiply_f(float *result, float *v0, float f);
 float	*vec3_normalize(float *result, float *v0);
 float	*vec3_cross(float *result, float *v0, float *v1);

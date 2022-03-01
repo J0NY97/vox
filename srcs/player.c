@@ -28,6 +28,9 @@ void	player_events(t_player *player, t_key *keys, GLFWwindow *win)
 	}
 }
 
+/*
+ * Calculates the wish velocity;
+*/
 void	player_movement(t_player *player, GLFWwindow *win, t_fps fps)
 {
 	float	temp0[VEC3_SIZE];
@@ -62,13 +65,15 @@ void	player_movement(t_player *player, GLFWwindow *win, t_fps fps)
 
 	vec3_add(player->velocity, player->velocity, temp0);
 	vec3_add(player->velocity, player->velocity, temp1);
+}
 
+void	player_apply_velocity(t_player *player)
+{
 	vec3_add(player->camera.pos, player->camera.pos, player->velocity);
-
 	new_vec3(player->velocity, 0, 0, 0);
 }
 
-void	player_movement_old(t_player *player, GLFWwindow *win, t_fps fps)
+void	player_movement_old_basically_noclip(t_player *player, GLFWwindow *win, t_fps fps)
 {
 	float	temp[VEC3_SIZE];
 	float	speed_multiplier = 1.0f;
@@ -86,14 +91,14 @@ void	player_movement_old(t_player *player, GLFWwindow *win, t_fps fps)
 	else if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS)
 	{
 		vec3_multiply_f(temp, player->camera.front, speed);
-		vec3_subtract(player->camera.pos, player->camera.pos, temp);
+		vec3_sub(player->camera.pos, player->camera.pos, temp);
 	}
 	if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS)
 	{
 		vec3_cross(temp, player->camera.front, player->camera.up);
 		vec3_normalize(temp, temp);
 		vec3_multiply_f(temp, temp, speed);
-		vec3_subtract(player->camera.pos, player->camera.pos, temp);
+		vec3_sub(player->camera.pos, player->camera.pos, temp);
 	}
 	else if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS)
 	{

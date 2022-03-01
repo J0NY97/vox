@@ -12,12 +12,23 @@ int	create_shader(GLuint *shader, const char *content, GLenum type)
 	glGetShaderiv(shdr, GL_COMPILE_STATUS, &status);
 	glGetShaderInfoLog(shdr, 512, NULL, buffer);
 	if (status != GL_TRUE)
-	{     
+	{
 		LG_WARN("Compilation error => %s", buffer);
 		return (0);
 	}
 	*shader = shdr;
 	return (1);
+}
+
+void	check_program_errors(GLuint program)
+{
+	char	buffer[512];
+	GLint	status;
+
+	glGetProgramiv(program, GL_LINK_STATUS, &status);
+	glGetProgramInfoLog(program, 512, NULL, buffer);
+	if (status != GL_TRUE)
+		LG_WARN("Creation error => %s", buffer);
 }
 
 int	create_program(GLuint *result, GLuint vs, GLuint fs)
@@ -58,10 +69,14 @@ void	new_shader(t_shader *shader, const char *vs, const char *fs)
 			LG_WARN("Couldnt get file content <%f>", fs);
 		return ;
 	}
-	if (!create_shader(&v_shader, vs_cont, GL_VERTEX_SHADER)
-		|| !create_shader(&f_shader, fs_cont, GL_FRAGMENT_SHADER))
+	if (!create_shader(&v_shader, vs_cont, GL_VERTEX_SHADER))
 	{
-		LG_WARN("Couldnt create shaders from file content.");
+		LG_WARN("Couldnt create shaders from vertex shader content.");
+		return ;
+	}
+	if (!create_shader(&f_shader, fs_cont, GL_FRAGMENT_SHADER))
+	{
+		LG_WARN("Couldnt create shaders from fragment shader content.");
 		return ;
 	}
 	if (!create_program(&shader->program, v_shader, f_shader))

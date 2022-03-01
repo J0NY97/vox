@@ -92,6 +92,9 @@ int	main(void)
 	t_fractal2d	fractal;
 	new_fractal2d(&fractal);
 
+	t_shader	crosshair_shader;
+	new_crosshair_shader(&crosshair_shader);
+
 	int error = glGetError();
 	if (error)
 		LG_ERROR("gl errors before while : %d", error);
@@ -110,8 +113,20 @@ int	main(void)
 		player_movement(&player, sp.win, fps);
 		if (player.enabled_mouse)
 			player_looking(&player, sp.win, fps);
-
 		entity_collision_detection(entity_collision_list, player.camera.pos);
+
+////////////////////////
+		float p1[VEC3_SIZE];
+		new_vec3(p1, retrotv.aabb.min[0], retrotv.aabb.max[1], retrotv.aabb.max[2]);
+		float p2[VEC3_SIZE];
+		new_vec3(p2, retrotv.aabb.max[0], retrotv.aabb.max[1], retrotv.aabb.max[2]);
+		float p3[VEC3_SIZE];
+		new_vec3(p3, retrotv.aabb.min[0], retrotv.aabb.min[1], retrotv.aabb.max[2]);
+
+		line_triangle_intersect(player.camera.pos, player.camera.front, p1, p2, p3);
+////////////////////////
+
+		player_apply_velocity(&player);
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -123,6 +138,9 @@ int	main(void)
 
 		render_entity(&retrotv, &player.camera, &retrotv_model, &shader1);
 		//render_entity(&dust2, &player.camera, &dust2_model, &shader1);
+
+//// 2D / UI /////
+		render_2d_line((float []){-1, 0.5, 0}, (float []){0, 0, 0}, (float []){1, 1, 1});
 
 		glfwSwapBuffers(sp.win);
 

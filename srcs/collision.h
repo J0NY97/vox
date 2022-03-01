@@ -4,9 +4,10 @@
 # include "math.h"
 # include "stdio.h"
 
-/*
- * Axis-aligned bounding box;
- */
+////////////////////////
+//	AXIS ALIGNED BOUNDING BOX COLLISION
+////////////////////////
+
 typedef struct s_aabb
 {
 	float	min[3];
@@ -19,5 +20,11 @@ int			aabb_aabb_collision(t_aabb *a, t_aabb *b);
 int			point_aabb_collision(float *point, t_aabb *b);
 
 void		aabb_print(t_aabb *a);
+
+////////////////////////
+//	TRIANGLE COLLISION
+////////////////////////
+
+int			line_triangle_intersect(float *orig, float *dir, float *p1, float *p2, float *p3);
 
 #endif

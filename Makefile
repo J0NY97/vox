@@ -15,6 +15,8 @@ CFILES = \
 	key.c \
 	collision.c \
 	ellipsoid_collision.c \
+	triangle_collision.c \
+	crosshair.c \
 	help.c \
 	bimgf/bimgf_bmp.c \
 	bimgf/bimgf_help.c \

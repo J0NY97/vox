@@ -9,8 +9,8 @@ int	is_point_in_triangle(float *point, float *p1, float *p2, float *p3)
 	float	e0[VEC3_SIZE];
 	float	e1[VEC3_SIZE];
 
-	vec3_subtract(e0, p2, p1);
-	vec3_subtract(e1, p3, p1);
+	vec3_sub(e0, p2, p1);
+	vec3_sub(e1, p3, p1);
 
 	float a = vec3_dot(e0, e0);
 	float b = vec3_dot(e0, e1);
@@ -121,13 +121,13 @@ float	*espace_conversion(float *res, float *src)
 /*
  * Takes in position of ellipsoid and the mesh we want to check its colliding;
  * Returns 1 if yes, 0 if no;
- * 
+ *
  * NOTE: The coordinates for pos and mesh triangle vertex pos need to be in the
  *  same coordinate space. (just so you dont forget)
- * 
+ *
  * velocity is basically just the length of the line you want to 'cast' in front
  * and check if it hits a mesh;
- * 
+ *
  * STEPS:
  * Convert to eSpace, both pos and mesh triangle vertices;
  * check if sphere...

@@ -29,7 +29,7 @@ float *vec3_add(float *result, float *v0, float *v1)
 	return (result);
 }
 
-float *vec3_subtract(float *result, float *v0, float *v1)
+float *vec3_sub(float *result, float *v0, float *v1)
 {
 	result[0] = v0[0] - v1[0];
 	result[1] = v0[1] - v1[1];
@@ -391,7 +391,7 @@ float	*mat4_look_at(float *result, float *position, float *target, float *up)
 	float	tmp_side[VEC3_SIZE];
 	float	tmp_up[VEC3_SIZE];
 
-	vec3_subtract(tmp_forward, target, position);
+	vec3_sub(tmp_forward, target, position);
 	vec3_normalize(tmp_forward, tmp_forward);
 	vec3_cross(tmp_side, tmp_forward, up);
 	vec3_normalize(tmp_side, tmp_side);
