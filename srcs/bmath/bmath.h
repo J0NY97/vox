@@ -14,7 +14,7 @@
 // VEC3
 float	*new_vec3(float *src, float x, float y, float z);
 float	*vec3_cpy(float *dest, float *src);
-void	vec3_string(float *v);
+void	vec3_string(char *str, float *v);
 float	*vec3_add(float *result, float *v0, float *v1);
 float	*vec3_sub(float *result, float *v0, float *v1);
 float	*vec3_multiply_f(float *result, float *v0, float f);
@@ -52,5 +52,6 @@ float	*mat4_rotation_axis(float *result, float *v0, float f);
 float	*mat4_perspective_fov(float *result, float fov, float w, float h, float n, float f);
 float	*mat4_look_at(float *result, float *position, float *target, float *up);
 float	*mat4_multiply(float *result, float *m0, float *m1);
+float	*mat4_inverse(float *result, float *m0);
 
 #endif

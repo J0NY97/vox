@@ -27,4 +27,10 @@ void		aabb_print(t_aabb *a);
 
 int			line_triangle_intersect(float *orig, float *dir, float *p1, float *p2, float *p3);
 
+////////////////////////
+//	PLANE COLLISION
+////////////////////////
+
+float		ray_plane_intersect(float *orig, float *dir, float *pos, float *norm);
+
 #endif

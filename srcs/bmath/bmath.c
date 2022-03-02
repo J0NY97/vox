@@ -16,9 +16,9 @@ float	*vec3_cpy(float *dest, float *src)
 	return (src);
 }
 
-void	vec3_string(float *v)
+void	vec3_string(char *str, float *v)
 {
-	printf("{ %f %f %f }\n", v[0], v[1], v[2]);
+	printf("%s { %f %f %f }\n", str, v[0], v[1], v[2]);
 }
 
 float *vec3_add(float *result, float *v0, float *v1)
@@ -189,6 +189,22 @@ float	*mat3_assign(float *result, float *m0)
 	return (result);
 }
 
+void	mat3_string(float *m)
+{
+	int	i;
+
+	i = 0;
+	printf("{");
+	while (i < MAT3_SIZE)
+	{
+		if (i % 3 == 0)
+			printf("\n");
+		printf("%f ", m[i]);
+		i++;
+	}
+	printf("}\n");
+}
+
 float	*mat4_identity(float *result)
 {
 	result[0] = 1.0f;
@@ -230,7 +246,6 @@ float	*mat4_assign(float *result, float *m0)
 	result[15] = m0[15];
 	return (result);
 }
-
 
 void	mat4_string(float *m)
 {
@@ -396,6 +411,12 @@ float	*mat4_look_at(float *result, float *position, float *target, float *up)
 	vec3_cross(tmp_side, tmp_forward, up);
 	vec3_normalize(tmp_side, tmp_side);
 	vec3_cross(tmp_up, tmp_side, tmp_forward);
+
+/*
+	float t[3];
+	vec3_string("look at", vec3_normalize(t, vec3_add(t, tmp_forward, vec3_add(t, tmp_up, tmp_side))));
+	*/
+
 	result[0] = tmp_side[0];
 	result[1] = tmp_up[0];
 	result[2] = -tmp_forward[0];
@@ -450,5 +471,142 @@ float *mat4_multiply(float *result, float *m0, float *m1)
 	result[13] = multiplied[13];
 	result[14] = multiplied[14];
 	result[15] = multiplied[15];
+	return (result);
+}
+
+float	*mat4_inverse(float *result, float *m0)
+{
+	float inverse[MAT4_SIZE];
+	float inverted_determinant;
+	float m11 = m0[0];
+	float m21 = m0[1];
+	float m31 = m0[2];
+	float m41 = m0[3];
+	float m12 = m0[4];
+	float m22 = m0[5];
+	float m32 = m0[6];
+	float m42 = m0[7];
+	float m13 = m0[8];
+	float m23 = m0[9];
+	float m33 = m0[10];
+	float m43 = m0[11];
+	float m14 = m0[12];
+	float m24 = m0[13];
+	float m34 = m0[14];
+	float m44 = m0[15];
+
+	inverse[0] = m22 * m33 * m44
+		- m22 * m43 * m34
+		- m23 * m32 * m44
+		+ m23 * m42 * m34
+		+ m24 * m32 * m43
+		- m24 * m42 * m33;
+	inverse[4] = -m12 * m33 * m44
+		+ m12 * m43 * m34
+		+ m13 * m32 * m44
+		- m13 * m42 * m34
+		- m14 * m32 * m43
+		+ m14 * m42 * m33;
+	inverse[8] = m12 * m23 * m44
+		- m12 * m43 * m24
+		- m13 * m22 * m44
+		+ m13 * m42 * m24
+		+ m14 * m22 * m43
+		- m14 * m42 * m23;
+	inverse[12] = -m12 * m23 * m34
+		+ m12 * m33 * m24
+		+ m13 * m22 * m34
+		- m13 * m32 * m24
+		- m14 * m22 * m33
+		+ m14 * m32 * m23;
+	inverse[1] = -m21 * m33 * m44
+		+ m21 * m43 * m34
+		+ m23 * m31 * m44
+		- m23 * m41 * m34
+		- m24 * m31 * m43
+		+ m24 * m41 * m33;
+	inverse[5] =m11 * m33 * m44
+		-m11 * m43 * m34
+		- m13 * m31 * m44
+		+ m13 * m41 * m34
+		+ m14 * m31 * m43
+		- m14 * m41 * m33;
+	inverse[9] = -m11 * m23 * m44
+		+m11 * m43 * m24
+		+ m13 * m21 * m44
+		- m13 * m41 * m24
+		- m14 * m21 * m43
+		+ m14 * m41 * m23;
+	inverse[13] =m11 * m23 * m34
+		-m11 * m33 * m24
+		- m13 * m21 * m34
+		+ m13 * m31 * m24
+		+ m14 * m21 * m33
+		- m14 * m31 * m23;
+	inverse[2] = m21 * m32 * m44
+		- m21 * m42 * m34
+		- m22 * m31 * m44
+		+ m22 * m41 * m34
+		+ m24 * m31 * m42
+		- m24 * m41 * m32;
+	inverse[6] = -m11 * m32 * m44
+		+m11 * m42 * m34
+		+ m12 * m31 * m44
+		- m12 * m41 * m34
+		- m14 * m31 * m42
+		+ m14 * m41 * m32;
+	inverse[10] =m11 * m22 * m44
+		-m11 * m42 * m24
+		- m12 * m21 * m44
+		+ m12 * m41 * m24
+		+ m14 * m21 * m42
+		- m14 * m41 * m22;
+	inverse[14] = -m11 * m22 * m34
+		+m11 * m32 * m24
+		+ m12 * m21 * m34
+		- m12 * m31 * m24
+		- m14 * m21 * m32
+		+ m14 * m31 * m22;
+	inverse[3] = -m21 * m32 * m43
+		+ m21 * m42 * m33
+		+ m22 * m31 * m43
+		- m22 * m41 * m33
+		- m23 * m31 * m42
+		+ m23 * m41 * m32;
+	inverse[7] =m11 * m32 * m43
+		-m11 * m42 * m33
+		- m12 * m31 * m43
+		+ m12 * m41 * m33
+		+ m13 * m31 * m42
+		- m13 * m41 * m32;
+	inverse[11] = -m11 * m22 * m43
+		+m11 * m42 * m23
+		+ m12 * m21 * m43
+		- m12 * m41 * m23
+		- m13 * m21 * m42
+		+ m13 * m41 * m22;
+	inverse[15] =m11 * m22 * m33
+		-m11 * m32 * m23
+		- m12 * m21 * m33
+		+ m12 * m31 * m23
+		+ m13 * m21 * m32
+		- m13 * m31 * m22;
+	inverted_determinant = 1.0f / (m11 * inverse[0] + m21 * inverse[4] + m31 * inverse[8] + m41 * inverse[12]);
+	result[0] = inverse[0] * inverted_determinant;
+	result[1] = inverse[1] * inverted_determinant;
+	result[2] = inverse[2] * inverted_determinant;
+	result[3] = inverse[3] * inverted_determinant;
+	result[4] = inverse[4] * inverted_determinant;
+	result[5] = inverse[5] * inverted_determinant;
+	result[6] = inverse[6] * inverted_determinant;
+	result[7] = inverse[7] * inverted_determinant;
+	result[8] = inverse[8] * inverted_determinant;
+	result[9] = inverse[9] * inverted_determinant;
+	result[10] = inverse[10] * inverted_determinant;
+	result[11] = inverse[11] * inverted_determinant;
+	result[12] = inverse[12] * inverted_determinant;
+	result[13] = inverse[13] * inverted_determinant;
+	result[14] = inverse[14] * inverted_determinant;
+	result[15] = inverse[15] * inverted_determinant;
 	return (result);
 }

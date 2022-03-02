@@ -247,6 +247,7 @@ typedef struct	s_shaderpixel
 ///////////////////
 
 void		memset_pattern(void *dest, size_t dest_size, void *src, size_t src_size);
+void		normalized_device_coords(float *v3, float *mouse, int w, int h);
 
 ///////////////////
 //	Crosshair

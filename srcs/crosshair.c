@@ -47,6 +47,10 @@ typedef struct s_render_line
 	GLuint		vbo_pos;
 }				t_render_line;
 
+////////////////////////////////////
+// 2D LINE
+////////////////////////////////////
+
 void	setup_2d_line(t_render_line *info)
 {
 	new_shader(&info->shader, ROOT_PATH"shaders/2d.vs", ROOT_PATH"shaders/2d.fs");
@@ -92,6 +96,10 @@ void	render_2d_line(float *p1, float *p2, float *col)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
+////////////////////////////////////
+// 3D LINE
+////////////////////////////////////
+
 void	setup_3d_line(t_render_line *info)
 {
 	new_shader(&info->shader, ROOT_PATH"shaders/3d.vs", ROOT_PATH"shaders/3d.fs");
@@ -103,6 +111,9 @@ void	setup_3d_line(t_render_line *info)
 	glGenBuffers(1, &info->vbo_pos);
 }
 
+/*
+ * 'p1' and 'p2' should be coordinates in world space already;
+*/
 void	render_3d_line(float *p1, float *p2, float *col, float *view_mat, float *project_mat)
 {
 	static t_render_line	info = {};

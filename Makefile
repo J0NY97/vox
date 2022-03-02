@@ -16,6 +16,7 @@ CFILES = \
 	aabb_collision.c \
 	ellipsoid_collision.c \
 	triangle_collision.c \
+	plane_collision.c \
 	crosshair.c \
 	help.c \
 	bimgf/bimgf_bmp.c \
