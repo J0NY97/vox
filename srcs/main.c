@@ -116,14 +116,19 @@ int	main(void)
 		entity_collision_detection(entity_collision_list, player.camera.pos);
 
 ////////////////////////
-		float p1[VEC3_SIZE];
-		new_vec3(p1, retrotv.aabb.min[0], retrotv.aabb.max[1], retrotv.aabb.max[2]);
-		float p2[VEC3_SIZE];
-		new_vec3(p2, retrotv.aabb.max[0], retrotv.aabb.max[1], retrotv.aabb.max[2]);
-		float p3[VEC3_SIZE];
-		new_vec3(p3, retrotv.aabb.min[0], retrotv.aabb.min[1], retrotv.aabb.max[2]);
+		t_aabb	temp_aabb;
+		temp_aabb = retrotv.aabb;
+		aabb_transform(&temp_aabb, retrotv.model_mat);
 
-		line_triangle_intersect(player.camera.pos, player.camera.front, p1, p2, p3);
+		float p1[VEC3_SIZE];
+		new_vec3(p1, temp_aabb.min[0], temp_aabb.max[1], temp_aabb.max[2]);
+		float p2[VEC3_SIZE];
+		new_vec3(p2, temp_aabb.max[0], temp_aabb.max[1], temp_aabb.max[2]);
+		float p3[VEC3_SIZE];
+		new_vec3(p3, temp_aabb.min[0], temp_aabb.min[1], temp_aabb.max[2]);
+
+		if (line_triangle_intersect(player.camera.pos, player.camera.front, p1, p2, p3))
+			printf("Intersect.\n");
 ////////////////////////
 
 		player_apply_velocity(&player);
@@ -139,9 +144,15 @@ int	main(void)
 		render_entity(&retrotv, &player.camera, &retrotv_model, &shader1);
 		//render_entity(&dust2, &player.camera, &dust2_model, &shader1);
 
-//// 2D / UI /////
 		glDisable(GL_DEPTH_TEST);
-		render_2d_line((float []){-1, 0.5, 0}, (float []){0, 0, 0}, (float []){1, 1, 1});
+		render_3d_line(p1, p2, (float []){0, 0, 1},
+			player.camera.view, player.camera.projection);
+		render_3d_line(p1, p3, (float []){0, 1, 0},
+			player.camera.view, player.camera.projection);
+		render_3d_line(p2, p3, (float []){0, 1, 1},
+			player.camera.view, player.camera.projection);
+
+		render_crosshair();
 
 		glfwSwapBuffers(sp.win);
 

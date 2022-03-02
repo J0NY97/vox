@@ -253,11 +253,13 @@ void		memset_pattern(void *dest, size_t dest_size, void *src, size_t src_size);
 ///////////////////
 
 void		new_crosshair_shader(t_shader *shader);
+void		render_crosshair(void);
 
 ///////////////////
 // Line Draw
 ///////////////////
 
 void		render_2d_line(float *p1, float *p2, float *col);
+void		render_3d_line(float *p1, float *p2, float *col, float *view_mat, float *project_mat);
 
 #endif

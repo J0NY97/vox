@@ -31,27 +31,13 @@ void	new_crosshair_shader(t_shader *shader)
 	check_program_errors(shader->program);
 }
 
-/*
-void	render_crosshair(t_shader *shader)
+void	render_crosshair(void)
 {
-	float	vertices[] = {
-		0, 0, 0
-	};
-
-	GLuint	vao;
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-
-	glEnableVertexAttribArray(0);
-
-	GLuint	vbo;
-	glGenBuffers(1, &vbo);
-
-
-
-	glUseProgram(shader->program);
+	glDisable(GL_DEPTH_TEST);
+	render_2d_line((float []){-0.01, 0, 0}, (float []){0.01, 0, 0}, (float []){1, 1, 1});
+	// (w * 0.01) / h = (1280 * 0.01) / 720 = 0.0177
+	render_2d_line((float []){0, -0.0177, 0}, (float []){0, 0.0177, 0}, (float []){1, 1, 1});
 }
-*/
 
 typedef struct s_render_line
 {
@@ -68,7 +54,6 @@ void	setup_2d_line(t_render_line *info)
 	glGenVertexArrays(1, &info->vao);
 	glBindVertexArray(info->vao);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
 
 	glGenBuffers(1, &info->vbo_pos);
 }
@@ -83,24 +68,66 @@ void	render_2d_line(float *p1, float *p2, float *col)
 		setup_2d_line(&info);
 		set = 1;
 	}
-	glUseProgram(info.shader.program);
 	int i = 0;
 	for (; i < 3; i++)
 		info.vertices[i] = p1[i];
 	for (; i < 6; i++)
 		info.vertices[i] = p2[i - 3];
 
-	for (int j = 0; j < 6; j++)
-		ft_printf("%.2f ", info.vertices[j]);
-	ft_printf("\n");
-	for (int j = 0; j < 3; j++)
-		ft_printf("%.2f ", col[j]);
-	ft_printf("\n");
-
+	glUseProgram(info.shader.program);
 	glBindVertexArray(info.vao);
 	glBindBuffer(GL_ARRAY_BUFFER, info.vbo_pos);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6, &info.vertices[0], GL_DYNAMIC_DRAW);
 	glUniform3fv(glGetUniformLocation(info.shader.program, "inColor"), 1, col);
+
+	glDrawArrays(GL_LINES, 0, 2);
+
+	int error = glGetError();
+	if (error)
+		LG_WARN("(%d)", error);
+
+	glUseProgram(0);
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void	setup_3d_line(t_render_line *info)
+{
+	new_shader(&info->shader, ROOT_PATH"shaders/3d.vs", ROOT_PATH"shaders/3d.fs");
+
+	glGenVertexArrays(1, &info->vao);
+	glBindVertexArray(info->vao);
+	glEnableVertexAttribArray(0);
+
+	glGenBuffers(1, &info->vbo_pos);
+}
+
+void	render_3d_line(float *p1, float *p2, float *col, float *view_mat, float *project_mat)
+{
+	static t_render_line	info = {};
+	static int				set = 0;
+
+	if (!set)
+	{
+		setup_3d_line(&info);
+		set = 1;
+	}
+	int i = 0;
+	for (; i < 3; i++)
+		info.vertices[i] = p1[i];
+	for (; i < 6; i++)
+		info.vertices[i] = p2[i - 3];
+
+	glUseProgram(info.shader.program);
+	glBindVertexArray(info.vao);
+	glBindBuffer(GL_ARRAY_BUFFER, info.vbo_pos);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6, &info.vertices[0], GL_DYNAMIC_DRAW);
+
+	glUniform3fv(glGetUniformLocation(info.shader.program, "inColor"), 1, col);
+	glUniformMatrix4fv(glGetUniformLocation(info.shader.program, "view"), 1, GL_FALSE, &view_mat[0]);
+	glUniformMatrix4fv(glGetUniformLocation(info.shader.program, "projection"), 1, GL_FALSE, &project_mat[0]);
 
 	glDrawArrays(GL_LINES, 0, 2);
 
