@@ -113,7 +113,8 @@ void	entity_collision_detection(t_list *entity_list, float *point)
 		aabb_create(&entity->aabb, entity->model->info->mesh.vertices,
 			entity->model->info->mesh.vertex_amount);
 		aabb_transform(&entity->aabb, entity->model_mat);
-		entity->collision = point_aabb_collision(point, &entity->aabb);
+		//entity->collision = point_aabb_collision(point, &entity->aabb);
+		entity->collision = 0;
 		curr = curr->next;
 	}
 }

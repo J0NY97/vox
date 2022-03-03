@@ -21,7 +21,7 @@ float	*vec3_multiply_f(float *result, float *v0, float f);
 float	*vec3_normalize(float *result, float *v0);
 float	*vec3_cross(float *result, float *v0, float *v1);
 float	vec3_dot(float *v0, float *v1);
-float	vec3_distance(float *v0, float *v1);
+float	vec3_dist(float *v0, float *v1);
 float	*vec3_multiply_mat3(float *res, float *v, float *m);
 float	vec3_length(float *v0);
 

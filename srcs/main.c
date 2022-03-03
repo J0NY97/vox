@@ -131,8 +131,24 @@ int	main(void)
 		if (ray_plane_intersect(player.camera.pos, player.camera.front, retrotv.pos, (float[]){0, 0, -1}))
 			retrotv.collision = 1;
 			*/
-		if (ray_triangle_intersect(player.camera.pos, player.camera.front, p1, p2, p3, (float []){0, 0, -1}))
-			retrotv.collision = 1;
+		float	intersect_point[3];
+		float	normed[3];
+	//	if (ray_triangle_intersect(player.camera.pos, player.camera.front, p1, p2, p3, intersect_point))
+		if ((player.velocity[0] || player.velocity[1] || player.velocity[2]) &&
+			ray_triangle_intersect(player.camera.pos, vec3_normalize(normed, player.velocity), p1, p2, p3, intersect_point))
+		{
+			float	new_pos[3];
+			vec3_add(new_pos, player.camera.pos, player.velocity);
+			if (vec3_dist(player.camera.pos, new_pos) > vec3_dist(player.camera.pos, intersect_point))
+			{
+				retrotv.collision = 1;
+				//vec3_sub(player.velocity, new_pos, intersect_point);
+				new_vec3(player.velocity, 0, 0, 0);
+				vec3_string("new_pos : ", new_pos);
+				vec3_string("intersect_point : ", intersect_point);
+				vec3_string("player.velocity : ", player.velocity);
+			}
+		}
 ////////////////////////
 
 		player_apply_velocity(&player);

@@ -2,11 +2,13 @@
 
 /*
  * Yoinked from : https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/ray-triangle-intersection-geometric-solution
+ * Improvement? : Look into : Möller-Trumbore algorithm
+ * Improvment: Instead of calculating the normals, we can give in them.
  *
  * Checks if ray, starting at 'orig' and going in 'dir', intersects triangle,
  *	made of 'v0', 'v1', 'v2'.
 */
-int	ray_triangle_intersect(float *orig, float *dir, float *v0, float *v1, float *v2, float *t_normal)
+int	ray_triangle_intersect(float *orig, float *dir, float *v0, float *v1, float *v2, float *intersect_point)
 {
 	// compute plane's normal
 	float	v0v1[3];
@@ -18,6 +20,11 @@ int	ray_triangle_intersect(float *orig, float *dir, float *v0, float *v1, float 
 	// no need to normalize
 	float	N[3];
 	vec3_cross(N, v0v1, v0v2); // N
+
+	// back face culler
+	if (vec3_dot(dir, N) < 0)
+		return (0);
+
 	float	area2 = vec3_length(N);
 
 	// Step 1: finding P
@@ -74,5 +81,6 @@ int	ray_triangle_intersect(float *orig, float *dir, float *v0, float *v1, float 
 	if (vec3_dot(N, C) < 0)
 		return (0); // P is on the right side;
 
+	memcpy(intersect_point, P, sizeof(float) * 3);
 	return (1); // this ray hits the triangle
 }

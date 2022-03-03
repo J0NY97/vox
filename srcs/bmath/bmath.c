@@ -71,7 +71,7 @@ float	*vec3_multiply_f(float *result, float *v0, float f)
 	return result;
 }
 
-float	vec3_distance(float *v0, float *v1)
+float	vec3_dist(float *v0, float *v1)
 {
 	float	a;
 	float	b;
