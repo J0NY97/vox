@@ -27,7 +27,7 @@ void		aabb_print(t_aabb *a);
 //	TRIANGLE
 ////////////////////////
 
-int			ray_triangle_intersect(float *orig, float *dir, float *p1, float *p2, float *p3);
+int			ray_triangle_intersect(float *orig, float *dir, float *p1, float *p2, float *p3, float *t_normal);
 
 ////////////////////////
 //	PLANE

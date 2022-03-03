@@ -76,9 +76,7 @@ void	render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader 
 
 	render_model(model);
 
-	t_aabb	temp = entity->aabb;
-	aabb_transform(&temp, entity->model_mat);
-	create_bb_vertices(entity->bb_vertices, temp.min, temp.max);
+	create_bb_vertices(entity->bb_vertices, entity->aabb.min, entity->aabb.max);
 	create_bb_indices(entity->bb_indices);
 	render_box(entity->bb_vertices, entity->bb_indices, (float[]){1, 0, 0},
 		camera->view, camera->projection);
@@ -99,6 +97,8 @@ void	render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader 
  *
  * Improvement perhaps : split the aabb into elements instead of creating it
  * 	from the whole mesh, so that the detection is more precise... if needed;
+ *
+ * Would probably make more sense if the aabb was updated in the entity_update;
  */
 void	entity_collision_detection(t_list *entity_list, float *point)
 {
@@ -112,9 +112,8 @@ void	entity_collision_detection(t_list *entity_list, float *point)
 		entity = curr->content;
 		aabb_create(&entity->aabb, entity->model->info->mesh.vertices,
 			entity->model->info->mesh.vertex_amount);
-		aabb = entity->aabb;
-		aabb_transform(&aabb, entity->model_mat);
-		entity->collision = point_aabb_collision(point, &aabb);
+		aabb_transform(&entity->aabb, entity->model_mat);
+		entity->collision = point_aabb_collision(point, &entity->aabb);
 		curr = curr->next;
 	}
 }
@@ -174,6 +173,11 @@ unsigned int	*create_bb_indices(unsigned int *res)
 	};
 	memcpy(res, indices, sizeof(unsigned int) * 36);
 	return (res);
+}
+
+float	*create_bb_normals(float *res)
+{
+
 }
 
 typedef struct	s_render_info

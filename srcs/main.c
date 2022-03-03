@@ -120,20 +120,18 @@ int	main(void)
 		entity_collision_detection(entity_collision_list, player.camera.pos);
 
 ////////////////////////
-		t_aabb	temp_aabb;
-		temp_aabb = retrotv.aabb;
-		aabb_transform(&temp_aabb, retrotv.model_mat);
-
 		float p1[VEC3_SIZE];
-		new_vec3(p1, temp_aabb.min[0], temp_aabb.max[1], temp_aabb.max[2]);
+		new_vec3(p1, retrotv.aabb.min[0], retrotv.aabb.max[1], retrotv.aabb.max[2]);
 		float p2[VEC3_SIZE];
-		new_vec3(p2, temp_aabb.max[0], temp_aabb.max[1], temp_aabb.max[2]);
+		new_vec3(p2, retrotv.aabb.max[0], retrotv.aabb.max[1], retrotv.aabb.max[2]);
 		float p3[VEC3_SIZE];
-		new_vec3(p3, temp_aabb.min[0], temp_aabb.min[1], temp_aabb.max[2]);
+		new_vec3(p3, retrotv.aabb.min[0], retrotv.aabb.min[1], retrotv.aabb.max[2]);
 
+/*
 		if (ray_plane_intersect(player.camera.pos, player.camera.front, retrotv.pos, (float[]){0, 0, -1}))
 			retrotv.collision = 1;
-		if (ray_triangle_intersect(player.camera.pos, player.camera.front, p1, p2, p3))
+			*/
+		if (ray_triangle_intersect(player.camera.pos, player.camera.front, p1, p2, p3, (float []){0, 0, -1}))
 			retrotv.collision = 1;
 ////////////////////////
 
