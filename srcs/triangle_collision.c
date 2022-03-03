@@ -4,7 +4,7 @@
  * Checks if line, starting at 'orig' and going in 'dir', intersects triangle,
  *	made of 'p1', 'p2', 'p3'.
 */
-int	line_triangle_intersect(float *orig, float *dir, float *p1, float *p2, float *p3)
+int	ray_triangle_intersect(float *orig, float *dir, float *p1, float *p2, float *p3)
 {
 	float	e1[VEC3_SIZE];
 	float	e2[VEC3_SIZE];

@@ -105,43 +105,6 @@ int	main(void)
 		glDisable(GL_DEPTH_TEST);
 		render_fractal2d(&fractal, &mandelbrot_shader);
 
-		// mouse //
-		/*
-		float	norm_dc[VEC4_SIZE];
-		double	temp[2];
-		float	mouse[2];
-		glfwGetCursorPos(sp.win, &temp[0], &temp[1]);
-		mouse[0] = temp[0];
-		mouse[1] = temp[1];
-		normalized_device_coords(norm_dc, mouse, 1280, 720);
-		norm_dc[2] = -1;
-		norm_dc[3] = 1;
-
-		float	eye_ray[VEC4_SIZE];
-		float	inverse_proj_mat[MAT4_SIZE];
-		mat4_inverse(inverse_proj_mat, player.camera.projection);
-		vec4_multiply_mat4(eye_ray, norm_dc, inverse_proj_mat);
-
-		eye_ray[2] = -1.0f;
-		eye_ray[3] = 0.0f;
-
-		float	temp_v4[VEC4_SIZE];
-		float	inverse_view[MAT4_SIZE];
-		float	world_ray[VEC3_SIZE];
-
-		mat4_inverse(inverse_view, player.camera.view);
-		vec4_multiply_mat4(temp_v4, eye_ray, inverse_view);
-		vec3_normalize(world_ray, temp_v4);
-
-		float	magnify[3];
-		render_3d_line(
-			(float []){0, 0, 0},
-			vec3_multiply_f(magnify, world_ray, 10),
-			(float []){1, 0, 1},
-			player.camera.view, player.camera.projection);
-			*/
-		// end mouse //
-
 		glfwPollEvents();
 		if (glfwGetKey(sp.win, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 			glfwSetWindowShouldClose(sp.win, GLFW_TRUE);
@@ -168,33 +131,11 @@ int	main(void)
 		float p3[VEC3_SIZE];
 		new_vec3(p3, temp_aabb.min[0], temp_aabb.min[1], temp_aabb.max[2]);
 
-		float	camera_dir[VEC3_SIZE];
-		vec3_add(camera_dir, player.camera.pos, player.camera.front);
-		vec3_normalize(camera_dir, camera_dir);
-
-		float	side[VEC3_SIZE];
-		float	up[VEC3_SIZE];
-		float	forward[VEC3_SIZE];
-		new_vec3(side, player.camera.view[0], player.camera.view[4], player.camera.view[8]);
-		new_vec3(up, player.camera.view[1], player.camera.view[5], player.camera.view[9]);
-		new_vec3(forward, player.camera.view[2], player.camera.view[6], player.camera.view[10]);
-
-		vec3_normalize(camera_dir, vec3_add(camera_dir, forward, vec3_add(camera_dir, up, side)));
-
-		vec3_string("camera_dir", camera_dir);
-		vec3_string("front", player.camera.front);
-		vec3_string("retrotv", retrotv.pos);
-
 		if (ray_plane_intersect(player.camera.pos, player.camera.front, retrotv.pos, (float[]){0, 0, -1}))
 			retrotv.collision = 1;
-		if (line_triangle_intersect(player.camera.pos, player.camera.front, p1, p2, p3))
+		if (ray_triangle_intersect(player.camera.pos, player.camera.front, p1, p2, p3))
 			retrotv.collision = 1;
 ////////////////////////
-		glDisable(GL_DEPTH_TEST);
-		render_3d_line(player.camera.pos,
-			camera_dir,
-			(float []){1, 1, 1},
-			player.camera.view, player.camera.projection);
 
 		player_apply_velocity(&player);
 

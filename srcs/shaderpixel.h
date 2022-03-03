@@ -56,6 +56,8 @@ typedef struct	s_entity
 	float			model_mat[MAT4_SIZE];
 
 	t_aabb			aabb;
+	float			bb_vertices[24];
+	unsigned int	bb_indices[36];
 	int				collision;
 
 	t_model			*model;
@@ -65,8 +67,6 @@ void				new_entity(t_entity *entity);
 void				update_entity(t_entity *entity);
 void				render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader *shader);
 void				entity_collision_detection(t_list *entity_list, float *point);
-
-void				render_box(float *min, float *max); // TODO: Move this
 
 ///////////////////
 //	MODEL
@@ -226,12 +226,6 @@ struct	s_key
 void		update_all_keys(t_key *keys, GLFWwindow *win);
 
 ///////////////////
-//	COLLISION
-///////////////////
-
-int			ellipsoid_collision(float *pos, float *velocity, t_mesh *mesh);
-
-///////////////////
 //	SHADERPIXEL
 ///////////////////
 
@@ -262,5 +256,13 @@ void		render_crosshair(void);
 
 void		render_2d_line(float *p1, float *p2, float *col);
 void		render_3d_line(float *p1, float *p2, float *col, float *view_mat, float *project_mat);
+
+///////////////////
+// Box Draw
+///////////////////
+
+float			*create_bb_vertices(float *res, float *min, float *max);
+unsigned int	*create_bb_indices(unsigned int *res);
+void			render_box(float *vertices, unsigned int *indices, float *col, float *view, float *proj);
 
 #endif

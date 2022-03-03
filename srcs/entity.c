@@ -76,8 +76,12 @@ void	render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader 
 
 	render_model(model);
 
-	glUniform1i(glGetUniformLocation(shader->program, "useColor"), 1);
-	render_box(entity->aabb.min, entity->aabb.max);
+	t_aabb	temp = entity->aabb;
+	aabb_transform(&temp, entity->model_mat);
+	create_bb_vertices(entity->bb_vertices, temp.min, temp.max);
+	create_bb_indices(entity->bb_indices);
+	render_box(entity->bb_vertices, entity->bb_indices, (float[]){1, 0, 0},
+		camera->view, camera->projection);
 
 	glUseProgram(0);
 	glBindVertexArray(0);
@@ -115,19 +119,7 @@ void	entity_collision_detection(t_list *entity_list, float *point)
 	}
 }
 
-// TODO: Move this to some place that makes more sense;
-// Improvement?: Have the vbo, vao, ebo in a static;
-/*
- * Pretty self-explanatory;
- *
- * Renders box immediately;
- * Creates temporary vao, vbo, ebo that gets deleted after used;
- *
- * NOTE: you have to glUseProgram before calling this function, with attribs:
- * 	0 = pos,
- * 	1 = col,
-*/
-void	render_box(float *min, float *max)
+float	*create_bb_vertices(float *res, float *min, float *max)
 {
 	float	vertices[] = {
 		// front
@@ -142,11 +134,12 @@ void	render_box(float *min, float *max)
 		min[0], min[1], min[2], // bot left		6
 		max[0], min[1], min[2] // bot right		7
 	};
+	memcpy(res, vertices, sizeof(float) * 24);
+	return (res);
+}
 
-	float	colors[8 * 3];
-	float	temp[3] = {255, 0, 0};
-	memset_pattern(colors, 8 * 3 * sizeof(float), temp, sizeof(float) * 3);
-
+unsigned int	*create_bb_indices(unsigned int *res)
+{
 	unsigned int	indices[] = {
 		// front
 			//ftl, ftr, fbl,
@@ -179,43 +172,70 @@ void	render_box(float *min, float *max)
 			6, 7, 2,
 			7, 3, 2
 	};
+	memcpy(res, indices, sizeof(unsigned int) * 36);
+	return (res);
+}
 
-	GLuint	vao;
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
+typedef struct	s_render_info
+{
+	t_shader	shader;
+	GLuint		vao;
+	GLuint		vbo;
+	GLuint		ebo;
+}	t_render_info;
+
+int	setup_render_box(t_render_info *info)
+{
+	new_shader(&info->shader, ROOT_PATH"shaders/box.vs", ROOT_PATH"shaders/box.fs");
+
+	glGenVertexArrays(1, &info->vao);
+	glBindVertexArray(info->vao);
 
 	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
 
-	GLuint	vbo;
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices[0], GL_STATIC_DRAW);
+	glGenBuffers(1, &info->vbo);
+	glGenBuffers(1, &info->ebo);
+
+	return (1);
+}
+
+void	render_box(float *vertices, unsigned int *indices, float *col, float *view, float *proj)
+{
+	static t_render_info	info = {};
+	static int				set = 0;
+	int	error = 0;
+
+	if (!set)
+		set = setup_render_box(&info);
+
+	glUseProgram(info.shader.program);
+
+	glBindVertexArray(info.vao);
+
+	glBindBuffer(GL_ARRAY_BUFFER, info.vbo);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 24, &vertices[0], GL_DYNAMIC_DRAW);
 
-	GLuint	vbo_col;
-	glGenBuffers(1, &vbo_col);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_col);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(colors), &colors[0], GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, info.ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 36, &indices[0], GL_DYNAMIC_DRAW);
 
-	GLuint	ebo;
-	glGenBuffers(1, &ebo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), &indices[0], GL_STATIC_DRAW);
+	glUniform3fv(glGetUniformLocation(info.shader.program, "inColor"), 1, col);
+	glUniformMatrix4fv(glGetUniformLocation(info.shader.program, "view"), 1, GL_FALSE, &view[0]);
+	glUniformMatrix4fv(glGetUniformLocation(info.shader.program, "projection"), 1, GL_FALSE, &proj[0]);
 
 	GLint	prev_pol_mode;
 	glGetIntegerv(GL_POLYGON_MODE, &prev_pol_mode);
-
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(unsigned int), GL_UNSIGNED_INT, NULL);
+
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, NULL);
+
 	glPolygonMode(GL_FRONT_AND_BACK, prev_pol_mode);
 
-	glDeleteVertexArrays(1, &vao);
-	glDeleteBuffers(1, &vbo);
-	glDeleteBuffers(1, &ebo);
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
 
+	error = glGetError();
+	if (error)
+		LG_ERROR("(%d)", error);
+}

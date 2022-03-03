@@ -136,15 +136,13 @@ float	*espace_conversion(float *res, float *src)
  * 3rd ... collides with vertices of triangle;
  * 4th ... collides with edges of triangle;
  */
-int	ellipsoid_collision(float *pos, float *velocity, t_mesh *mesh)
+int	ellipsoid_collision(float *pos, float *velocity, float *p1, float *p2, float *p3)
 {
-	float	p1[VEC3_SIZE];
-	float	p2[VEC3_SIZE];
-	float	p3[VEC3_SIZE];
 	float	epos[VEC3_SIZE];
 	int		found;
 
 	found = 0;
+	/*
 	for (int elem = 0; elem < mesh->element_amount; elem++)
 	{
 		for (size_t face = 0; face < mesh->elements[elem].face_count; face++)
@@ -172,6 +170,7 @@ int	ellipsoid_collision(float *pos, float *velocity, t_mesh *mesh)
 				found = 1;
 		}
 	}
+	*/
 	if (found)
 		LG_INFO("Collision detected.");
 	return (found);
