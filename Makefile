@@ -13,6 +13,7 @@ CFILES = \
 	player.c \
 	fps.c \
 	key.c \
+	collision.c \
 	aabb_collision.c \
 	ellipsoid_collision.c \
 	triangle_collision.c \

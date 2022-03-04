@@ -119,69 +119,8 @@ int	main(void)
 
 		entity_collision_detection(entity_collision_list, player.camera.pos);
 
-////////////////////////
-		float p1[VEC3_SIZE];
-		float p2[VEC3_SIZE];
-		float p3[VEC3_SIZE];
-		unsigned int index = 0;
-		
-	/*
-		if (ray_triangle_intersect(player.camera.pos, player.camera.front, p1, p2, p3, intersect_point))
-		if (ray_plane_intersect(player.camera.pos, player.camera.front, retrotv.pos, (float[]){0, 0, -1}))
-			retrotv.collision = 1;
-	*/
-		float	intersect_point[3];
-		float	normed[3];
-		int		player_moving = (player.velocity[0] || player.velocity[1] || player.velocity[2]);
-		int		aabb_collision = aabb_aabb_collision(&player.aabb, &retrotv.aabb);
-		int		triangle_collision = 0;
+		player_entity_collision(&player, &retrotv);
 
-		if (player_moving && aabb_collision)
-		{
-			for (int triangle = 0; triangle < 12; triangle++)
-			{
-
-				index = retrotv.bb_indices[triangle * 3 + 0] * 3;
-				new_vec3(p1,
-					retrotv.bb_vertices[index + 0],
-					retrotv.bb_vertices[index + 1],
-					retrotv.bb_vertices[index + 2]
-				);
-				index = retrotv.bb_indices[triangle * 3 + 1] * 3;
-				new_vec3(p2,
-					retrotv.bb_vertices[index + 0],
-					retrotv.bb_vertices[index + 1],
-					retrotv.bb_vertices[index + 2]
-				);
-				index = retrotv.bb_indices[triangle * 3 + 2] * 3;
-				new_vec3(p3,
-					retrotv.bb_vertices[index + 0],
-					retrotv.bb_vertices[index + 1],
-					retrotv.bb_vertices[index + 2]
-				);
-
-				if (ray_triangle_intersect(player.camera.pos,
-						vec3_normalize(normed, player.velocity),
-						p1, p2, p3, intersect_point))
-				{
-					triangle_collision = 1;
-					break ;
-				}
-			}
-			if (triangle_collision)
-			{
-				float	new_pos[3];
-				vec3_add(new_pos, player.camera.pos, player.velocity);
-				if (vec3_dist(player.camera.pos, new_pos) >
-					vec3_dist(player.camera.pos, intersect_point))
-				{
-					retrotv.collision = 1;
-					//vec3_sub(player.velocity, new_pos, intersect_point);
-					new_vec3(player.velocity, 0, 0, 0);
-				}
-			}
-		}
-////////////////////////
 		player_apply_velocity(&player);
 
 		glEnable(GL_DEPTH_TEST);

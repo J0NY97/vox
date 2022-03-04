@@ -199,6 +199,7 @@ void		player_events(t_player *player, t_key *keys, GLFWwindow *win);
 void		player_movement(t_player *player, GLFWwindow *win, t_fps fps);
 void		player_apply_velocity(t_player *player);
 void		player_looking(t_player *player, GLFWwindow *win, t_fps fps);
+void		player_entity_collision(t_player *player, t_entity *entity);
 
 ///////////////////
 //	FPS
