@@ -190,6 +190,8 @@ typedef struct s_player
 	int			enabled_mouse;
 	double		mouse_pos[2];
 	double		last_mouse_pos[2];
+
+	t_aabb		aabb;
 }	t_player;
 
 void		new_player(t_player *player);

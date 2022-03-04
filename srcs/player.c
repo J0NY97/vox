@@ -7,6 +7,8 @@ void	new_player(t_player *player)
 	player->enabled_mouse = 0;
 	player->last_mouse_pos[0] = 0;
 	player->last_mouse_pos[1] = 0;
+
+	new_vec3(player->velocity, 0, 0, 0);
 }
 
 void	player_events(t_player *player, t_key *keys, GLFWwindow *win)
@@ -26,6 +28,13 @@ void	player_events(t_player *player, t_key *keys, GLFWwindow *win)
 			LG_INFO("Mouse Disabled");
 		}
 	}
+
+	player->aabb.min[0] = player->camera.pos[0] - 1.0f;
+	player->aabb.min[1] = player->camera.pos[1] - 1.0f;
+	player->aabb.min[2] = player->camera.pos[2] - 1.0f;
+	player->aabb.max[0] = player->camera.pos[0] + 1.0f;
+	player->aabb.max[1] = player->camera.pos[1] + 1.0f;
+	player->aabb.max[2] = player->camera.pos[2] + 1.0f;
 }
 
 /*

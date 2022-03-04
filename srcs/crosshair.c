@@ -33,10 +33,14 @@ void	new_crosshair_shader(t_shader *shader)
 
 void	render_crosshair(void)
 {
+	GLint	viewport[4];
+
+	glGetIntegerv(GL_VIEWPORT, viewport);
 	glDisable(GL_DEPTH_TEST);
-	render_2d_line((float []){-0.01, 0, 0}, (float []){0.01, 0, 0}, (float []){1, 1, 1});
-	// (w * 0.01) / h = (1280 * 0.01) / 720 = 0.0177
-	render_2d_line((float []){0, -0.0177, 0}, (float []){0, 0.0177, 0}, (float []){1, 1, 1});
+	float	len = 0.009;
+	float	h_len = (viewport[2] * len) / viewport[3];
+	render_2d_line((float []){-len, 0, 0}, (float []){len, 0, 0}, (float []){1, 1, 1});
+	render_2d_line((float []){0, -h_len, 0}, (float []){0, h_len, 0}, (float []){1, 1, 1});
 }
 
 typedef struct s_render_line

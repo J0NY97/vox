@@ -121,36 +121,67 @@ int	main(void)
 
 ////////////////////////
 		float p1[VEC3_SIZE];
-		new_vec3(p1, retrotv.aabb.min[0], retrotv.aabb.max[1], retrotv.aabb.max[2]);
 		float p2[VEC3_SIZE];
-		new_vec3(p2, retrotv.aabb.max[0], retrotv.aabb.max[1], retrotv.aabb.max[2]);
 		float p3[VEC3_SIZE];
-		new_vec3(p3, retrotv.aabb.min[0], retrotv.aabb.min[1], retrotv.aabb.max[2]);
-
-/*
+		unsigned int index = 0;
+		
+	/*
+		if (ray_triangle_intersect(player.camera.pos, player.camera.front, p1, p2, p3, intersect_point))
 		if (ray_plane_intersect(player.camera.pos, player.camera.front, retrotv.pos, (float[]){0, 0, -1}))
 			retrotv.collision = 1;
-			*/
+	*/
 		float	intersect_point[3];
 		float	normed[3];
-	//	if (ray_triangle_intersect(player.camera.pos, player.camera.front, p1, p2, p3, intersect_point))
-		if ((player.velocity[0] || player.velocity[1] || player.velocity[2]) &&
-			ray_triangle_intersect(player.camera.pos, vec3_normalize(normed, player.velocity), p1, p2, p3, intersect_point))
+		int		player_moving = (player.velocity[0] || player.velocity[1] || player.velocity[2]);
+		int		aabb_collision = aabb_aabb_collision(&player.aabb, &retrotv.aabb);
+		int		triangle_collision = 0;
+
+		if (player_moving && aabb_collision)
 		{
-			float	new_pos[3];
-			vec3_add(new_pos, player.camera.pos, player.velocity);
-			if (vec3_dist(player.camera.pos, new_pos) > vec3_dist(player.camera.pos, intersect_point))
+			for (int triangle = 0; triangle < 12; triangle++)
 			{
-				retrotv.collision = 1;
-				//vec3_sub(player.velocity, new_pos, intersect_point);
-				new_vec3(player.velocity, 0, 0, 0);
-				vec3_string("new_pos : ", new_pos);
-				vec3_string("intersect_point : ", intersect_point);
-				vec3_string("player.velocity : ", player.velocity);
+
+				index = retrotv.bb_indices[triangle * 3 + 0] * 3;
+				new_vec3(p1,
+					retrotv.bb_vertices[index + 0],
+					retrotv.bb_vertices[index + 1],
+					retrotv.bb_vertices[index + 2]
+				);
+				index = retrotv.bb_indices[triangle * 3 + 1] * 3;
+				new_vec3(p2,
+					retrotv.bb_vertices[index + 0],
+					retrotv.bb_vertices[index + 1],
+					retrotv.bb_vertices[index + 2]
+				);
+				index = retrotv.bb_indices[triangle * 3 + 2] * 3;
+				new_vec3(p3,
+					retrotv.bb_vertices[index + 0],
+					retrotv.bb_vertices[index + 1],
+					retrotv.bb_vertices[index + 2]
+				);
+
+				if (ray_triangle_intersect(player.camera.pos,
+						vec3_normalize(normed, player.velocity),
+						p1, p2, p3, intersect_point))
+				{
+					triangle_collision = 1;
+					break ;
+				}
+			}
+			if (triangle_collision)
+			{
+				float	new_pos[3];
+				vec3_add(new_pos, player.camera.pos, player.velocity);
+				if (vec3_dist(player.camera.pos, new_pos) >
+					vec3_dist(player.camera.pos, intersect_point))
+				{
+					retrotv.collision = 1;
+					//vec3_sub(player.velocity, new_pos, intersect_point);
+					new_vec3(player.velocity, 0, 0, 0);
+				}
 			}
 		}
 ////////////////////////
-
 		player_apply_velocity(&player);
 
 		glEnable(GL_DEPTH_TEST);
@@ -158,14 +189,6 @@ int	main(void)
 
 		render_entity(&retrotv, &player.camera, &retrotv_model, &shader1);
 		//render_entity(&dust2, &player.camera, &dust2_model, &shader1);
-
-		glDisable(GL_DEPTH_TEST);
-		render_3d_line(p1, p2, (float []){0, 0, 1},
-			player.camera.view, player.camera.projection);
-		render_3d_line(p1, p3, (float []){0, 1, 0},
-			player.camera.view, player.camera.projection);
-		render_3d_line(p2, p3, (float []){0, 1, 1},
-			player.camera.view, player.camera.projection);
 
 		render_crosshair();
 

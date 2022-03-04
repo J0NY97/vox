@@ -12,6 +12,7 @@ void	new_entity(t_entity *entity)
 
 	entity->model = NULL;
 
+	update_entity(entity);
 	LG_INFO("new entity made.");
 }
 
@@ -54,6 +55,10 @@ void	update_entity(t_entity *entity)
 	mat4_multiply(entity->model_mat, entity->model_mat, entity->scale_mat);
 	mat4_multiply(entity->model_mat, entity->model_mat, entity->rot_mat);
 	mat4_multiply(entity->model_mat, entity->model_mat, entity->trans_mat);
+
+	// AABB
+	create_bb_vertices(entity->bb_vertices, entity->aabb.min, entity->aabb.max);
+	create_bb_indices(entity->bb_indices);
 }
 
 void	render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader *shader)
@@ -76,8 +81,6 @@ void	render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader 
 
 	render_model(model);
 
-	create_bb_vertices(entity->bb_vertices, entity->aabb.min, entity->aabb.max);
-	create_bb_indices(entity->bb_indices);
 	render_box(entity->bb_vertices, entity->bb_indices, (float[]){1, 0, 0},
 		camera->view, camera->projection);
 
