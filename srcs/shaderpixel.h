@@ -237,6 +237,8 @@ typedef struct	s_shaderpixel
 	GLFWwindow	*win;
 	int			win_w;
 	int			win_h;
+	int			polygon_mode;
+	int			pilpalpol;
 }	t_shaderpixel;
 
 ///////////////////
