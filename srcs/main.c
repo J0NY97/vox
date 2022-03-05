@@ -61,7 +61,8 @@ int	main(void)
 	t_player	player;
 	new_player(&player);
 
-	new_vec3(player.camera.pos, 0, 0, 2.5);
+	new_vec3(player.camera.pos, 2.5, 0.5, 0.5);
+	player.camera.yaw = -126;
 	player.camera.viewport_w = sp.win_w;
 	player.camera.viewport_h = sp.win_h;
 
@@ -98,6 +99,11 @@ int	main(void)
 	new_model(&display_model, &display_obj);
 	t_entity	display;
 	new_entity(&display);
+	new_vec3(display.pos, 1.2, 0.6, -2.0);
+	display.scale_value = 0.1;
+	display.rot_x_angle = 0;
+	display.rot_y_angle = 0;
+	display.rot_z_angle = 0;
 
 	t_shader	mandelbrot_shader;
 	new_shader(&mandelbrot_shader, SHADER_PATH"mandelbrot.vs", SHADER_PATH"mandelbrot.fs");
@@ -131,6 +137,11 @@ int	main(void)
 				sp.polygon_mode = GL_LINE;
 			else if (sp.pilpalpol == 2)
 				sp.polygon_mode = GL_POINT;
+		}
+		if (keys[GLFW_KEY_P].state == GLFW_PRESS)
+		{
+			player_print(&player);
+			entity_print(&display);
 		}
 
 		update_fps(&fps);

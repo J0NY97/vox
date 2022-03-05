@@ -20,7 +20,7 @@ void	add_collision_entity(t_collision_detector *detector, t_entity *entity)
 		return ;
 	}
 	new = ft_lstnew(0, 0);
-	node = &(new->content);
+	node = new->content;
 	node->entity = entity;
 }
 
@@ -42,7 +42,7 @@ void	remove_collision_entity(t_collision_detector *detector, t_entity *entity)
 
 void	free_collision_detector(t_collision_detector *detector)
 {
-	ft_lstdel(detector->nodes, &free_collision_node);
+	ft_lstdel(&detector->nodes, &free_collision_node);
 }
 
 void	free_collision_node(void *pointer, size_t size)

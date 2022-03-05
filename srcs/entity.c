@@ -8,12 +8,22 @@ void	new_entity(t_entity *entity)
 	entity->rot_z_angle = 0.0f;
 	entity->scale_value = 1.0f;
 
+	entity->collision_detection_enabled = 0;
 	entity->collision = 0;
 
 	entity->model = NULL;
 
 	update_entity(entity);
 	LG_INFO("new entity made.");
+}
+
+void	entity_print(t_entity *entity)
+{
+	ft_printf("Entity :\n");
+	vec3_string("entity.pos : ", entity->pos);
+	ft_printf("entity.rot_x_angle : %f\n", entity->rot_x_angle);
+	ft_printf("entity.rot_y_angle : %f\n", entity->rot_y_angle);
+	ft_printf("entity.rot_z_angle : %f\n", entity->rot_z_angle);
 }
 
 /*
@@ -52,13 +62,16 @@ void	update_entity(t_entity *entity)
 
 
 	mat4_identity(entity->model_mat);
-	mat4_multiply(entity->model_mat, entity->model_mat, entity->scale_mat);
-	mat4_multiply(entity->model_mat, entity->model_mat, entity->rot_mat);
 	mat4_multiply(entity->model_mat, entity->model_mat, entity->trans_mat);
+	mat4_multiply(entity->model_mat, entity->model_mat, entity->rot_mat);
+	mat4_multiply(entity->model_mat, entity->model_mat, entity->scale_mat);
 
 	// AABB
-	create_bb_vertices(entity->bb_vertices, entity->aabb.min, entity->aabb.max);
-	create_bb_indices(entity->bb_indices);
+	if (entity->collision_detection_enabled)
+	{
+		create_bb_vertices(entity->bb_vertices, entity->aabb.min, entity->aabb.max);
+		create_bb_indices(entity->bb_indices);
+	}
 }
 
 void	render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader *shader)
@@ -81,8 +94,9 @@ void	render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader 
 
 	render_model(model);
 
-	render_box(entity->bb_vertices, entity->bb_indices, (float[]){1, 0, 0},
-		camera->view, camera->projection);
+	if (entity->collision_detection_enabled)
+		render_box(entity->bb_vertices, entity->bb_indices, (float[]){1, 0, 0},
+			camera->view, camera->projection);
 
 	glUseProgram(0);
 	glBindVertexArray(0);
@@ -113,6 +127,7 @@ void	entity_collision_detection(t_list *entity_list, float *point)
 	while (curr)
 	{
 		entity = curr->content;
+		entity->collision_detection_enabled = 1;
 		aabb_create(&entity->aabb, entity->model->info->mesh.vertices,
 			entity->model->info->mesh.vertex_amount);
 		aabb_transform(&entity->aabb, entity->model_mat);
