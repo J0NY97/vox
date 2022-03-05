@@ -92,6 +92,13 @@ int	main(void)
 	dust2.rot_z_angle = -90;
 	dust2.scale_value = 0.005;
 
+	t_obj		display_obj;
+	obj_load(&display_obj, MODEL_PATH"display/display.obj");
+	t_model		display_model;
+	new_model(&display_model, &display_obj);
+	t_entity	display;
+	new_entity(&display);
+
 	t_shader	mandelbrot_shader;
 	new_shader(&mandelbrot_shader, SHADER_PATH"mandelbrot.vs", SHADER_PATH"mandelbrot.fs");
 
@@ -145,6 +152,7 @@ int	main(void)
 
 		render_entity(&retrotv, &player.camera, &retrotv_model, &shader1);
 		render_entity(&dust2, &player.camera, &dust2_model, &shader1);
+		render_entity(&display, &player.camera, &display_model, &shader1);
 
 		render_crosshair();
 
