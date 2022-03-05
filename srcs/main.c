@@ -90,7 +90,7 @@ int	main(void)
 	new_model(&dust2_model, &dust2_obj);
 	t_entity	dust2;
 	new_entity(&dust2);
-	dust2.rot_z_angle = -90;
+	dust2.rot_x_angle = -90;
 	dust2.scale_value = 0.005;
 
 	t_obj		display_obj;
@@ -102,7 +102,7 @@ int	main(void)
 	new_vec3(display.pos, 1.2, 0.6, -2.0);
 	display.scale_value = 0.1;
 	display.rot_x_angle = 0;
-	display.rot_y_angle = 0;
+	display.rot_y_angle = 90;
 	display.rot_z_angle = 0;
 
 	t_shader	mandelbrot_shader;
@@ -138,11 +138,33 @@ int	main(void)
 			else if (sp.pilpalpol == 2)
 				sp.polygon_mode = GL_POINT;
 		}
+
+		int			rot_amount = 1;
+		t_entity	*which_entity = &display;
+		if (keys[GLFW_KEY_KP_1].state == GLFW_PRESS)
+		{
+			if (keys[GLFW_KEY_LEFT_SHIFT].state)
+				rot_amount = -rot_amount;
+			which_entity->rot_x_angle += rot_amount;
+		}
+		if (keys[GLFW_KEY_KP_2].state == GLFW_PRESS)
+		{
+			if (keys[GLFW_KEY_LEFT_SHIFT].state)
+				rot_amount = -rot_amount;
+			which_entity->rot_y_angle += rot_amount;
+		}
+		if (keys[GLFW_KEY_KP_3].state == GLFW_PRESS)
+		{
+			if (keys[GLFW_KEY_LEFT_SHIFT].state)
+				rot_amount = -rot_amount;
+			which_entity->rot_z_angle += rot_amount;
+		}
 		if (keys[GLFW_KEY_P].state == GLFW_PRESS)
 		{
 			player_print(&player);
-			entity_print(&display);
+			entity_print(which_entity);
 		}
+
 
 		update_fps(&fps);
 		player_events(&player, keys, sp.win);
