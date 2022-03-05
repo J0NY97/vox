@@ -55,6 +55,7 @@ typedef struct	s_entity
 	float			trans_mat[MAT4_SIZE];
 	float			model_mat[MAT4_SIZE];
 
+	int				collision_detection_enabled;
 	t_aabb			aabb;
 	float			bb_vertices[24];
 	unsigned int	bb_indices[36];
@@ -64,6 +65,7 @@ typedef struct	s_entity
 }	t_entity;
 
 void				new_entity(t_entity *entity);
+void				entity_print(t_entity *entity);
 void				update_entity(t_entity *entity);
 void				render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader *shader);
 void				entity_collision_detection(t_list *entity_list, float *point);
@@ -160,6 +162,7 @@ struct s_camera
 
 void		new_camera(t_camera *camera);
 void		update_camera(t_camera *camera);
+void		camera_print(t_camera *camera);
 
 ///////////////////
 //	FRACTAL
@@ -200,6 +203,7 @@ void		player_movement(t_player *player, GLFWwindow *win, t_fps fps);
 void		player_apply_velocity(t_player *player);
 void		player_looking(t_player *player, GLFWwindow *win, t_fps fps);
 void		player_entity_collision(t_player *player, t_entity *entity);
+void		player_print(t_player *player);
 
 ///////////////////
 //	FPS

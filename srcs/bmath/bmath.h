@@ -10,6 +10,7 @@
 # define MAT2_SIZE 4
 # define MAT3_SIZE 9
 # define MAT4_SIZE 16
+# define QUAT_SIZE 4
 
 // VEC3
 float	*new_vec3(float *src, float x, float y, float z);
@@ -53,5 +54,10 @@ float	*mat4_perspective_fov(float *result, float fov, float w, float h, float n,
 float	*mat4_look_at(float *result, float *position, float *target, float *up);
 float	*mat4_multiply(float *result, float *m0, float *m1);
 float	*mat4_inverse(float *result, float *m0);
+
+// QUAT
+float	*quat_new(float *res, float x, float y, float z, float w);
+float	*euler_to_quat(float *res, float roll, float pitch, float yaw);
+float	*mat4_rotation_quat(float *res, float *q0);
 
 #endif

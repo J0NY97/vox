@@ -610,3 +610,62 @@ float	*mat4_inverse(float *result, float *m0)
 	result[15] = inverse[15] * inverted_determinant;
 	return (result);
 }
+
+////////////////
+// QUAT
+////////////////
+
+float	*quat_new(float *res, float x, float y, float z, float w)
+{
+	res[0] = x;
+	res[1] = y;
+	res[2] = z;
+	res[3] = w;
+	return (res);
+}
+
+float	*euler_to_quat(float *res, float yaw, float pitch, float roll) // roll (X), pitch (Y), yaw (Z)
+{
+	double	cy = cos(yaw * 0.5);
+	double	sy = sin(yaw * 0.5);
+	double	cp = cos(pitch * 0.5);
+	double	sp = sin(pitch * 0.5);
+	double	cr = cos(roll * 0.5);
+	double	sr = sin(roll * 0.5);
+
+	res[0] = sr * cp * cy - cr * sp * sy;
+	res[1] = cr * sp * cy + sr * cp * sy;
+	res[2] = cr * cp * sy - sr * sp * cy;
+	res[3] = cr * cp * cy + sr * sp * sy;
+	return (res);
+}
+
+float	*mat4_rotation_quat(float *res, float *q0)
+{
+	float	xx = q0[0] * q0[0];
+	float	yy = q0[1] * q0[1];
+	float	zz = q0[2] * q0[2];
+	float	xy = q0[0] * q0[1];
+	float	zw = q0[2] * q0[3];
+	float	xz = q0[0] * q0[2];
+	float	yw = q0[1] * q0[3];
+	float	yz = q0[1] * q0[2];
+	float	xw = q0[0] * q0[3];
+	res[0] = 1.0f - (2.0) * (yy + zz);
+	res[1] = (2.0) * (xy + zw);
+	res[2] = (2.0) * (xz - yw);
+	res[3] = (0.0);
+	res[4] = (2.0) * (xy - zw);
+	res[5] = (1.0) - (2.0) * (xx + zz);
+	res[6] = (2.0) * (yz + xw);
+	res[7] = (0.0);
+	res[8] = (2.0) * (xz + yw);
+	res[9] = (2.0) * (yz - xw);
+	res[10] = (1.0) - (2.0) * (xx + yy);
+	res[11] = (0.0);
+	res[12] = (0.0);
+	res[13] = (0.0);
+	res[14] = (0.0);
+	res[15] = (1.0);
+	return (res);
+}

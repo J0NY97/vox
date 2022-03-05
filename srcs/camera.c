@@ -33,3 +33,16 @@ void	update_camera(t_camera *camera)
 	mat4_identity(camera->view);
 	mat4_look_at(camera->view, camera->pos, vec3_add(temp_vec3, camera->pos, camera->front), camera->up);
 }
+
+void	camera_print(t_camera *camera)
+{
+	ft_printf("CAMERA :\n");
+	vec3_string("camera.pos : ", camera->pos);
+	vec3_string("camera.front : ", camera->front);
+	vec3_string("camera.up : ", camera->up);
+	ft_printf("camera.pitch : %f\n", camera->pitch);
+	ft_printf("camera.yaw : %f\n", camera->yaw);
+	ft_printf("camera.fov : %f\n", camera->fov);
+	ft_printf("camera.viewport_w : %f\n", camera->viewport_w);
+	ft_printf("camera.viewport_h : %f\n", camera->viewport_h);
+}

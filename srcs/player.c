@@ -143,3 +143,10 @@ void	player_looking(t_player *player, GLFWwindow *win, t_fps fps)
 	else if (player->camera.pitch < -89.0f)
 		player->camera.pitch = -89.0f;
 }
+
+void	player_print(t_player *player)
+{
+	ft_printf("PLAYER :\n");
+	vec3_string("player.velocity : ", player->velocity);
+	camera_print(&player->camera);
+}
