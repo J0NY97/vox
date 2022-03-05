@@ -19,11 +19,10 @@ void	player_entity_collision(t_player *player, t_entity *entity)
 	
 	float	intersect_point[3];
 	float	normed[3];
-	int		player_moving = (player->velocity[0] || player->velocity[1] || player->velocity[2]);
 	int		aabb_collision = aabb_aabb_collision(&player->aabb, &entity->aabb);
 	int		triangle_collision = 0;
 
-	if (player_moving && aabb_collision)
+	if (player->moving && aabb_collision)
 	{
 		for (int triangle = 0; triangle < 12; triangle++)
 		{
@@ -62,6 +61,7 @@ void	player_entity_collision(t_player *player, t_entity *entity)
 				vec3_dist(player->camera.pos, intersect_point))
 			{
 				entity->collision = 1;
+				player->colliding = 1;
 				//vec3_sub(player.velocity, new_pos, intersect_point);
 				new_vec3(player->velocity, 0, 0, 0);
 			}

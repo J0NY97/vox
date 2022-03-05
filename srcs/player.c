@@ -9,6 +9,8 @@ void	new_player(t_player *player)
 	player->last_mouse_pos[1] = 0;
 
 	new_vec3(player->velocity, 0, 0, 0);
+
+	player->moving = 0;
 }
 
 void	player_events(t_player *player, t_key *keys, GLFWwindow *win)
@@ -35,6 +37,8 @@ void	player_events(t_player *player, t_key *keys, GLFWwindow *win)
 	player->aabb.max[0] = player->camera.pos[0] + 1.0f;
 	player->aabb.max[1] = player->camera.pos[1] + 1.0f;
 	player->aabb.max[2] = player->camera.pos[2] + 1.0f;
+
+	player->colliding = 0;
 }
 
 /*
@@ -74,6 +78,8 @@ void	player_movement(t_player *player, GLFWwindow *win, t_fps fps)
 
 	vec3_add(player->velocity, player->velocity, temp0);
 	vec3_add(player->velocity, player->velocity, temp1);
+
+	player->moving = (player->velocity[0] || player->velocity[1] || player->velocity[2]);
 }
 
 void	player_apply_velocity(t_player *player)
@@ -148,5 +154,7 @@ void	player_print(t_player *player)
 {
 	ft_printf("PLAYER :\n");
 	vec3_string("player.velocity : ", player->velocity);
+	ft_printf("player.moving : %d\n", player->moving);
+	ft_printf("player.colliding : %d\n", player->colliding);
 	camera_print(&player->camera);
 }

@@ -190,11 +190,14 @@ typedef struct s_player
 	float		velocity[VEC3_SIZE];
 	float		gravity[VEC3_SIZE];
 
+	int			moving;
+	int			colliding;
 	int			enabled_mouse;
 	double		mouse_pos[2];
 	double		last_mouse_pos[2];
 
 	t_aabb		aabb;
+
 }	t_player;
 
 void		new_player(t_player *player);
