@@ -629,6 +629,7 @@ t_material	*material_load(
 			*mat_amount += 1;
 			materials = realloc(materials, sizeof(t_material) * *mat_amount);
 			curr_mat = &materials[*mat_amount - 1];
+			memset(curr_mat, 0, sizeof(t_material));
 			curr_mat->name = ft_strdup(arr[1]);
 		}
 		else if (ft_strequ(arr[0], "Ns"))

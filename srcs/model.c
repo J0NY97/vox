@@ -72,6 +72,8 @@ void	fill_mesh_info(t_mesh_info *info, t_mesh *mesh)
 
 void	new_model(t_model *model, t_obj *obj)
 {
+	char	*temp_mat_kd;
+
 	glGetError();
 
 	model->obj = obj;
@@ -90,13 +92,16 @@ void	new_model(t_model *model, t_obj *obj)
 		for (int i = 0; i < model->mat_info_amount; i++)
 		{
 			model->mat_info[i].material = &obj->materials[i];
-			glGenTextures(1, &model->mat_info[i].texture);
 			if (access(model->mat_info[i].material->map_Kd, F_OK))
 			{
+				temp_mat_kd = ft_strjoin(obj->root_path, model->mat_info[i].material->map_Kd);
+				LG_WARN("Cant find texture (%s) with direct path. Trying <%s>",
+					model->mat_info[i].material->map_Kd, temp_mat_kd);
 				free(model->mat_info[i].material->map_Kd);
-				model->mat_info[i].material->map_Kd
-					= ft_strjoin(obj->root_path, obj->materials[i].map_Kd);
+				model->mat_info[i].material->map_Kd = ft_strdup(temp_mat_kd);
+				free(temp_mat_kd);
 			}
+			glGenTextures(1, &model->mat_info[i].texture);
 			model->mat_info[i].loaded = new_texture(&model->mat_info[i].texture, model->mat_info[i].material->map_Kd);
 		}
 	}
