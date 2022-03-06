@@ -118,6 +118,11 @@ int	main(void)
 	if (error)
 		LG_ERROR("gl errors before while : %d", error);
 
+	float		rot_amount = 1;
+	int			toggle_rot_x = 0;
+	int			toggle_rot_y = 0;
+	int			toggle_rot_z = 0;
+
 	glfwSwapInterval(0);
 	while (!glfwWindowShouldClose(sp.win))
 	{
@@ -139,26 +144,36 @@ int	main(void)
 				sp.polygon_mode = GL_POINT;
 		}
 
-		int			rot_amount = 1;
+		float		rot_amount_delta = rot_amount * 10.0f * fps.delta_time;
 		t_entity	*which_entity = &display;
+
+		if (keys[GLFW_KEY_KP_ENTER].state == GLFW_PRESS)
+			rot_amount *= -1;
+
 		if (keys[GLFW_KEY_KP_1].state == GLFW_PRESS)
-		{
-			if (keys[GLFW_KEY_LEFT_SHIFT].state)
-				rot_amount = -rot_amount;
 			which_entity->rot_x_angle += rot_amount;
-		}
 		if (keys[GLFW_KEY_KP_2].state == GLFW_PRESS)
-		{
-			if (keys[GLFW_KEY_LEFT_SHIFT].state)
-				rot_amount = -rot_amount;
 			which_entity->rot_y_angle += rot_amount;
-		}
 		if (keys[GLFW_KEY_KP_3].state == GLFW_PRESS)
-		{
-			if (keys[GLFW_KEY_LEFT_SHIFT].state)
-				rot_amount = -rot_amount;
 			which_entity->rot_z_angle += rot_amount;
-		}
+
+		if (keys[GLFW_KEY_KP_4].state == GLFW_PRESS)
+			toggle_rot_x = toggle_rot_x != 1;
+		if (toggle_rot_x)
+			which_entity->rot_x_angle += rot_amount_delta;
+
+/*
+		if (keys[GLFW_KEY_KP_5].state == GLFW_PRESS)
+			toggle_rot_y = toggle_rot_y != 1;
+		if (toggle_rot_y)
+			which_entity->rot_y_angle += rot_amount_delta;
+
+		if (keys[GLFW_KEY_KP_5].state == GLFW_PRESS)
+			toggle_rot_z = toggle_rot_z != 1;
+		if (toggle_rot_z)
+			which_entity->rot_z_angle += rot_amount_delta;
+*/
+
 		if (keys[GLFW_KEY_P].state == GLFW_PRESS)
 		{
 			player_print(&player);

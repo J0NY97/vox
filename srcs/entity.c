@@ -40,29 +40,30 @@ void	update_entity(t_entity *entity)
 
 	mat4_identity(entity->rot_mat);
 
-/*
 	float	rot_x[MAT4_SIZE];
 	mat4_identity(rot_x);
 	mat4_rotation_x(rot_x, to_radians(entity->rot_x_angle));
 
 	float	rot_y[MAT4_SIZE];
 	mat4_identity(rot_y);
-	mat4_rotation_x(rot_y, to_radians(entity->rot_y_angle));
+	mat4_rotation_y(rot_y, to_radians(entity->rot_y_angle));
 
 	float	rot_z[MAT4_SIZE];
 	mat4_identity(rot_z);
-	mat4_rotation_x(rot_z, to_radians(entity->rot_z_angle));
+	mat4_rotation_z(rot_z, to_radians(entity->rot_z_angle));
 
 	mat4_multiply(entity->rot_mat, entity->rot_mat, rot_x);
 	mat4_multiply(entity->rot_mat, entity->rot_mat, rot_y);
 	mat4_multiply(entity->rot_mat, entity->rot_mat, rot_z);
-	*/
+
+/*
 	float	q[QUAT_SIZE];
 	euler_to_quat(q,
 		to_radians(entity->rot_x_angle),
 		to_radians(entity->rot_y_angle),
 		to_radians(entity->rot_z_angle));
 	mat4_rotation_quat(entity->rot_mat, q);
+	*/
 
 
 	mat4_identity(entity->trans_mat);

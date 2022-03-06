@@ -624,7 +624,7 @@ float	*quat_new(float *res, float x, float y, float z, float w)
 	return (res);
 }
 
-float	*euler_to_quat(float *res, float yaw, float pitch, float roll) // roll (X), pitch (Y), yaw (Z)
+float	*euler_to_quat(float *res, float roll, float pitch, float yaw) // roll (X), pitch (Y), yaw (Z)
 {
 	double	cy = cos(yaw * 0.5);
 	double	sy = sin(yaw * 0.5);
