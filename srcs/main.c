@@ -52,21 +52,22 @@ int	main(void)
 	init(&sp);
 	t_scene	scene;
 	create_scene(&scene);
-
-	t_list	*entity_collision_list = NULL;
-
 	t_key	keys[GLFW_KEY_LAST];
-
 	t_fps	fps;
 	new_fps(&fps);
 
 	t_player	player;
 	new_player(&player);
-
 	new_vec3(player.camera.pos, 2.5, 0.5, 0.5);
 	player.camera.yaw = -126;
 	player.camera.viewport_w = sp.win_w;
 	player.camera.viewport_h = sp.win_h;
+
+	t_shader	crosshair_shader;
+	new_crosshair_shader(&crosshair_shader);
+
+	t_shader	shader1;
+	new_shader(&shader1, SHADER_PATH"simple.vs", SHADER_PATH"simple.fs");
 
 	t_obj		retrotv_obj;
 	obj_load(&retrotv_obj, MODEL_PATH"retrotv/retrotv.obj");
@@ -77,11 +78,6 @@ int	main(void)
 	new_vec3(retrotv->pos, 0, 0, -2.5);
 	retrotv->collision_detection_enabled = 1;
 	size_t	retrotv_index = add_entity_to_scene(&scene, retrotv);
-
-	add_to_list(&entity_collision_list, retrotv, 0);
-
-	t_shader	shader1;
-	new_shader(&shader1, SHADER_PATH"simple.vs", SHADER_PATH"simple.fs");
 
 	t_obj		dust2_obj;
 	obj_load(&dust2_obj, MODEL_PATH"de_dust2/de_dust2.obj");
@@ -111,12 +107,8 @@ int	main(void)
 
 	t_shader	mandelbrot_shader;
 	new_shader(&mandelbrot_shader, SHADER_PATH"mandelbrot.vs", SHADER_PATH"mandelbrot.fs");
-
 	t_fractal2d	fractal;
 	new_fractal2d(&fractal);
-
-	t_shader	crosshair_shader;
-	new_crosshair_shader(&crosshair_shader);
 
 	int error = glGetError();
 	if (error)
@@ -199,7 +191,10 @@ int	main(void)
 				aabb_transform(&scene.entities[i]->aabb,
 					scene.entities[i]->model_mat);
 				if (scene.entities[i]->collision_use_precise)
+				{
+					LG_INFO("Using precise collision detection for entity %d.", i);
 					player_entity_collision_precise(&player, scene.entities[i]);
+				}
 				else
 					player_entity_collision(&player, scene.entities[i]);
 				entities_collisioned += 1;

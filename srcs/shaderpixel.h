@@ -133,6 +133,7 @@ void		camera_print(t_camera *camera);
 ///////////////////
 //	FRACTAL
 ///////////////////
+
 typedef struct s_fractal2d
 {
 	GLuint	vao;
@@ -149,9 +150,6 @@ void		render_fractal2d(t_fractal2d *fractal, t_shader *shader);
 //	ENTITY
 ///////////////////
 
-/*
- * model in the entity is currently only needed in the collision detection;
-*/
 typedef struct	s_entity
 {
 	size_t			id;
