@@ -25,6 +25,7 @@ float	vec3_dot(float *v0, float *v1);
 float	vec3_dist(float *v0, float *v1);
 float	*vec3_multiply_mat3(float *res, float *v, float *m);
 float	vec3_length(float *v0);
+float	*vec3_to_vec4(float *res, float *v3);
 
 // VEC4
 float	*vec4_new(float *res, float x, float y, float z, float w);

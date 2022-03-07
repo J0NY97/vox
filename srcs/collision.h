@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/04 09:39:11 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/03/05 11:14:54 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/03/07 12:13:25 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,8 @@ typedef struct s_aabb
 
 void		aabb_create(t_aabb *res, float *vertices, size_t vertex_amount);
 void		aabb_transform(t_aabb *a, float *model);
+void		aabb_transform_new(t_aabb *a, float *model);
+void		aabb_vertify(t_aabb *a);
 int			aabb_aabb_collision(t_aabb *a, t_aabb *b);
 int			point_aabb_collision(float *point, t_aabb *b);
 

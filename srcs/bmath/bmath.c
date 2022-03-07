@@ -101,6 +101,15 @@ float	*vec3_multiply_mat3(float *res, float *v, float *m)
 	return (res);
 }
 
+float	*vec3_to_vec4(float *res, float *v3)
+{
+	res[0] = v3[0];
+	res[1] = v3[1];
+	res[2] = v3[2];
+	res[3] = 1;
+	return (res);
+}
+
 float	*vec4_to_vec3(float *res, float *v4)
 {
 	res[0] = v4[0];

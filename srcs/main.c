@@ -58,8 +58,10 @@ int	main(void)
 
 	t_player	player;
 	new_player(&player);
-	new_vec3(player.camera.pos, 2.5, 0.5, 0.5);
-	player.camera.yaw = -126;
+	new_vec3(player.camera.pos, -9.269078, 0.349081, -6.638917);
+	player.camera.yaw = -263;
+//	new_vec3(player.camera.pos, 2.5, 0.5, 0.5);
+//	player.camera.yaw = -126;
 	player.camera.viewport_w = sp.win_w;
 	player.camera.viewport_h = sp.win_h;
 
@@ -138,6 +140,7 @@ int	main(void)
 				sp.polygon_mode = GL_LINE;
 			else if (sp.pilpalpol == 2)
 				sp.polygon_mode = GL_POINT;
+			glPolygonMode(GL_FRONT_AND_BACK, sp.polygon_mode);
 		}
 
 		float		rot_amount_delta = rot_amount * 10.0f * fps.delta_time;
@@ -185,16 +188,25 @@ int	main(void)
 		{
 			if (scene.entities[i] && scene.entities[i]->collision_detection_enabled)
 			{
+				// creates model thingthong
 				aabb_create(&scene.entities[i]->aabb,
 					scene.entities[i]->model.info->mesh.vertices,
 					scene.entities[i]->model.info->mesh.vertex_amount);
-				aabb_transform(&scene.entities[i]->aabb,
+				// create vertices of them
+				aabb_vertify(&scene.entities[i]->aabb);
+				// transform all the vertices
+				aabb_transform_new(&scene.entities[i]->aabb,
 					scene.entities[i]->model_mat);
+
+				aabb_create(&scene.entities[i]->aabb,
+					scene.entities[i]->aabb.vertices, 8);
+
+
+				// At some point, so it doenst get done somewhere im not sure where....
+				// aabb_vertify();
+
 				if (scene.entities[i]->collision_use_precise)
-				{
-					LG_INFO("Using precise collision detection for entity %d.", i);
 					player_entity_collision_precise(&player, scene.entities[i]);
-				}
 				else
 					player_entity_collision(&player, scene.entities[i]);
 				entities_collisioned += 1;
@@ -204,7 +216,6 @@ int	main(void)
 		player_apply_velocity(&player);
 
 		glEnable(GL_DEPTH_TEST);
-		glPolygonMode(GL_FRONT_AND_BACK, sp.polygon_mode);
 
 		update_camera(&player.camera);
 
@@ -217,6 +228,17 @@ int	main(void)
 				entities_rendered += 1;
 			}
 		}
+
+		glDisable(GL_DEPTH_TEST);
+/*
+		float p1[] = { -9.760000, 0.320000, -5.760000 };
+		float p2[] = { -9.280000, 0.320000, -5.760000 };
+		float p3[] = { -9.280000, 0.160000, -5.760000 };
+
+		render_3d_line(p1, p2, (float []){0, 1, 0}, player.camera.view, player.camera.projection);
+		render_3d_line(p1, p3, (float []){0, 1, 0}, player.camera.view, player.camera.projection);
+		render_3d_line(p2, p3, (float []){0, 1, 0}, player.camera.view, player.camera.projection);
+		*/
 
 		render_crosshair();
 

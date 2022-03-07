@@ -115,6 +115,7 @@ void	render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader 
 		LG_ERROR("(%d)", error);
 }
 
+// TODO: When not using anymore, REMOVE!
 float	*create_bb_vertices(float *res, float *min, float *max)
 {
 	float	vertices[] = {

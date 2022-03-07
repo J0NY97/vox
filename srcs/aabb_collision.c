@@ -45,6 +45,7 @@ void	aabb_create(t_aabb *res, float *vertices, size_t vertex_amount)
 void	aabb_transform(t_aabb *a, float *model)
 {
 	float	v4[VEC4_SIZE];
+	t_aabb	temp;
 
 	vec4_new(v4, a->min[0], a->min[1], a->min[2], 1);
 	vec4_multiply_mat4(v4, v4, model);
@@ -53,6 +54,49 @@ void	aabb_transform(t_aabb *a, float *model)
 	vec4_new(v4, a->max[0], a->max[1], a->max[2], 1);
 	vec4_multiply_mat4(v4, v4, model);
 	vec4_to_vec3(a->max, v4);
+
+	temp = *a;
+	if (temp.min[0] > temp.max[0])
+		ft_swap(&temp.min[0], &temp.max[0]);
+	if (temp.min[1] > temp.max[1])
+		ft_swap(&temp.min[1], &temp.max[1]);
+	if (temp.min[2] > temp.max[2])
+		ft_swap(&temp.min[2], &temp.max[2]);
+	*a = temp;
+}
+
+// TODO : Replace the old version with this;
+void	aabb_transform_new(t_aabb *a, float *model)
+{
+	float	v4[VEC4_SIZE];
+	t_aabb	temp;
+
+	for (int i = 0; i < 24; i += 3)
+	{
+		vec4_new(v4, a->vertices[i + 0], a->vertices[i + 1], a->vertices[i + 2], 1);
+		vec4_multiply_mat4(v4, v4, model);
+		a->vertices[i + 0] = v4[0];
+		a->vertices[i + 1] = v4[1];
+		a->vertices[i + 2] = v4[2];
+	}
+}
+
+void	aabb_vertify(t_aabb *a)
+{
+	float	vertices[] = {
+		// front
+		a->min[0], a->max[1], a->max[2], // top left		0
+		a->max[0], a->max[1], a->max[2], // top right	1
+		a->min[0], a->min[1], a->max[2], // bot left		2
+		a->max[0], a->min[1], a->max[2], // bot right	3
+
+		// back
+		a->min[0], a->max[1], a->min[2], // top left		4
+		a->max[0], a->max[1], a->min[2], // top right	5
+		a->min[0], a->min[1], a->min[2], // bot left		6
+		a->max[0], a->min[1], a->min[2] // bot right		7
+	};
+	memcpy(a->vertices, vertices, sizeof(float) * 24);
 }
 
 /*
