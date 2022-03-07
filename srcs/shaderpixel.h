@@ -34,41 +34,7 @@ typedef struct	s_model		t_model;
 typedef struct	s_shader	t_shader;
 typedef struct	s_fps		t_fps;
 typedef struct	s_key		t_key;
-
-///////////////////
-//	ENTITY
-///////////////////
-
-/*
- * model in the entity is currently only needed in the collision detection;
-*/
-typedef struct	s_entity
-{
-	float			pos[VEC3_SIZE];
-	float			rot_x_angle;
-	float			rot_y_angle;
-	float			rot_z_angle;
-	float			scale_value;
-
-	float			scale_mat[MAT4_SIZE];
-	float			rot_mat[MAT4_SIZE];
-	float			trans_mat[MAT4_SIZE];
-	float			model_mat[MAT4_SIZE];
-
-	int				collision_detection_enabled;
-	t_aabb			aabb;
-	float			bb_vertices[24];
-	unsigned int	bb_indices[36];
-	int				collision;
-
-	t_model			*model;
-}	t_entity;
-
-void				new_entity(t_entity *entity);
-void				entity_print(t_entity *entity);
-void				update_entity(t_entity *entity);
-void				render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader *shader);
-void				entity_collision_detection(t_list *entity_list, float *point);
+typedef struct	s_model		t_model;
 
 ///////////////////
 //	MODEL
@@ -180,6 +146,45 @@ void		new_fractal2d(t_fractal2d *fractal);
 void		render_fractal2d(t_fractal2d *fractal, t_shader *shader);
 
 ///////////////////
+//	ENTITY
+///////////////////
+
+/*
+ * model in the entity is currently only needed in the collision detection;
+*/
+typedef struct	s_entity
+{
+	size_t			id;
+
+	float			pos[VEC3_SIZE];
+	float			rot_x_angle;
+	float			rot_y_angle;
+	float			rot_z_angle;
+	float			scale_value;
+
+	float			scale_mat[MAT4_SIZE];
+	float			rot_mat[MAT4_SIZE];
+	float			trans_mat[MAT4_SIZE];
+	float			model_mat[MAT4_SIZE];
+
+	int				collision_detection_enabled;
+	int				collision_use_precise;
+	t_aabb			aabb;
+	float			bb_vertices[24];
+	unsigned int	bb_indices[36];
+	int				collision;
+
+	t_model			model;
+}	t_entity;
+
+void				new_entity(t_entity *entity);
+void				entity_print(t_entity *entity);
+void				update_entity(t_entity *entity);
+void				render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader *shader);
+
+
+
+///////////////////
 //	PLAYER
 ///////////////////
 
@@ -206,6 +211,7 @@ void		player_movement(t_player *player, GLFWwindow *win, t_fps fps);
 void		player_apply_velocity(t_player *player);
 void		player_looking(t_player *player, GLFWwindow *win, t_fps fps);
 void		player_entity_collision(t_player *player, t_entity *entity);
+void		player_entity_collision_precise(t_player *player, t_entity *entity);
 void		player_print(t_player *player);
 
 ///////////////////
@@ -234,6 +240,29 @@ struct	s_key
 };
 
 void		update_all_keys(t_key *keys, GLFWwindow *win);
+
+///////////////////
+//	SCENE
+///////////////////
+
+/*
+ * entity_allocated : size of the entities array;
+ * entity_amount : amount of entities in entities array:
+ * note: we can have empty spots in the entities array thats why they are separate;
+*/
+typedef struct	s_scene
+{
+	t_entity	**entities;
+	size_t		entities_allocated;
+	size_t		entity_amount;
+}		t_scene;
+
+void		create_scene(t_scene *scene);
+void		remove_scene(t_scene *scene);
+void		remove_entity_from_scene_with_index(t_scene *scene, size_t index);
+void		remove_entity_from_scene(t_scene *scene, t_entity *entity);
+size_t		add_entity_to_scene(t_scene *scene, t_entity *entity);
+t_entity	*get_scene_entity(t_scene *scene, size_t index);
 
 ///////////////////
 //	SHADERPIXEL

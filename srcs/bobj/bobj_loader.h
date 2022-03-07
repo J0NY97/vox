@@ -40,7 +40,7 @@ typedef struct s_element
 	size_t			face_count;
 
 	t_material		*material; // address of the material you should use;
-	
+
 	// Allocation amount;
 	int				index_allocated;
 }	t_element;
@@ -49,11 +49,11 @@ typedef struct s_element
  * Vertices / uvs / normals / indices, all follow these rules;
  *
  * vertices : array with the vertex coordinates; 3 values per vertex_amount;
- * vertices_size : the size of the vertices array in bytes; 
+ * vertices_size : the size of the vertices array in bytes;
  * vertices_value_amount : amount of values in the vertices array;
  * vertex_amount : amount of vertices in the array;
  * vertex_value_amount : amount of values per vertex;
- * 
+ *
  * ex:
  * 	vertex_value_amount = 3 (x, y, z)
  * 	vertex_amount = 6 (2 triangles)

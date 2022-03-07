@@ -9,9 +9,8 @@ void	new_entity(t_entity *entity)
 	entity->scale_value = 1.0f;
 
 	entity->collision_detection_enabled = 0;
+	entity->collision_use_precise = 0;
 	entity->collision = 0;
-
-	entity->model = NULL;
 
 	update_entity(entity);
 	LG_INFO("new entity made.");
@@ -65,7 +64,6 @@ void	update_entity(t_entity *entity)
 	mat4_rotation_quat(entity->rot_mat, q);
 	*/
 
-
 	mat4_identity(entity->trans_mat);
 	mat4_translate(entity->trans_mat, entity->trans_mat, entity->pos);
 
@@ -115,35 +113,6 @@ void	render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader 
 	error = glGetError();
 	if (error)
 		LG_ERROR("(%d)", error);
-}
-
-/*
- * 'entity_list' the list of entities we want the collision detection to be
- *	compared against the 'point';
- *
- * Improvement perhaps : split the aabb into elements instead of creating it
- * 	from the whole mesh, so that the detection is more precise... if needed;
- *
- * Would probably make more sense if the aabb was updated in the entity_update;
- */
-void	entity_collision_detection(t_list *entity_list, float *point)
-{
-	t_aabb		aabb;
-	t_list		*curr;
-	t_entity	*entity;
-
-	curr = entity_list;
-	while (curr)
-	{
-		entity = curr->content;
-		entity->collision_detection_enabled = 1;
-		aabb_create(&entity->aabb, entity->model->info->mesh.vertices,
-			entity->model->info->mesh.vertex_amount);
-		aabb_transform(&entity->aabb, entity->model_mat);
-		//entity->collision = point_aabb_collision(point, &entity->aabb);
-		entity->collision = 0;
-		curr = curr->next;
-	}
 }
 
 float	*create_bb_vertices(float *res, float *min, float *max)

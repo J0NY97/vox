@@ -4,6 +4,7 @@ SHELL_NAME = $(shell uname -s)
 NAME = sp #shaderpixel
 CFILES = \
 	main.c \
+	scene.c \
 	entity.c \
 	model.c \
 	shader.c \

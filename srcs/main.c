@@ -50,6 +50,8 @@ int	main(void)
 {
 	t_shaderpixel	sp;
 	init(&sp);
+	t_scene	scene;
+	create_scene(&scene);
 
 	t_list	*entity_collision_list = NULL;
 
@@ -67,43 +69,45 @@ int	main(void)
 	player.camera.viewport_h = sp.win_h;
 
 	t_obj		retrotv_obj;
-	ft_timer_start();
 	obj_load(&retrotv_obj, MODEL_PATH"retrotv/retrotv.obj");
-	ft_printf("retro time : %f\n", ft_timer_end());
-	t_model		retrotv_model;
-	new_model(&retrotv_model, &retrotv_obj);
-	t_entity	retrotv;
-	new_entity(&retrotv);
-	retrotv.model = &retrotv_model;
-	new_vec3(retrotv.pos, 0, 0, -2.5);
 
-	add_to_list(&entity_collision_list, &retrotv, 0);
+	t_entity	*retrotv = malloc(sizeof(t_entity));
+	new_entity(retrotv);
+	new_model(&retrotv->model, &retrotv_obj);
+	new_vec3(retrotv->pos, 0, 0, -2.5);
+	retrotv->collision_detection_enabled = 1;
+	size_t	retrotv_index = add_entity_to_scene(&scene, retrotv);
+
+	add_to_list(&entity_collision_list, retrotv, 0);
 
 	t_shader	shader1;
 	new_shader(&shader1, SHADER_PATH"simple.vs", SHADER_PATH"simple.fs");
 
 	t_obj		dust2_obj;
-	ft_timer_start();
 	obj_load(&dust2_obj, MODEL_PATH"de_dust2/de_dust2.obj");
-	ft_printf("dust time : %f\n", ft_timer_end());
-	t_model		dust2_model;
-	new_model(&dust2_model, &dust2_obj);
-	t_entity	dust2;
-	new_entity(&dust2);
-	dust2.rot_x_angle = -90;
-	dust2.scale_value = 0.005;
+
+	t_entity	*dust2 = malloc(sizeof(t_entity));
+	new_entity(dust2);
+	new_model(&dust2->model, &dust2_obj);
+	size_t	dust2_index = add_entity_to_scene(&scene, dust2);
+	dust2->collision_detection_enabled = 1;
+	dust2->collision_use_precise = 1;
+	dust2->rot_x_angle = -90;
+	dust2->scale_value = 0.005;
 
 	t_obj		display_obj;
 	obj_load(&display_obj, MODEL_PATH"display/display.obj");
-	t_model		display_model;
-	new_model(&display_model, &display_obj);
-	t_entity	display;
-	new_entity(&display);
-	new_vec3(display.pos, 1.2, 0.6, -2.0);
-	display.scale_value = 0.1;
-	display.rot_x_angle = 0;
-	display.rot_y_angle = 90;
-	display.rot_z_angle = 0;
+
+	t_entity	*display = malloc(sizeof(t_entity));
+	new_entity(display);
+	new_model(&display->model, &display_obj);
+	size_t display_index = add_entity_to_scene(&scene, display);
+	new_vec3(display->pos, 1.2, 0.6, -2.0);
+	display->collision_detection_enabled = 1;
+	display->scale_value = 0.1;
+	display->rot_x_angle = 0;
+	display->rot_y_angle = 90;
+	display->rot_z_angle = 0;
 
 	t_shader	mandelbrot_shader;
 	new_shader(&mandelbrot_shader, SHADER_PATH"mandelbrot.vs", SHADER_PATH"mandelbrot.fs");
@@ -145,41 +149,38 @@ int	main(void)
 		}
 
 		float		rot_amount_delta = rot_amount * 10.0f * fps.delta_time;
-		t_entity	*which_entity = &display;
+		t_entity	*selected_entity = get_scene_entity(&scene, display_index);
 
 		if (keys[GLFW_KEY_KP_ENTER].state == GLFW_PRESS)
 			rot_amount *= -1;
 
 		if (keys[GLFW_KEY_KP_1].state == GLFW_PRESS)
-			which_entity->rot_x_angle += rot_amount;
+			selected_entity->rot_x_angle += rot_amount;
 		if (keys[GLFW_KEY_KP_2].state == GLFW_PRESS)
-			which_entity->rot_y_angle += rot_amount;
+			selected_entity->rot_y_angle += rot_amount;
 		if (keys[GLFW_KEY_KP_3].state == GLFW_PRESS)
-			which_entity->rot_z_angle += rot_amount;
+			selected_entity->rot_z_angle += rot_amount;
 
 		if (keys[GLFW_KEY_KP_4].state == GLFW_PRESS)
 			toggle_rot_x = toggle_rot_x != 1;
 		if (toggle_rot_x)
-			which_entity->rot_x_angle += rot_amount_delta;
+			selected_entity->rot_x_angle += rot_amount_delta;
 
-/*
 		if (keys[GLFW_KEY_KP_5].state == GLFW_PRESS)
 			toggle_rot_y = toggle_rot_y != 1;
 		if (toggle_rot_y)
-			which_entity->rot_y_angle += rot_amount_delta;
+			selected_entity->rot_y_angle += rot_amount_delta;
 
-		if (keys[GLFW_KEY_KP_5].state == GLFW_PRESS)
+		if (keys[GLFW_KEY_KP_6].state == GLFW_PRESS)
 			toggle_rot_z = toggle_rot_z != 1;
 		if (toggle_rot_z)
-			which_entity->rot_z_angle += rot_amount_delta;
-*/
+			selected_entity->rot_z_angle += rot_amount_delta;
 
 		if (keys[GLFW_KEY_P].state == GLFW_PRESS)
 		{
 			player_print(&player);
-			entity_print(which_entity);
+			entity_print(selected_entity);
 		}
-
 
 		update_fps(&fps);
 		player_events(&player, keys, sp.win);
@@ -187,9 +188,23 @@ int	main(void)
 		if (player.enabled_mouse)
 			player_looking(&player, sp.win, fps);
 
-		entity_collision_detection(entity_collision_list, player.camera.pos);
-
-		player_entity_collision(&player, &retrotv);
+		size_t	entities_collisioned = 0;
+		for (size_t i = 0; i < scene.entities_allocated && entities_collisioned < scene.entity_amount; i++)
+		{
+			if (scene.entities[i] && scene.entities[i]->collision_detection_enabled)
+			{
+				aabb_create(&scene.entities[i]->aabb,
+					scene.entities[i]->model.info->mesh.vertices,
+					scene.entities[i]->model.info->mesh.vertex_amount);
+				aabb_transform(&scene.entities[i]->aabb,
+					scene.entities[i]->model_mat);
+				if (scene.entities[i]->collision_use_precise)
+					player_entity_collision_precise(&player, scene.entities[i]);
+				else
+					player_entity_collision(&player, scene.entities[i]);
+				entities_collisioned += 1;
+			}
+		}
 
 		player_apply_velocity(&player);
 
@@ -198,9 +213,15 @@ int	main(void)
 
 		update_camera(&player.camera);
 
-		render_entity(&retrotv, &player.camera, &retrotv_model, &shader1);
-		render_entity(&dust2, &player.camera, &dust2_model, &shader1);
-		render_entity(&display, &player.camera, &display_model, &shader1);
+		size_t	entities_rendered = 0;
+		for (size_t i = 0; i < scene.entities_allocated && entities_rendered < scene.entity_amount; i++)
+		{
+			if (scene.entities[i])
+			{
+				render_entity(scene.entities[i], &player.camera, &scene.entities[i]->model, &shader1);
+				entities_rendered += 1;
+			}
+		}
 
 		render_crosshair();
 
