@@ -67,7 +67,7 @@ else
 LIBS += -lOpenGl32 -lgdi32
 endif
 
-FLAGS = -Wall -Wextra -Wno-unused-variable -MMD -g -fsanitize=address
+FLAGS = -Wall -Wextra -Wno-unused-variable -MMD #-g -fsanitize=address
 
 all: $(ODIR) $(NAME)
 

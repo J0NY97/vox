@@ -78,6 +78,8 @@ void	player_entity_collision_precise(t_player *player, t_entity *entity)
 	unsigned int index = 0;
 
 	float	player_pos[VEC3_SIZE];
+	float	player_front[VEC3_SIZE];
+	float	velocity[VEC3_SIZE];
 
 	float	intersect_point[3];
 	float	normed[3];
@@ -85,28 +87,13 @@ void	player_entity_collision_precise(t_player *player, t_entity *entity)
 	int		aabb_collision;
 
 	entity->collision = 0;
+	/*
 	if (!player->moving)
-	{
-		//LG_WARN("Player not moving");
 		return ;
-	}
+		*/
 	aabb_collision = aabb_aabb_collision(&player->aabb, &entity->aabb);
 	if (!aabb_collision)
 	{
-		t_aabb a = entity->aabb;
-		ft_printf("Entity aabb:\n");
-		ft_printf("%f %f %f\n", a.min[0], a.min[1], a.min[2]);
-		ft_printf("%f %f %f\n", a.max[0], a.max[1], a.max[2]);
-		t_aabb b = player->aabb;
-		ft_printf("Player aabb:\n");
-		ft_printf("%f %f %f\n", b.min[0], b.min[1], b.min[2]);
-		ft_printf("%f %f %f\n", b.max[0], b.max[1], b.max[2]);
-
-		ft_printf("%d %d, %d %d, %d %d",
-			a.min[0] <= b.max[0], a.max[0] >= b.min[0],
-			a.min[1] <= b.max[1], a.max[1] >= b.min[1],
-			a.min[2] <= b.max[2], a.max[2] >= b.min[2]
-		);
 		aabb_collision = point_aabb_collision(player->camera.pos, &entity->aabb);
 		if (!aabb_collision)
 		{
@@ -114,43 +101,41 @@ void	player_entity_collision_precise(t_player *player, t_entity *entity)
 			return ;
 		}
 	}
-	/*
-if (!aabb_collision)
-	{
-		LG_WARN("aabb not colliding (%d), trying point", aabb_collision);
-		aabb_collision = point_aabb_collision(player->camera.pos, &entity->aabb);
-		if (!aabb_collision)
-		{
-			LG_WARN("point not colliding either", aabb_collision);
-			return ;
-		}
-	}
-	*/
-	//LG_INFO("Inside precies");
 
-	// Convert player pos to the model coordinates of the entity;
-	float	v4[VEC4_SIZE];
-	float	reverse_model_mat[MAT4_SIZE];
+	// Convert player pos and velocity to local coords of the entity;
+	float	v3[VEC3_SIZE];
+	float	trans_mat[MAT3_SIZE];
+	float	inverse_trans_mat[MAT3_SIZE];
 
-	mat4_identity(reverse_model_mat);
-	mat4_inverse(reverse_model_mat, entity->model_mat);
-	vec4_new(v4, player->camera.pos[0], player->camera.pos[1], player->camera.pos[2], 1);
-	vec4_multiply_mat4(v4, v4, entity->model_mat);
-	new_vec3(player_pos, v4[0], v4[1], v4[2]);
+	mat4_to_mat3(trans_mat, entity->model_mat);
+
+	mat3_identity(inverse_trans_mat);
+	mat3_inverse(inverse_trans_mat, trans_mat);
+
+	vec3_multiply_mat3(player_pos, player->camera.pos, inverse_trans_mat);
+	vec3_multiply_mat3(velocity, player->velocity, inverse_trans_mat);
+	vec3_normalize(velocity, velocity);
+
+	vec3_multiply_mat3(velocity, player->velocity, inverse_trans_mat);
+	vec3_normalize(velocity, velocity);
+
+	vec3_multiply_mat3(player_front, player->camera.front, inverse_trans_mat);
+	vec3_normalize(player_front, player_front);
 /*
+				*/
 	for (int mesh_index = 0; mesh_index < entity->model.info_amount; mesh_index++)
 	{
 		for (int elem_index = 0; elem_index < entity->model.info[mesh_index].mesh.element_amount; elem_index++)
 		{
-			for (size_t face_index = 0; face_index < entity->model.info[mesh_index].mesh.elements[elem_index].index_amount / 3; face_index++)
+			for (size_t face_index = 0; face_index < entity->model.info[mesh_index].mesh.elements[elem_index].index_amount; face_index++)
 			{
 				float			*vertices = entity->model.info[mesh_index].mesh.vertices;
 				unsigned int	*indices = entity->model.info[mesh_index].mesh.elements[elem_index].indices;
-				*/
+				/*
 				int face_index = 0; // remove
-
 				float			*vertices = entity->model.info[0].mesh.vertices;
 				unsigned int	*indices = entity->model.info[0].mesh.elements[0].indices;
+				*/
 
 				index = indices[face_index * 3 + 0] * 3;
 				new_vec3(p1,
@@ -162,40 +147,39 @@ if (!aabb_collision)
 				new_vec3(p3,
 					vertices[index + 0], vertices[index + 1], vertices[index + 2]);
 
-				if (ray_triangle_intersect(player_pos,
-						vec3_normalize(normed, player->velocity),
+/*
+				if (ray_triangle_intersect(player_pos, velocity,
+						p1, p2, p3, intersect_point))
+					triangle_collision = 1;
+					*/
+				if (ray_triangle_intersect(player_pos, player_front,
 						p1, p2, p3, intersect_point))
 					triangle_collision = 1;
 
-				vec3_to_vec4(v4, p1);
-				vec4_multiply_mat4(v4, v4, entity->model_mat);
-				vec4_to_vec3(p1, v4);
-
-				vec3_to_vec4(v4, p2);
-				vec4_multiply_mat4(v4, v4, entity->model_mat);
-				vec4_to_vec3(p2, v4);
-
-				vec3_to_vec4(v4, p3);
-				vec4_multiply_mat4(v4, v4, entity->model_mat);
-				vec4_to_vec3(p3, v4);
+				vec3_multiply_mat3(p1, p1, trans_mat);
+				vec3_multiply_mat3(p2, p2, trans_mat);
+				vec3_multiply_mat3(p3, p3, trans_mat);
 
 				glDisable(GL_DEPTH_TEST);
 				render_3d_line(p1, p2, (float []){0, 1, 0}, player->camera.view, player->camera.projection);
 				render_3d_line(p1, p3, (float []){0, 1, 0}, player->camera.view, player->camera.projection);
 				render_3d_line(p2, p3, (float []){0, 1, 0}, player->camera.view, player->camera.projection);
-
-
-					/*
+/*
+				*/
 			}
 		}
 	}
+				/*
 	*/
 	if (triangle_collision)
 	{
 		float	new_pos[3];
 		vec3_add(new_pos, player->camera.pos, player->velocity);
-		if (vec3_dist(player->camera.pos, new_pos) >
-			vec3_dist(player->camera.pos, intersect_point))
+		vec3_multiply_mat3(new_pos, new_pos, inverse_trans_mat);
+
+		entity->collision = 1;
+		if (vec3_dist(player_pos, new_pos) >
+			vec3_dist(player_pos, intersect_point))
 		{
 			entity->collision = 1;
 			player->colliding = 1;

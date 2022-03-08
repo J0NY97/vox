@@ -170,6 +170,19 @@ float	to_degrees(float radians)
 	return (radians * 180.0f / M_PI);
 }
 
+////////////////////////////////
+// MAT2
+////////////////////////////////
+
+float	mat2_determinant(float *m)
+{
+	return (m[0] * m[3] - m[2] * m[1]);
+}
+
+////////////////////////////////
+// MAT3
+////////////////////////////////
+
 float	*mat3_identity(float *result)
 {
 	result[0] = 1.0f;
@@ -198,12 +211,12 @@ float	*mat3_assign(float *result, float *m0)
 	return (result);
 }
 
-void	mat3_string(float *m)
+void	mat3_string(char *str, float *m)
 {
 	int	i;
 
 	i = 0;
-	printf("{");
+	printf("%s {", str);
 	while (i < MAT3_SIZE)
 	{
 		if (i % 3 == 0)
@@ -213,6 +226,118 @@ void	mat3_string(float *m)
 	}
 	printf("}\n");
 }
+
+float	*mat3_multiply_f(float *result, float *m0, float f)
+{
+	result[0] = m0[0] * f;
+	result[1] = m0[1] * f;
+	result[2] = m0[2] * f;
+	result[3] = m0[3] * f;
+	result[4] = m0[4] * f;
+	result[5] = m0[5] * f;
+	result[6] = m0[6] * f;
+	result[7] = m0[7] * f;
+	result[8] = m0[8] * f;
+	return (result);
+}
+
+float *mat3_cofactor(float *result, float *m0)
+{
+	float	cofactor[MAT3_SIZE];
+	float	minor[MAT2_SIZE];
+	minor[0] = m0[4];
+	minor[1] = m0[5];
+	minor[2] = m0[7];
+	minor[3] = m0[8];
+	cofactor[0] = mat2_determinant(minor);
+	minor[0] = m0[3];
+	minor[1] = m0[5];
+	minor[2] = m0[6];
+	minor[3] = m0[8];
+	cofactor[1] = -mat2_determinant(minor);
+	minor[0] = m0[3];
+	minor[1] = m0[4];
+	minor[2] = m0[6];
+	minor[3] = m0[7];
+	cofactor[2] = mat2_determinant(minor);
+	minor[0] = m0[1];
+	minor[1] = m0[2];
+	minor[2] = m0[7];
+	minor[3] = m0[8];
+	cofactor[3] = -mat2_determinant(minor);
+	minor[0] = m0[0];
+	minor[1] = m0[2];
+	minor[2] = m0[6];
+	minor[3] = m0[8];
+	cofactor[4] = mat2_determinant(minor);
+	minor[0] = m0[0];
+	minor[1] = m0[1];
+	minor[2] = m0[6];
+	minor[3] = m0[7];
+	cofactor[5] = -mat2_determinant(minor);
+	minor[0] = m0[1];
+	minor[1] = m0[2];
+	minor[2] = m0[4];
+	minor[3] = m0[5];
+	cofactor[6] = mat2_determinant(minor);
+	minor[0] = m0[0];
+	minor[1] = m0[2];
+	minor[2] = m0[3];
+	minor[3] = m0[5];
+	cofactor[7] = -mat2_determinant(minor);
+	minor[0] = m0[0];
+	minor[1] = m0[1];
+	minor[2] = m0[3];
+	minor[3] = m0[4];
+	cofactor[8] = mat2_determinant(minor);
+	result[0] = cofactor[0];
+	result[1] = cofactor[1];
+	result[2] = cofactor[2];
+	result[3] = cofactor[3];
+	result[4] = cofactor[4];
+	result[5] = cofactor[5];
+	result[6] = cofactor[6];
+	result[7] = cofactor[7];
+	result[8] = cofactor[8];
+	return (result);
+}
+
+float mat3_determinant(float *m)
+{
+	float	m11 = m[0];
+	float	m21 = m[1];
+	float	m31 = m[2];
+	float	m12 = m[3];
+	float	m22 = m[4];
+	float	m32 = m[5];
+	float	m13 = m[6];
+	float	m23 = m[7];
+	float	m33 = m[8];
+	float	determinant = m11 * m22 * m33
+		+ m12 * m23 * m31
+		+ m13 * m21 * m32
+		- m11 * m23 * m32
+		- m12 * m21 * m33
+		- m13 * m22 * m31;
+	return (determinant);
+}
+
+float	*mat3_inverse(float *res, float *m)
+{
+	float	inverse[MAT3_SIZE];
+	float	det;
+
+	det = mat3_determinant(m);
+	mat3_cofactor(inverse, m);
+	mat3_multiply_f(inverse, inverse, 1.0f / det);
+	for (int i = 0; i < MAT3_SIZE; i++)
+		res[i] = inverse[i];
+	return (res);
+}
+
+///////////////////
+// MAT4
+///////////////////
 
 float	*mat4_identity(float *result)
 {
@@ -256,12 +381,12 @@ float	*mat4_assign(float *result, float *m0)
 	return (result);
 }
 
-void	mat4_string(float *m)
+void	mat4_string(char *str, float *m)
 {
 	int	i;
 
 	i = 0;
-	printf("{");
+	printf("%s : {", str);
 	while (i < 16)
 	{
 		if (i % 4 == 0)

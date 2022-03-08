@@ -40,10 +40,12 @@ float	to_degrees(float radians);
 float	*mat3_identity(float *result);
 float	*mat3_assign(float *result, float *m0);
 float	*mat4_to_mat3(float *res, float *m4);
+void	mat3_string(char *str, float *m);
+float	*mat3_inverse(float *res, float *m);
 
 // MAT4
 float	*mat4_assign(float *result, float *m0);
-void	mat4_string(float *m);
+void	mat4_string(char *str, float *m);
 float	*mat4_identity(float *result);
 float	*mat4_translate(float *result, float *m0, float *v0);
 float	*mat4_scale(float *result, float *m0, float *v0);
