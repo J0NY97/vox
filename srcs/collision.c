@@ -87,10 +87,8 @@ void	player_entity_collision_precise(t_player *player, t_entity *entity)
 	int		aabb_collision;
 
 	entity->collision = 0;
-	/*
 	if (!player->moving)
 		return ;
-		*/
 	aabb_collision = aabb_aabb_collision(&player->aabb, &entity->aabb);
 	if (!aabb_collision)
 	{
@@ -116,13 +114,9 @@ void	player_entity_collision_precise(t_player *player, t_entity *entity)
 	vec3_multiply_mat3(velocity, player->velocity, inverse_trans_mat);
 	vec3_normalize(velocity, velocity);
 
-	vec3_multiply_mat3(velocity, player->velocity, inverse_trans_mat);
-	vec3_normalize(velocity, velocity);
-
-	vec3_multiply_mat3(player_front, player->camera.front, inverse_trans_mat);
+	vec3_multiply_mat3(player_front, player_front, inverse_trans_mat);
 	vec3_normalize(player_front, player_front);
-/*
-				*/
+				/*
 	for (int mesh_index = 0; mesh_index < entity->model.info_amount; mesh_index++)
 	{
 		for (int elem_index = 0; elem_index < entity->model.info[mesh_index].mesh.element_amount; elem_index++)
@@ -131,11 +125,10 @@ void	player_entity_collision_precise(t_player *player, t_entity *entity)
 			{
 				float			*vertices = entity->model.info[mesh_index].mesh.vertices;
 				unsigned int	*indices = entity->model.info[mesh_index].mesh.elements[elem_index].indices;
-				/*
+				*/
 				int face_index = 0; // remove
 				float			*vertices = entity->model.info[0].mesh.vertices;
 				unsigned int	*indices = entity->model.info[0].mesh.elements[0].indices;
-				*/
 
 				index = indices[face_index * 3 + 0] * 3;
 				new_vec3(p1,
@@ -156,20 +149,19 @@ void	player_entity_collision_precise(t_player *player, t_entity *entity)
 						p1, p2, p3, intersect_point))
 					triangle_collision = 1;
 
+/*
+				*/
 				vec3_multiply_mat3(p1, p1, trans_mat);
 				vec3_multiply_mat3(p2, p2, trans_mat);
 				vec3_multiply_mat3(p3, p3, trans_mat);
-
 				glDisable(GL_DEPTH_TEST);
 				render_3d_line(p1, p2, (float []){0, 1, 0}, player->camera.view, player->camera.projection);
 				render_3d_line(p1, p3, (float []){0, 1, 0}, player->camera.view, player->camera.projection);
 				render_3d_line(p2, p3, (float []){0, 1, 0}, player->camera.view, player->camera.projection);
-/*
-				*/
+				/*
 			}
 		}
 	}
-				/*
 	*/
 	if (triangle_collision)
 	{
