@@ -145,6 +145,11 @@ float	*vec4_new(float *res, float x, float y, float z, float w)
 	return (res);
 }
 
+void	vec4_string(char *str, float *v)
+{
+	printf("%s { %f %f %f %f }\n", str, v[0], v[1], v[2], v[3]);
+}
+
 float	*vec4_multiply_mat4(float *res, float *v, float *m)
 {
 	float	xyzw[VEC4_SIZE];

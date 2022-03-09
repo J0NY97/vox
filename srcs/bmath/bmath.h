@@ -29,6 +29,7 @@ float	*vec3_to_vec4(float *res, float *v3);
 
 // VEC4
 float	*vec4_new(float *res, float x, float y, float z, float w);
+void	vec4_string(char *str, float *v);
 float	*vec4_multiply_mat4(float *res, float *v, float *m);
 float	*vec4_to_vec3(float *res, float *v4);
 

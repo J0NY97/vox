@@ -151,30 +151,29 @@ void	player_entity_collision_precise(t_player *player, t_entity *entity)
 
 				if (face_index == 0)
 				{
-				mat4_string("model_mat :", entity->model_mat);
-				mat4_string("inver_mat :", inverse_trans_mat);
+					mat4_string("entity->model_mat :", entity->model_mat);
+					mat4_string("inverse_trans_mat :", inverse_trans_mat);
+					vec4_string("player_pos :", player_pos);
+					vec4_string("player_front :", player_front);
+					vec3_string("p1 :", p1);
+					vec3_string("p2 :", p2);
+					vec3_string("p3 :", p3);
 				}
 
-				vec3_to_vec4(v4, p1);
-				vec4_multiply_mat4(v4, v4, entity->model_mat);
-				vec4_to_vec3(p1, v4);
-
-				vec3_to_vec4(v4, p2);
-				vec4_multiply_mat4(v4, v4, entity->model_mat);
-				vec4_to_vec3(p2, v4);
-
-				vec3_to_vec4(v4, p3);
-				vec4_multiply_mat4(v4, v4, entity->model_mat);
-				vec4_to_vec3(p3, v4);
-/*
 				vec4_to_vec3(p1, vec4_multiply_mat4(v4, vec3_to_vec4(v4, p1), entity->model_mat));
 				vec4_to_vec3(p2, vec4_multiply_mat4(v4, vec3_to_vec4(v4, p2), entity->model_mat));
-				vec4_to_vec3(p3, vec4_multiply_mat4(v4, vec3_to_vec4(v4, p2), entity->model_mat));
-				*/
+				vec4_to_vec3(p3, vec4_multiply_mat4(v4, vec3_to_vec4(v4, p3), entity->model_mat));
 				glDisable(GL_DEPTH_TEST);
 				render_3d_line(p1, p2, (float []){0, 1, 0}, player->camera.view, player->camera.projection);
 				render_3d_line(p1, p3, (float []){0, 1, 0}, player->camera.view, player->camera.projection);
 				render_3d_line(p2, p3, (float []){0, 1, 0}, player->camera.view, player->camera.projection);
+
+				if (face_index == 0)
+				{
+					vec3_string("world p1 :", p1);
+					vec3_string("world p2 :", p2);
+					vec3_string("world p3 :", p3);
+				}
 				/*
 	*/
 			}
@@ -182,9 +181,9 @@ void	player_entity_collision_precise(t_player *player, t_entity *entity)
 	}
 	if (triangle_collision)
 	{
-		float	new_pos[3];
+		float	new_pos[4];
 		vec3_add(new_pos, player->camera.pos, player->velocity);
-		vec3_multiply_mat3(new_pos, new_pos, inverse_trans_mat);
+		vec4_multiply_mat4(new_pos, new_pos, inverse_trans_mat);
 
 		entity->collision = 1;
 		if (vec3_dist(player_pos, new_pos) >
