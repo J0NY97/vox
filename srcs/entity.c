@@ -28,36 +28,6 @@ void	entity_print(t_entity *entity)
 	mat4_string("rot_mat :", entity->rot_mat);
 	mat4_string("trans_mat :", entity->trans_mat);
 	mat4_string("model_mat :", entity->model_mat);
-
-	float	tmp[MAT4_SIZE];
-	mat4_identity(tmp);
-	mat4_string("step1 :", tmp);
-
-	mat4_multiply(tmp, tmp, entity->scale_mat);
-	mat4_string("step2 :", tmp);
-
-	float	m0[MAT4_SIZE];
-	float	m1[MAT4_SIZE];
-	mat4_assign(m0, tmp);
-	mat4_assign(m1, entity->rot_mat);
-
-	mat4_multiply(tmp, tmp, entity->rot_mat);
-	mat4_string("step3 :", tmp);
-
-	mat4_multiply(tmp, tmp, entity->trans_mat);
-	mat4_string("final :", tmp);
-
-	float	mult[MAT4_SIZE];
-
-	mult[12] = m0[0] * m1[12] + m0[4] * m1[13] + m0[8] * m1[14] + m0[12] * m1[15];
-	ft_printf("mult[12] : (%f) + (%f) + (%f) + (%f)\n",
-		m0[0] * m1[0],
-		m0[4] * m1[1],
-		m0[8] * m1[2],
-		m0[12] * m1[15]
-		);
-	ft_printf("m0[10] : %f, m1[2] : %f\n", m0[10], m1[2]);
-	ft_printf("mult[12] : %f\n", mult[12]);
 }
 
 /*
@@ -86,9 +56,9 @@ void	update_entity(t_entity *entity)
 	mat4_identity(rot_z);
 	mat4_rotation_z(rot_z, to_radians(entity->rot_z_angle));
 
-	mat4_multiply(entity->rot_mat, entity->rot_mat, rot_x);
-	mat4_multiply(entity->rot_mat, entity->rot_mat, rot_y);
-	mat4_multiply(entity->rot_mat, entity->rot_mat, rot_z);
+	mat4_multiply(entity->rot_mat, rot_x, entity->rot_mat);
+	mat4_multiply(entity->rot_mat, rot_y, entity->rot_mat);
+	mat4_multiply(entity->rot_mat, rot_z, entity->rot_mat);
 
 /*
 	float	q[QUAT_SIZE];
@@ -104,9 +74,9 @@ void	update_entity(t_entity *entity)
 
 
 	mat4_identity(entity->model_mat);
-	mat4_multiply(entity->model_mat, entity->model_mat, entity->scale_mat);
-	mat4_multiply(entity->model_mat, entity->model_mat, entity->rot_mat);
-	mat4_multiply(entity->model_mat, entity->model_mat, entity->trans_mat);
+	mat4_multiply(entity->model_mat, entity->scale_mat, entity->model_mat);
+	mat4_multiply(entity->model_mat, entity->rot_mat, entity->model_mat);
+	mat4_multiply(entity->model_mat, entity->trans_mat, entity->model_mat);
 
 	// AABB
 	if (entity->collision_detection_enabled)

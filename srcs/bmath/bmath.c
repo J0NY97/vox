@@ -578,6 +578,9 @@ float	*mat4_look_at(float *result, float *position, float *target, float *up)
 /*
  * NOTE: We dont want to save the calculation directly into result, since
  * result could be one of the matrices m0 or m1;
+ * 
+ * There is a difference in which matrix you multiplicate by;
+ * why?
 */
 float	*mat4_multiply(float *result, float *m0, float *m1)
 {
@@ -594,19 +597,10 @@ float	*mat4_multiply(float *result, float *m0, float *m1)
 	multiplied[9] = m0[1] * m1[8] + m0[5] * m1[9] + m0[9] * m1[10] + m0[13] * m1[11];
 	multiplied[10] = m0[2] * m1[8] + m0[6] * m1[9] + m0[10] * m1[10] + m0[14] * m1[11];
 	multiplied[11] = m0[3] * m1[8] + m0[7] * m1[9] + m0[11] * m1[10] + m0[15] * m1[11];
-
-	// This is the only thing that should be caluclated the other way??!?!?!?
-	multiplied[12] = m1[0] * m0[12] + m1[4] * m0[13] + m1[8] * m0[14] + m1[12] * m0[15];
-	multiplied[13] = m1[1] * m0[12] + m1[5] * m0[13] + m1[9] * m0[14] + m1[13] * m0[15];
-	multiplied[14] = m1[2] * m0[12] + m1[6] * m0[13] + m1[10] * m0[14] + m1[14] * m0[15];
-	multiplied[15] = m1[3] * m0[12] + m1[7] * m0[13] + m1[11] * m0[14] + m1[15] * m0[15];
-
-	/*
 	multiplied[12] = m0[0] * m1[12] + m0[4] * m1[13] + m0[8] * m1[14] + m0[12] * m1[15];
 	multiplied[13] = m0[1] * m1[12] + m0[5] * m1[13] + m0[9] * m1[14] + m0[13] * m1[15];
 	multiplied[14] = m0[2] * m1[12] + m0[6] * m1[13] + m0[10] * m1[14] + m0[14] * m1[15];
 	multiplied[15] = m0[3] * m1[12] + m0[7] * m1[13] + m0[11] * m1[14] + m0[15] * m1[15];
-	*/
 	result[0] = multiplied[0];
 	result[1] = multiplied[1];
 	result[2] = multiplied[2];
