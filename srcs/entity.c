@@ -69,9 +69,9 @@ void	update_entity(t_entity *entity)
 
 
 	mat4_identity(entity->model_mat);
-	mat4_multiply(entity->model_mat, entity->model_mat, entity->trans_mat);
-	mat4_multiply(entity->model_mat, entity->model_mat, entity->rot_mat);
 	mat4_multiply(entity->model_mat, entity->model_mat, entity->scale_mat);
+	mat4_multiply(entity->model_mat, entity->model_mat, entity->rot_mat);
+	mat4_multiply(entity->model_mat, entity->model_mat, entity->trans_mat);
 
 	// AABB
 	if (entity->collision_detection_enabled)

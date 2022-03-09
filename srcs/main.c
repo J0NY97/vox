@@ -46,6 +46,23 @@ void	uninit(t_shaderpixel *sp)
 	glfwTerminate();
 }
 
+/*
+ * From face get nth vertex;
+ * res[VEC3_SIZE];
+ * vertex_index = 0-3;
+ * face_index = 0-index_amount;
+*/
+float *nth(float *res, unsigned int *indices, float *vertices, int face_index, int vertex_index)
+{
+	int	vert;	
+
+	vert = indices[face_index * 3 + vertex_index];
+	res[0] = vertices[vert + 0];
+	res[1] = vertices[vert + 1];
+	res[2] = vertices[vert + 2];
+	return (res);
+}
+
 int	main(void)
 {
 	t_shaderpixel	sp;
@@ -58,10 +75,12 @@ int	main(void)
 
 	t_player	player;
 	new_player(&player);
+	/*
 	new_vec3(player.camera.pos, -9.269078, 0.349081, -6.638917);
 	player.camera.yaw = -263;
-//	new_vec3(player.camera.pos, 2.5, 0.5, 0.5);
-//	player.camera.yaw = -126;
+	*/
+	new_vec3(player.camera.pos, 2.5, 0.5, 0.5);
+	player.camera.yaw = -126;
 	player.camera.viewport_w = sp.win_w;
 	player.camera.viewport_h = sp.win_h;
 
@@ -77,19 +96,22 @@ int	main(void)
 	t_entity	*retrotv = malloc(sizeof(t_entity));
 	new_entity(retrotv);
 	new_model(&retrotv->model, &retrotv_obj);
-	new_vec3(retrotv->pos, 0, 0, -2.5);
+	//new_vec3(retrotv->pos, 0, 0, -2.5);
+	new_vec3(retrotv->pos, 2.5, 0.5, 0);
 	retrotv->collision_detection_enabled = 1;
+	retrotv->collision_use_precise = 1;
 	size_t	retrotv_index = add_entity_to_scene(&scene, retrotv);
 
 	t_obj		dust2_obj;
-	obj_load(&dust2_obj, MODEL_PATH"de_dust2/de_dust2.obj");
+//	obj_load(&dust2_obj, MODEL_PATH"de_dust2/de_dust2.obj");
+	obj_load(&dust2_obj, MODEL_PATH"dust2_retry/dust2.obj");
 
 	t_entity	*dust2 = malloc(sizeof(t_entity));
 	new_entity(dust2);
 	new_model(&dust2->model, &dust2_obj);
 	size_t	dust2_index = add_entity_to_scene(&scene, dust2);
 	dust2->collision_detection_enabled = 1;
-	dust2->collision_use_precise = 1;
+//	dust2->collision_use_precise = 1;
 	dust2->rot_x_angle = -90;
 	dust2->scale_value = 0.005;
 

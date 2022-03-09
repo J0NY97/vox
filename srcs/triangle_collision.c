@@ -22,8 +22,10 @@ int	ray_triangle_intersect(float *orig, float *dir, float *v0, float *v1, float 
 	vec3_cross(N, v0v1, v0v2); // N
 
 	// back face culler
+	/* Enable for only one sided collision detection;
 	if (vec3_dot(dir, N) < 0)
 		return (0);
+		*/
 
 	float	area2 = vec3_length(N);
 
