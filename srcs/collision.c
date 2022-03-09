@@ -148,7 +148,7 @@ void	player_entity_collision_precise(t_player *player, t_entity *entity)
 				if (ray_triangle_intersect(player_pos, player_front,
 						p1, p2, p3, intersect_point))
 					triangle_collision = 1;
-
+/*
 				if (face_index == 0)
 				{
 					mat4_string("entity->model_mat :", entity->model_mat);
@@ -159,7 +159,9 @@ void	player_entity_collision_precise(t_player *player, t_entity *entity)
 					vec3_string("p2 :", p2);
 					vec3_string("p3 :", p3);
 				}
+				*/
 
+				/*
 				vec4_to_vec3(p1, vec4_multiply_mat4(v4, vec3_to_vec4(v4, p1), entity->model_mat));
 				vec4_to_vec3(p2, vec4_multiply_mat4(v4, vec3_to_vec4(v4, p2), entity->model_mat));
 				vec4_to_vec3(p3, vec4_multiply_mat4(v4, vec3_to_vec4(v4, p3), entity->model_mat));
@@ -174,7 +176,6 @@ void	player_entity_collision_precise(t_player *player, t_entity *entity)
 					vec3_string("world p2 :", p2);
 					vec3_string("world p3 :", p3);
 				}
-				/*
 	*/
 			}
 		}

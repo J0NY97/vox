@@ -23,6 +23,41 @@ void	entity_print(t_entity *entity)
 	ft_printf("entity.rot_x_angle : %f\n", entity->rot_x_angle);
 	ft_printf("entity.rot_y_angle : %f\n", entity->rot_y_angle);
 	ft_printf("entity.rot_z_angle : %f\n", entity->rot_z_angle);
+
+	mat4_string("scale_mat :", entity->scale_mat);
+	mat4_string("rot_mat :", entity->rot_mat);
+	mat4_string("trans_mat :", entity->trans_mat);
+	mat4_string("model_mat :", entity->model_mat);
+
+	float	tmp[MAT4_SIZE];
+	mat4_identity(tmp);
+	mat4_string("step1 :", tmp);
+
+	mat4_multiply(tmp, tmp, entity->scale_mat);
+	mat4_string("step2 :", tmp);
+
+	float	m0[MAT4_SIZE];
+	float	m1[MAT4_SIZE];
+	mat4_assign(m0, tmp);
+	mat4_assign(m1, entity->rot_mat);
+
+	mat4_multiply(tmp, tmp, entity->rot_mat);
+	mat4_string("step3 :", tmp);
+
+	mat4_multiply(tmp, tmp, entity->trans_mat);
+	mat4_string("final :", tmp);
+
+	float	mult[MAT4_SIZE];
+
+	mult[12] = m0[0] * m1[12] + m0[4] * m1[13] + m0[8] * m1[14] + m0[12] * m1[15];
+	ft_printf("mult[12] : (%f) + (%f) + (%f) + (%f)\n",
+		m0[0] * m1[0],
+		m0[4] * m1[1],
+		m0[8] * m1[2],
+		m0[12] * m1[15]
+		);
+	ft_printf("m0[10] : %f, m1[2] : %f\n", m0[10], m1[2]);
+	ft_printf("mult[12] : %f\n", mult[12]);
 }
 
 /*
