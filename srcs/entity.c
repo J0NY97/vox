@@ -11,6 +11,9 @@ void	new_entity(t_entity *entity)
 	entity->collision_detection_enabled = 0;
 	entity->collision_use_precise = 0;
 	entity->collision = 0;
+	entity->render_aabb = 1;
+
+	entity->show_normal_map = 0;
 
 	update_entity(entity);
 	LG_INFO("new entity made.");
@@ -103,10 +106,15 @@ void	render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader 
 		glUniform1i(glGetUniformLocation(shader->program, "useColor"), 1);
 	else
 		glUniform1i(glGetUniformLocation(shader->program, "useColor"), 0);
+	
+	if (entity->show_normal_map)
+		glUniform1i(glGetUniformLocation(shader->program, "show_normal_map"), 1);
+	else
+		glUniform1i(glGetUniformLocation(shader->program, "show_normal_map"), 0);
 
 	render_model(model);
 
-	if (entity->collision_detection_enabled)
+	if (entity->collision_detection_enabled && entity->render_aabb)
 		render_box(entity->bb_vertices, entity->bb_indices, (float[]){1, 0, 0},
 			camera->view, camera->projection);
 

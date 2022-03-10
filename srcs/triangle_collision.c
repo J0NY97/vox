@@ -1,5 +1,20 @@
 #include "shaderpixel.h"
 
+float	*triangle_face_normal(float *res, float *n0, float *n1, float *n2)
+{
+	float	norm[3];
+	float	n10[3];
+	float	n20[3];
+
+	vec3_sub(n10, n1, n0);
+	vec3_sub(n20, n2, n0);
+	vec3_cross(norm, n10, n20);
+	res[0] = norm[0];
+	res[1] = norm[1];
+	res[2] = norm[2];
+	return (res);
+}
+
 /*
  * Yoinked from : https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/ray-triangle-intersection-geometric-solution
  * Improvement? : Look into : Möller-Trumbore algorithm
@@ -11,15 +26,8 @@
 int	ray_triangle_intersect(float *orig, float *dir, float *v0, float *v1, float *v2, float *intersect_point)
 {
 	// compute plane's normal
-	float	v0v1[3];
-	vec3_sub(v0v1, v1, v0);
-
-	float	v0v2[3];
-	vec3_sub(v0v2, v2, v0);
-
-	// no need to normalize
 	float	N[3];
-	vec3_cross(N, v0v1, v0v2); // N
+	triangle_face_normal(N, v0, v1, v2);
 
 	// back face culler
 	/* Enable for only one sided collision detection;

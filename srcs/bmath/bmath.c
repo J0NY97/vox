@@ -2,6 +2,11 @@
 
 float	*new_vec3(float *src, float x, float y, float z)
 {
+	return (vec3_new(src, x, y, z));
+}
+
+float	*vec3_new(float *src, float x, float y, float z)
+{
 	src[0] = x;
 	src[1] = y;
 	src[2] = z;

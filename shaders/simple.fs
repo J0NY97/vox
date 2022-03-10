@@ -16,7 +16,7 @@ void main()
 {
 	if (texture_amount > 0)
 		FragColor = texture(textures[0], inTex);
-	else if (show_normal_map == 1)
+	if (show_normal_map == 1)
 		FragColor = vec4(inNorm, 1);
 	if (useColor == 1)
 		FragColor = mix(FragColor, vec4(inColor, 1), 0.1);

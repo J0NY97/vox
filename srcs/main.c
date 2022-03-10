@@ -100,6 +100,7 @@ int	main(void)
 	new_vec3(retrotv->pos, 2.5, 0.5, 0);
 	retrotv->collision_detection_enabled = 1;
 	retrotv->collision_use_precise = 1;
+	retrotv->render_aabb = 0;
 	size_t	retrotv_index = add_entity_to_scene(&scene, retrotv);
 
 	t_obj		dust2_obj;
@@ -109,7 +110,7 @@ int	main(void)
 	t_entity	*dust2 = malloc(sizeof(t_entity));
 	new_entity(dust2);
 	new_model(&dust2->model, &dust2_obj);
-	size_t	dust2_index = add_entity_to_scene(&scene, dust2);
+	//size_t	dust2_index = add_entity_to_scene(&scene, dust2);
 	dust2->collision_detection_enabled = 1;
 //	dust2->collision_use_precise = 1;
 	dust2->rot_x_angle = -90;
@@ -192,6 +193,9 @@ int	main(void)
 			toggle_rot_z = toggle_rot_z != 1;
 		if (toggle_rot_z)
 			selected_entity->rot_z_angle += rot_amount_delta;
+		
+		if (keys[GLFW_KEY_N].state == GLFW_PRESS)
+			selected_entity->show_normal_map = selected_entity->show_normal_map != 1;
 
 		if (keys[GLFW_KEY_P].state == GLFW_PRESS)
 		{
@@ -205,6 +209,8 @@ int	main(void)
 		if (player.enabled_mouse)
 			player_looking(&player, sp.win, fps);
 
+		if (0)
+		{
 		size_t	entities_collisioned = 0;
 		for (size_t i = 0; i < scene.entities_allocated && entities_collisioned < scene.entity_amount; i++)
 		{
@@ -226,13 +232,15 @@ int	main(void)
 
 				// At some point, so it doenst get done somewhere im not sure where....
 				// aabb_vertify();
+					//player_entity_collision_precise(&player, scene.entities[i]);
 
 				if (scene.entities[i]->collision_use_precise)
-					player_entity_collision_precise(&player, scene.entities[i]);
+					testing_triangle_collision(&player, scene.entities[i]);
 				else
 					player_entity_collision(&player, scene.entities[i]);
 				entities_collisioned += 1;
 			}
+		}
 		}
 
 		player_apply_velocity(&player);

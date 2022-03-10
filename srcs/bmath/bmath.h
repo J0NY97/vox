@@ -14,6 +14,7 @@
 
 // VEC3
 float	*new_vec3(float *src, float x, float y, float z);
+float	*vec3_new(float *src, float x, float y, float z);
 float	*vec3_cpy(float *dest, float *src);
 void	vec3_string(char *str, float *v);
 float	*vec3_add(float *result, float *v0, float *v1);

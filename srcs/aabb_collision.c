@@ -2,18 +2,6 @@
 #include "bmath.h"
 
 /*
- * We are taking a pause on the ellipsoid on triangle collision detection,
- * and we are now trying to implement the AABB detection... so that we can have
- * something to work with, its been so long since ive made some progress.
- * Ill implement the more complicated thing later when i know more.
-*/
-
-/*NOTE*/
-/*
- * This detection type probably only works on objects, not really terrain....
-*/
-
-/*
  * amount of values in vertices should be vertex_amount * 3 (xyz per vertex);
 */
 void	aabb_create(t_aabb *res, float *vertices, size_t vertex_amount)
@@ -69,7 +57,14 @@ void	aabb_transform(t_aabb *a, float *model)
 void	aabb_transform_new(t_aabb *a, float *model)
 {
 	float	v4[VEC4_SIZE];
-	t_aabb	temp;
+
+	a->min[0] = INFINITY;
+	a->min[1] = INFINITY;
+	a->min[2] = INFINITY;
+
+	a->max[0] = -INFINITY;
+	a->max[1] = -INFINITY;
+	a->max[2] = -INFINITY;
 
 	for (int i = 0; i < 24; i += 3)
 	{
@@ -78,6 +73,14 @@ void	aabb_transform_new(t_aabb *a, float *model)
 		a->vertices[i + 0] = v4[0];
 		a->vertices[i + 1] = v4[1];
 		a->vertices[i + 2] = v4[2];
+
+		a->min[0] = fmin(a->min[0], a->vertices[i + 0]);
+		a->min[1] = fmin(a->min[1], a->vertices[i + 1]);
+		a->min[2] = fmin(a->min[2], a->vertices[i + 2]);
+
+		a->max[0] = fmax(a->max[0], a->vertices[i + 0]);
+		a->max[1] = fmax(a->max[1], a->vertices[i + 1]);
+		a->max[2] = fmax(a->max[2], a->vertices[i + 2]);
 	}
 }
 

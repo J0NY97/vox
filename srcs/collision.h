@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   collision.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jsalmi <jsalmi@student.42.fr>              +#+  +:+       +#+        */
+/*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/04 09:39:11 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/03/07 12:13:25 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/03/10 09:31:29 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,7 @@ void		aabb_print(t_aabb *a);
 ////////////////////////
 
 int			ray_triangle_intersect(float *orig, float *dir, float *p1, float *p2, float *p3, float *intersect_point);
+float		*triangle_face_normal(float *res, float *n0, float *n1, float *n2);
 
 ////////////////////////
 //	PLANE

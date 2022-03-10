@@ -165,12 +165,15 @@ typedef struct	s_entity
 	float			trans_mat[MAT4_SIZE];
 	float			model_mat[MAT4_SIZE];
 
+	int				render_aabb;
 	int				collision_detection_enabled;
 	int				collision_use_precise;
 	t_aabb			aabb;
 	float			bb_vertices[24];
 	unsigned int	bb_indices[36];
 	int				collision;
+
+	int				show_normal_map;
 
 	t_model			model;
 }	t_entity;
@@ -210,6 +213,7 @@ void		player_apply_velocity(t_player *player);
 void		player_looking(t_player *player, GLFWwindow *win, t_fps fps);
 void		player_entity_collision(t_player *player, t_entity *entity);
 void		player_entity_collision_precise(t_player *player, t_entity *entity);
+void		testing_triangle_collision(t_player *player, t_entity *entity);
 void		player_print(t_player *player);
 
 ///////////////////
