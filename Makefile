@@ -20,6 +20,8 @@ CFILES = \
 	triangle_collision.c \
 	plane_collision.c \
 	crosshair.c \
+	skybox.c \
+	instance.c \
 	help.c \
 	bimgf/bimgf_bmp.c \
 	bimgf/bimgf_help.c \

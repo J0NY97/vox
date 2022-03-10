@@ -131,6 +131,25 @@ void		update_camera(t_camera *camera);
 void		camera_print(t_camera *camera);
 
 ///////////////////
+//	SKYBOX
+///////////////////
+
+typedef struct s_skybox
+{
+	GLuint		vao;
+	GLuint		vbo_position;
+	GLuint		texture;
+	t_shader	shader;
+	float		vertices[6 * 3 * 6];
+	size_t		vertices_size;
+}	t_skybox;
+
+unsigned int	load_cube_map(char **paths, int paths_size);
+t_skybox		*new_skybox(t_skybox *skybox);
+float			*skybox_vertices(float *res, size_t *size);
+void			render_skybox(t_skybox *skybox, t_camera *camera);
+
+///////////////////
 //	FRACTAL
 ///////////////////
 
@@ -183,7 +202,26 @@ void				entity_print(t_entity *entity);
 void				update_entity(t_entity *entity);
 void				render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader *shader);
 
+/////////////////////
+// ENTITY INSTANCED
+/////////////////////
 
+typedef struct s_block
+{
+	float	pos[VEC3_SIZE];
+}	t_block;
+
+typedef struct	s_chunk
+{
+	float		pos_offset[VEC3_SIZE]; // All the instance pos are relative to this;
+	int			block_amount;
+	t_block		*blocks; //x*y*z real amount should be : 20 736
+	t_model		model;
+}	t_chunk;
+
+void		new_chunk(t_chunk *chunk);
+void		gen_chunk_blocks(t_block *blocks, int *dim);
+void		render_chunk(t_chunk *chunk, t_camera *camera, t_model *model, t_shader *shader);
 
 ///////////////////
 //	PLAYER

@@ -21,5 +21,6 @@ int	new_texture(GLuint *texture, const char *image_file)
 		0, orig_img_format, GL_UNSIGNED_BYTE, image.pixels);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);
+	bimgf_free(&image);
 	return (1);
 }

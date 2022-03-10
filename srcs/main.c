@@ -135,6 +135,33 @@ int	main(void)
 	t_fractal2d	fractal;
 	new_fractal2d(&fractal);
 
+	t_skybox	skybox;
+	new_skybox(&skybox);
+
+	t_obj		cube_obj;
+	obj_load(&cube_obj, MODEL_PATH"cube/cube.obj");
+
+	t_entity	*test_cube = malloc(sizeof(t_entity));
+	new_entity(test_cube);
+	new_model(&test_cube->model, &cube_obj);
+	add_entity_to_scene(&scene, test_cube);
+	new_vec3(test_cube->pos, 2, 0.6, -2.0);
+	test_cube->scale_value = .1;
+	test_cube->rot_x_angle = 0;
+	test_cube->rot_y_angle = 0;
+	test_cube->rot_z_angle = 0;
+
+//////////////////////////////
+	// Instance testing
+//////////////////////////////
+		t_shader	cube_shader;
+		new_shader(&cube_shader, SHADER_PATH"simple_instance.vs", SHADER_PATH"simple.fs");
+		t_chunk	cube_chunk;	
+		new_model(&cube_chunk.model, &cube_obj);
+//////////////////////////////
+	// END Instance testing
+//////////////////////////////
+
 	int error = glGetError();
 	if (error)
 		LG_ERROR("gl errors before while : %d", error);
@@ -147,8 +174,10 @@ int	main(void)
 	glfwSwapInterval(0);
 	while (!glfwWindowShouldClose(sp.win))
 	{
+		/*
 		glDisable(GL_DEPTH_TEST);
 		render_fractal2d(&fractal, &mandelbrot_shader);
+		*/
 
 		update_all_keys(keys, sp.win);
 		glfwPollEvents();
@@ -259,17 +288,11 @@ int	main(void)
 			}
 		}
 
+		render_chunk(&cube_chunk, &player.camera, &cube_chunk.model, &cube_shader);
+
+		render_skybox(&skybox, &player.camera);
+
 		glDisable(GL_DEPTH_TEST);
-/*
-		float p1[] = { -9.760000, 0.320000, -5.760000 };
-		float p2[] = { -9.280000, 0.320000, -5.760000 };
-		float p3[] = { -9.280000, 0.160000, -5.760000 };
-
-		render_3d_line(p1, p2, (float []){0, 1, 0}, player.camera.view, player.camera.projection);
-		render_3d_line(p1, p3, (float []){0, 1, 0}, player.camera.view, player.camera.projection);
-		render_3d_line(p2, p3, (float []){0, 1, 0}, player.camera.view, player.camera.projection);
-		*/
-
 		render_crosshair();
 
 		glfwSwapBuffers(sp.win);
