@@ -157,6 +157,7 @@ int	main(void)
 		t_shader	cube_shader;
 		new_shader(&cube_shader, SHADER_PATH"simple_instance.vs", SHADER_PATH"simple.fs");
 		t_chunk	cube_chunk;	
+		new_chunk(&cube_chunk);
 		new_model(&cube_chunk.model, &cube_obj);
 //////////////////////////////
 	// END Instance testing

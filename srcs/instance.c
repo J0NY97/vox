@@ -4,9 +4,9 @@ void	new_chunk(t_chunk *chunk)
 {
 	memset(chunk, 0, sizeof(t_chunk));
 	vec3_new(chunk->pos_offset, 0, 0, 0);
-	chunk->block_amount = 9 * 9 * 1;
+	chunk->block_amount = /*9 * 9 */ 1;
 	chunk->blocks = malloc(sizeof(t_block) * chunk->block_amount);
-	gen_chunk_blocks(chunk->blocks, (int []){9, 9, 1});
+	gen_chunk_blocks(chunk->blocks, (int []){1, 1, 1});
 }
 
 void	gen_chunk_blocks(t_block *blocks, int *dim)
@@ -42,8 +42,10 @@ void	render_chunk(t_chunk *chunk, t_camera *camera, t_model *model, t_shader *sh
 	for (int i = 0; i < chunk->block_amount; i++)
 	{
 		mat4_identity(model_matrix);
+
 		mat4_identity(trans_matrix);
 		mat4_translate(trans_matrix, trans_matrix, chunk->blocks[i].pos);
+
 		mat4_multiply(model_matrix, scale_matrix, model_matrix);
 		mat4_multiply(model_matrix, trans_matrix, model_matrix);
 
@@ -61,7 +63,7 @@ void	render_chunk(t_chunk *chunk, t_camera *camera, t_model *model, t_shader *sh
 		glBindTexture(GL_TEXTURE_2D, model->info[0].elem_info[0].material->texture);
 	}
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->info[0].elem_info[0].ebo);
-	glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, chunk->block_amount);
+	glDrawElementsInstanced(GL_TRIANGLES, model->info[0].elem_info[0].element.indices_value_amount , GL_UNSIGNED_INT, NULL, chunk->block_amount);
 
 	glUseProgram(0);
 	glBindVertexArray(0);
