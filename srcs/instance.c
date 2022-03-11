@@ -6,12 +6,15 @@ void	new_chunk(t_chunk *chunk, float *coord)
 	if (error)
 		LG_ERROR("Before (%d)", error);
 
-	chunk->block_scale = 0.1f;
+	chunk->block_scale = 1;
 	vec3_new(chunk->coordinate, coord[0], coord[1], coord[2]);
 	vec3_new(chunk->world_coordinate,
 		chunk->coordinate[0] * (9 * chunk->block_scale * 2),
 		chunk->coordinate[1] * (9 * chunk->block_scale * 2),
 		chunk->coordinate[2] * (9 * chunk->block_scale * 2));
+	
+	vec3_string("coordinate :", chunk->coordinate);
+	vec3_string("world_coordinate :", chunk->world_coordinate);
 
 	chunk->blocks = malloc(sizeof(t_block) * (9 * 9 * 256)); // <-- max amount of blocks
 	/*
@@ -96,12 +99,11 @@ int	random_chunk_gen(t_chunk *chunk)
 		for (int z = 0; z < 9; z++)
 		{
 			ft_printf("\n");
-			float	block_world_x = (chunk->coordinate[0] * (9 * chunk->block_scale * 2)) + x;
-			float	block_world_z = (chunk->coordinate[2] * (9 * chunk->block_scale * 2)) + z;
-			float perper = perlin(block_world_x, block_world_z);
-			ft_printf("start_y * perper = %f\n", start_y * perper);
-			int actual = start_y + (int)(5 * perper);
+			float	block_world_x = chunk->world_coordinate[0] + (float)x;
+			float	block_world_z = chunk->world_coordinate[2] + (float)z;
 			ft_printf("world x : %f, z : %f\n", block_world_x, block_world_z);
+			float perper = perlin(block_world_x, block_world_z);
+			int actual = start_y + perper;
 			ft_printf("perper : %f %d\n", perper, actual);
 			for (int y = 0; y < ft_clamp(actual, 1, max_y); y++)
 			{

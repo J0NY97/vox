@@ -54,7 +54,7 @@ void	player_movement(t_player *player, GLFWwindow *win, t_fps fps)
 
 	if (glfwGetKey(win, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		speed_multiplier = 2.0f;
-	speed = speed_multiplier * fps.delta_time;
+	speed = (speed_multiplier * 10.0f) * fps.delta_time;
 
 	new_vec3(temp0, 0, 0, 0);
 	if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS)

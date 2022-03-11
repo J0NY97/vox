@@ -14,7 +14,7 @@ float interpolate(float a0, float a1, float w) {
      * if (0.0 > w) return a0;
      * if (1.0 < w) return a1;
      */
-    return (a1 - a0) * w + a0;
+	return (a1 - a0) * w + a0;
     /* // Use this cubic interpolation [[Smoothstep]] instead, for a smooth appearance:
 	 */
 	//return (a1 - a0) * (3.0 - w * 2.0) * w * w + a0;
@@ -30,7 +30,7 @@ float interpolate(float a0, float a1, float w) {
 float	*randomGradient(float *res_v2, int ix, int iy)
 {
 	// No precomputed gradients mean this works for any number of grid coordinates
-	const unsigned int	w = 8 * sizeof(unsigned int);
+	const unsigned int	w = 8 * sizeof(unsigned);
 	const unsigned int	s = w / 2; // rotation width
 
 	unsigned int	a = ix;
