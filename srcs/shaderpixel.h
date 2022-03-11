@@ -225,8 +225,16 @@ typedef struct	s_chunk
 }	t_chunk;
 
 void		new_chunk(t_chunk *chunk, float *coord);
-void		gen_chunk_blocks(t_block *blocks, float scale, int *dim);
+void		gen_chunk_blocks(t_block *blocks, int *dim);
+int			random_chunk_gen(t_chunk *chunk);
 void		render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader);
+
+///////////////////
+//	NOISE
+///////////////////
+
+int			random_number(int x, int y);
+float		perlin(float x, float y);
 
 ///////////////////
 //	PLAYER

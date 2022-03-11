@@ -13,13 +13,14 @@ void	new_chunk(t_chunk *chunk, float *coord)
 		chunk->coordinate[1] * (9 * chunk->block_scale * 2),
 		chunk->coordinate[2] * (9 * chunk->block_scale * 2));
 
-	chunk->block_amount = 9 * 9 * 256; // try to have >= 9 * 9
-	chunk->blocks = malloc(sizeof(t_block) * chunk->block_amount);
+	chunk->blocks = malloc(sizeof(t_block) * (9 * 9 * 256)); // <-- max amount of blocks
+	/*
 	int	x_amount = chunk->block_amount > 9 ? 9 : chunk->block_amount;
 	int y_amount = chunk->block_amount / (9 * 9);
 	int z_amount = chunk->block_amount > 9 ? 9 : 9 - (chunk->block_amount % 9);
-	gen_chunk_blocks(chunk->blocks, chunk->block_scale,
-		(int []){x_amount, y_amount, z_amount});
+	gen_chunk_blocks(chunk->blocks, (int []){x_amount, y_amount, z_amount});
+		*/
+	chunk->block_amount = random_chunk_gen(chunk);
 	
 	chunk->block_matrices_size = sizeof(float) * 16 * chunk->block_amount;
 	chunk->block_matrices = malloc(chunk->block_matrices_size);
@@ -34,9 +35,9 @@ void	new_chunk(t_chunk *chunk, float *coord)
 	{
 		mat4_identity(trans);
 		mat4_translate(trans, trans, vec3_new(tmp,
-			chunk->blocks[i].pos[0] + chunk->world_coordinate[0],
-			chunk->blocks[i].pos[1] + chunk->world_coordinate[1],
-			chunk->blocks[i].pos[2] + chunk->world_coordinate[2]));
+			(chunk->blocks[i].pos[0] * chunk->block_scale * 2) + chunk->world_coordinate[0],
+			(chunk->blocks[i].pos[1] * chunk->block_scale * 2) + chunk->world_coordinate[1],
+			(chunk->blocks[i].pos[2] * chunk->block_scale * 2) + chunk->world_coordinate[2]));
 
 		mat4_identity(scale);
 		mat4_scale(scale, scale, vec3_new(tmp,
@@ -47,12 +48,7 @@ void	new_chunk(t_chunk *chunk, float *coord)
 		mat4_multiply(model, trans, model);
 
 		memcpy(chunk->block_matrices + (i * 16), model, sizeof(float) * 16);
-
-//		mat4_string("model :", chunk->block_matrices + (i * 16));
 	}
-
-	ft_printf("block_amount : %d, block_matrices_size : %d\n",
-		chunk->block_amount, chunk->block_matrices_size);
 
 	glGenBuffers(1, &chunk->vbo_instance);
 	glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo_instance);
@@ -86,7 +82,36 @@ void	new_chunk(t_chunk *chunk, float *coord)
 
 }
 
-void	gen_chunk_blocks(t_block *blocks, float scale, int *dim)
+/*
+ * Returns amount of blocks generated;
+*/
+int	random_chunk_gen(t_chunk *chunk)
+{
+	int	start_y = 32;
+	int	max_y = 256;
+	int i = 0;
+
+	for (int x = 0; x < 9; x++)
+	{
+		for (int z = 0; z < 9; z++)
+		{
+			int	block_world_x = x + (int)chunk->world_coordinate[0];
+			int	block_world_z = z + (int)chunk->world_coordinate[2];
+			float perper = perlin(block_world_x, block_world_z);
+			int actual = start_y + (int)(start_y * perper);
+			ft_printf("world x : %d, y : %d\n", block_world_x, block_world_z);
+			ft_printf("perper : %f %d\n", perper, actual);
+			for (int y = 0; y < ft_clamp(actual, 1, max_y); y++)
+			{
+				vec3_new(chunk->blocks[i].pos, x, y, z);
+				i++;
+			}
+		}
+	}
+	return (i);
+}
+
+void	gen_chunk_blocks(t_block *blocks, int *dim)
 {
 	int	i = 0;
 
@@ -96,10 +121,7 @@ void	gen_chunk_blocks(t_block *blocks, float scale, int *dim)
 		{
 			for (int z = 0; z < dim[2]; z++)
 			{
-				vec3_new(blocks[i].pos,
-					x * scale + x * scale,
-					y * scale + y * scale,
-					z * scale + z * scale);
+				vec3_new(blocks[i].pos, x, y, z);
 				i++;
 			}
 		}
