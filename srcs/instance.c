@@ -95,11 +95,13 @@ int	random_chunk_gen(t_chunk *chunk)
 	{
 		for (int z = 0; z < 9; z++)
 		{
-			int	block_world_x = x + (int)chunk->world_coordinate[0];
-			int	block_world_z = z + (int)chunk->world_coordinate[2];
+			ft_printf("\n");
+			float	block_world_x = (chunk->coordinate[0] * (9 * chunk->block_scale * 2)) + x;
+			float	block_world_z = (chunk->coordinate[2] * (9 * chunk->block_scale * 2)) + z;
 			float perper = perlin(block_world_x, block_world_z);
-			int actual = start_y + (int)(start_y * perper);
-			ft_printf("world x : %d, y : %d\n", block_world_x, block_world_z);
+			ft_printf("start_y * perper = %f\n", start_y * perper);
+			int actual = start_y + (int)(5 * perper);
+			ft_printf("world x : %f, z : %f\n", block_world_x, block_world_z);
 			ft_printf("perper : %f %d\n", perper, actual);
 			for (int y = 0; y < ft_clamp(actual, 1, max_y); y++)
 			{

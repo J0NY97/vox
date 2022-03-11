@@ -16,11 +16,13 @@ float interpolate(float a0, float a1, float w) {
      */
     return (a1 - a0) * w + a0;
     /* // Use this cubic interpolation [[Smoothstep]] instead, for a smooth appearance:
-     * return (a1 - a0) * (3.0 - w * 2.0) * w * w + a0;
+	 */
+	//return (a1 - a0) * (3.0 - w * 2.0) * w * w + a0;
+	/*
      *
      * // Use [[Smootherstep]] for an even smoother result with a second derivative equal to zero on boundaries:
-     * return (a1 - a0) * ((w * (w * 6.0 - 15.0) + 10.0) * w * w * w) + a0;
      */
+	//return (a1 - a0) * ((w * (w * 6.0 - 15.0) + 10.0) * w * w * w) + a0;
 }
 
 /* Create pseudorandom direction vector
@@ -28,14 +30,18 @@ float interpolate(float a0, float a1, float w) {
 float	*randomGradient(float *res_v2, int ix, int iy)
 {
 	// No precomputed gradients mean this works for any number of grid coordinates
-	const unsigned w = 8 * sizeof(unsigned);
-	const unsigned s = w / 2; // rotation width
-	unsigned a = ix, b = iy;
-	a *= 3284157443; b ^= a << s | a >> w-s;
-	b *= 1911520717; a ^= b << s | b >> w-s;
-	a *= 2048419325;
-	float random = a * (3.14159265 / ~(~0u >> 1)); // in [0, 2*Pi]
+	const unsigned int	w = 8 * sizeof(unsigned int);
+	const unsigned int	s = w / 2; // rotation width
 
+	unsigned int	a = ix;
+	unsigned int	b = iy;
+	a *= 3284157443;
+	b ^= (a << s) | (a >> (w - s));
+	b *= 1911520717;
+	a ^= (b << s) | (b >> (w - s));
+	a *= 2048419325;
+
+	float	random = a * (3.14159265 / ~(~0u >> 1)); // in [0, 2*Pi]
 	float	v[VEC2_SIZE];
 	v[0] = cos(random);
 	v[1] = sin(random);
