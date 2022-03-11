@@ -79,8 +79,9 @@ int	main(void)
 	new_vec3(player.camera.pos, -9.269078, 0.349081, -6.638917);
 	player.camera.yaw = -263;
 	*/
-	new_vec3(player.camera.pos, 2.5, 0.5, 0.5);
-	player.camera.yaw = -126;
+	new_vec3(player.camera.pos, 0.7, 4.5, 1.0);
+	player.camera.pitch = -50;
+	player.camera.yaw = 50;
 	player.camera.viewport_w = sp.win_w;
 	player.camera.viewport_h = sp.win_h;
 
@@ -156,9 +157,26 @@ int	main(void)
 //////////////////////////////
 		t_shader	cube_shader;
 		new_shader(&cube_shader, SHADER_PATH"simple_instance.vs", SHADER_PATH"simple.fs");
-		t_chunk	cube_chunk;	
-		new_chunk(&cube_chunk);
-		new_model(&cube_chunk.model, &cube_obj);
+		int	chunk_dim[] = {9, 1, 9};
+		t_chunk	cube_chunk[9 * 9];	
+		t_model	cube_model;
+		new_model(&cube_model, &cube_obj);
+		int	nth_chunk = 0;
+		for (int y = 0; y < chunk_dim[1]; y++)
+		{
+			for (int x = 0; x < chunk_dim[0]; x++)
+			{
+				for (int z = 0; z < chunk_dim[2]; z++)
+				{
+//					cube_chunk[nth_chunk].model = &cube_model;
+					new_model(&cube_chunk[nth_chunk].model, &cube_obj);
+					new_chunk(&cube_chunk[nth_chunk],
+						(float []){x, y, z});
+					nth_chunk++;
+				}
+			}
+		}
+		ft_printf("Chunks created : %d\n", nth_chunk);
 //////////////////////////////
 	// END Instance testing
 //////////////////////////////
@@ -289,7 +307,16 @@ int	main(void)
 			}
 		}
 
-		render_chunk(&cube_chunk, &player.camera, &cube_chunk.model, &cube_shader);
+/////////////////
+		// Chunk ernerererd
+/////////////////
+//		glCullface();
+		nth_chunk = 0;
+		for (; nth_chunk < chunk_dim[0] * chunk_dim[1] * chunk_dim[2]; nth_chunk++)
+			render_chunk(&cube_chunk[nth_chunk], &player.camera, &cube_shader);
+/////////////////
+		// END Chunk ernerererd
+/////////////////
 
 		render_skybox(&skybox, &player.camera);
 

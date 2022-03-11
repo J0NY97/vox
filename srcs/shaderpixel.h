@@ -34,7 +34,6 @@ typedef struct	s_model		t_model;
 typedef struct	s_shader	t_shader;
 typedef struct	s_fps		t_fps;
 typedef struct	s_key		t_key;
-typedef struct	s_model		t_model;
 
 ///////////////////
 //	MODEL
@@ -208,20 +207,26 @@ void				render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shad
 
 typedef struct s_block
 {
-	float	pos[VEC3_SIZE];
+	float	pos[VEC3_SIZE]; // in chunk coordinates, add chunk world coordinate to this to get world coordinate;
 }	t_block;
 
 typedef struct	s_chunk
 {
-	float		pos_offset[VEC3_SIZE]; // All the instance pos are relative to this;
+	float		coordinate[VEC3_SIZE];
+	float		world_coordinate[VEC3_SIZE];
+
+	float		block_scale;
 	int			block_amount;
 	t_block		*blocks; //x*y*z real amount should be : 20 736
+	int			block_matrices_size; // sizeof (block_positions)
+	float		*block_matrices;
 	t_model		model;
+	GLuint		vbo_instance;
 }	t_chunk;
 
-void		new_chunk(t_chunk *chunk);
-void		gen_chunk_blocks(t_block *blocks, int *dim);
-void		render_chunk(t_chunk *chunk, t_camera *camera, t_model *model, t_shader *shader);
+void		new_chunk(t_chunk *chunk, float *coord);
+void		gen_chunk_blocks(t_block *blocks, float scale, int *dim);
+void		render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader);
 
 ///////////////////
 //	PLAYER
