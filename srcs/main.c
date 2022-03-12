@@ -75,7 +75,8 @@ int	main(void)
 
 	t_player	player;
 	new_player(&player);
-	new_vec3(player.camera.pos, -3, 78, -3);
+	new_vec3(player.camera.pos, 0, 80, 0);
+//	new_vec3(player.camera.pos, 16384, 80, 16384);
 	player.camera.pitch = -20;
 	player.camera.yaw = 50;
 	player.camera.viewport_w = sp.win_w;
@@ -153,23 +154,35 @@ int	main(void)
 //////////////////////////////
 		t_shader	cube_shader;
 		new_shader(&cube_shader, SHADER_PATH"simple_instance.vs", SHADER_PATH"simple.fs");
-		int	chunk_dim[] = {1, 1, 1};
-		t_chunk	cube_chunk[chunk_dim[0] * chunk_dim[2]];	
+		float	render_distance = 5;
+		t_chunk	chunks[(int)render_distance * (int)render_distance];	
 		t_model	cube_model;
 		new_model(&cube_model, &cube_obj);
-		int	nth_chunk = 0;
-		for (int y = 0; y < chunk_dim[1]; y++)
+		int		nth_chunk = 0;
+		float	player_chunk[VEC2_SIZE];
+		int		prev_player_chunk[VEC2_SIZE];
+		int		start_coord[VEC2_SIZE];
+		
+		t_chunk_info	chunk_info;
+		chunk_info.width = 16;
+		chunk_info.breadth = 16;
+		chunk_info.block_scale = 1.0f;
+		chunk_info.block_size = chunk_info.block_scale * 2;
+		chunk_info.chunk_size = chunk_info.width * chunk_info.block_scale * 2;
+
+		player_in_chunk(player_chunk, player.camera.pos, &chunk_info);
+		start_coord[0] = player_chunk[0] - (render_distance / 2);
+		start_coord[1] = player_chunk[1] - (render_distance / 2);
+		prev_player_chunk[0] = player_chunk[0];
+		prev_player_chunk[1] = player_chunk[1];
+
+		for (int x = start_coord[0], x_amount = 0; x_amount < render_distance; x++, x_amount++)
 		{
-			for (int x = 0; x < chunk_dim[0]; x++)
+			for (int z = start_coord[1], z_amount = 0; z_amount < render_distance; z++, z_amount++)
 			{
-				for (int z = 0; z < chunk_dim[2]; z++)
-				{
-//					cube_chunk[nth_chunk].model = &cube_model;
-					new_model(&cube_chunk[nth_chunk].model, &cube_obj);
-					new_chunk(&cube_chunk[nth_chunk],
-						(float []){x, y, z});
-					nth_chunk++;
-				}
+				new_model(&chunks[nth_chunk].model, &cube_obj);
+				new_chunk(&chunks[nth_chunk], &chunk_info, (float []){x, 1, z});
+				nth_chunk++;
 			}
 		}
 		ft_printf("Chunks created : %d\n", nth_chunk);
@@ -306,15 +319,67 @@ int	main(void)
 		}
 
 /////////////////
-		// Chunk ernerererd
+		// Chunk things
 /////////////////
+		// Insert here where we check if we have gone past the chunk border;
+		// Currently just redo every chunk;
+		player_in_chunk(player_chunk, player.camera.pos, &chunk_info);
+		if (prev_player_chunk[0] != (int)(player_chunk[0]) ||
+			prev_player_chunk[1] != (int)(player_chunk[1]))
+		{
+			ft_printf("Update chunks.\n");
+			start_coord[0] = player_chunk[0] - (render_distance / 2);
+			start_coord[1] = player_chunk[1] - (render_distance / 2);
+
+			prev_player_chunk[0] = player_chunk[0];
+			prev_player_chunk[1] = player_chunk[1];
+
+			ft_printf("player_chunk : %f %f\n", player_chunk[0], player_chunk[1]);
+			ft_printf("prev_player_chunk : %f %f\n", prev_player_chunk[0], prev_player_chunk[1]);
+
+/* THIS DOESNT CARE ABOUT WHAT HAS BEEN UNLOADED, IT UPDATES EVERYTHING AROUND*/
+			ft_timer_start();
+			nth_chunk = 0;
+			for (int x = start_coord[0], x_amount = 0; x_amount < render_distance; x++, x_amount++)
+			{
+				for (int z = start_coord[1], z_amount = 0; z_amount < render_distance; z++, z_amount++)
+				{
+					update_chunk(&chunks[nth_chunk], (float []){x, 1, z});
+					nth_chunk++;
+				}
+			}
+			ft_printf("vol1 updating chunks : %f\n", ft_timer_end());
+/*
+			*/
+
+/* VOL 2 TRYING TO OPTIMIZE UPDATING OF CHUNKS */
+			/*
+			ft_timer_start();
+			int	res[256];
+			int found = furthest_away_chunks(res, player_chunk, chunks, render_distance * render_distance);
+			nth_chunk = 0;
+			for (int x = start_coord[0], x_amount = 0; x_amount < render_distance; x++, x_amount++)
+			{
+				for (int z = start_coord[1], z_amount = 0; z_amount < render_distance; z++, z_amount++)
+				{
+					for (int i = 0; i < found; i++)
+						if (nth_chunk == res[i])
+							update_chunk(&chunks[res[i]], (float []){x, 1, z});
+					nth_chunk++;
+				}
+			}
+			ft_printf("vol2 updating chunks : %f\n", ft_timer_end());
+*/
+		}
+
+
 		glCullFace(GL_BACK);
 		glFrontFace(GL_CCW);
 		nth_chunk = 0;
-		for (; nth_chunk < chunk_dim[0] * chunk_dim[1] * chunk_dim[2]; nth_chunk++)
-			render_chunk(&cube_chunk[nth_chunk], &player.camera, &cube_shader);
+		for (; nth_chunk < render_distance * render_distance; nth_chunk++)
+			render_chunk(&chunks[nth_chunk], &player.camera, &cube_shader);
 /////////////////
-		// END Chunk ernerererd
+		// END Chunk things
 /////////////////
 
 		render_skybox(&skybox, &player.camera);

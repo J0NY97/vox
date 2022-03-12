@@ -13,6 +13,7 @@
 #ifndef SHADERPIXEL_H
 # define SHADERPIXEL_H
 
+# include "limits.h"
 # include "libft.h"
 # include "libpf.h"
 # include "liblg.h"
@@ -210,12 +211,22 @@ typedef struct s_block
 	float	pos[VEC3_SIZE]; // in chunk coordinates, add chunk world coordinate to this to get world coordinate;
 }	t_block;
 
+typedef struct s_chunk_info
+{
+	int			width; // in blocks;
+	int			breadth; // in blocks;
+	float		block_scale;
+	float		block_size;
+	float		chunk_size;
+	//t_model		model; // at some point this;
+}	t_chunk_info;
+
 typedef struct	s_chunk
 {
+	t_chunk_info	*info;
 	float		coordinate[VEC3_SIZE];
 	float		world_coordinate[VEC3_SIZE];
 
-	float		block_scale;
 	int			block_amount;
 	t_block		*blocks; //x*y*z real amount should be : 20 736
 	int			block_matrices_size; // sizeof (block_positions)
@@ -224,10 +235,13 @@ typedef struct	s_chunk
 	GLuint		vbo_instance;
 }	t_chunk;
 
-void		new_chunk(t_chunk *chunk, float *coord);
+void		new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord);
 void		gen_chunk_blocks(t_block *blocks, int *dim);
-int			random_chunk_gen(t_chunk *chunk);
+int			chunk_gen(t_chunk *chunk);
 void		render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader);
+void		update_chunk(t_chunk *chunk, float *coord);
+float		*player_in_chunk(float *res, float *player_coord, t_chunk_info *info);
+int			furthest_away_chunks(int *res, float *player_chunk, t_chunk *chunks, int render_distance);
 
 ///////////////////
 //	NOISE
