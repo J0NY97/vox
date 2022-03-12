@@ -327,15 +327,11 @@ int	main(void)
 		if (prev_player_chunk[0] != (int)(player_chunk[0]) ||
 			prev_player_chunk[1] != (int)(player_chunk[1]))
 		{
-			ft_printf("Update chunks.\n");
 			start_coord[0] = player_chunk[0] - (render_distance / 2);
 			start_coord[1] = player_chunk[1] - (render_distance / 2);
 
 			prev_player_chunk[0] = player_chunk[0];
 			prev_player_chunk[1] = player_chunk[1];
-
-			ft_printf("player_chunk : %f %f\n", player_chunk[0], player_chunk[1]);
-			ft_printf("prev_player_chunk : %f %f\n", prev_player_chunk[0], prev_player_chunk[1]);
 
 /* THIS DOESNT CARE ABOUT WHAT HAS BEEN UNLOADED, IT UPDATES EVERYTHING AROUND*/
 			ft_timer_start();

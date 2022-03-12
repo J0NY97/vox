@@ -149,7 +149,7 @@ int	chunk_gen(t_chunk *chunk)
 			int actual = start_y + perper;
 //			ft_printf("perper : %f %d\n", perper, actual);
 			//for (int y = 0; y < ft_clamp(actual, 1, max_y); y++)
-			for (int y = ft_clamp(actual, 1, max_y), b = 0; b < 256; y--, b++) // the 'b' is the amount of blocks we have on the y axis;
+			for (int y = ft_clamp(actual, 1, max_y), b = 0; b < 2; y--, b++) // the 'b' is the amount of blocks we have on the y axis;
 			{
 				vec3_new(chunk->blocks[i].pos, x, y, z);
 				i++;
@@ -179,7 +179,7 @@ void	gen_chunk_blocks(t_block *blocks, int *dim)
 float	*player_in_chunk(float *res, float *player_coord, t_chunk_info *info)
 {
 	res[0] = player_coord[0] / info->chunk_size;
-	res[1] = player_coord[1] / info->chunk_size;
+	res[1] = player_coord[2] / info->chunk_size;
 	return (res);
 }
 
