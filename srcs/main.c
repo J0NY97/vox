@@ -163,12 +163,17 @@ int	main(void)
 		int		prev_player_chunk[VEC2_SIZE];
 		int		start_coord[VEC2_SIZE];
 		
+		float v3[VEC3_SIZE];
 		t_chunk_info	chunk_info;
+
 		chunk_info.width = 16;
 		chunk_info.breadth = 16;
 		chunk_info.block_scale = 1.0f;
 		chunk_info.block_size = chunk_info.block_scale * 2;
 		chunk_info.chunk_size = chunk_info.width * chunk_info.block_scale * 2;
+		mat4_identity(chunk_info.scale_matrix);
+		mat4_scale(chunk_info.scale_matrix, chunk_info.scale_matrix, vec3_new(v3,
+				chunk_info.block_scale, chunk_info.block_scale, chunk_info.block_scale));
 
 		player_in_chunk(player_chunk, player.camera.pos, &chunk_info);
 		start_coord[0] = player_chunk[0] - (render_distance / 2);

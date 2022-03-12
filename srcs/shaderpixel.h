@@ -218,6 +218,8 @@ typedef struct s_chunk_info
 	float		block_scale;
 	float		block_size;
 	float		chunk_size;
+
+	float		scale_matrix[MAT4_SIZE];
 	//t_model		model; // at some point this;
 }	t_chunk_info;
 

@@ -149,7 +149,7 @@ int	chunk_gen(t_chunk *chunk)
 			int actual = start_y + perper;
 //			ft_printf("perper : %f %d\n", perper, actual);
 			//for (int y = 0; y < ft_clamp(actual, 1, max_y); y++)
-			for (int y = ft_clamp(actual, 1, max_y), b = 0; b < 2; y--, b++) // the 'b' is the amount of blocks we have on the y axis;
+			for (int y = ft_clamp(actual, 1, max_y), b = 0; b < 256; y--, b++) // the 'b' is the amount of blocks we have on the y axis;
 			{
 				vec3_new(chunk->blocks[i].pos, x, y, z);
 				i++;
