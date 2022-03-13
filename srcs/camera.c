@@ -28,7 +28,7 @@ void	update_camera(t_camera *camera)
 	vec3_normalize(camera->front, temp_vec3);
 
 	mat4_identity(camera->projection);
-	mat4_perspective_fov(camera->projection, to_radians(camera->fov), camera->viewport_w, camera->viewport_h, 0.1f, 100.0f);
+	mat4_perspective_fov(camera->projection, to_radians(camera->fov), camera->viewport_w, camera->viewport_h, 0.1f, 200.0f);
 
 	mat4_identity(camera->view);
 	mat4_look_at(camera->view, camera->pos, vec3_add(temp_vec3, camera->pos, camera->front), camera->up);

@@ -154,7 +154,7 @@ int	main(void)
 //////////////////////////////
 		t_shader	cube_shader;
 		new_shader(&cube_shader, SHADER_PATH"simple_instance.vs", SHADER_PATH"simple_instance.fs");
-		float	render_distance = 5;
+		float	render_distance = 10;
 		t_chunk	chunks[(int)render_distance * (int)render_distance];	
 		t_model	cube_model;
 		new_model(&cube_model, &cube_obj);
