@@ -17,7 +17,7 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord)
 	
 	int	max_blocks = chunk->info->width * chunk->info->breadth * 256;
 	chunk->blocks = malloc(sizeof(t_block) * (max_blocks));
-	chunk->block_amount = chunk_gen(chunk);
+	chunk->block_amount = chunk_gen(chunk, 25);
 	
 	chunk->block_matrices_size = sizeof(float) * 16 * chunk->block_amount;
 	chunk->block_matrices = malloc(sizeof(float) * 16 * max_blocks);
@@ -108,7 +108,7 @@ void	update_chunk(t_chunk *chunk, float *coord)
 		chunk->coordinate[0] * chunk->info->chunk_size, 1,
 		chunk->coordinate[2] * chunk->info->chunk_size);
 	
-	chunk->block_amount = chunk_gen(chunk);
+	chunk->block_amount = chunk_gen(chunk, 25);
 	chunk->block_matrices_size = sizeof(float) * 16 * chunk->block_amount;
 
 	float	tmp[VEC3_SIZE];
@@ -155,7 +155,7 @@ void	update_chunk(t_chunk *chunk, float *coord)
 /*
  * Returns amount of blocks generated;
 */
-int	chunk_gen(t_chunk *chunk)
+int	chunk_gen(t_chunk *chunk, float freq)
 {
 	int	start_y = 16;
 	int	max_y = 256;
@@ -165,16 +165,20 @@ int	chunk_gen(t_chunk *chunk)
 	{
 		for (int z = 0; z < chunk->info->breadth; z++)
 		{
-			float	block_world_x = (chunk->world_coordinate[0] + (float)x) / 10;
-			float	block_world_z = (chunk->world_coordinate[2] + (float)z) / 10;
-			float	perper =
-					1 * perlin(1 * block_world_x, 1 * block_world_z);
-					/*
-					0.5 * perlin(2 * block_world_x, 2 * block_world_z);
+			float	block_world_x = ((chunk->coordinate[0] * chunk->info->chunk_size) +
+				((float)x * chunk->info->block_size)) / freq;
+			float	block_world_z = ((chunk->coordinate[2] * chunk->info->chunk_size) +
+				((float)z * chunk->info->block_size)) / freq;
+
+			float	perper = 1 * perlin(1 * block_world_x, 1 * block_world_z, chunk->info->seed);
+			/*
+					1 * perlin(1 * block_world_x, 1 * block_world_z) +
+					0.5 * perlin(2 * block_world_x, 2 * block_world_z) +
 					0.25 * perlin(4 * block_world_x, 4 * block_world_z) +
 					0.125 * perlin(8 * block_world_x, 8 * block_world_z);
 					*/
-			float	rounded = round(perper * 32) / 32;
+			float	rounded = perper;
+			rounded = round(rounded * 32) / 32;
 			if (rounded < 0)
 				rounded = -powf(fabs(rounded), 1.5f);
 			else
@@ -188,7 +192,7 @@ int	chunk_gen(t_chunk *chunk)
 			for (int y = actual, b = 0; b < start_y + actual; y--, b++) // the 'b' is the amount of blocks we have on the y axis;
 			{
 				vec3_new(chunk->blocks[i].pos, x, y, z);
-				if (b > 2)
+				if (b > 2) // if we have 3 dirt block on top we make the rest stone blocks;
 					chunk->blocks[i].texture_id = 1;
 				else
 					chunk->blocks[i].texture_id = 0;

@@ -166,6 +166,7 @@ int	main(void)
 		float v3[VEC3_SIZE];
 		t_chunk_info	chunk_info;
 
+		chunk_info.seed = 896868766;
 		chunk_info.width = 16;
 		chunk_info.breadth = 16;
 		chunk_info.block_scale = 1.0f;

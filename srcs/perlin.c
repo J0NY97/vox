@@ -14,7 +14,7 @@ float interpolate(float a0, float a1, float w) {
      * if (0.0 > w) return a0;
      * if (1.0 < w) return a1;
      */
-	return (a1 - a0) * w + a0;
+	//return (a1 - a0) * w + a0;
     /* // Use this cubic interpolation [[Smoothstep]] instead, for a smooth appearance:
 	 */
 	//return (a1 - a0) * (3.0 - w * 2.0) * w * w + a0;
@@ -22,12 +22,12 @@ float interpolate(float a0, float a1, float w) {
      *
      * // Use [[Smootherstep]] for an even smoother result with a second derivative equal to zero on boundaries:
      */
-	//return (a1 - a0) * ((w * (w * 6.0 - 15.0) + 10.0) * w * w * w) + a0;
+	return (a1 - a0) * ((w * (w * 6.0 - 15.0) + 10.0) * w * w * w) + a0;
 }
 
 /* Create pseudorandom direction vector
  */
-float	*randomGradient(float *res_v2, int ix, int iy)
+float	*randomGradient(float *res_v2, int ix, int iy, unsigned int seed)
 {
 	// No precomputed gradients mean this works for any number of grid coordinates
 	const unsigned int	w = 8 * sizeof(unsigned);
@@ -35,11 +35,14 @@ float	*randomGradient(float *res_v2, int ix, int iy)
 
 	unsigned int	a = ix;
 	unsigned int	b = iy;
-	a *= 3284157443;
+	//a *= 3284157443;
+	//b *= 1911520717;
+	//a *= 2048419325;
+	a *= seed;
 	b ^= (a << s) | (a >> (w - s));
-	b *= 1911520717;
+	b *= seed;
 	a ^= (b << s) | (b >> (w - s));
-	a *= 2048419325;
+	a *= seed;
 
 	float	random = a * (3.14159265 / ~(~0u >> 1)); // in [0, 2*Pi]
 	float	v[VEC2_SIZE];
@@ -52,11 +55,11 @@ float	*randomGradient(float *res_v2, int ix, int iy)
 }
 
 // Computes the dot product of the distance and gradient vectors.
-float	dotGridGradient(int ix, int iy, float x, float y)
+float	dotGridGradient(int ix, int iy, float x, float y, unsigned int seed)
 {
 	// Get gradient from integer coordinates
 	float	gradient[VEC2_SIZE];
-	randomGradient(gradient, ix, iy);
+	randomGradient(gradient, ix, iy, seed);
 
 	// Compute the distance vector
 	float dx = x - (float)ix;
@@ -67,7 +70,7 @@ float	dotGridGradient(int ix, int iy, float x, float y)
 }
 
 // Compute Perlin noise at coordinates x, y
-float perlin(float x, float y)
+float perlin(float x, float y, unsigned int seed)
 {
     // Determine grid cell coordinates
     int x0 = (int)floor(x);
@@ -83,12 +86,12 @@ float perlin(float x, float y)
     // Interpolate between grid point gradients
     float n0, n1, ix0, ix1, value;
 
-    n0 = dotGridGradient(x0, y0, x, y);
-    n1 = dotGridGradient(x1, y0, x, y);
+    n0 = dotGridGradient(x0, y0, x, y, seed);
+    n1 = dotGridGradient(x1, y0, x, y, seed);
     ix0 = interpolate(n0, n1, sx);
 
-    n0 = dotGridGradient(x0, y1, x, y);
-    n1 = dotGridGradient(x1, y1, x, y);
+    n0 = dotGridGradient(x0, y1, x, y, seed);
+    n1 = dotGridGradient(x1, y1, x, y, seed);
     ix1 = interpolate(n0, n1, sx);
 
     value = interpolate(ix0, ix1, sy);

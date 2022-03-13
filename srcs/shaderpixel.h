@@ -220,6 +220,8 @@ typedef struct s_chunk_info
 	float		block_size;
 	float		chunk_size;
 
+	unsigned int	seed;
+
 	float		scale_matrix[MAT4_SIZE];
 	//t_model		model; // at some point this;
 }	t_chunk_info;
@@ -244,7 +246,7 @@ typedef struct	s_chunk
 
 void		new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord);
 void		gen_chunk_blocks(t_block *blocks, int *dim);
-int			chunk_gen(t_chunk *chunk);
+int			chunk_gen(t_chunk *chunk, float freq);
 void		render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader);
 void		update_chunk(t_chunk *chunk, float *coord);
 float		*player_in_chunk(float *res, float *player_coord, t_chunk_info *info);
@@ -255,7 +257,7 @@ int			furthest_away_chunks(int *res, float *player_chunk, t_chunk *chunks, int r
 ///////////////////
 
 int			random_number(int x, int y);
-float		perlin(float x, float y);
+float		perlin(float x, float y, unsigned int seed);
 
 ///////////////////
 //	PLAYER
