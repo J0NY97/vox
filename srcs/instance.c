@@ -191,12 +191,15 @@ int	chunk_gen(t_chunk *chunk, float freq)
 			*/
 			for (int y = actual, b = 0; b < start_y + actual; y--, b++) // the 'b' is the amount of blocks we have on the y axis;
 			{
-				vec3_new(chunk->blocks[i].pos, x, y, z);
-				if (b > 2) // if we have 3 dirt block on top we make the rest stone blocks;
-					chunk->blocks[i].texture_id = 1;
-				else
-					chunk->blocks[i].texture_id = 0;
-				i++;
+//				if (solid_enough(perlin3d(x, y, z))) // only create block of this if solid_enough, otherwise air, aka cave;
+				{
+					vec3_new(chunk->blocks[i].pos, x, y, z);
+					if (b > 2) // if we have 3 dirt block on top we make the rest stone blocks;
+						chunk->blocks[i].texture_id = 1;
+					else
+						chunk->blocks[i].texture_id = 0;
+					i++;
+				}
 			}
 		}
 	}
