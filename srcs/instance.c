@@ -1,5 +1,7 @@
 #include "shaderpixel.h"
 
+// Basically everything needed for minecraft : https://www.redblobgames.com/maps/terrain-from-noise/
+
 void	new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord)
 {
 	int error = glGetError();
@@ -19,6 +21,9 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord)
 	
 	chunk->block_matrices_size = sizeof(float) * 16 * chunk->block_amount;
 	chunk->block_matrices = malloc(sizeof(float) * 16 * max_blocks);
+
+	chunk->block_textures_size = sizeof(int) * chunk->block_amount;
+	chunk->block_textures = malloc(sizeof(int) * max_blocks);
 
 	float	tmp[VEC3_SIZE];
 	float	model[MAT4_SIZE];
@@ -45,10 +50,12 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord)
 		mat4_multiply(model, trans, model);
 
 		memcpy(chunk->block_matrices + (i * 16), model, sizeof(float) * 16);
+		memcpy(chunk->block_textures + (i), &chunk->blocks[i].texture_id, sizeof(int));
 	}
 
-	glGenBuffers(1, &chunk->vbo_instance);
-	glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo_instance);
+	// Matrices
+	glGenBuffers(1, &chunk->vbo_matrices);
+	glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo_matrices);
 	glBufferData(GL_ARRAY_BUFFER, chunk->block_matrices_size,
 		&chunk->block_matrices[0], GL_STATIC_DRAW);
 
@@ -69,6 +76,17 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord)
 	glEnableVertexAttribArray(7);
 	glVertexAttribPointer(7, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void *)(3 * 4 * sizeof(float)));
 	glVertexAttribDivisor(7, 1);
+
+	// Texture ID
+	glGenBuffers(1, &chunk->vbo_texture_ids);
+	glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo_texture_ids);
+	glBufferData(GL_ARRAY_BUFFER, chunk->block_textures_size,
+		&chunk->block_textures[0], GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(8);
+	glVertexAttribIPointer(8, 1, GL_INT, GL_FALSE, NULL);
+	glVertexAttribDivisor(8, 1);
+
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -118,11 +136,18 @@ void	update_chunk(t_chunk *chunk, float *coord)
 		mat4_multiply(model, trans, model);
 
 		memcpy(chunk->block_matrices + (i * 16), model, sizeof(float) * 16);
+		memcpy(chunk->block_textures + (i), &chunk->blocks[i].texture_id, sizeof(int));
 	}
 
-	glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo_instance);
+	// Update matrix buffer
+	glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo_matrices);
 	glBufferData(GL_ARRAY_BUFFER, chunk->block_matrices_size,
 		&chunk->block_matrices[0], GL_STATIC_DRAW);
+
+	// Update texture id buffer
+	glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo_texture_ids);
+	glBufferData(GL_ARRAY_BUFFER, chunk->block_textures_size,
+		&chunk->block_textures[0], GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -140,18 +165,33 @@ int	chunk_gen(t_chunk *chunk)
 	{
 		for (int z = 0; z < chunk->info->breadth; z++)
 		{
-		//	ft_printf("\n");
-			float	block_world_x = chunk->world_coordinate[0] + (float)x;
-			float	block_world_z = chunk->world_coordinate[2] + (float)z;
-	//		ft_printf("world x : %f, z : %f\n", block_world_x, block_world_z);
-			float perper = perlin(block_world_x / 10, block_world_z / 10);
-//			int actual = start_y + (perper * 5);
-			int actual = start_y + perper;
-//			ft_printf("perper : %f %d\n", perper, actual);
-			//for (int y = 0; y < ft_clamp(actual, 1, max_y); y++)
-			for (int y = ft_clamp(actual, 1, max_y), b = 0; b < 256; y--, b++) // the 'b' is the amount of blocks we have on the y axis;
+			float	block_world_x = (chunk->world_coordinate[0] + (float)x) / 10;
+			float	block_world_z = (chunk->world_coordinate[2] + (float)z) / 10;
+			float	perper =
+					1 * perlin(1 * block_world_x, 1 * block_world_z);
+					/*
+					0.5 * perlin(2 * block_world_x, 2 * block_world_z);
+					0.25 * perlin(4 * block_world_x, 4 * block_world_z) +
+					0.125 * perlin(8 * block_world_x, 8 * block_world_z);
+					*/
+			float	rounded = round(perper * 32) / 32;
+			if (rounded < 0)
+				rounded = -powf(fabs(rounded), 1.5f);
+			else
+				rounded = powf(fabs(rounded), 1.5f);
+			float	actual = start_y * rounded;
+			/*
+			ft_printf("actual : %f\n", actual);
+			ft_printf("powf(%f, 1.20) = %f\n", perper, rounded);
+			ft_printf("%d + (%d * %f) = %f\n", start_y, start_y, rounded, actual);
+			*/
+			for (int y = actual, b = 0; b < start_y + actual; y--, b++) // the 'b' is the amount of blocks we have on the y axis;
 			{
 				vec3_new(chunk->blocks[i].pos, x, y, z);
+				if (b > 2)
+					chunk->blocks[i].texture_id = 1;
+				else
+					chunk->blocks[i].texture_id = 0;
 				i++;
 			}
 		}

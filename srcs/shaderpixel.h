@@ -209,6 +209,7 @@ void				render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shad
 typedef struct s_block
 {
 	float	pos[VEC3_SIZE]; // in chunk coordinates, add chunk world coordinate to this to get world coordinate;
+	int		texture_id;
 }	t_block;
 
 typedef struct s_chunk_info
@@ -233,8 +234,12 @@ typedef struct	s_chunk
 	t_block		*blocks; //x*y*z real amount should be : 20 736
 	int			block_matrices_size; // sizeof (block_positions)
 	float		*block_matrices;
+	int			block_textures_size;
+	int			*block_textures;
+
 	t_model		model;
-	GLuint		vbo_instance;
+	GLuint		vbo_matrices;
+	GLuint		vbo_texture_ids;
 }	t_chunk;
 
 void		new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord);
