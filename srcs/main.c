@@ -155,7 +155,8 @@ int	main(void)
 		t_shader	cube_shader;
 		new_shader(&cube_shader, SHADER_PATH"simple_instance.vs", SHADER_PATH"simple_instance.fs");
 		float	render_distance = 10;
-		t_chunk	chunks[(int)render_distance * (int)render_distance];	
+		int		chunks_loaded = (int)render_distance * (int)render_distance;
+		t_chunk	chunks[chunks_loaded];	
 		t_model	cube_model;
 		new_model(&cube_model, &cube_obj);
 		int		nth_chunk = 0;
@@ -329,6 +330,7 @@ int	main(void)
 /////////////////
 		// Insert here where we check if we have gone past the chunk border;
 		// Currently just redo every chunk;
+
 		player_in_chunk(player_chunk, player.camera.pos, &chunk_info);
 		if (prev_player_chunk[0] != (int)(player_chunk[0]) ||
 			prev_player_chunk[1] != (int)(player_chunk[1]))
@@ -339,9 +341,10 @@ int	main(void)
 			prev_player_chunk[0] = player_chunk[0];
 			prev_player_chunk[1] = player_chunk[1];
 
-/* THIS DOESNT CARE ABOUT WHAT HAS BEEN UNLOADED, IT UPDATES EVERYTHING AROUND*/
-			ft_timer_start();
 			nth_chunk = 0;
+/* THIS DOESNT CARE ABOUT WHAT HAS BEEN UNLOADED, IT UPDATES EVERYTHING AROUND*/
+			/*
+			ft_timer_start();
 			for (int x = start_coord[0], x_amount = 0; x_amount < render_distance; x++, x_amount++)
 			{
 				for (int z = start_coord[1], z_amount = 0; z_amount < render_distance; z++, z_amount++)
@@ -351,27 +354,63 @@ int	main(void)
 				}
 			}
 			ft_printf("vol1 updating chunks : %f\n", ft_timer_end());
-/*
 			*/
 
-/* VOL 2 TRYING TO OPTIMIZE UPDATING OF CHUNKS */
-			/*
+/* VOL2 */
 			ft_timer_start();
-			int	res[256];
-			int found = furthest_away_chunks(res, player_chunk, chunks, render_distance * render_distance);
+			int	reload_these_chunks[50];
+			int	reload_amount = 0;
+			int	found;
+
+			// Check which chunks are not going to be in the next iteration of
+			//	loaded chunks, save those to 'reload_these_chunks' and when starting
+			// to update the new chunks that are going to be loaded, and put the
+			// new chunk info into those 'chunks' indices;
+			for (int i = 0; i < chunks_loaded; i++)
+			{
+				found = 0;
+				for (int x = start_coord[0], x_amount = 0; x_amount < render_distance; x++, x_amount++)
+				{
+					for (int z = start_coord[1], z_amount = 0; z_amount < render_distance; z++, z_amount++)
+					{
+						if (chunks[i].coordinate[0] == x && chunks[i].coordinate[2] == z)
+							found = 1;
+					}
+				}
+				if (!found)
+				{
+					reload_these_chunks[reload_amount] = i;
+					reload_amount++;
+				}
+			}
+			//ft_printf("Chunk unload checker time : %f\n", ft_timer_end());
+			
+			// Go through all the coordinates that will be loaded next time, and
+			//  check if any of the loaded chunks have those coordinates, if not
+			//	we take one of the chunks that are not going to be loaded next time
+			// 	and update the new chunk into that memory;
 			nth_chunk = 0;
 			for (int x = start_coord[0], x_amount = 0; x_amount < render_distance; x++, x_amount++)
 			{
 				for (int z = start_coord[1], z_amount = 0; z_amount < render_distance; z++, z_amount++)
 				{
-					for (int i = 0; i < found; i++)
-						if (nth_chunk == res[i])
-							update_chunk(&chunks[res[i]], (float []){x, 1, z});
-					nth_chunk++;
+					found = 0;
+					for (int i = 0; i < chunks_loaded; i++)
+					{
+						if (chunks[i].coordinate[0] == x && chunks[i].coordinate[2] == z)
+						{
+							found = 1;
+							break ;
+						}
+					}
+					if (!found)
+					{
+						update_chunk(&chunks[reload_these_chunks[nth_chunk]], (float []){x, 1, z});
+						nth_chunk++;
+					}
 				}
 			}
-			ft_printf("vol2 updating chunks : %f\n", ft_timer_end());
-*/
+			ft_printf("Vol2 chunk update timer : %f\n", ft_timer_end());
 		}
 
 
