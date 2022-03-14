@@ -17,7 +17,7 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord)
 	
 	int	max_blocks = chunk->info->width * chunk->info->breadth * 256;
 	chunk->blocks = malloc(sizeof(t_block) * (max_blocks));
-	chunk->block_amount = chunk_gen(chunk, 25);
+	chunk->block_amount = chunk_gen(chunk);
 	
 	chunk->block_matrices_size = sizeof(float) * 16 * chunk->block_amount;
 	chunk->block_matrices = malloc(sizeof(float) * 16 * max_blocks);
@@ -108,7 +108,7 @@ void	update_chunk(t_chunk *chunk, float *coord)
 		chunk->coordinate[0] * chunk->info->chunk_size, 1,
 		chunk->coordinate[2] * chunk->info->chunk_size);
 	
-	chunk->block_amount = chunk_gen(chunk, 25);
+	chunk->block_amount = chunk_gen(chunk);
 	chunk->block_matrices_size = sizeof(float) * 16 * chunk->block_amount;
 
 	float	tmp[VEC3_SIZE];
@@ -155,11 +155,13 @@ void	update_chunk(t_chunk *chunk, float *coord)
 /*
  * Returns amount of blocks generated;
 */
-int	chunk_gen(t_chunk *chunk, float freq)
+int	chunk_gen(t_chunk *chunk)
 {
-	int	start_y = 16;
-	int	max_y = 256;
-	int i = 0;
+	int		start_y = 65;
+	int		max_y = 256;
+	float	freq = 120.0f;
+	float	height = freq / 100; // less is more;
+	int		i = 0;
 
 	for (int x = 0; x < chunk->info->width; x++)
 	{
@@ -172,17 +174,18 @@ int	chunk_gen(t_chunk *chunk, float freq)
 
 			float	perper = 1 * perlin(1 * block_world_x, 1 * block_world_z, chunk->info->seed);
 			/*
-					1 * perlin(1 * block_world_x, 1 * block_world_z) +
-					0.5 * perlin(2 * block_world_x, 2 * block_world_z) +
-					0.25 * perlin(4 * block_world_x, 4 * block_world_z) +
-					0.125 * perlin(8 * block_world_x, 8 * block_world_z);
-					*/
+			float perper = 
+					1 * perlin(1 * block_world_x, 1 * block_world_z, chunk->info->seed) +
+					0.5 * perlin(2 * block_world_x, 2 * block_world_z, chunk->info->seed) +
+					0.25 * perlin(4 * block_world_x, 4 * block_world_z, chunk->info->seed) +
+					0.125 * perlin(8 * block_world_x, 8 * block_world_z, chunk->info->seed);
+			*/
 			float	rounded = perper;
-			rounded = round(rounded * 32) / 32;
+			rounded = round(rounded * (freq / 2)) / (freq / 2);
 			if (rounded < 0)
-				rounded = -powf(fabs(rounded), 1.5f);
+				rounded = -powf(fabs(rounded), height);
 			else
-				rounded = powf(fabs(rounded), 1.5f);
+				rounded = powf(fabs(rounded), height);
 			float	actual = start_y * rounded;
 			/*
 			ft_printf("actual : %f\n", actual);

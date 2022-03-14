@@ -366,6 +366,7 @@ int	main(void)
 			//	loaded chunks, save those to 'reload_these_chunks' and when starting
 			// to update the new chunks that are going to be loaded, and put the
 			// new chunk info into those 'chunks' indices;
+			// Takes 0.000000 seconds
 			for (int i = 0; i < chunks_loaded; i++)
 			{
 				found = 0;
@@ -389,6 +390,7 @@ int	main(void)
 			//  check if any of the loaded chunks have those coordinates, if not
 			//	we take one of the chunks that are not going to be loaded next time
 			// 	and update the new chunk into that memory;
+			// Takes 0.018 - 0.009 seconds with current 'chunk_gen' (b < start_y + actual)
 			nth_chunk = 0;
 			for (int x = start_coord[0], x_amount = 0; x_amount < render_distance; x++, x_amount++)
 			{

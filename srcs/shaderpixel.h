@@ -246,7 +246,7 @@ typedef struct	s_chunk
 
 void		new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord);
 void		gen_chunk_blocks(t_block *blocks, int *dim);
-int			chunk_gen(t_chunk *chunk, float freq);
+int			chunk_gen(t_chunk *chunk);
 void		render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader);
 void		update_chunk(t_chunk *chunk, float *coord);
 float		*player_in_chunk(float *res, float *player_coord, t_chunk_info *info);
