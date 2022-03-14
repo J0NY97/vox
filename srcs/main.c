@@ -95,7 +95,7 @@ int	main(void)
 	new_entity(retrotv);
 	new_model(&retrotv->model, &retrotv_obj);
 	//new_vec3(retrotv->pos, 0, 0, -2.5);
-	new_vec3(retrotv->pos, 2.5, 0.5, 0);
+	new_vec3(retrotv->pos, 0, 90, 0);
 	retrotv->collision_detection_enabled = 1;
 	retrotv->collision_use_precise = 1;
 	retrotv->render_aabb = 0;
