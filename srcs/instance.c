@@ -187,14 +187,11 @@ int	chunk_gen(t_chunk *chunk)
 			else
 				rounded = powf(fabs(rounded), height);
 			float	actual = start_y * rounded;
-			/*
-			ft_printf("actual : %f\n", actual);
-			ft_printf("powf(%f, 1.20) = %f\n", perper, rounded);
-			ft_printf("%d + (%d * %f) = %f\n", start_y, start_y, rounded, actual);
-			*/
+
 			for (int y = actual, b = 0; b < start_y + actual; y--, b++) // the 'b' is the amount of blocks we have on the y axis;
 			{
-//				if (solid_enough(perlin3d(x, y, z))) // only create block of this if solid_enough, otherwise air, aka cave;
+//				ft_printf("%d %d %d : %f\n", x, y, z, perlin3(x / 10.0f, y / 10.0f, z / 10.0f, chunk->info->seed));
+				if (perlin3(x / 10.0f, y / 10.0f, z / 10.0f, chunk->info->seed) > 0.0f) // only create block of this if solid_enough, otherwise air, aka cave;
 				{
 					vec3_new(chunk->blocks[i].pos, x, y, z);
 					if (b > 2) // if we have 3 dirt block on top we make the rest stone blocks;

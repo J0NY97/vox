@@ -258,6 +258,7 @@ int			furthest_away_chunks(int *res, float *player_chunk, t_chunk *chunks, int r
 
 int			random_number(int x, int y);
 float		perlin(float x, float y, unsigned int seed);
+float		perlin3(float x, float y, float z, unsigned int seed);
 
 ///////////////////
 //	PLAYER
