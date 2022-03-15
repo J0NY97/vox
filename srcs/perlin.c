@@ -154,91 +154,16 @@ float	dotGridGradient3(int ix, int iy, int iz, float x, float y, float z, unsign
 	return (dx * gradient[0] + dy * gradient[1] + dz * gradient[2]);
 }
 
-// Compute Perlin noise at coordinates x, y, z
-/*
-float perlin3(float x, float y, float z, unsigned int seed)
-{
-	int		ix0 = (int)floor(x);
-	int		iy0 = (int)floor(x);
-	int		iz0 = (int)floor(x);
-	int		ix1 = ix0 + 1;
-	int		iy1 = iy0 + 1;
-	int		iz1 = iz0 + 1;
-
-	float	tx = x - (int)floor(x);
-	float	ty = y - (int)floor(y);
-	float	tz = z - (int)floor(z);
-
-	float	u = interpolate(0, 1, tx);
-	float	v = interpolate(0, 1, ty);
-	float	w = interpolate(0, 1, tz);
-
-	float	x0 = tx;
-	float	x1 = tx - 1;
-	float	y0 = ty;
-	float	y1 = ty - 1;
-	float	z0 = tz;
-	float	z1 = tz - 1;
-
-	float	a = interpolate(dotGridGradient3(ix0, iy0, iz0, x0, y0, z0, seed),
-		dotGridGradient3(ix1, iy0, iz0, x1, y0, z0, seed), u);
-	float	b = interpolate(dotGridGradient3(ix0, iy1, iz0, x0, y1, z0, seed),
-		dotGridGradient3(ix1, iy1, iz0, x1, y1, z0, seed), u);
-	float	c = interpolate(dotGridGradient3(ix0, iy0, iz1, x0, y0, z1, seed),
-		dotGridGradient3(ix1, iy0, iz1, x1, y0, z1, seed), u);
-	float	d = interpolate(dotGridGradient3(ix0, iy1, iz1, x0, y1, z1, seed),
-		dotGridGradient3(ix1, iy1, iz1, x1, y1, z1, seed), u);
-
-	float	e = interpolate(a, b, v);
-	float	f = interpolate(c, d, v);
-    return (interpolate(e, f, w));
-}
-*/
-
 float	perlin3(float x, float y, float z, unsigned int seed)
 { 
-	int xi0 = (int)floor(x);
-	int yi0 = (int)floor(y);
-	int zi0 = (int)floor(z);
+	float	ab = perlin(x, y, seed);
+	float	bc = perlin(y, z, seed);
+	float	ac = perlin(x, z, seed);
 
-	int xi1 = (xi0 + 1);
-	int yi1 = (yi0 + 1);
-	int zi1 = (zi0 + 1);
+	float	ba = perlin(y, x, seed);
+	float	cb = perlin(z, y, seed);
+	float	ca = perlin(z, x, seed);
 
-	float tx = x - (int)floor(x); 
-	float ty = y - (int)floor(y); 
-	float tz = z - (int)floor(z); 
-
-	float u = interpolate(0, 1, tx); 
-	float v = interpolate(0, 1, ty); 
-	float w = interpolate(0, 1, tz); 
-
-	// generate vectors going from the grid points to p
-	float x0 = tx, x1 = tx - 1; 
-	float y0 = ty, y1 = ty - 1; 
-	float z0 = tz, z1 = tz - 1; 
-
-	// gradients at the corner of the cell
-	int	cp0 = dotGridGradient3(xi0, yi0, zi0, x0, y0, z0, seed);
-	int	cp1 = dotGridGradient3(xi0, yi0, zi0, x0, y0, z0, seed);
-
-	int	cp2 = dotGridGradient3(xi0, yi1, zi0, x0, y1, z0, seed);
-	int	cp3 = dotGridGradient3(xi1, yi1, zi0, x1, y1, z0, seed);
-
-	int	cp4 = dotGridGradient3(xi0, yi0, zi1, x0, y0, z1, seed);
-	int	cp5 = dotGridGradient3(xi1, yi0, zi1, x1, y0, z1, seed);
-
-	int	cp6 = dotGridGradient3(xi0, yi1, zi1, x0, y1, z1, seed);
-	int	cp7 = dotGridGradient3(xi1, yi1, zi1, x1, y1, z1, seed);
-
-	// linear interpolation
-	float a = interpolate(cp0, cp1, u); 
-	float b = interpolate(cp2, cp3, u); 
-	float c = interpolate(cp4, cp5, u); 
-	float d = interpolate(cp6, cp7, u); 
-
-	float e = interpolate(a, b, v); 
-	float f = interpolate(c, d, v); 
-
-	return (interpolate(e, f, w));
+	float	abc = ab + bc + ac + ba + cb + ca;
+	return (abc / 6.0f);
 }

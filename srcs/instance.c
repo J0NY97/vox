@@ -173,25 +173,29 @@ int	chunk_gen(t_chunk *chunk)
 				((float)z * chunk->info->block_size)) / freq;
 
 			float	perper = 1 * perlin(1 * block_world_x, 1 * block_world_z, chunk->info->seed);
-			/*
-			float perper = 
-					1 * perlin(1 * block_world_x, 1 * block_world_z, chunk->info->seed) +
-					0.5 * perlin(2 * block_world_x, 2 * block_world_z, chunk->info->seed) +
-					0.25 * perlin(4 * block_world_x, 4 * block_world_z, chunk->info->seed) +
-					0.125 * perlin(8 * block_world_x, 8 * block_world_z, chunk->info->seed);
-			*/
-			float	rounded = perper;
-			rounded = round(rounded * (freq / 2)) / (freq / 2);
-			if (rounded < 0)
-				rounded = -powf(fabs(rounded), height);
+			perper = round(perper * (freq / 2)) / (freq / 2);
+			if (perper < 0)
+				perper = -powf(fabs(perper), height);
 			else
-				rounded = powf(fabs(rounded), height);
-			float	actual = start_y * rounded;
-
-			for (int y = actual, b = 0; b < /*start_y + actual*/ 3; y--, b++) // the 'b' is the amount of blocks we have on the y axis;
+				perper = powf(fabs(perper), height);
+			perper = start_y * perper;
+			for (int y = start_y + perper, b = 0; b < start_y + perper; y--, b++) // the 'b' is the amount of blocks we have on the y axis;
 			{
 //				ft_printf("%d %d %d : %f\n", x, y, z, perlin3(x / 10.0f, y / 10.0f, z / 10.0f, chunk->info->seed));
-				//if (perlin3(x / 10.0f, y / 10.0f, z / 10.0f, chunk->info->seed) > 0.0f) // only create block of this if solid_enough, otherwise air, aka cave;
+				float	freq2 = 8.0f;
+				float	h2 = freq / 100;
+				float	rep_x = ((chunk->coordinate[0] * chunk->info->chunk_size) +
+					((float)x * chunk->info->block_size)) / freq2;
+				float	rep_z = ((chunk->coordinate[2] * chunk->info->chunk_size) +
+					((float)z * chunk->info->block_size)) / freq2;
+				float	rep_y = ((float)y * chunk->info->block_size) / freq2;
+				float	rep = 1 * perlin3(1 * rep_x, 1 * rep_y, 1 * rep_z, chunk->info->seed);
+			//		0.5 * perlin3(2 * rep_x, 2 * rep_y, 2 * rep_z, chunk->info->seed) +
+			//		0.25 * perlin3(4 * rep_x, 4 * rep_y, 4 * rep_z, chunk->info->seed);
+				rep = round(rep * (freq / 2)) / (freq / 2);
+				if (rep > 0)
+					rep = powf(fabs(rep), h2);
+				if (rep > 0.0f) // only create block of this if solid_enough, otherwise air, aka cave;
 				{
 					vec3_new(chunk->blocks[i].pos, x, y, z);
 					if (b > 2) // if we have 3 dirt block on top we make the rest stone blocks;
@@ -201,6 +205,8 @@ int	chunk_gen(t_chunk *chunk)
 					i++;
 				}
 			}
+			vec3_new(chunk->blocks[i - 1].pos, x, 0, z);
+			chunk->blocks[i - 1].texture_id = 2;
 		}
 	}
 	return (i);
@@ -228,54 +234,6 @@ float	*player_in_chunk(float *res, float *player_coord, t_chunk_info *info)
 	res[0] = player_coord[0] / info->chunk_size;
 	res[1] = player_coord[2] / info->chunk_size;
 	return (res);
-}
-
-int	dist_2d(int *p1, int *p2)
-{
-	int	x = p2[0] - p1[0];
-	int	y = p2[1] - p1[1];
-	return (sqrt((x * x) + (y * y)));
-}
-
-void	int_sort(int *arr, size_t size)
-{
-	for (int i = 0; i < size - 1; i++)
-	{
-		if (arr[i + 0] > arr[i + 1])
-		{
-			ft_swap(&arr[i + 0], &arr[i + 1]);
-			i = -1;
-		}
-	}
-}
-
-int	furthest_away_chunks(int *res, float *player_chunk, t_chunk *chunks, int chunk_amount)
-{
-	int	amount_to_find = sqrt(chunk_amount) * 2 - 1;
-	int	distances[chunk_amount];
-	int	found = 0;
-
-	for (int i = 0; i < chunk_amount; i++)
-		distances[i] = dist_2d((int []){player_chunk[0], player_chunk[1]},
-				(int []){chunks[i].coordinate[0], chunks[i].coordinate[2]});
-	int_sort(distances, chunk_amount);
-	for (int i = 0; i < chunk_amount; i++)
-	{
-		for (int j = chunk_amount - 1; j >= 0; j--)
-		{
-			if (dist_2d((int []){player_chunk[0], player_chunk[1]},
-				(int []){chunks[i].coordinate[0], chunks[i].coordinate[2]}) ==
-				distances[j])
-			{
-				res[found] = i;
-				found++;
-				break ;
-			}
-		}
-		if (found == amount_to_find)
-			break ;
-	}
-	return (found);
 }
 
 void	render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader)

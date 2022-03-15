@@ -75,7 +75,7 @@ int	main(void)
 
 	t_player	player;
 	new_player(&player);
-	new_vec3(player.camera.pos, 0, 80, 0);
+	new_vec3(player.camera.pos, 0, 200, 0);
 //	new_vec3(player.camera.pos, 16384, 80, 16384);
 	player.camera.pitch = -20;
 	player.camera.yaw = 50;
