@@ -70,7 +70,7 @@ else
 LIBS += -lOpenGl32 -lgdi32
 endif
 
-FLAGS = -Wall -Wextra -Wno-unused-variable -MMD #-g -fsanitize=address
+FLAGS = -Wall -Wextra -Wno-unused-variable -MMD #-O3 #-g -fsanitize=address
 
 all: $(ODIR) $(NAME)
 
@@ -84,7 +84,7 @@ $(ODIR):
 	@mkdir -p $@/glad
 
 $(ODIR)/%.o: $(CDIR)/%.c
-	@gcc -c $< -o $@ -MMD -O3 $(INCS) $(FLAGS)
+	@gcc -c $< -o $@ $(INCS) $(FLAGS)
 	@printf $(YELLOW)"Compiling $<\n"$(RESET)
 
 $(NAME): $(OBJ)

@@ -215,6 +215,7 @@ int	main(void)
 		glDisable(GL_DEPTH_TEST);
 		render_fractal2d(&fractal, &mandelbrot_shader);
 		*/
+//		ft_printf("FPS : %d\n", fps.fps);
 
 		update_all_keys(keys, sp.win);
 		glfwPollEvents();
@@ -268,6 +269,9 @@ int	main(void)
 			player_print(&player);
 			entity_print(selected_entity);
 		}
+
+		if (keys[GLFW_KEY_5].state == GLFW_PRESS)
+			vec3_new(player.camera.pos, 0, 200, 0);
 
 		update_fps(&fps);
 		player_events(&player, keys, sp.win);
@@ -332,8 +336,8 @@ int	main(void)
 		// Currently just redo every chunk;
 
 		player_in_chunk(player_chunk, player.camera.pos, &chunk_info);
-		if (prev_player_chunk[0] != (int)(player_chunk[0]) ||
-			prev_player_chunk[1] != (int)(player_chunk[1]))
+		if (0 && (prev_player_chunk[0] != (int)(player_chunk[0]) ||
+			prev_player_chunk[1] != (int)(player_chunk[1])))
 		{
 			start_coord[0] = player_chunk[0] - (render_distance / 2);
 			start_coord[1] = player_chunk[1] - (render_distance / 2);
@@ -341,22 +345,6 @@ int	main(void)
 			prev_player_chunk[0] = player_chunk[0];
 			prev_player_chunk[1] = player_chunk[1];
 
-			nth_chunk = 0;
-/* THIS DOESNT CARE ABOUT WHAT HAS BEEN UNLOADED, IT UPDATES EVERYTHING AROUND*/
-			/*
-			ft_timer_start();
-			for (int x = start_coord[0], x_amount = 0; x_amount < render_distance; x++, x_amount++)
-			{
-				for (int z = start_coord[1], z_amount = 0; z_amount < render_distance; z++, z_amount++)
-				{
-					update_chunk(&chunks[nth_chunk], (float []){x, 1, z});
-					nth_chunk++;
-				}
-			}
-			ft_printf("vol1 updating chunks : %f\n", ft_timer_end());
-			*/
-
-/* VOL2 */
 			ft_timer_start();
 			int	reload_these_chunks[50];
 			int	reload_amount = 0;
@@ -416,8 +404,8 @@ int	main(void)
 		}
 
 
-		glCullFace(GL_BACK);
-		glFrontFace(GL_CCW);
+//		glCullFace(GL_BACK);
+//		glFrontFace(GL_CCW);
 		nth_chunk = 0;
 		for (; nth_chunk < render_distance * render_distance; nth_chunk++)
 			render_chunk(&chunks[nth_chunk], &player.camera, &cube_shader);
