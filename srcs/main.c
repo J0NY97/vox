@@ -314,11 +314,9 @@ int	main(void)
 		}
 
 		player_apply_velocity(&player);
-
-		glEnable(GL_DEPTH_TEST);
-
 		update_camera(&player.camera);
 
+		glEnable(GL_DEPTH_TEST);
 		size_t	entities_rendered = 0;
 		for (size_t i = 0; i < scene.entities_allocated && entities_rendered < scene.entity_amount; i++)
 		{
@@ -332,77 +330,17 @@ int	main(void)
 /////////////////
 		// Chunk things
 /////////////////
-		// Insert here where we check if we have gone past the chunk border;
-		// Currently just redo every chunk;
-
 		player_in_chunk(player_chunk, player.camera.pos, &chunk_info);
-		if (0 && (prev_player_chunk[0] != (int)(player_chunk[0]) ||
+		if (1 && (prev_player_chunk[0] != (int)(player_chunk[0]) ||
 			prev_player_chunk[1] != (int)(player_chunk[1])))
 		{
-			start_coord[0] = player_chunk[0] - (render_distance / 2);
-			start_coord[1] = player_chunk[1] - (render_distance / 2);
-
 			prev_player_chunk[0] = player_chunk[0];
 			prev_player_chunk[1] = player_chunk[1];
 
 			ft_timer_start();
-			int	reload_these_chunks[50];
-			int	reload_amount = 0;
-			int	found;
-
-			// Check which chunks are not going to be in the next iteration of
-			//	loaded chunks, save those to 'reload_these_chunks' and when starting
-			// to update the new chunks that are going to be loaded, and put the
-			// new chunk info into those 'chunks' indices;
-			// Takes 0.000000 seconds
-			for (int i = 0; i < chunks_loaded; i++)
-			{
-				found = 0;
-				for (int x = start_coord[0], x_amount = 0; x_amount < render_distance; x++, x_amount++)
-				{
-					for (int z = start_coord[1], z_amount = 0; z_amount < render_distance; z++, z_amount++)
-					{
-						if (chunks[i].coordinate[0] == x && chunks[i].coordinate[2] == z)
-							found = 1;
-					}
-				}
-				if (!found)
-				{
-					reload_these_chunks[reload_amount] = i;
-					reload_amount++;
-				}
-			}
-			//ft_printf("Chunk unload checker time : %f\n", ft_timer_end());
-			
-			// Go through all the coordinates that will be loaded next time, and
-			//  check if any of the loaded chunks have those coordinates, if not
-			//	we take one of the chunks that are not going to be loaded next time
-			// 	and update the new chunk into that memory;
-			// Takes 0.018 - 0.009 seconds with current 'chunk_gen' (b < start_y + actual)
-			nth_chunk = 0;
-			for (int x = start_coord[0], x_amount = 0; x_amount < render_distance; x++, x_amount++)
-			{
-				for (int z = start_coord[1], z_amount = 0; z_amount < render_distance; z++, z_amount++)
-				{
-					found = 0;
-					for (int i = 0; i < chunks_loaded; i++)
-					{
-						if (chunks[i].coordinate[0] == x && chunks[i].coordinate[2] == z)
-						{
-							found = 1;
-							break ;
-						}
-					}
-					if (!found)
-					{
-						update_chunk(&chunks[reload_these_chunks[nth_chunk]], (float []){x, 1, z});
-						nth_chunk++;
-					}
-				}
-			}
+			//regenerate_chunks(chunks, &chunk_info, player_chunk);	
 			ft_printf("Vol2 chunk update timer : %f\n", ft_timer_end());
 		}
-
 
 //		glCullFace(GL_BACK);
 //		glFrontFace(GL_CCW);

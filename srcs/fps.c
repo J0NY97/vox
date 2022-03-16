@@ -2,7 +2,10 @@
 
 void	new_fps(t_fps *fps)
 {
-	(void)fps;
+	fps->fps = 1;
+	fps->count = 0;
+	fps->delta_time = 0.1;
+	fps->last_time = glfwGetTime();
 }
 
 void	update_fps(t_fps *fps)

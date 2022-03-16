@@ -222,6 +222,10 @@ typedef struct s_chunk_info
 
 	unsigned int	seed;
 
+	// TODO: These could be moved to 't_game_info' or something like that.
+	int			chunks_loaded;
+	int			render_distance;
+
 	float		scale_matrix[MAT4_SIZE];
 	//t_model		model; // at some point this;
 }	t_chunk_info;
@@ -250,7 +254,7 @@ int			chunk_gen(t_chunk *chunk);
 void		render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader);
 void		update_chunk(t_chunk *chunk, float *coord);
 float		*player_in_chunk(float *res, float *player_coord, t_chunk_info *info);
-int			furthest_away_chunks(int *res, float *player_chunk, t_chunk *chunks, int render_distance);
+void		regenerate_chunks(t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2);
 
 ///////////////////
 //	NOISE

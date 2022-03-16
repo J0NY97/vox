@@ -274,3 +274,64 @@ void	render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader)
 	if (error)
 		LG_ERROR("(%d)", error);
 }
+
+void	regenerate_chunks(t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2)
+{
+	int	reload_these_chunks[50];
+	int	reload_amount = 0;
+	int	found;
+	int	start_coord[2];
+
+	start_coord[0] = player_chunk_v2[0] - (info->render_distance / 2);
+	start_coord[1] = player_chunk_v2[1] - (info->render_distance / 2);
+	// Check which chunks are not going to be in the next iteration of
+	//	loaded chunks, save those to 'reload_these_chunks' and when starting
+	// to update the new chunks that are going to be loaded, and put the
+	// new chunk info into those 'chunks' indices;
+	// Takes 0.000000 seconds
+	for (int i = 0; i < info->chunks_loaded; i++)
+	{
+		found = 0;
+		for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
+		{
+			for (int z = start_coord[1], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
+			{
+				if (chunks[i].coordinate[0] == x && chunks[i].coordinate[2] == z)
+					found = 1;
+			}
+		}
+		if (!found)
+		{
+			reload_these_chunks[reload_amount] = i;
+			reload_amount++;
+		}
+	}
+	//ft_printf("Chunk unload checker time : %f\n", ft_timer_end());
+	
+	// Go through all the coordinates that will be loaded next time, and
+	//  check if any of the loaded chunks have those coordinates, if not
+	//	we take one of the chunks that are not going to be loaded next time
+	// 	and update the new chunk into that memory;
+	// Takes 0.018 - 0.009 seconds with current 'chunk_gen' (b < start_y + actual)
+	int	nth_chunk = 0;
+	for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
+	{
+		for (int z = start_coord[1], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
+		{
+			found = 0;
+			for (int i = 0; i < info->chunks_loaded; i++)
+			{
+				if (chunks[i].coordinate[0] == x && chunks[i].coordinate[2] == z)
+				{
+					found = 1;
+					break ;
+				}
+			}
+			if (!found)
+			{
+				update_chunk(&chunks[reload_these_chunks[nth_chunk]], (float []){x, 1, z});
+				nth_chunk++;
+			}
+		}
+	}
+}
