@@ -165,6 +165,9 @@ int	main(void)
 		chunk_info.block_size = chunk_info.block_scale * 2;
 		chunk_info.chunk_size = chunk_info.width * chunk_info.block_scale * 2;
 
+		int	chunk_reloading[2]; // 0 : reaload_amount, 1: reloaded amount
+		chunk_reloading[0] = 0;
+		chunk_reloading[1] = 0;
 		t_chunk	chunks[chunk_info.chunks_loaded];	
 		t_model	cube_model;
 		new_model(&cube_model, &cube_obj);
@@ -327,15 +330,16 @@ int	main(void)
 		// Chunk things
 /////////////////
 		player_in_chunk(player_chunk, player.camera.pos, &chunk_info);
-		if (1 && (prev_player_chunk[0] != (int)(player_chunk[0]) ||
-			prev_player_chunk[1] != (int)(player_chunk[1])))
+		if (1 && ((prev_player_chunk[0] != (int)(player_chunk[0]) ||
+			prev_player_chunk[1] != (int)(player_chunk[1])) ||
+			(chunk_reloading[0] != chunk_reloading[1])))
 		{
 			prev_player_chunk[0] = player_chunk[0];
 			prev_player_chunk[1] = player_chunk[1];
 
 			ft_timer_start();
 		//	regenerate_chunks(chunks, &chunk_info, player_chunk);	
-			regenerate_chunks_multi(chunks, &chunk_info, player_chunk);	
+			regenerate_chunks_multi(chunk_reloading, chunks, &chunk_info, player_chunk);	
 			ft_printf("Vol2 chunk update timer : %f\n", ft_timer_end());
 		}
 

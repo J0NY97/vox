@@ -86,7 +86,7 @@ int	chunk_gen(t_chunk *chunk)
 				perper = powf(fabs(perper), height);
 			perper = start_y * perper;
 //			ft_printf("perlin : %f\n", perper);
-			for (int y = start_y + perper, b = 0; b < /*start_y + perper*/ 5; y--, b++) // the 'b' is the amount of blocks we have on the y axis;
+			for (int y = start_y + perper, b = 0; b < start_y + perper; y--, b++) // the 'b' is the amount of blocks we have on the y axis;
 			{
 				float	cave_freq = 200.0f;
 				float	cave_height = cave_freq / 200;
@@ -103,7 +103,7 @@ int	chunk_gen(t_chunk *chunk)
 					rep = powf(rep, cave_height);
 			//	ft_printf("to_use_x : %f, to_use_y : %f, to_use_z : %f\n", to_use_x, to_use_y, to_use_z);
 			//	ft_printf("perlin3 : %f\n", rep);
-				if (rep > -0.03f)
+				if (rep > -0.10f)
 				{
 					vec3_new(chunk->blocks[i].pos, x, y, z);
 					if (b >= 1) // if we have 3 dirt block on top we make the rest stone blocks;
@@ -230,7 +230,7 @@ void	*update_chunk_threaded(void *arg)
 	return (NULL);
 }
 
-void	regenerate_chunks_multi(t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2)
+void	regenerate_chunks_multi(float *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2)
 {
 	int	reload_these_chunks[50];
 	int	reload_amount = 0;
@@ -288,11 +288,12 @@ void	regenerate_chunks_multi(t_chunk *chunks, t_chunk_info *info, float *player_
 			{
 				if (nth_thread >= 4)
 				{
+					break ;
 					int i = 0;
 					while (i < nth_thread)
 					{
 						if (pthread_join(threads[i], NULL))
-							LG_ERROR("Couldnt join thread.");
+							LG_ERROR("Couldnt join thread. -1-");
 						i++;
 					}
 					nth_thread = 0;
@@ -310,7 +311,7 @@ void	regenerate_chunks_multi(t_chunk *chunks, t_chunk_info *info, float *player_
 	while (j < nth_thread)
 	{
 		if (pthread_join(threads[j], NULL))
-			LG_ERROR("Couldnt join thread.");
+			LG_ERROR("Couldnt join thread. -2-");
 		j++;
 	}
 
@@ -332,6 +333,8 @@ void	regenerate_chunks_multi(t_chunk *chunks, t_chunk_info *info, float *player_
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+	res[0] = reload_amount;
+	res[1] = nth_chunk;
 	/*
 	*/
 }
