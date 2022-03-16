@@ -14,13 +14,18 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord)
 	chunk->block_matrices = malloc(sizeof(float) * 16 * max_blocks);
 	chunk->block_textures = malloc(sizeof(int) * max_blocks);
 
-	update_chunk(chunk, coord);
+	mat4_identity(chunk->block_matrices);
+	chunk->block_textures[0] = 0;
 
+	vec3_new(chunk->coordinate, coord[0], coord[1], coord[2]);
+	vec3_new(chunk->world_coordinate,
+		chunk->coordinate[0] * chunk->info->chunk_size, 1,
+		chunk->coordinate[2] * chunk->info->chunk_size);
+	
 	// Matrices
 	glGenBuffers(1, &chunk->vbo_matrices);
 	glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo_matrices);
-	glBufferData(GL_ARRAY_BUFFER, chunk->block_matrices_size,
-		&chunk->block_matrices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 16, &chunk->block_matrices[0], GL_STATIC_DRAW);
 
 	glBindVertexArray(chunk->model.info[0].vao);
 
@@ -43,8 +48,7 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord)
 	// Texture ID
 	glGenBuffers(1, &chunk->vbo_texture_ids);
 	glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo_texture_ids);
-	glBufferData(GL_ARRAY_BUFFER, chunk->block_textures_size,
-		&chunk->block_textures[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(int), &chunk->block_textures[0], GL_STATIC_DRAW);
 
 	glEnableVertexAttribArray(8);
 	glVertexAttribIPointer(8, 1, GL_INT, GL_FALSE, NULL);
@@ -103,6 +107,8 @@ int	chunk_gen(t_chunk *chunk)
 					rep = powf(rep, cave_height);
 			//	ft_printf("to_use_x : %f, to_use_y : %f, to_use_z : %f\n", to_use_x, to_use_y, to_use_z);
 			//	ft_printf("perlin3 : %f\n", rep);
+				/*
+				*/
 				if (rep > -0.10f)
 				{
 					vec3_new(chunk->blocks[i].pos, x, y, z);
@@ -230,9 +236,9 @@ void	*update_chunk_threaded(void *arg)
 	return (NULL);
 }
 
-void	regenerate_chunks_multi(float *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2)
+void	regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2)
 {
-	int	reload_these_chunks[50];
+	int	reload_these_chunks[info->chunks_loaded];
 	int	reload_amount = 0;
 	int	found;
 	int	start_coord[2];
@@ -261,14 +267,14 @@ void	regenerate_chunks_multi(float *res, t_chunk *chunks, t_chunk_info *info, fl
 			reload_amount++;
 		}
 	}
-	
+
 	// Go through all the coordinates that will be loaded next time, and
 	//  check if any of the loaded chunks have those coordinates, if not
 	//	we take one of the chunks that are not going to be loaded next time
 	// 	and update the new chunk into that memory;
-	pthread_t	threads[4];
+	pthread_t		threads[4];
 	t_chunk_args	args[4];
-	int			nth_thread = 0;
+	int				nth_thread = 0;
 
 	int	nth_chunk = 0;
 	for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
@@ -288,7 +294,7 @@ void	regenerate_chunks_multi(float *res, t_chunk *chunks, t_chunk_info *info, fl
 			{
 				if (nth_thread >= 4)
 				{
-					break ;
+					//break ;
 					int i = 0;
 					while (i < nth_thread)
 					{

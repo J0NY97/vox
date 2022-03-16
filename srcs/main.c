@@ -182,15 +182,12 @@ int	main(void)
 		prev_player_chunk[0] = player_chunk[0];
 		prev_player_chunk[1] = player_chunk[1];
 
-		for (int x = start_coord[0], x_amount = 0; x_amount < chunk_info.render_distance; x++, x_amount++)
+		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
 		{
-			for (int z = start_coord[1], z_amount = 0; z_amount < chunk_info.render_distance; z++, z_amount++)
-			{
-				new_model(&chunks[nth_chunk].model, &cube_obj);
-				new_chunk(&chunks[nth_chunk], &chunk_info, (float []){x, 1, z});
-				nth_chunk++;
-			}
+			new_model(&chunks[nth_chunk].model, &cube_obj);
+			new_chunk(&chunks[nth_chunk], &chunk_info, (float []){999, 1, 999});
 		}
+		regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);	
 		ft_printf("Chunks created : %d\n", nth_chunk);
 //////////////////////////////
 	// END Instance testing
@@ -334,12 +331,12 @@ int	main(void)
 			prev_player_chunk[1] != (int)(player_chunk[1])) ||
 			(chunk_reloading[0] != chunk_reloading[1])))
 		{
+			ft_printf("Update Chunks\n");
 			prev_player_chunk[0] = player_chunk[0];
 			prev_player_chunk[1] = player_chunk[1];
 
 			ft_timer_start();
-		//	regenerate_chunks(chunks, &chunk_info, player_chunk);	
-			regenerate_chunks_multi(chunk_reloading, chunks, &chunk_info, player_chunk);	
+			regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);	
 			ft_printf("Vol2 chunk update timer : %f\n", ft_timer_end());
 		}
 

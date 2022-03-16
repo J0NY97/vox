@@ -255,7 +255,7 @@ int			chunk_gen(t_chunk *chunk);
 void		render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader);
 void		update_chunk(t_chunk *chunk, float *coord);
 float		*player_in_chunk(float *res, float *player_coord, t_chunk_info *info);
-void		regenerate_chunks(t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2);
+void		regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2);
 
 ///////////////////
 //	NOISE
