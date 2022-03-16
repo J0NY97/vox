@@ -161,24 +161,21 @@ int	main(void)
 		chunk_info.seed = 896868766;
 		chunk_info.width = 16;
 		chunk_info.breadth = 16;
+		chunk_info.height = 256;
 		chunk_info.block_scale = 1.0f;
 		chunk_info.block_size = chunk_info.block_scale * 2;
 		chunk_info.chunk_size = chunk_info.width * chunk_info.block_scale * 2;
 
-		int	chunk_reloading[2]; // 0 : reaload_amount, 1: reloaded amount
+		int	chunk_reloading[2]; // 0 : reload_amount, 1: reloaded amount
 		chunk_reloading[0] = 0;
 		chunk_reloading[1] = 0;
 		t_chunk	chunks[chunk_info.chunks_loaded];	
-		t_model	cube_model;
-		new_model(&cube_model, &cube_obj);
+
 		int		nth_chunk = 0;
 		float	player_chunk[VEC2_SIZE];
 		int		prev_player_chunk[VEC2_SIZE];
-		int		start_coord[VEC2_SIZE];
 		
 		player_in_chunk(player_chunk, player.camera.pos, &chunk_info);
-		start_coord[0] = player_chunk[0] - (chunk_info.render_distance / 2);
-		start_coord[1] = player_chunk[1] - (chunk_info.render_distance / 2);
 		prev_player_chunk[0] = player_chunk[0];
 		prev_player_chunk[1] = player_chunk[1];
 
@@ -188,6 +185,7 @@ int	main(void)
 			new_chunk(&chunks[nth_chunk], &chunk_info, (float []){999, 1, 999});
 		}
 		regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);	
+		exit(0);
 		ft_printf("Chunks created : %d\n", nth_chunk);
 //////////////////////////////
 	// END Instance testing

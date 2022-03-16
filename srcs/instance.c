@@ -9,7 +9,7 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord)
 		LG_ERROR("Before (%d)", error);
 
 	chunk->info = info;
-	int	max_blocks = chunk->info->width * chunk->info->breadth * 256;
+	int	max_blocks = chunk->info->width * chunk->info->breadth * chunk->info->height;
 	chunk->blocks = malloc(sizeof(t_block) * (max_blocks));
 	chunk->block_matrices = malloc(sizeof(float) * 16 * max_blocks);
 	chunk->block_textures = malloc(sizeof(int) * max_blocks);
@@ -68,7 +68,6 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord)
 int	chunk_gen(t_chunk *chunk)
 {
 	int		start_y = 65;
-	int		max_y = 256;
 	float	freq = 120.0f;
 	float	height = freq / 100; // less is more;
 	int		i = 0;
@@ -90,7 +89,8 @@ int	chunk_gen(t_chunk *chunk)
 				perper = powf(fabs(perper), height);
 			perper = start_y * perper;
 //			ft_printf("perlin : %f\n", perper);
-			for (int y = start_y + perper, b = 0; b < start_y + perper; y--, b++) // the 'b' is the amount of blocks we have on the y axis;
+			for (int y = min(start_y + perper, chunk->info->height), b = 0;
+				b < start_y + perper; y--, b++) // the 'b' is the amount of blocks we have on the y axis;
 			{
 				float	cave_freq = 200.0f;
 				float	cave_height = cave_freq / 200;

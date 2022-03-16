@@ -217,6 +217,7 @@ typedef struct s_chunk_info
 {
 	int			width; // in blocks;
 	int			breadth; // in blocks;
+	int			height; // in blocks;
 	float		block_scale;
 	float		block_size;
 	float		chunk_size;

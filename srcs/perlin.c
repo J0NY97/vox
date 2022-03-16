@@ -14,7 +14,7 @@ float interpolate(float a0, float a1, float w) {
      * if (0.0 > w) return a0;
      * if (1.0 < w) return a1;
      */
-	//return (a1 - a0) * w + a0;
+	return (a1 - a0) * w + a0;
     /* // Use this cubic interpolation [[Smoothstep]] instead, for a smooth appearance:
 	 */
 	//return (a1 - a0) * (3.0 - w * 2.0) * w * w + a0;
@@ -22,7 +22,7 @@ float interpolate(float a0, float a1, float w) {
      *
      * // Use [[Smootherstep]] for an even smoother result with a second derivative equal to zero on boundaries:
      */
-	return (a1 - a0) * ((w * (w * 6.0 - 15.0) + 10.0) * w * w * w) + a0;
+	//return (a1 - a0) * ((w * (w * 6.0 - 15.0) + 10.0) * w * w * w) + a0;
 }
 
 /* Create pseudorandom direction vector
@@ -44,7 +44,9 @@ float	*randomGradient(float *res_v2, int ix, int iy, unsigned int seed)
 	a ^= (b << s) | (b >> (w - s));
 	a *= seed;
 
-	float	random = a * (3.14159265 / ~(~0u >> 1)); // in [0, 2*Pi]
+	float	q = 3.14159265 / ~(~0u >> 1);
+	float	random = a * q; // in [0, 2*Pi] <--- slow af
+
 	float	v[VEC2_SIZE];
 	v[0] = cos(random);
 	v[1] = sin(random);
@@ -69,13 +71,22 @@ float	dotGridGradient(int ix, int iy, float x, float y, unsigned int seed)
 	return (dx * gradient[0] + dy * gradient[1]);
 }
 
+int fasterfloor(float x)
+{
+	return x < 0 ? (int) x == x ? (int) x : (int) x -1 : (int) x;
+}
+
 // Compute Perlin noise at coordinates x, y
 float perlin(float x, float y, unsigned int seed)
 {
     // Determine grid cell coordinates
-    int x0 = (int)floor(x);
+	/*
+    int x0 = floor(x);
+    int y0 = floor(y);
+	*/
+    int x0 = fasterfloor(x);
+    int y0 = fasterfloor(y);
     int x1 = x0 + 1;
-    int y0 = (int)floor(y);
     int y1 = y0 + 1;
 
     // Determine interpolation weights
