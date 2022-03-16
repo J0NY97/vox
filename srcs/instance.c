@@ -9,49 +9,12 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord)
 		LG_ERROR("Before (%d)", error);
 
 	chunk->info = info;
-
-	vec3_new(chunk->coordinate, coord[0], coord[1], coord[2]);
-	vec3_new(chunk->world_coordinate,
-		chunk->coordinate[0] * chunk->info->chunk_size, 1,
-		chunk->coordinate[2] * chunk->info->chunk_size);
-	
 	int	max_blocks = chunk->info->width * chunk->info->breadth * 256;
 	chunk->blocks = malloc(sizeof(t_block) * (max_blocks));
-	chunk->block_amount = chunk_gen(chunk);
-	
-	chunk->block_matrices_size = sizeof(float) * 16 * chunk->block_amount;
 	chunk->block_matrices = malloc(sizeof(float) * 16 * max_blocks);
-
-	chunk->block_textures_size = sizeof(int) * chunk->block_amount;
 	chunk->block_textures = malloc(sizeof(int) * max_blocks);
 
-	float	tmp[VEC3_SIZE];
-	float	model[MAT4_SIZE];
-	float	scale[MAT4_SIZE];
-//	float	rot[MAT4_SIZE];
-	float	trans[MAT4_SIZE];
-
-	for (int i = 0; i < chunk->block_amount; i++)
-	{
-		mat4_identity(trans);
-		mat4_translate(trans, trans, vec3_new(tmp,
-			(chunk->blocks[i].pos[0] * chunk->info->block_size) + chunk->world_coordinate[0],
-			(chunk->blocks[i].pos[1] * chunk->info->block_size) + chunk->world_coordinate[1],
-			(chunk->blocks[i].pos[2] * chunk->info->block_size) + chunk->world_coordinate[2]));
-
-		mat4_identity(scale);
-		mat4_scale(scale, scale, vec3_new(tmp,
-			chunk->info->block_scale,
-			chunk->info->block_scale,
-			chunk->info->block_scale));
-
-		mat4_identity(model);
-		mat4_multiply(model, scale, model);
-		mat4_multiply(model, trans, model);
-
-		memcpy(chunk->block_matrices + (i * 16), model, sizeof(float) * 16);
-		memcpy(chunk->block_textures + (i), &chunk->blocks[i].texture_id, sizeof(int));
-	}
+	update_chunk(chunk, coord);
 
 	// Matrices
 	glGenBuffers(1, &chunk->vbo_matrices);
@@ -87,71 +50,12 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord)
 	glVertexAttribIPointer(8, 1, GL_INT, GL_FALSE, NULL);
 	glVertexAttribDivisor(8, 1);
 
-
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	error = glGetError();
 	if (error)
 		LG_ERROR("(%d)", error);
-
-}
-
-/*
- * When ever we are generating new chunks, call this on the chunks we 'stopped' rendering;
- * Basically just use the same memory spot and update the data with the correct new one;
-*/
-void	update_chunk(t_chunk *chunk, float *coord)
-{
-	vec3_new(chunk->coordinate, coord[0], coord[1], coord[2]);
-	vec3_new(chunk->world_coordinate,
-		chunk->coordinate[0] * chunk->info->chunk_size, 1,
-		chunk->coordinate[2] * chunk->info->chunk_size);
-	
-	chunk->block_amount = chunk_gen(chunk);
-	
-	chunk->block_matrices_size = sizeof(float) * 16 * chunk->block_amount;
-
-	chunk->block_textures_size = sizeof(int) * chunk->block_amount;
-
-	float	tmp[VEC3_SIZE];
-	float	model[MAT4_SIZE];
-	float	scale[MAT4_SIZE];
-//	float	rot[MAT4_SIZE];
-	float	trans[MAT4_SIZE];
-
-	for (int i = 0; i < chunk->block_amount; i++)
-	{
-		mat4_identity(trans);
-		mat4_translate(trans, trans, vec3_new(tmp,
-			(chunk->blocks[i].pos[0] * chunk->info->block_size) + chunk->world_coordinate[0],
-			(chunk->blocks[i].pos[1] * chunk->info->block_size) + chunk->world_coordinate[1],
-			(chunk->blocks[i].pos[2] * chunk->info->block_size) + chunk->world_coordinate[2]));
-
-		mat4_identity(scale);
-		mat4_scale(scale, scale, vec3_new(tmp,
-			chunk->info->block_scale,
-			chunk->info->block_scale,
-			chunk->info->block_scale));
-
-		mat4_identity(model);
-		mat4_multiply(model, scale, model);
-		mat4_multiply(model, trans, model);
-
-		memcpy(chunk->block_matrices + (i * 16), model, sizeof(float) * 16);
-		memcpy(chunk->block_textures + (i), &chunk->blocks[i].texture_id, sizeof(int));
-	}
-	// Matrices
-	glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo_matrices);
-	glBufferData(GL_ARRAY_BUFFER, chunk->block_matrices_size,
-		&chunk->block_matrices[0], GL_STATIC_DRAW);
-
-	// Texture ID
-	glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo_texture_ids);
-	glBufferData(GL_ARRAY_BUFFER, chunk->block_textures_size,
-		&chunk->block_textures[0], GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 /*
@@ -270,7 +174,63 @@ void	render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader)
 		LG_ERROR("(%d)", error);
 }
 
-void	regenerate_chunks(t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2)
+typedef struct s_chunk_args
+{
+	t_chunk	*chunk;
+	float	coords[VEC3_SIZE];
+}	t_chunk_args;
+
+void	update_chunk(t_chunk *chunk, float *coord)
+{
+	vec3_new(chunk->coordinate, coord[0], coord[1], coord[2]);
+	vec3_new(chunk->world_coordinate,
+		chunk->coordinate[0] * chunk->info->chunk_size, 1,
+		chunk->coordinate[2] * chunk->info->chunk_size);
+	
+	chunk->block_amount = chunk_gen(chunk);
+	
+	chunk->block_matrices_size = sizeof(float) * 16 * chunk->block_amount;
+
+	chunk->block_textures_size = sizeof(int) * chunk->block_amount;
+
+	float	tmp[VEC3_SIZE];
+	float	model[MAT4_SIZE];
+	float	scale[MAT4_SIZE];
+//	float	rot[MAT4_SIZE];
+	float	trans[MAT4_SIZE];
+
+	for (int i = 0; i < chunk->block_amount; i++)
+	{
+		mat4_identity(trans);
+		mat4_translate(trans, trans, vec3_new(tmp,
+			(chunk->blocks[i].pos[0] * chunk->info->block_size) + chunk->world_coordinate[0],
+			(chunk->blocks[i].pos[1] * chunk->info->block_size) + chunk->world_coordinate[1],
+			(chunk->blocks[i].pos[2] * chunk->info->block_size) + chunk->world_coordinate[2]));
+
+		mat4_identity(scale);
+		mat4_scale(scale, scale, vec3_new(tmp,
+			chunk->info->block_scale,
+			chunk->info->block_scale,
+			chunk->info->block_scale));
+
+		mat4_identity(model);
+		mat4_multiply(model, scale, model);
+		mat4_multiply(model, trans, model);
+
+		memcpy(chunk->block_matrices + (i * 16), model, sizeof(float) * 16);
+		memcpy(chunk->block_textures + (i), &chunk->blocks[i].texture_id, sizeof(int));
+	}
+}
+
+void	*update_chunk_threaded(void *arg)
+{
+	t_chunk_args	*info = arg;
+
+	update_chunk(info->chunk, info->coords);
+	return (NULL);
+}
+
+void	regenerate_chunks_multi(t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2)
 {
 	int	reload_these_chunks[50];
 	int	reload_amount = 0;
@@ -301,13 +261,15 @@ void	regenerate_chunks(t_chunk *chunks, t_chunk_info *info, float *player_chunk_
 			reload_amount++;
 		}
 	}
-	//ft_printf("Chunk unload checker time : %f\n", ft_timer_end());
 	
 	// Go through all the coordinates that will be loaded next time, and
 	//  check if any of the loaded chunks have those coordinates, if not
 	//	we take one of the chunks that are not going to be loaded next time
 	// 	and update the new chunk into that memory;
-	// Takes 0.018 - 0.009 seconds with current 'chunk_gen' (b < start_y + actual)
+	pthread_t	threads[4];
+	t_chunk_args	args[4];
+	int			nth_thread = 0;
+
 	int	nth_chunk = 0;
 	for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
 	{
@@ -324,9 +286,52 @@ void	regenerate_chunks(t_chunk *chunks, t_chunk_info *info, float *player_chunk_
 			}
 			if (!found)
 			{
-				update_chunk(&chunks[reload_these_chunks[nth_chunk]], (float []){x, 1, z});
+				if (nth_thread >= 4)
+				{
+					int i = 0;
+					while (i < nth_thread)
+					{
+						if (pthread_join(threads[i], NULL))
+							LG_ERROR("Couldnt join thread.");
+						i++;
+					}
+					nth_thread = 0;
+				}
+				args[nth_thread].chunk = &chunks[reload_these_chunks[nth_chunk]];
+				vec3_new(args[nth_thread].coords, x, 1, z);
+				if (pthread_create(&threads[nth_thread], NULL, update_chunk_threaded, &args[nth_thread]))
+					LG_ERROR("Couldnt create thread.");
+				nth_thread++;
 				nth_chunk++;
 			}
 		}
 	}
+	int j = 0;
+	while (j < nth_thread)
+	{
+		if (pthread_join(threads[j], NULL))
+			LG_ERROR("Couldnt join thread.");
+		j++;
+	}
+
+
+	// Send all the updated chunk info to the gpu;
+	// This needs to be done on the main thread (or the thread that the context is made on)
+	for (int i = 0; i < reload_amount; i++)
+	{
+		// Matrices
+		glBindBuffer(GL_ARRAY_BUFFER, chunks[reload_these_chunks[i]].vbo_matrices);
+		glBufferData(GL_ARRAY_BUFFER, chunks[reload_these_chunks[i]].block_matrices_size,
+			&chunks[reload_these_chunks[i]].block_matrices[0], GL_STATIC_DRAW);
+
+		// Texture ID
+		glBindBuffer(GL_ARRAY_BUFFER, chunks[reload_these_chunks[i]].vbo_texture_ids);
+		glBufferData(GL_ARRAY_BUFFER, chunks[reload_these_chunks[i]].block_textures_size,
+			&chunks[reload_these_chunks[i]].block_textures[0], GL_STATIC_DRAW);
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	/*
+	*/
 }

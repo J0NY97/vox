@@ -14,6 +14,7 @@
 # define SHADERPIXEL_H
 
 # include "limits.h"
+# include "pthread.h"
 # include "libft.h"
 # include "libpf.h"
 # include "liblg.h"

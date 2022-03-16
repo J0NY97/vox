@@ -334,7 +334,8 @@ int	main(void)
 			prev_player_chunk[1] = player_chunk[1];
 
 			ft_timer_start();
-			regenerate_chunks(chunks, &chunk_info, player_chunk);	
+		//	regenerate_chunks(chunks, &chunk_info, player_chunk);	
+			regenerate_chunks_multi(chunks, &chunk_info, player_chunk);	
 			ft_printf("Vol2 chunk update timer : %f\n", ft_timer_end());
 		}
 
