@@ -102,58 +102,6 @@ float perlin(float x, float y, unsigned int seed)
 // 3D
 /////////////////////
 
-/* Create pseudorandom direction vector
- */
-float	*randomGradient3(float *res_v3, int ix, int iy, int iz, unsigned int seed)
-{
-	// No precomputed gradients mean this works for any number of grid coordinates
-	const unsigned int	w = 8 * sizeof(unsigned);
-	const unsigned int	s = w / 2; // rotation width
-
-	unsigned int	a = ix;
-	unsigned int	b = iy;
-	unsigned int	c = iz;
-	//a *= 3284157443;
-	//b *= 1911520717;
-	//a *= 2048419325;
-	a *= seed;
-	b ^= (a << s) | (a >> (w - s));
-
-	b *= seed;
-	a ^= (b << s) | (b >> (w - s));
-
-	c *= seed;
-	c ^= (a << s) | (a >> (w - s));
-
-	a *= seed;
-
-	float	random = a * (3.14159265 / ~(~0u >> 1)); // in [0, 2*Pi]
-	float	v[VEC3_SIZE];
-	v[0] = cos(random);
-	v[1] = sin(random);
-	v[2] = tan(random);
-
-	res_v3[0] = v[0];
-	res_v3[1] = v[1];
-	res_v3[2] = v[2];
-	return (res_v3);
-}
-// Computes the dot product of the distance and gradient vectors.
-float	dotGridGradient3(int ix, int iy, int iz, float x, float y, float z, unsigned int seed)
-{
-	// Get gradient from integer coordinates
-	float	gradient[VEC3_SIZE];
-	randomGradient3(gradient, ix, iy, iz, seed);
-
-	// Compute the distance vector
-	float dx = x - (float)ix;
-	float dy = y - (float)iy;
-	float dz = z - (float)iz;
-
-	// Compute the dot-product
-	return (dx * gradient[0] + dy * gradient[1] + dz * gradient[2]);
-}
-
 float	perlin3(float x, float y, float z, unsigned int seed)
 { 
 	float	ab = perlin(x, y, seed);

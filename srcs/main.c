@@ -154,9 +154,18 @@ int	main(void)
 //////////////////////////////
 		t_shader	cube_shader;
 		new_shader(&cube_shader, SHADER_PATH"simple_instance.vs", SHADER_PATH"simple_instance.fs");
-		float	render_distance = 10;
-		int		chunks_loaded = (int)render_distance * (int)render_distance;
-		t_chunk	chunks[chunks_loaded];	
+
+		t_chunk_info	chunk_info;
+		chunk_info.render_distance = 10;
+		chunk_info.chunks_loaded = (int)chunk_info.render_distance * (int)chunk_info.render_distance;
+		chunk_info.seed = 896868766;
+		chunk_info.width = 16;
+		chunk_info.breadth = 16;
+		chunk_info.block_scale = 1.0f;
+		chunk_info.block_size = chunk_info.block_scale * 2;
+		chunk_info.chunk_size = chunk_info.width * chunk_info.block_scale * 2;
+
+		t_chunk	chunks[chunk_info.chunks_loaded];	
 		t_model	cube_model;
 		new_model(&cube_model, &cube_obj);
 		int		nth_chunk = 0;
@@ -164,28 +173,15 @@ int	main(void)
 		int		prev_player_chunk[VEC2_SIZE];
 		int		start_coord[VEC2_SIZE];
 		
-		float v3[VEC3_SIZE];
-		t_chunk_info	chunk_info;
-
-		chunk_info.seed = 896868766;
-		chunk_info.width = 16;
-		chunk_info.breadth = 16;
-		chunk_info.block_scale = 1.0f;
-		chunk_info.block_size = chunk_info.block_scale * 2;
-		chunk_info.chunk_size = chunk_info.width * chunk_info.block_scale * 2;
-		mat4_identity(chunk_info.scale_matrix);
-		mat4_scale(chunk_info.scale_matrix, chunk_info.scale_matrix, vec3_new(v3,
-				chunk_info.block_scale, chunk_info.block_scale, chunk_info.block_scale));
-
 		player_in_chunk(player_chunk, player.camera.pos, &chunk_info);
-		start_coord[0] = player_chunk[0] - (render_distance / 2);
-		start_coord[1] = player_chunk[1] - (render_distance / 2);
+		start_coord[0] = player_chunk[0] - (chunk_info.render_distance / 2);
+		start_coord[1] = player_chunk[1] - (chunk_info.render_distance / 2);
 		prev_player_chunk[0] = player_chunk[0];
 		prev_player_chunk[1] = player_chunk[1];
 
-		for (int x = start_coord[0], x_amount = 0; x_amount < render_distance; x++, x_amount++)
+		for (int x = start_coord[0], x_amount = 0; x_amount < chunk_info.render_distance; x++, x_amount++)
 		{
-			for (int z = start_coord[1], z_amount = 0; z_amount < render_distance; z++, z_amount++)
+			for (int z = start_coord[1], z_amount = 0; z_amount < chunk_info.render_distance; z++, z_amount++)
 			{
 				new_model(&chunks[nth_chunk].model, &cube_obj);
 				new_chunk(&chunks[nth_chunk], &chunk_info, (float []){x, 1, z});
@@ -338,14 +334,14 @@ int	main(void)
 			prev_player_chunk[1] = player_chunk[1];
 
 			ft_timer_start();
-			//regenerate_chunks(chunks, &chunk_info, player_chunk);	
+			regenerate_chunks(chunks, &chunk_info, player_chunk);	
 			ft_printf("Vol2 chunk update timer : %f\n", ft_timer_end());
 		}
 
 //		glCullFace(GL_BACK);
 //		glFrontFace(GL_CCW);
 		nth_chunk = 0;
-		for (; nth_chunk < render_distance * render_distance; nth_chunk++)
+		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
 			render_chunk(&chunks[nth_chunk], &player.camera, &cube_shader);
 /////////////////
 		// END Chunk things

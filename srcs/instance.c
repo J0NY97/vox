@@ -109,7 +109,10 @@ void	update_chunk(t_chunk *chunk, float *coord)
 		chunk->coordinate[2] * chunk->info->chunk_size);
 	
 	chunk->block_amount = chunk_gen(chunk);
+	
 	chunk->block_matrices_size = sizeof(float) * 16 * chunk->block_amount;
+
+	chunk->block_textures_size = sizeof(int) * chunk->block_amount;
 
 	float	tmp[VEC3_SIZE];
 	float	model[MAT4_SIZE];
@@ -138,13 +141,12 @@ void	update_chunk(t_chunk *chunk, float *coord)
 		memcpy(chunk->block_matrices + (i * 16), model, sizeof(float) * 16);
 		memcpy(chunk->block_textures + (i), &chunk->blocks[i].texture_id, sizeof(int));
 	}
-
-	// Update matrix buffer
+	// Matrices
 	glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo_matrices);
 	glBufferData(GL_ARRAY_BUFFER, chunk->block_matrices_size,
 		&chunk->block_matrices[0], GL_STATIC_DRAW);
 
-	// Update texture id buffer
+	// Texture ID
 	glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo_texture_ids);
 	glBufferData(GL_ARRAY_BUFFER, chunk->block_textures_size,
 		&chunk->block_textures[0], GL_STATIC_DRAW);
@@ -165,46 +167,39 @@ int	chunk_gen(t_chunk *chunk)
 
 	for (int x = 0; x < chunk->info->width; x++)
 	{
+		float	block_world_x = ((chunk->coordinate[0] * chunk->info->chunk_size) + ((float)x * chunk->info->block_size));
+		float	to_use_x = block_world_x / freq;
 		for (int z = 0; z < chunk->info->breadth; z++)
 		{
-			float	block_world_x = ((chunk->coordinate[0] * chunk->info->chunk_size) +
-				((float)x * chunk->info->block_size)) / freq;
-			float	block_world_z = ((chunk->coordinate[2] * chunk->info->chunk_size) +
-				((float)z * chunk->info->block_size)) / freq;
+			float	block_world_z = ((chunk->coordinate[2] * chunk->info->chunk_size) + ((float)z * chunk->info->block_size));
+			float	to_use_z = block_world_z / freq;
 
-			float	perper = 1 * perlin(1 * block_world_x, 1 * block_world_z, chunk->info->seed);
+			float	perper = 1 * perlin(1 * to_use_x, 1 * to_use_z, chunk->info->seed);
 			perper = round(perper * (freq / 2)) / (freq / 2);
 			if (perper < 0)
 				perper = -powf(fabs(perper), height);
 			else
 				perper = powf(fabs(perper), height);
 			perper = start_y * perper;
-			for (int y = start_y + perper, b = 0; b < start_y + perper; y--, b++) // the 'b' is the amount of blocks we have on the y axis;
+//			ft_printf("perlin : %f\n", perper);
+			for (int y = start_y + perper, b = 0; b < /*start_y + perper*/ 5; y--, b++) // the 'b' is the amount of blocks we have on the y axis;
 			{
-//				ft_printf("%d %d %d : %f\n", x, y, z, perlin3(x / 10.0f, y / 10.0f, z / 10.0f, chunk->info->seed));
-				float	scale = 0.9f;
-				/*
-				float	rep_x = ((chunk->coordinate[0] * chunk->info->chunk_size) +
-					((float)x * chunk->info->block_size));
-				float	rep_z = ((chunk->coordinate[2] * chunk->info->chunk_size) +
-					((float)z * chunk->info->block_size));
-				float	rep_y = ((float)y * chunk->info->block_size);
-				*/
-			/*
-				float	rep_x = ((chunk->coordinate[0] * chunk->info->chunk_size) +
-					((float)x));
-				float	rep_z = ((chunk->coordinate[2] * chunk->info->chunk_size) +
-					((float)z));
-				float	rep_y = ((float)y);
-
-				float	rep = perlin3(rep_x * scale, rep_y * scale, rep_z * scale, chunk->info->seed);
-				*/
-				/*
-				rep = round(rep * (freq / 2)) / (freq / 2);
+				float	cave_freq = 200.0f;
+				float	cave_height = cave_freq / 200;
+				float	cave_x = block_world_x / cave_freq;
+				float	cave_z = block_world_z / cave_freq;
+				float	cave_y = ((float)y * chunk->info->block_size) / cave_freq;
+				float	rep = 1.0f;
+				rep = perlin3(cave_x, cave_y, cave_z, chunk->info->seed)
+					+ 0.5 * perlin3(2 * cave_x, 2 * cave_y, 2 * cave_z, chunk->info->seed)
+					+ 0.25 * perlin3(4 * cave_x, 4 * cave_y, 4 * cave_z, chunk->info->seed)
+					+ 0.125 * perlin3(8 * cave_x, 8 * cave_y, 8 * cave_z, chunk->info->seed);
+				rep /= 1 + 0.5 + 0.25 + 0.125;
 				if (rep > 0)
-					rep = powf(fabs(rep), h2);
-				*/
-//				if (rep >= 0.0f) // only create block of this if solid_enough, otherwise air, aka cave;
+					rep = powf(rep, cave_height);
+			//	ft_printf("to_use_x : %f, to_use_y : %f, to_use_z : %f\n", to_use_x, to_use_y, to_use_z);
+			//	ft_printf("perlin3 : %f\n", rep);
+				if (rep > -0.03f)
 				{
 					vec3_new(chunk->blocks[i].pos, x, y, z);
 					if (b >= 1) // if we have 3 dirt block on top we make the rest stone blocks;
