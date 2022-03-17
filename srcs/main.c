@@ -350,7 +350,7 @@ int	main(void)
 		{
 			// Create aabb for each chunk;
 			chunk_aabb_update(&chunks[nth_chunk]);
-			if (aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum)) // Check if frustum intersects chunk aabb;
+			if (!aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum)) // Check if frustum intersects chunk aabb;
 			{
 				render_chunk(&chunks[nth_chunk], &player.camera, &cube_shader);
 				sent_to_gpu++;
