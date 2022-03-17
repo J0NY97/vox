@@ -16,7 +16,7 @@ void	new_camera(t_camera *camera)
 	camera->viewport_h = 720;
 	camera->aspect = camera->viewport_w / camera->viewport_h;
 
-	frustum_new(&camera->frustum, camera);
+	update_camera(camera);
 	LG_INFO("new camera made.");
 }
 

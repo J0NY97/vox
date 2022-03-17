@@ -345,12 +345,16 @@ int	main(void)
 		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
 			render_chunk(&chunks[nth_chunk], &player.camera, &cube_shader);
 */
+		int sent_to_gpu = 0;
 		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
 		{
 			// Create aabb for each chunk;
 			chunk_aabb_update(&chunks[nth_chunk]);
 			if (aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum)) // Check if frustum intersects chunk aabb;
+			{
 				render_chunk(&chunks[nth_chunk], &player.camera, &cube_shader);
+				sent_to_gpu++;
+			}
 			if ((int)player_chunk[0] == chunks[nth_chunk].coordinate[0] &&
 				(int)player_chunk[1] == chunks[nth_chunk].coordinate[2])
 			{
@@ -358,6 +362,7 @@ int	main(void)
 				show_chunk_borders(&chunks[nth_chunk], &player.camera);
 			}
 		}
+		ft_printf("GPU : %d, GPU : %d\n", chunk_info.chunks_loaded, sent_to_gpu);
 
 /////////////////
 		// END Chunk things

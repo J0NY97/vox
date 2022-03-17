@@ -24,29 +24,25 @@ void	frustum_new(t_frustum *frustum, t_camera *camera)
 	vec3_cross(tmp,
 		camera->up,
 		vec3_add(tmp,
-			vec3_multiply_f(tmp, camera->right, half_h_side),
-			front_mult_far));
+			front_mult_far,
+			vec3_multiply_f(tmp, camera->right, half_h_side)));
 	plane_new(&frustum->right_plane, camera->pos, tmp);
 
 	vec3_cross(tmp,
 		vec3_sub(tmp,
-			vec3_multiply_f(tmp, camera->right, half_h_side),
-			front_mult_far),
+			front_mult_far,
+			vec3_multiply_f(tmp, camera->right, half_h_side)),
 		camera->up);
 	plane_new(&frustum->left_plane, camera->pos, tmp);
 
-	vec3_cross(tmp,
-		camera->right,
-		vec3_sub(tmp,
-			vec3_multiply_f(tmp, camera->up, half_v_side),
-			front_mult_far));
+	vec3_multiply_f(tmp, camera->up, half_v_side);
+	vec3_sub(tmp, front_mult_far, tmp);
+	vec3_cross(tmp, camera->right, tmp);
 	plane_new(&frustum->top_plane, camera->pos, tmp);
 
-	vec3_cross(tmp,
-		vec3_add(tmp,
-			vec3_multiply_f(tmp, camera->up, half_v_side),
-			front_mult_far),
-		camera->right);
+	vec3_multiply_f(tmp, camera->up, half_v_side);
+	vec3_add(tmp, front_mult_far, tmp);
+	vec3_cross(tmp, tmp, camera->right);
 	plane_new(&frustum->bot_plane, camera->pos, tmp);
 }
 
@@ -55,14 +51,23 @@ int	aabb_on_plane(t_aabb *a, t_plane *p)
 	float	c[3];
 	float	e[3];
 
+	vec3_multiply_f(c, vec3_add(c, a->min, a->max), 0.5f);
 	vec3_sub(e, a->max, c);
+
 	float	r = e[0] * fabs(p->normal[0]) +
 		e[1] * fabs(p->normal[1]) +
 		e[2] * fabs(p->normal[2]);
-
-	vec3_multiply_f(c, vec3_add(c, a->min, a->max), 0.5f);
 	float	s = vec3_dot(p->normal, c) - p->dist;
-	return (fabs(s) <= r);
+
+/*
+	vec3_string("plane_normal : ", p->normal);
+	ft_printf("plane_dist : %f\n", p->dist);
+	vec3_string("center : ", c);
+	vec3_string("extent : ", e);
+	ft_printf("%f %f\n", r, s);
+	ft_printf("%d\n", -r <= s);
+	*/
+	return (-r <= s);
 }
 
 int	aabb_in_frustum(t_aabb *a, t_frustum *f)
@@ -91,10 +96,10 @@ int	aabb_in_frustum(t_aabb *a, t_frustum *f)
 
 exit(0);
 */
-	return (aabb_on_plane(a, &f->top_plane) ||
-		aabb_on_plane(a, &f->bot_plane) ||
-		aabb_on_plane(a, &f->right_plane) ||
-		aabb_on_plane(a, &f->left_plane) ||
-		aabb_on_plane(a, &f->far_plane) ||
+	return (aabb_on_plane(a, &f->top_plane) &&
+		/*aabb_on_plane(a, &f->bot_plane) &&*/
+		aabb_on_plane(a, &f->right_plane) &&
+		aabb_on_plane(a, &f->left_plane) &&
+		aabb_on_plane(a, &f->far_plane) &&
 		aabb_on_plane(a, &f->near_plane));
 }
