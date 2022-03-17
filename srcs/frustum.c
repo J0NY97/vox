@@ -56,18 +56,18 @@ int	aabb_on_plane(t_aabb *a, t_plane *p)
 	float	e[3];
 
 	vec3_sub(e, a->max, c);
-	float	r = e[0] * abs(p->normal[0]) +
-		e[1] * abs(p->normal[1]) +
-		e[2] * abs(p->normal[2]);
+	float	r = e[0] * fabs(p->normal[0]) +
+		e[1] * fabs(p->normal[1]) +
+		e[2] * fabs(p->normal[2]);
 
 	vec3_multiply_f(c, vec3_add(c, a->min, a->max), 0.5f);
 	float	s = vec3_dot(p->normal, c) - p->dist;
-	return (abs(s) <= r);
+	return (fabs(s) <= r);
 }
 
 int	aabb_in_frustum(t_aabb *a, t_frustum *f)
 {
-	/*
+/*
 	aabb_print(a);
 	int a2 = aabb_on_plane(a, &f->top_plane);
 	int b = aabb_on_plane(a, &f->bot_plane);
@@ -91,10 +91,10 @@ int	aabb_in_frustum(t_aabb *a, t_frustum *f)
 
 exit(0);
 */
-	return (aabb_on_plane(a, &f->top_plane) &&
-		aabb_on_plane(a, &f->bot_plane) &&
-		aabb_on_plane(a, &f->right_plane) &&
-		aabb_on_plane(a, &f->left_plane) &&
-		aabb_on_plane(a, &f->far_plane) &&
+	return (aabb_on_plane(a, &f->top_plane) ||
+		aabb_on_plane(a, &f->bot_plane) ||
+		aabb_on_plane(a, &f->right_plane) ||
+		aabb_on_plane(a, &f->left_plane) ||
+		aabb_on_plane(a, &f->far_plane) ||
 		aabb_on_plane(a, &f->near_plane));
 }

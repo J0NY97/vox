@@ -357,3 +357,30 @@ void	regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *pla
 	/*
 	*/
 }
+
+void	show_chunk_borders(t_chunk *chunk, t_camera *camera)
+{
+	t_aabb *a;
+	
+	a = &chunk->aabb;
+	render_3d_line(
+		(float []){a->min[0], a->min[1], a->min[2]},
+		(float []){a->min[0], a->max[1], a->min[2]},
+		(float []){1, 0, 0},
+		camera->view, camera->projection);
+	render_3d_line(
+		(float []){a->max[0], a->min[1], a->min[2]},
+		(float []){a->max[0], a->max[1], a->min[2]},
+		(float []){1, 0, 0},
+		camera->view, camera->projection);
+	render_3d_line(
+		(float []){a->min[0], a->min[1], a->max[2]},
+		(float []){a->min[0], a->max[1], a->max[2]},
+		(float []){1, 0, 0},
+		camera->view, camera->projection);
+	render_3d_line(
+		(float []){a->max[0], a->min[1], a->max[2]},
+		(float []){a->max[0], a->max[1], a->max[2]},
+		(float []){1, 0, 0},
+		camera->view, camera->projection);
+}

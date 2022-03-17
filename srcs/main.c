@@ -349,32 +349,13 @@ int	main(void)
 		{
 			// Create aabb for each chunk;
 			chunk_aabb_update(&chunks[nth_chunk]);
-			//if (aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum)) // Check if frustum intersects chunk aabb;
+			if (aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum)) // Check if frustum intersects chunk aabb;
 				render_chunk(&chunks[nth_chunk], &player.camera, &cube_shader);
 			if ((int)player_chunk[0] == chunks[nth_chunk].coordinate[0] &&
 				(int)player_chunk[1] == chunks[nth_chunk].coordinate[2])
 			{
-				t_aabb *a = &chunks[nth_chunk].aabb;
-				render_3d_line(
-					(float []){a->min[0], a->min[1], a->min[2]},
-					(float []){a->min[0], a->max[1], a->min[2]},
-					(float []){1, 0, 0},
-					player.camera.view, player.camera.projection);
-				render_3d_line(
-					(float []){a->max[0], a->min[1], a->min[2]},
-					(float []){a->max[0], a->max[1], a->min[2]},
-					(float []){1, 0, 0},
-					player.camera.view, player.camera.projection);
-				render_3d_line(
-					(float []){a->min[0], a->min[1], a->max[2]},
-					(float []){a->min[0], a->max[1], a->max[2]},
-					(float []){1, 0, 0},
-					player.camera.view, player.camera.projection);
-				render_3d_line(
-					(float []){a->max[0], a->min[1], a->max[2]},
-					(float []){a->max[0], a->max[1], a->max[2]},
-					(float []){1, 0, 0},
-					player.camera.view, player.camera.projection);
+			//	aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum);
+				show_chunk_borders(&chunks[nth_chunk], &player.camera);
 			}
 		}
 

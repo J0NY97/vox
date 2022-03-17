@@ -17,7 +17,6 @@ void	new_camera(t_camera *camera)
 	camera->aspect = camera->viewport_w / camera->viewport_h;
 
 	frustum_new(&camera->frustum, camera);
-
 	LG_INFO("new camera made.");
 }
 
@@ -46,8 +45,7 @@ void	update_camera(t_camera *camera)
 	mat4_look_at(camera->view, camera->pos,
 		vec3_add(temp_vec3, camera->pos, camera->front), camera->up);
 
-	// TODO:
-	// update_frustum(camera->frustum, camera);
+	frustum_new(&camera->frustum, camera);
 }
 
 void	camera_print(t_camera *camera)

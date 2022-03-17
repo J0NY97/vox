@@ -290,6 +290,7 @@ void		update_chunk(t_chunk *chunk, float *coord);
 float		*player_in_chunk(float *res, float *player_coord, t_chunk_info *info);
 void		regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2);
 void		chunk_aabb_update(t_chunk *chunk);
+void		show_chunk_borders(t_chunk *chunk, t_camera *camera);
 
 ///////////////////
 //	NOISE
