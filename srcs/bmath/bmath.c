@@ -13,7 +13,7 @@ float	*vec3_new(float *src, float x, float y, float z)
 	return (src);
 }
 
-float	*vec3_cpy(float *dest, float *src)
+float	*vec3_assign(float *dest, float *src)
 {
 	dest[0] = src[0];
 	dest[1] = src[1];

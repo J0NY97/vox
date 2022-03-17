@@ -164,7 +164,7 @@ int	main(void)
 		chunk_info.height = 256;
 		chunk_info.block_scale = 1.0f;
 		chunk_info.block_size = chunk_info.block_scale * 2;
-		chunk_info.chunk_size = chunk_info.width * chunk_info.block_scale * 2;
+		chunk_info.chunk_size = chunk_info.width * chunk_info.block_size;
 
 		int	chunk_reloading[2]; // 0 : reload_amount, 1: reloaded amount
 		chunk_reloading[0] = 0;
@@ -185,7 +185,7 @@ int	main(void)
 			new_chunk(&chunks[nth_chunk], &chunk_info, (float []){999, 1, 999});
 		}
 		regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);	
-		exit(0);
+		//exit(0);
 		ft_printf("Chunks created : %d\n", nth_chunk);
 //////////////////////////////
 	// END Instance testing
@@ -261,7 +261,7 @@ int	main(void)
 		if (keys[GLFW_KEY_P].state == GLFW_PRESS)
 		{
 			player_print(&player);
-			entity_print(selected_entity);
+//			entity_print(selected_entity);
 		}
 
 		if (keys[GLFW_KEY_5].state == GLFW_PRESS)
@@ -341,8 +341,43 @@ int	main(void)
 //		glCullFace(GL_BACK);
 //		glFrontFace(GL_CCW);
 		nth_chunk = 0;
+/*
 		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
 			render_chunk(&chunks[nth_chunk], &player.camera, &cube_shader);
+*/
+		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
+		{
+			// Create aabb for each chunk;
+			chunk_aabb_update(&chunks[nth_chunk]);
+			//if (aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum)) // Check if frustum intersects chunk aabb;
+				render_chunk(&chunks[nth_chunk], &player.camera, &cube_shader);
+			if ((int)player_chunk[0] == chunks[nth_chunk].coordinate[0] &&
+				(int)player_chunk[1] == chunks[nth_chunk].coordinate[2])
+			{
+				t_aabb *a = &chunks[nth_chunk].aabb;
+				render_3d_line(
+					(float []){a->min[0], a->min[1], a->min[2]},
+					(float []){a->min[0], a->max[1], a->min[2]},
+					(float []){1, 0, 0},
+					player.camera.view, player.camera.projection);
+				render_3d_line(
+					(float []){a->max[0], a->min[1], a->min[2]},
+					(float []){a->max[0], a->max[1], a->min[2]},
+					(float []){1, 0, 0},
+					player.camera.view, player.camera.projection);
+				render_3d_line(
+					(float []){a->min[0], a->min[1], a->max[2]},
+					(float []){a->min[0], a->max[1], a->max[2]},
+					(float []){1, 0, 0},
+					player.camera.view, player.camera.projection);
+				render_3d_line(
+					(float []){a->max[0], a->min[1], a->max[2]},
+					(float []){a->max[0], a->max[1], a->max[2]},
+					(float []){1, 0, 0},
+					player.camera.view, player.camera.projection);
+			}
+		}
+
 /////////////////
 		// END Chunk things
 /////////////////

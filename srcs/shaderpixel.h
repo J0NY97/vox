@@ -109,6 +109,30 @@ void		check_program_errors(GLuint program);
 int			new_texture(GLuint *texture, const char *image_file);
 
 ///////////////////
+//	Frustum
+///////////////////
+
+typedef struct s_plane
+{
+	float	normal[VEC3_SIZE];
+	float	dist;
+}	t_plane;
+
+typedef struct s_frustum
+{
+	t_plane	top_plane;
+	t_plane	bot_plane;
+	t_plane	right_plane;
+	t_plane	left_plane;
+	t_plane	far_plane;
+	t_plane	near_plane;
+}		t_frustum;
+
+void		frustum_new(t_frustum *frustum, t_camera *camera);
+int			aabb_in_frustum(t_aabb *a, t_frustum *f);
+int			aabb_on_plane(t_aabb *a, t_plane *p);
+
+///////////////////
 //	CAMERA
 ///////////////////
 
@@ -117,14 +141,20 @@ struct s_camera
 	float	pos[VEC3_SIZE];
 	float	front[VEC3_SIZE];
 	float	up[VEC3_SIZE];
+	float	right[VEC3_SIZE];
 	float	yaw;
 	float	pitch;
 	float	fov;
+	float	aspect;
+	float	near_plane;
+	float	far_plane;
 	int		viewport_w;
 	int		viewport_h;
 
 	float	view[MAT4_SIZE];
 	float	projection[MAT4_SIZE];
+
+	t_frustum	frustum;
 };
 
 void		new_camera(t_camera *camera);
@@ -245,6 +275,8 @@ typedef struct	s_chunk
 	int			block_textures_size;
 	int			*block_textures;
 
+	t_aabb		aabb;
+
 	t_model		model;
 	GLuint		vbo_matrices;
 	GLuint		vbo_texture_ids;
@@ -257,6 +289,7 @@ void		render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader);
 void		update_chunk(t_chunk *chunk, float *coord);
 float		*player_in_chunk(float *res, float *player_coord, t_chunk_info *info);
 void		regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2);
+void		chunk_aabb_update(t_chunk *chunk);
 
 ///////////////////
 //	NOISE

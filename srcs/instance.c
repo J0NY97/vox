@@ -145,9 +145,22 @@ void	gen_chunk_blocks(t_block *blocks, int *dim)
 
 float	*player_in_chunk(float *res, float *player_coord, t_chunk_info *info)
 {
-	res[0] = player_coord[0] / info->chunk_size;
-	res[1] = player_coord[2] / info->chunk_size;
+	res[0] = floor(player_coord[0] / info->chunk_size);
+	res[1] = floor(player_coord[2] / info->chunk_size);
 	return (res);
+}
+
+void	chunk_aabb_update(t_chunk *chunk)
+{
+	t_aabb	*a;
+
+	a = &chunk->aabb;
+	a->min[0] = chunk->world_coordinate[0] - (chunk->info->block_size / 2);
+	a->min[1] = 0;
+	a->min[2] = chunk->world_coordinate[2] - (chunk->info->block_size / 2);
+	a->max[0] = a->min[0] + chunk->info->chunk_size;
+	a->max[1] = chunk->info->height * chunk->info->block_size;
+	a->max[2] = a->min[2] + chunk->info->chunk_size;
 }
 
 void	render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader)
