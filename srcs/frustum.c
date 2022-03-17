@@ -65,35 +65,6 @@ int	aabb_on_plane(t_aabb *a, t_plane *p)
 
 int	aabb_in_frustum(t_aabb *a, t_frustum *f)
 {
-	/*
-	aabb_print(a);
-
-	int a2 = aabb_on_plane(a, &f->top_plane);
-	if (!a2)
-		LG_INFO("Not Top");
-
-	int b = aabb_on_plane(a, &f->bot_plane);
-	if (!b)
-		LG_INFO("Not Bot");
-
-	int c = aabb_on_plane(a, &f->right_plane);
-	if (!c)
-		LG_INFO("Not Right");
-
-	int d = aabb_on_plane(a, &f->left_plane);
-	if (!d)
-		LG_INFO("Not Left");
-
-	int e = aabb_on_plane(a, &f->far_plane);
-	if (!e)
-		LG_INFO("Not Far");
-
-	int f2 = aabb_on_plane(a, &f->near_plane);
-	if (!f2)
-		LG_INFO("Not Near");
-
-exit(0);
-*/
 	return (aabb_on_plane(a, &f->top_plane) &&
 		aabb_on_plane(a, &f->bot_plane) &&
 		aabb_on_plane(a, &f->right_plane) &&
