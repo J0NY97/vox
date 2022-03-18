@@ -8,8 +8,8 @@ void	plane_new(t_plane *plane, float *p, float *norm)
 
 void	frustum_new(t_frustum *frustum, t_camera *camera)
 {
-	float	half_v_side = camera->far_plane * tanf(camera->fov * 0.5f);
-	float	half_h_side = half_v_side * camera->aspect;
+	float	half_h_side = camera->far_plane * tanf(to_radians(camera->fov) * 0.5f);
+	float	half_v_side = half_h_side * camera->aspect;
 	float	front_mult_far[VEC3_SIZE];
 	vec3_multiply_f(front_mult_far, camera->front, camera->far_plane);
 
@@ -57,12 +57,15 @@ int	aabb_on_plane(t_aabb *a, t_plane *p)
 		e[2] * fabs(p->normal[2]);
 	float	s = vec3_dot(p->normal, c) - p->dist;
 
+
 	return (-r <= s);
+/*
+	return (fabs(s) <= r);
+	*/
 }
 
 int	aabb_in_frustum(t_aabb *a, t_frustum *f)
 {
-	
 	return (
 	/*	aabb_on_plane(a, &f->top_plane) &&
 		aabb_on_plane(a, &f->bot_plane) &&

@@ -334,7 +334,8 @@ int	main(void)
 			prev_player_chunk[1] = player_chunk[1];
 
 			ft_timer_start();
-			regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);	
+			if (0)
+				regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);	
 			ft_printf("Vol2 chunk update timer : %f\n", ft_timer_end());
 		}
 
@@ -359,7 +360,7 @@ int	main(void)
 			if ((int)player_chunk[0] == chunks[nth_chunk].coordinate[0] &&
 				(int)player_chunk[1] == chunks[nth_chunk].coordinate[2])
 			{
-			//	aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum);
+				//aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum);
 				show_chunk_borders(&chunks[nth_chunk], &player.camera);
 			}
 		}

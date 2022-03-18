@@ -275,6 +275,9 @@ typedef struct	s_chunk
 	int			block_textures_size;
 	int			*block_textures;
 
+	t_block		*blocks_to_render; // blocks that are touching air, which means we want to render them;
+	int			amount_to_render; // amount of blocks in the array that we want to render;
+
 	t_aabb		aabb;
 
 	t_model		model;

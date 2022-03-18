@@ -9,10 +9,14 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord)
 		LG_ERROR("Before (%d)", error);
 
 	chunk->info = info;
+
 	int	max_blocks = chunk->info->width * chunk->info->breadth * chunk->info->height;
+
 	chunk->blocks = malloc(sizeof(t_block) * (max_blocks));
 	chunk->block_matrices = malloc(sizeof(float) * 16 * max_blocks);
 	chunk->block_textures = malloc(sizeof(int) * max_blocks);
+
+	chunk->blocks_to_render = malloc(sizeof(t_block) * max_blocks);
 
 	mat4_identity(chunk->block_matrices);
 	chunk->block_textures[0] = 0;
@@ -89,8 +93,8 @@ int	chunk_gen(t_chunk *chunk)
 				perper = powf(fabs(perper), height);
 			perper = start_y * perper;
 //			ft_printf("perlin : %f\n", perper);
-			for (int y = min(start_y + perper, chunk->info->height), b = 0;
-				b < start_y + perper; y--, b++) // the 'b' is the amount of blocks we have on the y axis;
+			int	amount = min(start_y + perper, chunk->info->height);
+			for (int y = amount, b = 0; b < amount; y--, b++) // the 'b' is the amount of blocks we have on the y axis;
 			{
 				float	cave_freq = 200.0f;
 				float	cave_height = cave_freq / 200;
@@ -193,6 +197,38 @@ void	render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader)
 		LG_ERROR("(%d)", error);
 }
 
+/*
+ * For each block in chunk;
+ *	Go through each block in chunk;
+ *		check if not touching 4 blocks;
+ *	if not 4;
+ *		add to render array;
+*/
+int	get_blocks_to_render(t_chunk *chunk)
+{
+	t_block	*blocks;
+	int		a = 0;
+
+	blocks = chunk->blocks;
+	for (int i = 0; i < chunk->block_amount; i++)
+	{
+		int	touching = 0;
+		for (int j = 0; j < chunk->block_amount; j++)
+		{
+			if (vec3_dist(blocks[i].pos, blocks[j].pos) <= 1)
+				touching++;
+			if (touching >= 6)
+				break ;
+		}
+		if (touching < 6)
+		{
+			chunk->blocks_to_render[a] = blocks[i];
+			a++;
+		}
+	}
+	return (a);
+}
+
 typedef struct s_chunk_args
 {
 	t_chunk	*chunk;
@@ -205,12 +241,14 @@ void	update_chunk(t_chunk *chunk, float *coord)
 	vec3_new(chunk->world_coordinate,
 		chunk->coordinate[0] * chunk->info->chunk_size, 1,
 		chunk->coordinate[2] * chunk->info->chunk_size);
-	
-	chunk->block_amount = chunk_gen(chunk);
-	
-	chunk->block_matrices_size = sizeof(float) * 16 * chunk->block_amount;
 
+	// Generate Chunks	
+	chunk->block_amount = chunk_gen(chunk);
+	chunk->block_matrices_size = sizeof(float) * 16 * chunk->block_amount;
 	chunk->block_textures_size = sizeof(int) * chunk->block_amount;
+
+	// Check which are touching air;
+	chunk->amount_to_render = get_blocks_to_render(chunk);
 
 	float	tmp[VEC3_SIZE];
 	float	model[MAT4_SIZE];
