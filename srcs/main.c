@@ -363,7 +363,7 @@ int	main(void)
 				show_chunk_borders(&chunks[nth_chunk], &player.camera);
 			}
 		}
-		ft_printf("GPU : %d, GPU : %d\n", chunk_info.chunks_loaded, sent_to_gpu);
+		ft_printf("CPU : %d, GPU : %d\n", chunk_info.chunks_loaded, sent_to_gpu);
 
 /////////////////
 		// END Chunk things

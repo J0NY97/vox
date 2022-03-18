@@ -15,25 +15,22 @@ void	frustum_new(t_frustum *frustum, t_camera *camera)
 
 	float	tmp[3];
 
-	vec3_add(tmp, camera->pos, vec3_multiply_f(tmp, camera->front, camera->near_plane));
+	vec3_multiply_f(tmp, camera->front, camera->near_plane);
+	vec3_add(tmp, tmp, camera->pos);
 	plane_new(&frustum->near_plane, tmp, camera->front);
 
 	vec3_add(tmp, camera->pos, front_mult_far);
 	plane_new(&frustum->far_plane, tmp,
 		(float []){-camera->front[0], -camera->front[1], -camera->front[2]});
 
-	vec3_cross(tmp,
-		camera->up,
-		vec3_add(tmp,
-			front_mult_far,
-			vec3_multiply_f(tmp, camera->right, half_h_side)));
+	vec3_multiply_f(tmp, camera->right, half_h_side);
+	vec3_add(tmp, tmp, front_mult_far);
+	vec3_cross(tmp, camera->up, tmp);
 	plane_new(&frustum->right_plane, camera->pos, tmp);
 
-	vec3_cross(tmp,
-		vec3_sub(tmp,
-			front_mult_far,
-			vec3_multiply_f(tmp, camera->right, half_h_side)),
-		camera->up);
+	vec3_multiply_f(tmp, camera->right, half_h_side);
+	vec3_sub(tmp, front_mult_far, tmp);
+	vec3_cross(tmp, tmp, camera->up);
 	plane_new(&frustum->left_plane, camera->pos, tmp);
 
 	vec3_multiply_f(tmp, camera->up, half_v_side);
@@ -65,10 +62,12 @@ int	aabb_on_plane(t_aabb *a, t_plane *p)
 
 int	aabb_in_frustum(t_aabb *a, t_frustum *f)
 {
-	return (aabb_on_plane(a, &f->top_plane) &&
+	
+	return (
+	/*	aabb_on_plane(a, &f->top_plane) &&
 		aabb_on_plane(a, &f->bot_plane) &&
 		aabb_on_plane(a, &f->right_plane) &&
 		aabb_on_plane(a, &f->left_plane) &&
-		aabb_on_plane(a, &f->far_plane) &&
+		aabb_on_plane(a, &f->far_plane) &&*/
 		aabb_on_plane(a, &f->near_plane));
 }

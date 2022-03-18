@@ -51,16 +51,17 @@ float *vec3_normalize(float *result, float *v0)
 	return (result);
 }
 
-float *vec3_cross(float *result, float *v0, float *v1)
+float *vec3_cross(float *res, float *v0, float *v1)
 {
-	float cross[VEC3_SIZE];
-	cross[0] = v0[1] * v1[2] - v0[2] * v1[1];
-	cross[1] = v0[2] * v1[0] - v0[0] * v1[2];
-	cross[2] = v0[0] * v1[1] - v0[1] * v1[0];
-	result[0] = cross[0];
-	result[1] = cross[1];
-	result[2] = cross[2];
-	return (result);
+	float	c[VEC3_SIZE];
+
+	c[0] = v0[1] * v1[2] - v0[2] * v1[1];
+	c[1] = v0[2] * v1[0] - v0[0] * v1[2];
+	c[2] = v0[0] * v1[1] - v0[1] * v1[0];
+	res[0] = c[0];
+	res[1] = c[1];
+	res[2] = c[2];
+	return (res);
 }
 
 float	vec3_dot(float *v0, float *v1)

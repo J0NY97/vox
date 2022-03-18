@@ -25,13 +25,13 @@ void	new_camera(t_camera *camera)
  */
 void	update_camera(t_camera *camera)
 {
-	float	temp_vec3[VEC3_SIZE];
+	float	v3[VEC3_SIZE];
 
-	new_vec3(temp_vec3,
+	new_vec3(camera->front,
 		cos(to_radians(camera->yaw)) * cos(to_radians(camera->pitch)),
 		sin(to_radians(camera->pitch)),
 		sin(to_radians(camera->yaw)) * cos(to_radians(camera->pitch)));
-	vec3_normalize(camera->front, temp_vec3);
+	vec3_normalize(camera->front, camera->front);
 
 	vec3_normalize(camera->right,
 		vec3_cross(camera->right, camera->up, camera->front));
@@ -43,7 +43,7 @@ void	update_camera(t_camera *camera)
 
 	mat4_identity(camera->view);
 	mat4_look_at(camera->view, camera->pos,
-		vec3_add(temp_vec3, camera->pos, camera->front), camera->up);
+		vec3_add(v3, camera->pos, camera->front), camera->up);
 
 	frustum_new(&camera->frustum, camera);
 }
