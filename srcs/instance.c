@@ -10,13 +10,15 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord)
 
 	chunk->info = info;
 
+	chunk->needs_to_update = 0;
+
 	int	max_blocks = chunk->info->width * chunk->info->breadth * chunk->info->height;
 
 	chunk->blocks = malloc(sizeof(t_block) * (max_blocks));
 	chunk->block_matrices = malloc(sizeof(float) * 16 * max_blocks);
 	chunk->block_textures = malloc(sizeof(int) * max_blocks);
 
-	chunk->blocks_to_render = malloc(sizeof(t_block) * max_blocks);
+	chunk->blocks_visible = malloc(sizeof(t_block) * max_blocks);
 
 	mat4_identity(chunk->block_matrices);
 	chunk->block_textures[0] = 0;
@@ -94,7 +96,7 @@ int	chunk_gen(t_chunk *chunk)
 			perper = start_y * perper;
 //			ft_printf("perlin : %f\n", perper);
 			int	amount = min(start_y + perper, chunk->info->height);
-			for (int y = amount, b = 0; b < amount; y--, b++) // the 'b' is the amount of blocks we have on the y axis;
+			for (int y = amount, b = 0; b <= amount; y--, b++) // the 'b' is the amount of blocks we have on the y axis;
 			{
 				float	cave_freq = 200.0f;
 				float	cave_height = cave_freq / 200;
@@ -204,7 +206,7 @@ void	render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader)
  *	if not 4;
  *		add to render array;
 */
-int	get_blocks_to_render(t_chunk *chunk)
+int	get_blocks_visible(t_chunk *chunk)
 {
 	t_block	*blocks;
 	int		a = 0;
@@ -213,16 +215,29 @@ int	get_blocks_to_render(t_chunk *chunk)
 	for (int i = 0; i < chunk->block_amount; i++)
 	{
 		int	touching = 0;
+		/* This doesnt work, we would have to check the adjacent chunk blocks;*/
+		if (blocks[i].pos[0] == 0)
+			touching++;
+		if (blocks[i].pos[2] == 0)
+			touching++;
+		if (blocks[i].pos[0] == 15)
+			touching++;
+		if (blocks[i].pos[2] == 15)
+			touching++;
+		if (blocks[i].pos[1] == 0)
+			touching++;
 		for (int j = 0; j < chunk->block_amount; j++)
 		{
-			if (vec3_dist(blocks[i].pos, blocks[j].pos) <= 1)
+			if (vec3_dist(blocks[i].pos, blocks[j].pos) <= 1.0f)
+			{
 				touching++;
-			if (touching >= 6)
-				break ;
+				if (touching >= 7)
+					break ;
+			}
 		}
-		if (touching < 6)
+		if (touching < 7)
 		{
-			chunk->blocks_to_render[a] = blocks[i];
+			chunk->blocks_visible[a] = blocks[i];
 			a++;
 		}
 	}
@@ -244,11 +259,15 @@ void	update_chunk(t_chunk *chunk, float *coord)
 
 	// Generate Chunks	
 	chunk->block_amount = chunk_gen(chunk);
-	chunk->block_matrices_size = sizeof(float) * 16 * chunk->block_amount;
-	chunk->block_textures_size = sizeof(int) * chunk->block_amount;
+//	chunk->block_matrices_size = sizeof(float) * 16 * chunk->block_amount;
+//	chunk->block_textures_size = sizeof(int) * chunk->block_amount;
 
 	// Check which are touching air;
-	chunk->amount_to_render = get_blocks_to_render(chunk);
+	chunk->blocks_visible_amount = get_blocks_visible(chunk);
+	chunk->block_matrices_size = sizeof(float) * 16 * chunk->blocks_visible_amount;
+	chunk->block_textures_size = sizeof(int) * chunk->blocks_visible_amount;
+
+	ft_printf("Rendered %d/%d\n", chunk->blocks_visible_amount, chunk->block_amount);
 
 	float	tmp[VEC3_SIZE];
 	float	model[MAT4_SIZE];
@@ -256,13 +275,13 @@ void	update_chunk(t_chunk *chunk, float *coord)
 //	float	rot[MAT4_SIZE];
 	float	trans[MAT4_SIZE];
 
-	for (int i = 0; i < chunk->block_amount; i++)
+	for (int i = 0; i < chunk->blocks_visible_amount; i++)
 	{
 		mat4_identity(trans);
 		mat4_translate(trans, trans, vec3_new(tmp,
-			(chunk->blocks[i].pos[0] * chunk->info->block_size) + chunk->world_coordinate[0],
-			(chunk->blocks[i].pos[1] * chunk->info->block_size) + chunk->world_coordinate[1],
-			(chunk->blocks[i].pos[2] * chunk->info->block_size) + chunk->world_coordinate[2]));
+			(chunk->blocks_visible[i].pos[0] * chunk->info->block_size) + chunk->world_coordinate[0],
+			(chunk->blocks_visible[i].pos[1] * chunk->info->block_size) + chunk->world_coordinate[1],
+			(chunk->blocks_visible[i].pos[2] * chunk->info->block_size) + chunk->world_coordinate[2]));
 
 		mat4_identity(scale);
 		mat4_scale(scale, scale, vec3_new(tmp,
@@ -275,8 +294,10 @@ void	update_chunk(t_chunk *chunk, float *coord)
 		mat4_multiply(model, trans, model);
 
 		memcpy(chunk->block_matrices + (i * 16), model, sizeof(float) * 16);
-		memcpy(chunk->block_textures + (i), &chunk->blocks[i].texture_id, sizeof(int));
+		memcpy(chunk->block_textures + (i), &chunk->blocks_visible[i].texture_id, sizeof(int));
 	}
+
+	chunk->needs_to_update = 1;
 }
 
 void	*update_chunk_threaded(void *arg)
@@ -285,6 +306,100 @@ void	*update_chunk_threaded(void *arg)
 
 	update_chunk(info->chunk, info->coords);
 	return (NULL);
+}
+
+void	regenerate_chunks_v2(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2, t_thread_manager *tm)
+{
+	int	reload_these_chunks[info->chunks_loaded];
+	int	reload_amount = 0;
+	int	found;
+	int	start_coord[2];
+
+	start_coord[0] = player_chunk_v2[0] - (info->render_distance / 2);
+	start_coord[1] = player_chunk_v2[1] - (info->render_distance / 2);
+	// Check which chunks are not going to be in the next iteration of
+	//	loaded chunks, save those to 'reload_these_chunks' and when starting
+	// to update the new chunks that are going to be loaded, and put the
+	// new chunk info into those 'chunks' indices;
+	// Takes 0.000000 seconds
+	for (int i = 0; i < info->chunks_loaded; i++)
+	{
+		found = 0;
+		for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
+		{
+			for (int z = start_coord[1], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
+			{
+				if (chunks[i].coordinate[0] == x && chunks[i].coordinate[2] == z)
+					found = 1;
+			}
+		}
+		if (!found)
+		{
+			reload_these_chunks[reload_amount] = i;
+			reload_amount++;
+		}
+	}
+
+	// Go through all the coordinates that will be loaded next time, and
+	//  check if any of the loaded chunks have those coordinates, if not
+	//	we take one of the chunks that are not going to be loaded next time
+	// 	and update the new chunk into that memory;
+	int	nth_chunk = 0;
+	int nth_thread = 0;
+	t_chunk_args	args[4];
+	for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
+	{
+		for (int z = start_coord[1], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
+		{
+			found = 0;
+			for (int i = 0; i < info->chunks_loaded; i++)
+			{
+				if (chunks[i].coordinate[0] == x && chunks[i].coordinate[2] == z)
+				{
+					found = 1;
+					break ;
+				}
+			}
+			if (!found)
+			{
+				if (nth_thread >= 4)
+					break ;
+				args[nth_thread].chunk = &chunks[reload_these_chunks[nth_chunk]];
+				vec3_new(args[nth_thread].coords, x, 1, z);
+				if (!thread_manager_new_thread(tm, update_chunk_threaded, &args[nth_thread]))
+				{
+					res[0] = reload_amount;
+					res[1] = nth_chunk;
+					ft_printf("Couldnt create more threads to the manager.\n");
+					return ;
+				}
+				nth_thread++;
+				nth_chunk++;
+			}
+		}
+	}
+
+	// Send all the updated chunk info to the gpu;
+	// This needs to be done on the main thread (or the thread that the context is made on)
+	/*
+	for (int i = 0; i < reload_amount; i++)
+	{
+		// Matrices
+		glBindBuffer(GL_ARRAY_BUFFER, chunks[reload_these_chunks[i]].vbo_matrices);
+		glBufferData(GL_ARRAY_BUFFER, chunks[reload_these_chunks[i]].block_matrices_size,
+			&chunks[reload_these_chunks[i]].block_matrices[0], GL_STATIC_DRAW);
+
+		// Texture ID
+		glBindBuffer(GL_ARRAY_BUFFER, chunks[reload_these_chunks[i]].vbo_texture_ids);
+		glBufferData(GL_ARRAY_BUFFER, chunks[reload_these_chunks[i]].block_textures_size,
+			&chunks[reload_these_chunks[i]].block_textures[0], GL_STATIC_DRAW);
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	*/
+
+	res[0] = reload_amount;
+	res[1] = nth_chunk;
 }
 
 void	regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2)
@@ -373,6 +488,7 @@ void	regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *pla
 	}
 
 
+/*
 	// Send all the updated chunk info to the gpu;
 	// This needs to be done on the main thread (or the thread that the context is made on)
 	for (int i = 0; i < reload_amount; i++)
@@ -389,11 +505,10 @@ void	regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *pla
 	}
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	*/
 
 	res[0] = reload_amount;
 	res[1] = nth_chunk;
-	/*
-	*/
 }
 
 void	show_chunk_borders(t_chunk *chunk, t_camera *camera)

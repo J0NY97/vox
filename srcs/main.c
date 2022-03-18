@@ -75,7 +75,7 @@ int	main(void)
 
 	t_player	player;
 	new_player(&player);
-	new_vec3(player.camera.pos, 0, 200, 0);
+	new_vec3(player.camera.pos, 15, 200, 15);
 //	new_vec3(player.camera.pos, 16384, 80, 16384);
 	player.camera.pitch = -20;
 	player.camera.yaw = 50;
@@ -155,8 +155,10 @@ int	main(void)
 		t_shader	cube_shader;
 		new_shader(&cube_shader, SHADER_PATH"simple_instance.vs", SHADER_PATH"simple_instance.fs");
 
+		t_thread_manager	tm;
+		thread_manager_new(&tm);
 		t_chunk_info	chunk_info;
-		chunk_info.render_distance = 10;
+		chunk_info.render_distance = 1;
 		chunk_info.chunks_loaded = (int)chunk_info.render_distance * (int)chunk_info.render_distance;
 		chunk_info.seed = 896868766;
 		chunk_info.width = 16;
@@ -184,7 +186,8 @@ int	main(void)
 			new_model(&chunks[nth_chunk].model, &cube_obj);
 			new_chunk(&chunks[nth_chunk], &chunk_info, (float []){999, 1, 999});
 		}
-		regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);	
+//		regenerate_chunks_v2(chunk_reloading, chunks, &chunk_info, player_chunk, &tm);
+		regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);
 		//exit(0);
 		ft_printf("Chunks created : %d\n", nth_chunk);
 //////////////////////////////
@@ -334,21 +337,34 @@ int	main(void)
 			prev_player_chunk[1] = player_chunk[1];
 
 			ft_timer_start();
-			if (0)
+			if (1)
 				regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);	
+//				regenerate_chunks_v2(chunk_reloading, chunks, &chunk_info, player_chunk, &tm);	
 			ft_printf("Vol2 chunk update timer : %f\n", ft_timer_end());
 		}
 
-//		glCullFace(GL_BACK);
-//		glFrontFace(GL_CCW);
+		thread_manager_check_threadiness(&tm);
+
+
 		nth_chunk = 0;
-/*
-		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
-			render_chunk(&chunks[nth_chunk], &player.camera, &cube_shader);
-*/
 		int sent_to_gpu = 0;
 		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
 		{
+			if (chunks[nth_chunk].needs_to_update)
+			{
+				// Matrices
+				glBindBuffer(GL_ARRAY_BUFFER, chunks[nth_chunk].vbo_matrices);
+				glBufferData(GL_ARRAY_BUFFER, chunks[nth_chunk].block_matrices_size,
+				&chunks[nth_chunk].block_matrices[0], GL_STATIC_DRAW);
+				// Texture ID
+				glBindBuffer(GL_ARRAY_BUFFER, chunks[nth_chunk].vbo_texture_ids);
+				glBufferData(GL_ARRAY_BUFFER, chunks[nth_chunk].block_textures_size,
+					&chunks[nth_chunk].block_textures[0], GL_STATIC_DRAW);
+
+				glBindBuffer(GL_ARRAY_BUFFER, 0);
+				chunks[nth_chunk].needs_to_update = 0;
+			}
+
 			// Create aabb for each chunk;
 			chunk_aabb_update(&chunks[nth_chunk]);
 			// TODO: Cull chunk if camera far plane is nearer than chunk;
@@ -364,7 +380,7 @@ int	main(void)
 				show_chunk_borders(&chunks[nth_chunk], &player.camera);
 			}
 		}
-		ft_printf("CPU : %d, GPU : %d\n", chunk_info.chunks_loaded, sent_to_gpu);
+		//ft_printf("CPU : %d, GPU : %d\n", chunk_info.chunks_loaded, sent_to_gpu);
 
 /////////////////
 		// END Chunk things

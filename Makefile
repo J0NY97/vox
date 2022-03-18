@@ -24,6 +24,7 @@ CFILES = \
 	instance.c \
 	perlin.c \
 	frustum.c \
+	thread.c \
 	help.c \
 	bimgf/bimgf_bmp.c \
 	bimgf/bimgf_help.c \
@@ -71,7 +72,7 @@ else
 LIBS += -lOpenGl32 -lgdi32
 endif
 
-FLAGS = -Wall -Wextra -Wno-unused-variable -MMD #-O3 #-g -fsanitize=address
+FLAGS = -Wall -Wextra -Wno-unused-variable -MMD -g #-O3 #-g -fsanitize=address
 
 all: $(ODIR) $(NAME)
 

@@ -24,6 +24,7 @@
 # include "bimgf.h"
 # include "bobj_loader.h"
 # include "collision.h"
+# include "thread.h"
 
 # define DEBUG 0
 
@@ -275,14 +276,16 @@ typedef struct	s_chunk
 	int			block_textures_size;
 	int			*block_textures;
 
-	t_block		*blocks_to_render; // blocks that are touching air, which means we want to render them;
-	int			amount_to_render; // amount of blocks in the array that we want to render;
+	t_block		*blocks_visible; // blocks that are touching air, which means we want to render them;
+	int			blocks_visible_amount; // amount of blocks in the array that we want to render;
 
 	t_aabb		aabb;
 
 	t_model		model;
 	GLuint		vbo_matrices;
 	GLuint		vbo_texture_ids;
+
+	int			needs_to_update;
 }	t_chunk;
 
 void		new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord);
@@ -292,6 +295,7 @@ void		render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader);
 void		update_chunk(t_chunk *chunk, float *coord);
 float		*player_in_chunk(float *res, float *player_coord, t_chunk_info *info);
 void		regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2);
+void		regenerate_chunks_v2(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2, t_thread_manager *tm);
 void		chunk_aabb_update(t_chunk *chunk);
 void		show_chunk_borders(t_chunk *chunk, t_camera *camera);
 
