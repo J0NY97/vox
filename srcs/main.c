@@ -156,7 +156,8 @@ int	main(void)
 		new_shader(&cube_shader, SHADER_PATH"simple_instance.vs", SHADER_PATH"simple_instance.fs");
 
 		t_thread_manager	tm;
-		thread_manager_new(&tm);
+		thread_manager_new(&tm, 16);
+
 		t_chunk_info	chunk_info;
 		chunk_info.render_distance = 1;
 		chunk_info.chunks_loaded = (int)chunk_info.render_distance * (int)chunk_info.render_distance;
@@ -186,8 +187,10 @@ int	main(void)
 			new_model(&chunks[nth_chunk].model, &cube_obj);
 			new_chunk(&chunks[nth_chunk], &chunk_info, (float []){999, 1, 999});
 		}
-//		regenerate_chunks_v2(chunk_reloading, chunks, &chunk_info, player_chunk, &tm);
-		regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);
+		if (0)
+			regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);
+		if (1)
+			regenerate_chunks_v2(chunk_reloading, chunks, &chunk_info, player_chunk, &tm);
 		//exit(0);
 		ft_printf("Chunks created : %d\n", nth_chunk);
 //////////////////////////////
@@ -337,14 +340,14 @@ int	main(void)
 			prev_player_chunk[1] = player_chunk[1];
 
 			ft_timer_start();
-			if (1)
+			if (0)
 				regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);	
-//				regenerate_chunks_v2(chunk_reloading, chunks, &chunk_info, player_chunk, &tm);	
+			if (1)
+				regenerate_chunks_v2(chunk_reloading, chunks, &chunk_info, player_chunk, &tm);	
 			ft_printf("Vol2 chunk update timer : %f\n", ft_timer_end());
 		}
 
 		thread_manager_check_threadiness(&tm);
-
 
 		nth_chunk = 0;
 		int sent_to_gpu = 0;
