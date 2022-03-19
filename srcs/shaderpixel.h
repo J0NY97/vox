@@ -238,10 +238,19 @@ void				render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shad
 // ENTITY INSTANCED
 /////////////////////
 
+enum e_block_type
+{
+	BLOCK_AIR = -1,
+	BLOCK_DIRT = 0,
+	BLOCK_STONE = 1,
+	BLOCK_BEDROCK = 2,
+	BLOCK_TYPE_AMOUNT
+};
+
 typedef struct s_block
 {
 	float	pos[VEC3_SIZE]; // in chunk coordinates, add chunk world coordinate to this to get world coordinate;
-	int		texture_id;
+	int		texture_id; // TODO: change to block type at some point;
 }	t_block;
 
 typedef struct s_chunk_info
@@ -251,7 +260,7 @@ typedef struct s_chunk_info
 	int			height; // in blocks;
 	float		block_scale;
 	float		block_size;
-	float		chunk_size;
+	float		chunk_size[VEC3_SIZE];
 
 	unsigned int	seed;
 
@@ -296,6 +305,7 @@ void		update_chunk(t_chunk *chunk, float *coord);
 float		*player_in_chunk(float *res, float *player_coord, t_chunk_info *info);
 void		regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2);
 void		regenerate_chunks_v2(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2, t_thread_manager *tm);
+void		regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2);
 void		chunk_aabb_update(t_chunk *chunk);
 void		show_chunk_borders(t_chunk *chunk, t_camera *camera);
 

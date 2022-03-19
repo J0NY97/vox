@@ -25,8 +25,9 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord)
 
 	vec3_new(chunk->coordinate, coord[0], coord[1], coord[2]);
 	vec3_new(chunk->world_coordinate,
-		chunk->coordinate[0] * chunk->info->chunk_size, 1,
-		chunk->coordinate[2] * chunk->info->chunk_size);
+		chunk->coordinate[0] * chunk->info->chunk_size[0],
+		chunk->coordinate[1] * chunk->info->chunk_size[1],
+		chunk->coordinate[2] * chunk->info->chunk_size[2]);
 	
 	// Matrices
 	glGenBuffers(1, &chunk->vbo_matrices);
@@ -68,6 +69,75 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord)
 		LG_ERROR("(%d)", error);
 }
 
+int	chunk_gen_v2(t_chunk *chunk)
+{
+	int		start_y = 65;
+	float	freq = 120.0f;
+	float	height = freq / 100; // less is more;
+	int		i = 0;
+
+	for (int x = 0; x < chunk->info->width; x++)
+	{
+		float	block_world_x = (chunk->world_coordinate[0] + ((float)x * chunk->info->block_size));
+		float	to_use_x = block_world_x / freq;
+		for (int z = 0; z < chunk->info->breadth; z++)
+		{
+			float	block_world_z = (chunk->world_coordinate[2] + ((float)z * chunk->info->block_size));
+			float	to_use_z = block_world_z / freq;
+
+			float	perper = 1 * perlin(1 * to_use_x, 1 * to_use_z, chunk->info->seed);
+			perper = round(perper * (freq / 2)) / (freq / 2);
+			if (perper < 0)
+				perper = -powf(fabs(perper), height);
+			else
+				perper = powf(fabs(perper), height);
+			perper = start_y * perper;
+			int	wanted_y = start_y + perper;
+			int amount = ft_clamp(wanted_y - (chunk->coordinate[1] * chunk->info->height), 0, chunk->info->height - 1);
+
+			/*
+			ft_printf("wanted : %d, amount : %d\n", wanted_y, amount);
+			vec3_string("Coords :", chunk->coordinate);
+			vec3_string("World Coords :", chunk->world_coordinate);
+			*/
+
+			for (int y = chunk->info->height - 1; y >= 0; y--) // the 'b' is the amount of blocks we have on the y axis;
+			{
+				/*
+				float	cave_freq = 200.0f;
+				float	cave_height = cave_freq / 200;
+				float	cave_x = block_world_x / cave_freq;
+				float	cave_z = block_world_z / cave_freq;
+				float	cave_y = ((float)y * chunk->info->block_size) / cave_freq;
+				float	rep = 1.0f;
+				rep = perlin3(cave_x, cave_y, cave_z, chunk->info->seed)
+					+ 0.5 * perlin3(2 * cave_x, 2 * cave_y, 2 * cave_z, chunk->info->seed)
+					+ 0.25 * perlin3(4 * cave_x, 4 * cave_y, 4 * cave_z, chunk->info->seed)
+					+ 0.125 * perlin3(8 * cave_x, 8 * cave_y, 8 * cave_z, chunk->info->seed);
+				rep /= 1 + 0.5 + 0.25 + 0.125;
+				if (rep > 0)
+					rep = powf(rep, cave_height);
+			//	ft_printf("to_use_x : %f, to_use_y : %f, to_use_z : %f\n", to_use_x, to_use_y, to_use_z);
+			//	ft_printf("perlin3 : %f\n", rep);
+				if (rep > -0.10f)
+				*/
+
+				vec3_new(chunk->blocks[i].pos, x, y, z);
+				if (y <= amount)
+				{
+					if (y <= amount - 1) // if we have 3 dirt block on top we make the rest stone blocks;
+						chunk->blocks[i].texture_id = BLOCK_STONE;
+					else
+						chunk->blocks[i].texture_id = BLOCK_DIRT;
+				}
+				else
+					chunk->blocks[i].texture_id = BLOCK_AIR;
+				i++;
+			}
+		}
+	}
+	return (i);
+}
 /*
  * Returns amount of blocks generated;
 */
@@ -80,11 +150,11 @@ int	chunk_gen(t_chunk *chunk)
 
 	for (int x = 0; x < chunk->info->width; x++)
 	{
-		float	block_world_x = ((chunk->coordinate[0] * chunk->info->chunk_size) + ((float)x * chunk->info->block_size));
+		float	block_world_x = ((chunk->coordinate[0] * chunk->info->chunk_size[0]) + ((float)x * chunk->info->block_size));
 		float	to_use_x = block_world_x / freq;
 		for (int z = 0; z < chunk->info->breadth; z++)
 		{
-			float	block_world_z = ((chunk->coordinate[2] * chunk->info->chunk_size) + ((float)z * chunk->info->block_size));
+			float	block_world_z = ((chunk->coordinate[2] * chunk->info->chunk_size[2]) + ((float)z * chunk->info->block_size));
 			float	to_use_z = block_world_z / freq;
 
 			float	perper = 1 * perlin(1 * to_use_x, 1 * to_use_z, chunk->info->seed);
@@ -119,40 +189,26 @@ int	chunk_gen(t_chunk *chunk)
 				{
 					vec3_new(chunk->blocks[i].pos, x, y, z);
 					if (b >= 1) // if we have 3 dirt block on top we make the rest stone blocks;
-						chunk->blocks[i].texture_id = 1;
+						chunk->blocks[i].texture_id = BLOCK_STONE;
 					else
-						chunk->blocks[i].texture_id = 0;
+						chunk->blocks[i].texture_id = BLOCK_DIRT;
 					i++;
 				}
 			}
+			/*
 			vec3_new(chunk->blocks[i - 1].pos, x, 0, z);
 			chunk->blocks[i - 1].texture_id = 2;
+			*/
 		}
 	}
 	return (i);
 }
 
-void	gen_chunk_blocks(t_block *blocks, int *dim)
-{
-	int	i = 0;
-
-	for (int y = 0; y < dim[1]; y++)
-	{
-		for (int x = 0; x < dim[0]; x++)
-		{
-			for (int z = 0; z < dim[2]; z++)
-			{
-				vec3_new(blocks[i].pos, x, y, z);
-				i++;
-			}
-		}
-	}
-}
-
 float	*player_in_chunk(float *res, float *player_coord, t_chunk_info *info)
 {
-	res[0] = floor(player_coord[0] / info->chunk_size);
-	res[1] = floor(player_coord[2] / info->chunk_size);
+	res[0] = floor(player_coord[0] / info->chunk_size[0]);
+	res[1] = floor(player_coord[1] / info->chunk_size[1]);
+	res[2] = floor(player_coord[2] / info->chunk_size[2]);
 	return (res);
 }
 
@@ -162,11 +218,11 @@ void	chunk_aabb_update(t_chunk *chunk)
 
 	a = &chunk->aabb;
 	a->min[0] = chunk->world_coordinate[0] - (chunk->info->block_size / 2);
-	a->min[1] = 0;
+	a->min[1] = chunk->world_coordinate[1] - (chunk->info->block_size / 2);
 	a->min[2] = chunk->world_coordinate[2] - (chunk->info->block_size / 2);
-	a->max[0] = a->min[0] + chunk->info->chunk_size;
-	a->max[1] = chunk->info->height * chunk->info->block_size;
-	a->max[2] = a->min[2] + chunk->info->chunk_size;
+	a->max[0] = a->min[0] + chunk->info->chunk_size[0];
+	a->max[1] = a->min[1] + chunk->info->chunk_size[1];
+	a->max[2] = a->min[2] + chunk->info->chunk_size[2];
 }
 
 void	render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader)
@@ -202,8 +258,8 @@ void	render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader)
 /*
  * For each block in chunk;
  *	Go through each block in chunk;
- *		check if not touching 4 blocks;
- *	if not 4;
+ *		check if not touching air blocks;
+ *	if touching;
  *		add to render array;
 */
 int	get_blocks_visible(t_chunk *chunk)
@@ -214,31 +270,16 @@ int	get_blocks_visible(t_chunk *chunk)
 	blocks = chunk->blocks;
 	for (int i = 0; i < chunk->block_amount; i++)
 	{
-		int	touching = 0;
-		/* This doesnt work, we would have to check the adjacent chunk blocks;*/
-		if (blocks[i].pos[0] == 0)
-			touching++;
-		if (blocks[i].pos[2] == 0)
-			touching++;
-		if (blocks[i].pos[0] == 15)
-			touching++;
-		if (blocks[i].pos[2] == 15)
-			touching++;
-		if (blocks[i].pos[1] == 0)
-			touching++;
+		if (blocks[i].texture_id == BLOCK_AIR)
+			continue ;
 		for (int j = 0; j < chunk->block_amount; j++)
 		{
-			if (vec3_dist(blocks[i].pos, blocks[j].pos) <= 1.0f)
+			if (vec3_dist(blocks[i].pos, blocks[j].pos) <= 1.0f &&
+				blocks[j].texture_id == BLOCK_AIR)
 			{
-				touching++;
-				if (touching >= 7)
-					break ;
+				chunk->blocks_visible[a] = blocks[i];
+				a++;
 			}
-		}
-		if (touching < 7)
-		{
-			chunk->blocks_visible[a] = blocks[i];
-			a++;
 		}
 	}
 	return (a);
@@ -254,13 +295,12 @@ void	update_chunk(t_chunk *chunk, float *coord)
 {
 	vec3_new(chunk->coordinate, coord[0], coord[1], coord[2]);
 	vec3_new(chunk->world_coordinate,
-		chunk->coordinate[0] * chunk->info->chunk_size, 1,
-		chunk->coordinate[2] * chunk->info->chunk_size);
-
+		chunk->coordinate[0] * chunk->info->chunk_size[0],
+		chunk->coordinate[1] * chunk->info->chunk_size[1],
+		chunk->coordinate[2] * chunk->info->chunk_size[2]);
+	
 	// Generate Chunks	
-	chunk->block_amount = chunk_gen(chunk);
-//	chunk->block_matrices_size = sizeof(float) * 16 * chunk->block_amount;
-//	chunk->block_textures_size = sizeof(int) * chunk->block_amount;
+	chunk->block_amount = chunk_gen_v2(chunk); // should always return max amount of blocks in a chunk;
 
 	// Check which are touching air;
 	chunk->blocks_visible_amount = get_blocks_visible(chunk);
@@ -298,6 +338,7 @@ void	update_chunk(t_chunk *chunk, float *coord)
 	}
 
 	chunk->needs_to_update = 1;
+	LG_INFO("DONE.");
 }
 
 void	*update_chunk_threaded(void *arg)
@@ -305,18 +346,111 @@ void	*update_chunk_threaded(void *arg)
 	t_chunk_args	*info = arg;
 
 	update_chunk(info->chunk, info->coords);
+	LG_INFO("DONE.");
 	return (NULL);
 }
 
-void	regenerate_chunks_v2(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2, t_thread_manager *tm)
+void	regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3)
 {
 	int	reload_these_chunks[info->chunks_loaded];
 	int	reload_amount = 0;
 	int	found;
 	int	start_coord[2];
 
-	start_coord[0] = player_chunk_v2[0] - (info->render_distance / 2);
-	start_coord[1] = player_chunk_v2[1] - (info->render_distance / 2);
+	start_coord[0] = player_chunk_v3[0] - (info->render_distance / 2);
+	start_coord[1] = player_chunk_v3[2] - (info->render_distance / 2);
+	// Check which chunks are not going to be in the next iteration of
+	//	loaded chunks, save those to 'reload_these_chunks' and when starting
+	// to update the new chunks that are going to be loaded, and put the
+	// new chunk info into those 'chunks' indices;
+	// Takes 0.000000 seconds
+	for (int i = 0; i < info->chunks_loaded; i++)
+	{
+		found = 0;
+		for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
+		{
+			for (int z = start_coord[1], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
+			{
+				if (chunks[i].coordinate[0] == x && chunks[i].coordinate[2] == z)
+					found = 1;
+			}
+		}
+		if (!found)
+		{
+			reload_these_chunks[reload_amount] = i;
+			reload_amount++;
+		}
+	}
+
+	for (int i = 0; i < reload_amount; i++)
+		ft_printf("%d ", reload_these_chunks[i]);
+
+	// Go through all the coordinates that will be loaded next time, and
+	//  check if any of the loaded chunks have those coordinates, if not
+	//	we take one of the chunks that are not going to be loaded next time
+	// 	and update the new chunk into that memory;
+	pthread_t		threads[reload_amount];
+	t_chunk_args	args[reload_amount];
+	int				nth_thread = 0;
+	int				nth_chunk = 0;
+
+	for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
+	{
+		for (int z = start_coord[1], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
+		{
+			found = 0;
+			for (int i = 0; i < info->chunks_loaded; i++)
+			{
+				if (chunks[i].coordinate[0] == x && chunks[i].coordinate[2] == z)
+				{
+					found = 1;
+					break ;
+				}
+			}
+			if (!found)
+			{
+				for (int y = 0, y_amount = 0; y_amount < 16; y++, y_amount++)
+				{
+					args[nth_thread].chunk = &chunks[reload_these_chunks[nth_chunk]];
+					vec3_new(args[nth_thread].coords, x, y, z);
+					if (pthread_create(&threads[nth_thread], NULL, update_chunk_threaded, &args[nth_thread]))
+						LG_ERROR("Couldnt create thread.");
+					nth_chunk++;
+					nth_thread++;
+					if (nth_chunk >= info->chunks_loaded) 
+						break ;
+				}
+			}
+			if (nth_chunk >= info->chunks_loaded) 
+				break ;
+		}
+		if (nth_chunk >= info->chunks_loaded) 
+			break ;
+	}
+
+	int j = 0;
+	while (j < nth_thread)
+	{
+		if (pthread_join(threads[j], NULL))
+			LG_ERROR("Couldnt join thread. -2-");
+		j++;
+	}
+
+	res[0] = reload_amount;
+	res[1] = nth_chunk;
+
+	LG_INFO("DOne.");
+}
+
+void	regenerate_chunks_v2(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3, t_thread_manager *tm)
+{
+	int	reload_these_chunks[info->chunks_loaded];
+	int	reload_amount = 0;
+	int	found;
+	int	start_coord[2];
+
+	start_coord[0] = player_chunk_v3[0] - (info->render_distance / 2);
+	start_coord[1] = player_chunk_v3[2] - (info->render_distance / 2);
 	// Check which chunks are not going to be in the next iteration of
 	//	loaded chunks, save those to 'reload_these_chunks' and when starting
 	// to update the new chunks that are going to be loaded, and put the
@@ -379,38 +513,19 @@ void	regenerate_chunks_v2(int *res, t_chunk *chunks, t_chunk_info *info, float *
 		}
 	}
 
-	// Send all the updated chunk info to the gpu;
-	// This needs to be done on the main thread (or the thread that the context is made on)
-	/*
-	for (int i = 0; i < reload_amount; i++)
-	{
-		// Matrices
-		glBindBuffer(GL_ARRAY_BUFFER, chunks[reload_these_chunks[i]].vbo_matrices);
-		glBufferData(GL_ARRAY_BUFFER, chunks[reload_these_chunks[i]].block_matrices_size,
-			&chunks[reload_these_chunks[i]].block_matrices[0], GL_STATIC_DRAW);
-
-		// Texture ID
-		glBindBuffer(GL_ARRAY_BUFFER, chunks[reload_these_chunks[i]].vbo_texture_ids);
-		glBufferData(GL_ARRAY_BUFFER, chunks[reload_these_chunks[i]].block_textures_size,
-			&chunks[reload_these_chunks[i]].block_textures[0], GL_STATIC_DRAW);
-	}
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	*/
-
 	res[0] = reload_amount;
 	res[1] = nth_chunk;
 }
 
-void	regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2)
+void	regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3)
 {
 	int	reload_these_chunks[info->chunks_loaded];
 	int	reload_amount = 0;
 	int	found;
 	int	start_coord[2];
 
-	start_coord[0] = player_chunk_v2[0] - (info->render_distance / 2);
-	start_coord[1] = player_chunk_v2[1] - (info->render_distance / 2);
+	start_coord[0] = player_chunk_v3[0] - (info->render_distance / 2);
+	start_coord[1] = player_chunk_v3[2] - (info->render_distance / 2);
 	// Check which chunks are not going to be in the next iteration of
 	//	loaded chunks, save those to 'reload_these_chunks' and when starting
 	// to update the new chunks that are going to be loaded, and put the
@@ -471,7 +586,7 @@ void	regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *pla
 					nth_thread = 0;
 				}
 				args[nth_thread].chunk = &chunks[reload_these_chunks[nth_chunk]];
-				vec3_new(args[nth_thread].coords, x, 1, z);
+				vec3_new(args[nth_thread].coords, x, 0, z);
 				if (pthread_create(&threads[nth_thread], NULL, update_chunk_threaded, &args[nth_thread]))
 					LG_ERROR("Couldnt create thread.");
 				nth_thread++;
@@ -486,26 +601,6 @@ void	regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *pla
 			LG_ERROR("Couldnt join thread. -2-");
 		j++;
 	}
-
-
-/*
-	// Send all the updated chunk info to the gpu;
-	// This needs to be done on the main thread (or the thread that the context is made on)
-	for (int i = 0; i < reload_amount; i++)
-	{
-		// Matrices
-		glBindBuffer(GL_ARRAY_BUFFER, chunks[reload_these_chunks[i]].vbo_matrices);
-		glBufferData(GL_ARRAY_BUFFER, chunks[reload_these_chunks[i]].block_matrices_size,
-			&chunks[reload_these_chunks[i]].block_matrices[0], GL_STATIC_DRAW);
-
-		// Texture ID
-		glBindBuffer(GL_ARRAY_BUFFER, chunks[reload_these_chunks[i]].vbo_texture_ids);
-		glBufferData(GL_ARRAY_BUFFER, chunks[reload_these_chunks[i]].block_textures_size,
-			&chunks[reload_these_chunks[i]].block_textures[0], GL_STATIC_DRAW);
-	}
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	*/
 
 	res[0] = reload_amount;
 	res[1] = nth_chunk;

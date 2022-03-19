@@ -158,16 +158,19 @@ int	main(void)
 		t_thread_manager	tm;
 		thread_manager_new(&tm, 16);
 
+		int				xz_maximum_blocks_wanted = 256; // on y;
 		t_chunk_info	chunk_info;
-		chunk_info.render_distance = 1;
-		chunk_info.chunks_loaded = (int)chunk_info.render_distance * (int)chunk_info.render_distance;
+		chunk_info.render_distance = 3;
 		chunk_info.seed = 896868766;
 		chunk_info.width = 16;
 		chunk_info.breadth = 16;
-		chunk_info.height = 256;
+		chunk_info.height = 16;
+		chunk_info.chunks_loaded = (xz_maximum_blocks_wanted / chunk_info.height) * ((int)chunk_info.render_distance * (int)chunk_info.render_distance);
 		chunk_info.block_scale = 1.0f;
 		chunk_info.block_size = chunk_info.block_scale * 2;
-		chunk_info.chunk_size = chunk_info.width * chunk_info.block_size;
+		chunk_info.chunk_size[0] = chunk_info.width * chunk_info.block_size;
+		chunk_info.chunk_size[1] = chunk_info.height * chunk_info.block_size;
+		chunk_info.chunk_size[2] = chunk_info.breadth * chunk_info.block_size;
 
 		int	chunk_reloading[2]; // 0 : reload_amount, 1: reloaded amount
 		chunk_reloading[0] = 0;
@@ -175,22 +178,23 @@ int	main(void)
 		t_chunk	chunks[chunk_info.chunks_loaded];	
 
 		int		nth_chunk = 0;
-		float	player_chunk[VEC2_SIZE];
-		int		prev_player_chunk[VEC2_SIZE];
+		float	player_chunk[VEC3_SIZE];
+		int		prev_player_chunk[VEC3_SIZE];
 		
 		player_in_chunk(player_chunk, player.camera.pos, &chunk_info);
 		prev_player_chunk[0] = player_chunk[0];
 		prev_player_chunk[1] = player_chunk[1];
+		prev_player_chunk[2] = player_chunk[2];
 
 		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
 		{
 			new_model(&chunks[nth_chunk].model, &cube_obj);
-			new_chunk(&chunks[nth_chunk], &chunk_info, (float []){999, 1, 999});
+			new_chunk(&chunks[nth_chunk], &chunk_info, (float []){999, 0, 999});
 		}
 		if (0)
 			regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);
 		if (1)
-			regenerate_chunks_v2(chunk_reloading, chunks, &chunk_info, player_chunk, &tm);
+			regenerate_chunks_v3(chunk_reloading, chunks, &chunk_info, player_chunk);
 		//exit(0);
 		ft_printf("Chunks created : %d\n", nth_chunk);
 //////////////////////////////
@@ -332,18 +336,19 @@ int	main(void)
 /////////////////
 		player_in_chunk(player_chunk, player.camera.pos, &chunk_info);
 		if (1 && ((prev_player_chunk[0] != (int)(player_chunk[0]) ||
-			prev_player_chunk[1] != (int)(player_chunk[1])) ||
+			prev_player_chunk[2] != (int)(player_chunk[2])) ||
 			(chunk_reloading[0] != chunk_reloading[1])))
 		{
 			ft_printf("Update Chunks\n");
 			prev_player_chunk[0] = player_chunk[0];
 			prev_player_chunk[1] = player_chunk[1];
+			prev_player_chunk[2] = player_chunk[2];
 
 			ft_timer_start();
 			if (0)
 				regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);	
 			if (1)
-				regenerate_chunks_v2(chunk_reloading, chunks, &chunk_info, player_chunk, &tm);	
+				regenerate_chunks_v3(chunk_reloading, chunks, &chunk_info, player_chunk);
 			ft_printf("Vol2 chunk update timer : %f\n", ft_timer_end());
 		}
 
@@ -353,31 +358,33 @@ int	main(void)
 		int sent_to_gpu = 0;
 		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
 		{
-			if (chunks[nth_chunk].needs_to_update)
+			if (chunks[nth_chunk].blocks_visible_amount > 0)
 			{
-				// Matrices
-				glBindBuffer(GL_ARRAY_BUFFER, chunks[nth_chunk].vbo_matrices);
-				glBufferData(GL_ARRAY_BUFFER, chunks[nth_chunk].block_matrices_size,
-				&chunks[nth_chunk].block_matrices[0], GL_STATIC_DRAW);
-				// Texture ID
-				glBindBuffer(GL_ARRAY_BUFFER, chunks[nth_chunk].vbo_texture_ids);
-				glBufferData(GL_ARRAY_BUFFER, chunks[nth_chunk].block_textures_size,
-					&chunks[nth_chunk].block_textures[0], GL_STATIC_DRAW);
+				if (chunks[nth_chunk].needs_to_update)
+				{
+					// Matrices
+					glBindBuffer(GL_ARRAY_BUFFER, chunks[nth_chunk].vbo_matrices);
+					glBufferData(GL_ARRAY_BUFFER, chunks[nth_chunk].block_matrices_size,
+					&chunks[nth_chunk].block_matrices[0], GL_STATIC_DRAW);
+					// Texture ID
+					glBindBuffer(GL_ARRAY_BUFFER, chunks[nth_chunk].vbo_texture_ids);
+					glBufferData(GL_ARRAY_BUFFER, chunks[nth_chunk].block_textures_size,
+						&chunks[nth_chunk].block_textures[0], GL_STATIC_DRAW);
 
-				glBindBuffer(GL_ARRAY_BUFFER, 0);
-				chunks[nth_chunk].needs_to_update = 0;
-			}
-
-			// Create aabb for each chunk;
-			chunk_aabb_update(&chunks[nth_chunk]);
-			// TODO: Cull chunk if camera far plane is nearer than chunk;
-			if (aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum)) // Check if frustum intersects chunk aabb;
-			{
-				render_chunk(&chunks[nth_chunk], &player.camera, &cube_shader);
-				sent_to_gpu++;
+					glBindBuffer(GL_ARRAY_BUFFER, 0);
+					chunks[nth_chunk].needs_to_update = 0;
+				}
+				// Create aabb for each chunk;
+				chunk_aabb_update(&chunks[nth_chunk]);
+				// TODO: Cull chunk if camera far plane is nearer than chunk;
+				if (aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum)) // Check if frustum intersects chunk aabb;
+				{
+					render_chunk(&chunks[nth_chunk], &player.camera, &cube_shader);
+					sent_to_gpu++;
+				}
 			}
 			if ((int)player_chunk[0] == chunks[nth_chunk].coordinate[0] &&
-				(int)player_chunk[1] == chunks[nth_chunk].coordinate[2])
+				(int)player_chunk[2] == chunks[nth_chunk].coordinate[2])
 			{
 				//aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum);
 				show_chunk_borders(&chunks[nth_chunk], &player.camera);
