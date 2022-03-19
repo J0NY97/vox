@@ -358,6 +358,8 @@ int	main(void)
 		int sent_to_gpu = 0;
 		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
 		{
+			// Create aabb for each chunk;
+			chunk_aabb_update(&chunks[nth_chunk]);
 			if (chunks[nth_chunk].blocks_visible_amount > 0)
 			{
 				if (chunks[nth_chunk].needs_to_update)
@@ -374,8 +376,6 @@ int	main(void)
 					glBindBuffer(GL_ARRAY_BUFFER, 0);
 					chunks[nth_chunk].needs_to_update = 0;
 				}
-				// Create aabb for each chunk;
-				chunk_aabb_update(&chunks[nth_chunk]);
 				// TODO: Cull chunk if camera far plane is nearer than chunk;
 				if (aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum)) // Check if frustum intersects chunk aabb;
 				{
@@ -384,6 +384,7 @@ int	main(void)
 				}
 			}
 			if ((int)player_chunk[0] == chunks[nth_chunk].coordinate[0] &&
+				(int)player_chunk[1] == chunks[nth_chunk].coordinate[1] &&
 				(int)player_chunk[2] == chunks[nth_chunk].coordinate[2])
 			{
 				//aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum);

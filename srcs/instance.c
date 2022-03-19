@@ -71,7 +71,7 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord)
 
 int	chunk_gen_v2(t_chunk *chunk)
 {
-	int		start_y = 65;
+	int		start_y = 64;
 	float	freq = 120.0f;
 	float	height = freq / 100; // less is more;
 	int		i = 0;
@@ -93,17 +93,12 @@ int	chunk_gen_v2(t_chunk *chunk)
 				perper = powf(fabs(perper), height);
 			perper = start_y * perper;
 			int	wanted_y = start_y + perper;
-			int amount = ft_clamp(wanted_y - (chunk->coordinate[1] * chunk->info->height), 0, chunk->info->height);
+			int whatchumacallit = wanted_y - (chunk->coordinate[1] * chunk->info->height);
+			int amount = ft_clamp(whatchumacallit, 0, chunk->info->height - 1);
 
-			/*
-			ft_printf("wanted : %d, amount : %d\n", wanted_y, amount);
-			vec3_string("Coords :", chunk->coordinate);
-			vec3_string("World Coords :", chunk->world_coordinate);
-			*/
-
-			for (int y = chunk->info->height; y > 0; y--)
+			for (int y = chunk->info->height - 1; y >= 0; y--)
 			{
-				/*
+				/* ////// CAVE GEN /////////
 				float	cave_freq = 200.0f;
 				float	cave_height = cave_freq / 200;
 				float	cave_x = block_world_x / cave_freq;
@@ -123,9 +118,9 @@ int	chunk_gen_v2(t_chunk *chunk)
 				*/
 
 				vec3_new(chunk->blocks[i].pos, x, y, z);
-				if (y <= amount)
+				if (y <= whatchumacallit)
 				{
-					if (y <= amount - 1) // if we have 3 dirt block on top we make the rest stone blocks;
+					if (y <= whatchumacallit - 1) // if we have 3 dirt block on top we make the rest stone blocks;
 						chunk->blocks[i].texture_id = BLOCK_STONE;
 					else
 						chunk->blocks[i].texture_id = BLOCK_DIRT;
@@ -268,6 +263,8 @@ int	get_blocks_visible(t_chunk *chunk)
 	int		a = 0;
 
 	blocks = chunk->blocks;
+
+	/* MAKE ONLY TOUCHING AIR VISIBLE */
 	for (int i = 0; i < chunk->block_amount; i++)
 	{
 		if (blocks[i].texture_id == BLOCK_AIR)
@@ -282,6 +279,17 @@ int	get_blocks_visible(t_chunk *chunk)
 			}
 		}
 	}
+
+	/* MAKE ALL VISIBLE */
+	/*
+	for (int i = 0; i < chunk->block_amount; i++)
+	{
+		if (blocks[i].texture_id == BLOCK_AIR)
+			continue ;
+		chunk->blocks_visible[a] = blocks[i];
+		a++;
+	}
+	*/
 	return (a);
 }
 
@@ -611,6 +619,7 @@ void	show_chunk_borders(t_chunk *chunk, t_camera *camera)
 	t_aabb *a;
 	
 	a = &chunk->aabb;
+	// VERTICAL LINES
 	render_3d_line(
 		(float []){a->min[0], a->min[1], a->min[2]},
 		(float []){a->min[0], a->max[1], a->min[2]},
@@ -629,6 +638,49 @@ void	show_chunk_borders(t_chunk *chunk, t_camera *camera)
 	render_3d_line(
 		(float []){a->max[0], a->min[1], a->max[2]},
 		(float []){a->max[0], a->max[1], a->max[2]},
+		(float []){1, 0, 0},
+		camera->view, camera->projection);
+
+	// HORIZONTAL LINES Bottom
+	render_3d_line(
+		(float []){a->min[0], a->min[1], a->min[2]},
+		(float []){a->max[0], a->min[1], a->min[2]},
+		(float []){1, 0, 0},
+		camera->view, camera->projection);
+	render_3d_line(
+		(float []){a->max[0], a->min[1], a->min[2]},
+		(float []){a->max[0], a->min[1], a->max[2]},
+		(float []){1, 0, 0},
+		camera->view, camera->projection);
+	render_3d_line(
+		(float []){a->max[0], a->min[1], a->max[2]},
+		(float []){a->min[0], a->min[1], a->max[2]},
+		(float []){1, 0, 0},
+		camera->view, camera->projection);
+	render_3d_line(
+		(float []){a->min[0], a->min[1], a->max[2]},
+		(float []){a->min[0], a->min[1], a->min[2]},
+		(float []){1, 0, 0},
+		camera->view, camera->projection);
+	// TOP
+	render_3d_line(
+		(float []){a->min[0], a->max[1], a->min[2]},
+		(float []){a->max[0], a->max[1], a->min[2]},
+		(float []){1, 0, 0},
+		camera->view, camera->projection);
+	render_3d_line(
+		(float []){a->max[0], a->max[1], a->min[2]},
+		(float []){a->max[0], a->max[1], a->max[2]},
+		(float []){1, 0, 0},
+		camera->view, camera->projection);
+	render_3d_line(
+		(float []){a->max[0], a->max[1], a->max[2]},
+		(float []){a->min[0], a->max[1], a->max[2]},
+		(float []){1, 0, 0},
+		camera->view, camera->projection);
+	render_3d_line(
+		(float []){a->min[0], a->max[1], a->max[2]},
+		(float []){a->min[0], a->max[1], a->min[2]},
 		(float []){1, 0, 0},
 		camera->view, camera->projection);
 }
