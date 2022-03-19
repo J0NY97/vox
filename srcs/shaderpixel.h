@@ -268,7 +268,8 @@ typedef struct s_chunk_info
 	unsigned int	seed;
 
 	// TODO: These could be moved to 't_game_info' or something like that.
-	int			chunks_loaded;
+	// 		something like t_world, so you can pass it in to the helper functions like 'get_block();'
+	int			chunks_loaded; // amount of chunks currently loaded;
 	int			render_distance;
 
 	float		scale_matrix[MAT4_SIZE];
