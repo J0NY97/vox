@@ -93,7 +93,7 @@ int	chunk_gen_v2(t_chunk *chunk)
 				perper = powf(fabs(perper), height);
 			perper = start_y * perper;
 			int	wanted_y = start_y + perper;
-			int amount = ft_clamp(wanted_y - (chunk->coordinate[1] * chunk->info->height), 0, chunk->info->height - 1);
+			int amount = ft_clamp(wanted_y - (chunk->coordinate[1] * chunk->info->height), 0, chunk->info->height);
 
 			/*
 			ft_printf("wanted : %d, amount : %d\n", wanted_y, amount);
@@ -101,7 +101,7 @@ int	chunk_gen_v2(t_chunk *chunk)
 			vec3_string("World Coords :", chunk->world_coordinate);
 			*/
 
-			for (int y = chunk->info->height - 1; y >= 0; y--) // the 'b' is the amount of blocks we have on the y axis;
+			for (int y = chunk->info->height; y > 0; y--)
 			{
 				/*
 				float	cave_freq = 200.0f;
