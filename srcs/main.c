@@ -144,7 +144,7 @@ int	main(void)
 	new_model(&test_cube->model, &cube_obj);
 	add_entity_to_scene(&scene, test_cube);
 	new_vec3(test_cube->pos, 2, 0.6, -2.0);
-	test_cube->scale_value = .1;
+	test_cube->scale_value = 0.1f;
 	test_cube->rot_x_angle = 0;
 	test_cube->rot_y_angle = 0;
 	test_cube->rot_z_angle = 0;
@@ -158,14 +158,14 @@ int	main(void)
 		t_thread_manager	tm;
 		thread_manager_new(&tm, 16);
 
-		int				xz_maximum_blocks_wanted = 256; // on y;
 		t_chunk_info	chunk_info;
-		chunk_info.render_distance = 3;
+		chunk_info.render_distance = 10;
 		chunk_info.seed = 896868766;
 		chunk_info.width = 16;
 		chunk_info.breadth = 16;
 		chunk_info.height = 16;
-		chunk_info.chunks_loaded = (xz_maximum_blocks_wanted / chunk_info.height) * ((int)chunk_info.render_distance * (int)chunk_info.render_distance);
+		chunk_info.y_chunk_amount = 256 / chunk_info.height;
+		chunk_info.chunks_loaded = chunk_info.y_chunk_amount * ((int)chunk_info.render_distance * (int)chunk_info.render_distance);
 		chunk_info.block_scale = 1.0f;
 		chunk_info.block_size = chunk_info.block_scale * 2;
 		chunk_info.chunk_size[0] = chunk_info.width * chunk_info.block_size;
@@ -191,11 +191,11 @@ int	main(void)
 			new_model(&chunks[nth_chunk].model, &cube_obj);
 			new_chunk(&chunks[nth_chunk], &chunk_info, (float []){999, 0, 999});
 		}
-		if (0)
-			regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);
+		ft_timer_start();
 		if (1)
-			regenerate_chunks_v3(chunk_reloading, chunks, &chunk_info, player_chunk);
+			regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);
 		//exit(0);
+		ft_printf("Time : %f\n", ft_timer_end());
 		ft_printf("Chunks created : %d\n", nth_chunk);
 //////////////////////////////
 	// END Instance testing
@@ -347,8 +347,6 @@ int	main(void)
 			ft_timer_start();
 			if (0)
 				regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);	
-			if (1)
-				regenerate_chunks_v3(chunk_reloading, chunks, &chunk_info, player_chunk);
 			ft_printf("Vol2 chunk update timer : %f\n", ft_timer_end());
 		}
 

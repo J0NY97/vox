@@ -69,7 +69,7 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord)
 		LG_ERROR("(%d)", error);
 }
 
-int	chunk_gen_v2(t_chunk *chunk)
+int	chunk_gen(t_chunk *chunk)
 {
 	int		start_y = 64;
 	float	freq = 120.0f;
@@ -86,17 +86,11 @@ int	chunk_gen_v2(t_chunk *chunk)
 			float	to_use_z = block_world_z / freq;
 
 			float	perper = 1 * perlin(1 * to_use_x, 1 * to_use_z, chunk->info->seed);
-			perper = round(perper * (freq / 2)) / (freq / 2);
-			if (perper < 0)
-				perper = -powf(fabs(perper), height);
-			else
-				perper = powf(fabs(perper), height);
-			perper = start_y * perper;
-			int	wanted_y = start_y + perper;
-			int whatchumacallit = wanted_y - (chunk->coordinate[1] * chunk->info->height);
-			int amount = ft_clamp(whatchumacallit, 0, chunk->info->height - 1);
+			int		wanted_y = start_y + (start_y * perper);
+			int		whatchumacallit = wanted_y - (chunk->coordinate[1] * chunk->info->height);
+			int		amount = ft_clamp(whatchumacallit, 0, chunk->info->height - 1);
 
-			for (int y = chunk->info->height - 1; y >= 0; y--)
+			for (int y = 0; y < chunk->info->height; y++)
 			{
 				/* ////// CAVE GEN /////////
 				float	cave_freq = 200.0f;
@@ -121,79 +115,14 @@ int	chunk_gen_v2(t_chunk *chunk)
 				if (y <= whatchumacallit)
 				{
 					if (y <= whatchumacallit - 1) // if we have 3 dirt block on top we make the rest stone blocks;
-						chunk->blocks[i].texture_id = BLOCK_STONE;
+						chunk->blocks[i].type = BLOCK_STONE;
 					else
-						chunk->blocks[i].texture_id = BLOCK_DIRT;
+						chunk->blocks[i].type = BLOCK_DIRT;
 				}
 				else
-					chunk->blocks[i].texture_id = BLOCK_AIR;
+					chunk->blocks[i].type = BLOCK_AIR;
 				i++;
 			}
-		}
-	}
-	return (i);
-}
-/*
- * Returns amount of blocks generated;
-*/
-int	chunk_gen(t_chunk *chunk)
-{
-	int		start_y = 65;
-	float	freq = 120.0f;
-	float	height = freq / 100; // less is more;
-	int		i = 0;
-
-	for (int x = 0; x < chunk->info->width; x++)
-	{
-		float	block_world_x = ((chunk->coordinate[0] * chunk->info->chunk_size[0]) + ((float)x * chunk->info->block_size));
-		float	to_use_x = block_world_x / freq;
-		for (int z = 0; z < chunk->info->breadth; z++)
-		{
-			float	block_world_z = ((chunk->coordinate[2] * chunk->info->chunk_size[2]) + ((float)z * chunk->info->block_size));
-			float	to_use_z = block_world_z / freq;
-
-			float	perper = 1 * perlin(1 * to_use_x, 1 * to_use_z, chunk->info->seed);
-			perper = round(perper * (freq / 2)) / (freq / 2);
-			if (perper < 0)
-				perper = -powf(fabs(perper), height);
-			else
-				perper = powf(fabs(perper), height);
-			perper = start_y * perper;
-//			ft_printf("perlin : %f\n", perper);
-			int	amount = min(start_y + perper, chunk->info->height);
-			for (int y = amount, b = 0; b <= amount; y--, b++) // the 'b' is the amount of blocks we have on the y axis;
-			{
-				float	cave_freq = 200.0f;
-				float	cave_height = cave_freq / 200;
-				float	cave_x = block_world_x / cave_freq;
-				float	cave_z = block_world_z / cave_freq;
-				float	cave_y = ((float)y * chunk->info->block_size) / cave_freq;
-				float	rep = 1.0f;
-				rep = perlin3(cave_x, cave_y, cave_z, chunk->info->seed)
-					+ 0.5 * perlin3(2 * cave_x, 2 * cave_y, 2 * cave_z, chunk->info->seed)
-					+ 0.25 * perlin3(4 * cave_x, 4 * cave_y, 4 * cave_z, chunk->info->seed)
-					+ 0.125 * perlin3(8 * cave_x, 8 * cave_y, 8 * cave_z, chunk->info->seed);
-				rep /= 1 + 0.5 + 0.25 + 0.125;
-				if (rep > 0)
-					rep = powf(rep, cave_height);
-			//	ft_printf("to_use_x : %f, to_use_y : %f, to_use_z : %f\n", to_use_x, to_use_y, to_use_z);
-			//	ft_printf("perlin3 : %f\n", rep);
-				/*
-				*/
-				if (rep > -0.10f)
-				{
-					vec3_new(chunk->blocks[i].pos, x, y, z);
-					if (b >= 1) // if we have 3 dirt block on top we make the rest stone blocks;
-						chunk->blocks[i].texture_id = BLOCK_STONE;
-					else
-						chunk->blocks[i].texture_id = BLOCK_DIRT;
-					i++;
-				}
-			}
-			/*
-			vec3_new(chunk->blocks[i - 1].pos, x, 0, z);
-			chunk->blocks[i - 1].texture_id = 2;
-			*/
 		}
 	}
 	return (i);
@@ -250,6 +179,14 @@ void	render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader)
 		LG_ERROR("(%d)", error);
 }
 
+int	is_adjacent_and_air(t_block *blocks, int compare, int with)
+{
+	if (blocks[with].type == BLOCK_AIR &&
+		vec3_dist(blocks[compare].pos, blocks[with].pos) <= 1.0f)
+		return (1);
+	return (0);
+}
+
 /*
  * For each block in chunk;
  *	Go through each block in chunk;
@@ -260,23 +197,91 @@ void	render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader)
 int	get_blocks_visible(t_chunk *chunk)
 {
 	t_block	*blocks;
-	int		a = 0;
+	int		a = -1;
 
 	blocks = chunk->blocks;
 
 	/* MAKE ONLY TOUCHING AIR VISIBLE */
+	/*
 	for (int i = 0; i < chunk->block_amount; i++)
 	{
-		if (blocks[i].texture_id == BLOCK_AIR)
+		if (blocks[i].type == BLOCK_AIR)
 			continue ;
 		for (int j = 0; j < chunk->block_amount; j++)
 		{
-			if (vec3_dist(blocks[i].pos, blocks[j].pos) <= 1.0f &&
-				blocks[j].texture_id == BLOCK_AIR)
+			if (blocks[j].type == BLOCK_AIR && // <- checking this first with 10 render distance takes time from 24s to 8s;
+				vec3_dist(blocks[i].pos, blocks[j].pos) <= 1.0f)
 			{
-				chunk->blocks_visible[a] = blocks[i];
-				a++;
+				chunk->blocks_visible[++a] = blocks[i];
+				break ;
 			}
+		}
+	}
+	*/
+
+	/* MAKE ONLY TOUCHING AIR VISIBLE */
+	/* More improvements */
+	for (int i = 0; i < chunk->block_amount; i++)
+	{
+		if (blocks[i].type == BLOCK_AIR)
+			continue ;
+
+		int index = i;
+		int z = index / (chunk->info->width * chunk->info->height);
+		index -= (z * chunk->info->width * chunk->info->height);
+		int y = index / chunk->info->width;
+		int x = index % chunk->info->width;
+		int	j = (z * chunk->info->width * chunk->info->height) + (y * chunk->info->width) + x;
+
+		/*
+		if (x == 0 || x == 15 || z == 0 || z == 15 || y == 0 || y == 15)
+		{
+			chunk->blocks_visible[++a] = blocks[i];
+			continue ;
+		}
+		*/
+
+		// left
+		if (x - 1 >= 0)
+		{
+			j = (z * chunk->info->width * chunk->info->height) + (y * chunk->info->width) + (x - 1);
+			if (is_adjacent_and_air(blocks, i, j))
+				chunk->blocks_visible[++a] = blocks[i];
+		}
+		// right
+		if (x + 1 < 16)
+		{
+			j = (z * chunk->info->width * chunk->info->height) + (y * chunk->info->width) + (x + 1);
+			if (is_adjacent_and_air(blocks, i, j))
+				chunk->blocks_visible[++a] = blocks[i];
+		}
+		// top
+		if (y + 1 < 16)
+		{
+			j = (z * chunk->info->width * chunk->info->height) + ((y + 1) * chunk->info->width) + x;
+			if (is_adjacent_and_air(blocks, i, j))
+				chunk->blocks_visible[++a] = blocks[i];
+		}
+		// bot
+		if (y - 1 >= 0)
+		{
+			j = (z * chunk->info->width * chunk->info->height) + ((y - 1) * chunk->info->width) + x;
+			if (is_adjacent_and_air(blocks, i, j))
+				chunk->blocks_visible[++a] = blocks[i];
+		}
+		// forward
+		if (z + 1 < 16)
+		{
+			j = ((z + 1) * chunk->info->width * chunk->info->height) + (y * chunk->info->width) + x;
+			if (is_adjacent_and_air(blocks, i, j))
+				chunk->blocks_visible[++a] = blocks[i];
+		}
+		// backward
+		if (z - 1 >= 0)
+		{
+			j = ((z - 1) * chunk->info->width * chunk->info->height) + (y * chunk->info->width) + x;
+			if (is_adjacent_and_air(blocks, i, j))
+				chunk->blocks_visible[++a] = blocks[i];
 		}
 	}
 
@@ -284,10 +289,9 @@ int	get_blocks_visible(t_chunk *chunk)
 	/*
 	for (int i = 0; i < chunk->block_amount; i++)
 	{
-		if (blocks[i].texture_id == BLOCK_AIR)
+		if (blocks[i].type == BLOCK_AIR)
 			continue ;
-		chunk->blocks_visible[a] = blocks[i];
-		a++;
+		chunk->blocks_visible[++a] = blocks[i];
 	}
 	*/
 	return (a);
@@ -308,7 +312,7 @@ void	update_chunk(t_chunk *chunk, float *coord)
 		chunk->coordinate[2] * chunk->info->chunk_size[2]);
 	
 	// Generate Chunks	
-	chunk->block_amount = chunk_gen_v2(chunk); // should always return max amount of blocks in a chunk;
+	chunk->block_amount = chunk_gen(chunk); // should always return max amount of blocks in a chunk;
 
 	// Check which are touching air;
 	chunk->blocks_visible_amount = get_blocks_visible(chunk);
@@ -342,11 +346,10 @@ void	update_chunk(t_chunk *chunk, float *coord)
 		mat4_multiply(model, trans, model);
 
 		memcpy(chunk->block_matrices + (i * 16), model, sizeof(float) * 16);
-		memcpy(chunk->block_textures + (i), &chunk->blocks_visible[i].texture_id, sizeof(int));
+		memcpy(chunk->block_textures + (i), &chunk->blocks_visible[i].type, sizeof(int));
 	}
 
 	chunk->needs_to_update = 1;
-	LG_INFO("DONE.");
 }
 
 void	*update_chunk_threaded(void *arg)
@@ -354,16 +357,15 @@ void	*update_chunk_threaded(void *arg)
 	t_chunk_args	*info = arg;
 
 	update_chunk(info->chunk, info->coords);
-	LG_INFO("DONE.");
 	return (NULL);
 }
 
-void	regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3)
+void	regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3)
 {
 	int	reload_these_chunks[info->chunks_loaded];
 	int	reload_amount = 0;
-	int	found;
 	int	start_coord[2];
+	int	found = 0;
 
 	start_coord[0] = player_chunk_v3[0] - (info->render_distance / 2);
 	start_coord[1] = player_chunk_v3[2] - (info->render_distance / 2);
@@ -390,6 +392,7 @@ void	regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float *
 		}
 	}
 
+	ft_printf("Chunk amount to reload : %d\n", reload_amount);
 	for (int i = 0; i < reload_amount; i++)
 		ft_printf("%d ", reload_these_chunks[i]);
 
@@ -397,8 +400,9 @@ void	regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float *
 	//  check if any of the loaded chunks have those coordinates, if not
 	//	we take one of the chunks that are not going to be loaded next time
 	// 	and update the new chunk into that memory;
-	pthread_t		threads[reload_amount];
-	t_chunk_args	args[reload_amount];
+	int				max_threads = 64;
+	pthread_t		threads[max_threads];
+	t_chunk_args	args[max_threads];
 	int				nth_thread = 0;
 	int				nth_chunk = 0;
 
@@ -417,8 +421,20 @@ void	regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float *
 			}
 			if (!found)
 			{
-				for (int y = 0, y_amount = 0; y_amount < 16; y++, y_amount++)
+				for (int y = 0, y_amount = 0; y_amount < info->y_chunk_amount; y++, y_amount++)
 				{
+					if (nth_thread >= max_threads)
+					{
+						//break ;
+						int i = 0;
+						while (i < nth_thread)
+						{
+							if (pthread_join(threads[i], NULL))
+								LG_ERROR("Couldnt join thread. -1-");
+							i++;
+						}
+						nth_thread = 0;
+					}
 					args[nth_thread].chunk = &chunks[reload_these_chunks[nth_chunk]];
 					vec3_new(args[nth_thread].coords, x, y, z);
 					if (pthread_create(&threads[nth_thread], NULL, update_chunk_threaded, &args[nth_thread]))
@@ -446,8 +462,6 @@ void	regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float *
 
 	res[0] = reload_amount;
 	res[1] = nth_chunk;
-
-	LG_INFO("DOne.");
 }
 
 void	regenerate_chunks_v2(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3, t_thread_manager *tm)
@@ -519,95 +533,6 @@ void	regenerate_chunks_v2(int *res, t_chunk *chunks, t_chunk_info *info, float *
 				nth_chunk++;
 			}
 		}
-	}
-
-	res[0] = reload_amount;
-	res[1] = nth_chunk;
-}
-
-void	regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3)
-{
-	int	reload_these_chunks[info->chunks_loaded];
-	int	reload_amount = 0;
-	int	found;
-	int	start_coord[2];
-
-	start_coord[0] = player_chunk_v3[0] - (info->render_distance / 2);
-	start_coord[1] = player_chunk_v3[2] - (info->render_distance / 2);
-	// Check which chunks are not going to be in the next iteration of
-	//	loaded chunks, save those to 'reload_these_chunks' and when starting
-	// to update the new chunks that are going to be loaded, and put the
-	// new chunk info into those 'chunks' indices;
-	// Takes 0.000000 seconds
-	for (int i = 0; i < info->chunks_loaded; i++)
-	{
-		found = 0;
-		for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
-		{
-			for (int z = start_coord[1], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
-			{
-				if (chunks[i].coordinate[0] == x && chunks[i].coordinate[2] == z)
-					found = 1;
-			}
-		}
-		if (!found)
-		{
-			reload_these_chunks[reload_amount] = i;
-			reload_amount++;
-		}
-	}
-
-	// Go through all the coordinates that will be loaded next time, and
-	//  check if any of the loaded chunks have those coordinates, if not
-	//	we take one of the chunks that are not going to be loaded next time
-	// 	and update the new chunk into that memory;
-	pthread_t		threads[4];
-	t_chunk_args	args[4];
-	int				nth_thread = 0;
-
-	int	nth_chunk = 0;
-	for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
-	{
-		for (int z = start_coord[1], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
-		{
-			found = 0;
-			for (int i = 0; i < info->chunks_loaded; i++)
-			{
-				if (chunks[i].coordinate[0] == x && chunks[i].coordinate[2] == z)
-				{
-					found = 1;
-					break ;
-				}
-			}
-			if (!found)
-			{
-				if (nth_thread >= 4)
-				{
-					//break ;
-					int i = 0;
-					while (i < nth_thread)
-					{
-						if (pthread_join(threads[i], NULL))
-							LG_ERROR("Couldnt join thread. -1-");
-						i++;
-					}
-					nth_thread = 0;
-				}
-				args[nth_thread].chunk = &chunks[reload_these_chunks[nth_chunk]];
-				vec3_new(args[nth_thread].coords, x, 0, z);
-				if (pthread_create(&threads[nth_thread], NULL, update_chunk_threaded, &args[nth_thread]))
-					LG_ERROR("Couldnt create thread.");
-				nth_thread++;
-				nth_chunk++;
-			}
-		}
-	}
-	int j = 0;
-	while (j < nth_thread)
-	{
-		if (pthread_join(threads[j], NULL))
-			LG_ERROR("Couldnt join thread. -2-");
-		j++;
 	}
 
 	res[0] = reload_amount;
