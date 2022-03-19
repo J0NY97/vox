@@ -386,7 +386,21 @@ int	main(void)
 				(int)player_chunk[2] == chunks[nth_chunk].coordinate[2])
 			{
 				//aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum);
-				show_chunk_borders(&chunks[nth_chunk], &player.camera);
+				show_chunk_borders(&chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
+
+				t_chunk	*north_chunk = get_adjacent_chunk(&chunks[nth_chunk], chunks, (float []){0, 0, -1});
+				if (north_chunk)
+					show_chunk_borders(north_chunk, &player.camera, (float []){0, 0, 1});
+				t_chunk	*south_chunk = get_adjacent_chunk(&chunks[nth_chunk], chunks, (float []){0, 0, 1});
+				if (south_chunk)
+					show_chunk_borders(south_chunk, &player.camera, (float []){0, 1, 0});
+				t_chunk	*east_chunk = get_adjacent_chunk(&chunks[nth_chunk], chunks, (float []){1, 0, 0});
+				if (east_chunk)
+					show_chunk_borders(east_chunk, &player.camera, (float []){0, 1, 1});
+				t_chunk	*west_chunk = get_adjacent_chunk(&chunks[nth_chunk], chunks, (float []){-1, 0, 0});
+				if (west_chunk)
+					show_chunk_borders(west_chunk, &player.camera, (float []){1, 1, 0});
+
 			}
 		}
 		//ft_printf("CPU : %d, GPU : %d\n", chunk_info.chunks_loaded, sent_to_gpu);

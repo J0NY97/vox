@@ -253,6 +253,8 @@ typedef struct s_block
 	int		type; // e_block_type;
 }	t_block;
 
+typedef struct s_chunk	t_chunk;
+
 typedef struct s_chunk_info
 {
 	int			width; // in blocks;
@@ -271,9 +273,11 @@ typedef struct s_chunk_info
 
 	float		scale_matrix[MAT4_SIZE];
 	//t_model		model; // at some point this;
+
+	t_chunk		*chunks; // you should not store the chunks here mainly; its just here so you can acces from places you need, without having to pass them in the function as argumnet;
 }	t_chunk_info;
 
-typedef struct	s_chunk
+struct	s_chunk
 {
 	t_chunk_info	*info;
 	float		coordinate[VEC3_SIZE];
@@ -296,7 +300,7 @@ typedef struct	s_chunk
 	GLuint		vbo_texture_ids;
 
 	int			needs_to_update;
-}	t_chunk;
+};
 
 void		new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord);
 void		gen_chunk_blocks(t_block *blocks, int *dim);
@@ -307,7 +311,8 @@ float		*player_in_chunk(float *res, float *player_coord, t_chunk_info *info);
 void		regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2);
 void		regenerate_chunks_v2(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2, t_thread_manager *tm);
 void		chunk_aabb_update(t_chunk *chunk);
-void		show_chunk_borders(t_chunk *chunk, t_camera *camera);
+void		show_chunk_borders(t_chunk *chunk, t_camera *camera, float *col);
+t_chunk		*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, float *dir);
 
 ///////////////////
 //	NOISE

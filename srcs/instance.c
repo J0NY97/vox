@@ -179,12 +179,66 @@ void	render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader)
 		LG_ERROR("(%d)", error);
 }
 
-int	is_adjacent_and_air(t_block *blocks, int compare, int with)
+int	is_adjacent_and_air(t_block *blocks, int compare, t_block *with_blocks, int with)
 {
-	if (blocks[with].type == BLOCK_AIR &&
-		vec3_dist(blocks[compare].pos, blocks[with].pos) <= 1.0f)
+	if (with_blocks[with].type == BLOCK_AIR &&
+		vec3_dist(blocks[compare].pos, with_blocks[with].pos) <= 1.0f)
 		return (1);
 	return (0);
+}
+
+/*
+ * Returns pointer to chunk if we can find the correct one;
+ * 	else NULL;
+ * 
+ * 'from' is the chunk we want to look in a direction from,
+ * 'chunks' is all the loaded chunks,
+ * 'dir' is the direction you want to look for the chunk in; (v3)
+*/
+t_chunk	*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, float *dir)
+{
+	for (int i = 0; i < from->info->chunks_loaded; i++)
+	{
+		if (chunks[i].coordinate[0] == from->coordinate[0] + dir[0] &&
+			chunks[i].coordinate[1] == from->coordinate[1] + dir[1] &&
+			chunks[i].coordinate[2] == from->coordinate[2] + dir[2])
+			return (&chunks[i]);
+	}
+	return (NULL);
+}
+
+t_chunk	*get_chunk(t_chunk_info	*info, int *chunk_pos)
+{
+	for (int i = 0; i < info->chunks_loaded; i++)
+	{
+		if (info->chunks[i].coordinate[0] == chunk_pos[0] && 
+			info->chunks[i].coordinate[1] == chunk_pos[1] && 
+			info->chunks[i].coordinate[2] == chunk_pos[2])
+			return (&info->chunks[i]);
+	}
+	return (NULL);
+}
+
+/*
+ * Dont use this before you know how slow this is;
+*/
+t_block	*get_block(t_chunk_info	*info, int *block_pos)
+{
+	int	chunk_coord[3];
+	t_chunk	*in;
+
+	chunk_coord[0] = block_pos[0] / info->width;
+	chunk_coord[1] = block_pos[1] / info->height;
+	chunk_coord[2] = block_pos[2] / info->breadth;
+	in = get_chunk(info, chunk_coord);
+	if (!in)
+		return (NULL);
+	int	x = block_pos[0] % info->width;
+	int	y = block_pos[1] % info->width;
+	int	z = block_pos[1] % info->width;
+	if (x < 0 || x > 15 || y < 0 || y > 15 || z < 0 || z > 15)
+		return (NULL);
+	return (&in->blocks[(z * info->width * info->height) + (y * info->width) + x]);
 }
 
 /*
@@ -193,6 +247,9 @@ int	is_adjacent_and_air(t_block *blocks, int compare, int with)
  *		check if not touching air blocks;
  *	if touching;
  *		add to render array;
+ *
+ * THIS MIGHT ONLY WORK NOW THAT THE CHUNKS ARE SYMMETRIC, IF SOMETHING BREAKS
+ * CHECK THAT THE XYZ CORRESPOND CORRECTLY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 */
 int	get_blocks_visible(t_chunk *chunk)
 {
@@ -220,7 +277,10 @@ int	get_blocks_visible(t_chunk *chunk)
 	*/
 
 	/* MAKE ONLY TOUCHING AIR VISIBLE */
-	/* More improvements */
+	/* More improvements, instead of looping twice through all the blocks */
+	/* We can just yoink the correct block from the array, now that they are all in order */
+	t_chunk	*adj_chunk = NULL;
+	t_block	*tmp_block = NULL;
 	for (int i = 0; i < chunk->block_amount; i++)
 	{
 		if (blocks[i].type == BLOCK_AIR)
@@ -233,55 +293,72 @@ int	get_blocks_visible(t_chunk *chunk)
 		int x = index % chunk->info->width;
 		int	j = (z * chunk->info->width * chunk->info->height) + (y * chunk->info->width) + x;
 
-		/*
-		if (x == 0 || x == 15 || z == 0 || z == 15 || y == 0 || y == 15)
-		{
-			chunk->blocks_visible[++a] = blocks[i];
-			continue ;
-		}
-		*/
-
 		// left
 		if (x - 1 >= 0)
 		{
 			j = (z * chunk->info->width * chunk->info->height) + (y * chunk->info->width) + (x - 1);
-			if (is_adjacent_and_air(blocks, i, j))
+			if (is_adjacent_and_air(blocks, i, blocks, j))
 				chunk->blocks_visible[++a] = blocks[i];
 		}
+		else
+		{
+			/* Figure out when to do this; because what if this is the first chunk generated.. then we cant check for adjacent blocks from other chunks since they dont exist yet;
+			tmp_block = get_block(chunk->info, (int []){chunk->info->width - 1, y, z});
+			if (tmp_block && tmp_block->type == BLOCK_AIR &&
+				vec3_dist(blocks[i].pos, tmp_block->pos) <= 1.0f)
+				chunk->blocks_visible[++a] = blocks[i];
+				*/
+		}
+
 		// right
 		if (x + 1 < 16)
 		{
 			j = (z * chunk->info->width * chunk->info->height) + (y * chunk->info->width) + (x + 1);
-			if (is_adjacent_and_air(blocks, i, j))
+			if (is_adjacent_and_air(blocks, i, blocks, j))
+			{
 				chunk->blocks_visible[++a] = blocks[i];
+				continue ;
+			}
 		}
 		// top
 		if (y + 1 < 16)
 		{
 			j = (z * chunk->info->width * chunk->info->height) + ((y + 1) * chunk->info->width) + x;
-			if (is_adjacent_and_air(blocks, i, j))
+			if (is_adjacent_and_air(blocks, i, blocks, j))
+			{
 				chunk->blocks_visible[++a] = blocks[i];
+				continue ;
+			}
 		}
 		// bot
 		if (y - 1 >= 0)
 		{
 			j = (z * chunk->info->width * chunk->info->height) + ((y - 1) * chunk->info->width) + x;
-			if (is_adjacent_and_air(blocks, i, j))
+			if (is_adjacent_and_air(blocks, i, blocks, j))
+			{
 				chunk->blocks_visible[++a] = blocks[i];
+				continue ;
+			}
 		}
 		// forward
 		if (z + 1 < 16)
 		{
 			j = ((z + 1) * chunk->info->width * chunk->info->height) + (y * chunk->info->width) + x;
-			if (is_adjacent_and_air(blocks, i, j))
+			if (is_adjacent_and_air(blocks, i, blocks, j))
+			{
 				chunk->blocks_visible[++a] = blocks[i];
+				continue ;
+			}
 		}
 		// backward
 		if (z - 1 >= 0)
 		{
 			j = ((z - 1) * chunk->info->width * chunk->info->height) + (y * chunk->info->width) + x;
-			if (is_adjacent_and_air(blocks, i, j))
+			if (is_adjacent_and_air(blocks, i, blocks, j))
+			{
 				chunk->blocks_visible[++a] = blocks[i];
+				continue ;
+			}
 		}
 	}
 
@@ -294,7 +371,7 @@ int	get_blocks_visible(t_chunk *chunk)
 		chunk->blocks_visible[++a] = blocks[i];
 	}
 	*/
-	return (a);
+	return (a + 1); // '+ 1' because we start at '-1';
 }
 
 typedef struct s_chunk_args
@@ -539,7 +616,7 @@ void	regenerate_chunks_v2(int *res, t_chunk *chunks, t_chunk_info *info, float *
 	res[1] = nth_chunk;
 }
 
-void	show_chunk_borders(t_chunk *chunk, t_camera *camera)
+void	show_chunk_borders(t_chunk *chunk, t_camera *camera, float *col)
 {
 	t_aabb *a;
 	
@@ -548,64 +625,64 @@ void	show_chunk_borders(t_chunk *chunk, t_camera *camera)
 	render_3d_line(
 		(float []){a->min[0], a->min[1], a->min[2]},
 		(float []){a->min[0], a->max[1], a->min[2]},
-		(float []){1, 0, 0},
+		col,
 		camera->view, camera->projection);
 	render_3d_line(
 		(float []){a->max[0], a->min[1], a->min[2]},
 		(float []){a->max[0], a->max[1], a->min[2]},
-		(float []){1, 0, 0},
+		col,
 		camera->view, camera->projection);
 	render_3d_line(
 		(float []){a->min[0], a->min[1], a->max[2]},
 		(float []){a->min[0], a->max[1], a->max[2]},
-		(float []){1, 0, 0},
+		col,
 		camera->view, camera->projection);
 	render_3d_line(
 		(float []){a->max[0], a->min[1], a->max[2]},
 		(float []){a->max[0], a->max[1], a->max[2]},
-		(float []){1, 0, 0},
+		col,
 		camera->view, camera->projection);
 
 	// HORIZONTAL LINES Bottom
 	render_3d_line(
 		(float []){a->min[0], a->min[1], a->min[2]},
 		(float []){a->max[0], a->min[1], a->min[2]},
-		(float []){1, 0, 0},
+		col,
 		camera->view, camera->projection);
 	render_3d_line(
 		(float []){a->max[0], a->min[1], a->min[2]},
 		(float []){a->max[0], a->min[1], a->max[2]},
-		(float []){1, 0, 0},
+		col,
 		camera->view, camera->projection);
 	render_3d_line(
 		(float []){a->max[0], a->min[1], a->max[2]},
 		(float []){a->min[0], a->min[1], a->max[2]},
-		(float []){1, 0, 0},
+		col,
 		camera->view, camera->projection);
 	render_3d_line(
 		(float []){a->min[0], a->min[1], a->max[2]},
 		(float []){a->min[0], a->min[1], a->min[2]},
-		(float []){1, 0, 0},
+		col,
 		camera->view, camera->projection);
 	// TOP
 	render_3d_line(
 		(float []){a->min[0], a->max[1], a->min[2]},
 		(float []){a->max[0], a->max[1], a->min[2]},
-		(float []){1, 0, 0},
+		col,
 		camera->view, camera->projection);
 	render_3d_line(
 		(float []){a->max[0], a->max[1], a->min[2]},
 		(float []){a->max[0], a->max[1], a->max[2]},
-		(float []){1, 0, 0},
+		col,
 		camera->view, camera->projection);
 	render_3d_line(
 		(float []){a->max[0], a->max[1], a->max[2]},
 		(float []){a->min[0], a->max[1], a->max[2]},
-		(float []){1, 0, 0},
+		col,
 		camera->view, camera->projection);
 	render_3d_line(
 		(float []){a->min[0], a->max[1], a->max[2]},
 		(float []){a->min[0], a->max[1], a->min[2]},
-		(float []){1, 0, 0},
+		col,
 		camera->view, camera->projection);
 }
