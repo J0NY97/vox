@@ -236,7 +236,7 @@ int	get_block_index(t_chunk_info *info, int x, int y, int z)
  * This block_pos is the world coordinates of the block;
  * The t_block->pos is the chunk coordinate;
 */
-t_block	*get_block(t_chunk_info	*info, int *block_pos)
+t_block	*get_block(t_chunk_info	*info, float *block_pos)
 {
 	float	chunk_coord[3];
 	t_chunk	*in;
@@ -247,9 +247,9 @@ t_block	*get_block(t_chunk_info	*info, int *block_pos)
 	in = get_chunk(info, chunk_coord);
 	if (!in)
 		return (NULL);
-	int	x = block_pos[0] % info->width;
-	int	y = block_pos[1] % info->width;
-	int	z = block_pos[1] % info->width;
+	int	x = (int)block_pos[0] % info->width;
+	int	y = (int)block_pos[1] % info->width;
+	int	z = (int)block_pos[1] % info->width;
 	if (x < 0 || x > 15 || y < 0 || y > 15 || z < 0 || z > 15)
 		return (NULL);
 	return (&in->blocks[get_block_index(info, x, y, z)]);
@@ -329,11 +329,12 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		else if (enable_adjacent_chunk)
 		{
-			/*
-			tmp_block = get_block(chunk->info, (int []){(int)i_block_w[0] - 1, i_block_w[1], i_block_w[2]});
+			j_block_w[0] = i_block_w[0] - chunk->info->block_size;
+			j_block_w[1] = i_block_w[1];
+			j_block_w[2] = i_block_w[2];
+			tmp_block = get_block(chunk->info, j_block_w);
 			if (tmp_block && tmp_block->type == BLOCK_AIR)
 				chunk->blocks_visible[++a] = blocks[i];
-				*/
 		}
 
 		// right
@@ -345,8 +346,11 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		else if (enable_adjacent_chunk)
 		{
-			tmp_block = get_block(chunk->info, (int []){0, y, z});
-			if (tmp_block && is_adjacent_and_air(&blocks[i], tmp_block))
+			j_block_w[0] = i_block_w[0] + chunk->info->block_size;
+			j_block_w[1] = i_block_w[1];
+			j_block_w[2] = i_block_w[2];
+			tmp_block = get_block(chunk->info, j_block_w);
+			if (tmp_block && tmp_block->type == BLOCK_AIR)
 				chunk->blocks_visible[++a] = blocks[i];
 		}
 
@@ -359,14 +363,10 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		else if (enable_adjacent_chunk)
 		{
-			tmp_block = get_block(chunk->info, (int []){(int)i_block_w[0], i_block_w[1] - chunk->info->block_size, i_block_w[2]});
-			if (tmp_block)
-			{
-				vec3_string("block[i] pos :", blocks[i].pos);
-				vec3_string("tmp_block pos :", tmp_block->pos);
-				ft_printf("tmp_block type : %d\n", tmp_block->type);
-				exit(0);
-			}
+			j_block_w[0] = i_block_w[0];
+			j_block_w[1] = i_block_w[1] + chunk->info->block_size;
+			j_block_w[2] = i_block_w[2];
+			tmp_block = get_block(chunk->info, j_block_w);
 			if (tmp_block && tmp_block->type == BLOCK_AIR)
 				chunk->blocks_visible[++a] = blocks[i];
 		}
@@ -380,8 +380,11 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		else if (enable_adjacent_chunk)
 		{
-			tmp_block = get_block(chunk->info, (int []){x, chunk->info->height - 1, z});
-			if (tmp_block && is_adjacent_and_air(&blocks[i], tmp_block))
+			j_block_w[0] = i_block_w[0];
+			j_block_w[1] = i_block_w[1] - chunk->info->block_size;
+			j_block_w[2] = i_block_w[2];
+			tmp_block = get_block(chunk->info, j_block_w);
+			if (tmp_block && tmp_block->type == BLOCK_AIR)
 				chunk->blocks_visible[++a] = blocks[i];
 		}
 
@@ -394,9 +397,13 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		else if (enable_adjacent_chunk)
 		{
-			tmp_block = get_block(chunk->info, (int []){x, y, 0});
-			if (tmp_block && is_adjacent_and_air(&blocks[i], tmp_block))
+			j_block_w[0] = i_block_w[0];
+			j_block_w[1] = i_block_w[1];
+			j_block_w[2] = i_block_w[2] + chunk->info->block_size;
+			tmp_block = get_block(chunk->info, j_block_w);
+			if (tmp_block && tmp_block->type == BLOCK_AIR)
 				chunk->blocks_visible[++a] = blocks[i];
+
 		}
 
 		// backward
@@ -408,8 +415,11 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		else if (enable_adjacent_chunk)
 		{
-			tmp_block = get_block(chunk->info, (int []){x, y, chunk->info->breadth - 1});
-			if (tmp_block && is_adjacent_and_air(&blocks[i], tmp_block))
+			j_block_w[0] = i_block_w[0];
+			j_block_w[1] = i_block_w[1];
+			j_block_w[2] = i_block_w[2] - chunk->info->block_size;
+			tmp_block = get_block(chunk->info, j_block_w);
+			if (tmp_block && tmp_block->type == BLOCK_AIR)
 				chunk->blocks_visible[++a] = blocks[i];
 		}
 
