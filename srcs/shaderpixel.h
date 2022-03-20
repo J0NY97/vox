@@ -247,13 +247,21 @@ enum e_block_type
 	BLOCK_TYPE_AMOUNT
 };
 
+typedef struct s_chunk	t_chunk;
+
 typedef struct s_block
 {
 	float	pos[VEC3_SIZE]; // in chunk coordinates, add chunk world coordinate to this to get world coordinate;
 	int		type; // e_block_type;
+	t_chunk	*chunk; // pointer to the chunk it is a part of;
 }	t_block;
 
-typedef struct s_chunk	t_chunk;
+typedef struct	s_chunk_block_aabb
+{
+	t_aabb		*aabb; // one for each block needs to be created (w * b * h);
+	t_block		**block_pointers; // pointer to the correspoinding block, same index;
+	int			block_amount; // (chunk.w * chunk.b * chunk.h);
+}	t_chunk_block_aabb;
 
 typedef struct s_chunk_info
 {
@@ -274,6 +282,9 @@ typedef struct s_chunk_info
 
 	float		scale_matrix[MAT4_SIZE];
 	//t_model		model; // at some point this;
+
+	t_chunk_block_aabb	*chunk_block_aabbs; // every chunk has t_chunk_aabb, which has an aabb for every block in the chunk;
+	int					chunk_block_aabb_amount; // 27;
 
 	t_chunk		*chunks; // you should not store the chunks here mainly; its just here so you can acces from places you need, without having to pass them in the function as argumnet;
 }	t_chunk_info;
@@ -314,6 +325,7 @@ void		regenerate_chunks_v2(int *res, t_chunk *chunks, t_chunk_info *info, float 
 void		chunk_aabb_update(t_chunk *chunk);
 void		show_chunk_borders(t_chunk *chunk, t_camera *camera, float *col);
 t_chunk		*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, float *dir);
+void		update_surrounding_chunks(t_chunk *chunks, float *player_chunk_v3);
 
 ///////////////////
 //	NOISE

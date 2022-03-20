@@ -159,7 +159,7 @@ int	main(void)
 		thread_manager_new(&tm, 16);
 
 		t_chunk_info	chunk_info;
-		chunk_info.render_distance = 10;
+		chunk_info.render_distance = 10; // dont have less than 3;
 		chunk_info.seed = 896868766;
 		chunk_info.width = 16;
 		chunk_info.breadth = 16;
@@ -171,11 +171,23 @@ int	main(void)
 		chunk_info.chunk_size[0] = chunk_info.width * chunk_info.block_size;
 		chunk_info.chunk_size[1] = chunk_info.height * chunk_info.block_size;
 		chunk_info.chunk_size[2] = chunk_info.breadth * chunk_info.block_size;
+		chunk_info.chunk_block_aabb_amount = 27;
+		chunk_info.chunk_block_aabbs = malloc(sizeof(t_chunk_block_aabb) * chunk_info.chunk_block_aabb_amount);
+		for (int i = 0; i < chunk_info.chunk_block_aabb_amount; i++)
+		{
+			chunk_info.chunk_block_aabbs[i].block_amount = chunk_info.width * chunk_info.breadth * chunk_info.height;
+			chunk_info.chunk_block_aabbs[i].aabb = malloc(sizeof(t_aabb) * chunk_info.chunk_block_aabbs[i].block_amount);
+			chunk_info.chunk_block_aabbs[i].block_pointers = malloc(sizeof(t_block *) * chunk_info.chunk_block_aabbs[i].block_amount);
+		}
 
 		int	chunk_reloading[2]; // 0 : reload_amount, 1: reloaded amount
 		chunk_reloading[0] = 0;
 		chunk_reloading[1] = 0;
-		t_chunk	chunks[chunk_info.chunks_loaded];	
+
+		t_chunk	*chunks;
+		chunks = malloc(sizeof(t_chunk) * chunk_info.chunks_loaded);
+
+		chunk_info.chunks = chunks;
 
 		int		nth_chunk = 0;
 		float	player_chunk[VEC3_SIZE];
@@ -194,9 +206,17 @@ int	main(void)
 		ft_timer_start();
 		if (1)
 			regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);
+//		update_surrounding_chunk(chunks, chunk); // for example the visible blocks;
+		update_surrounding_chunk_aabbs(chunks, player_chunk); // for now only the aabb;
 		//exit(0);
 		ft_printf("Time : %f\n", ft_timer_end());
 		ft_printf("Chunks created : %d\n", nth_chunk);
+
+		// Check total visible blocks;
+		int total_visible = 0;
+		for (int i = 0; i < chunk_info.chunks_loaded; i++)
+			total_visible += chunks[i].blocks_visible_amount;	
+		ft_printf("Total Blocks Visible : %d\n", total_visible);
 //////////////////////////////
 	// END Instance testing
 //////////////////////////////
