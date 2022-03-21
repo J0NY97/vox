@@ -93,7 +93,7 @@ int	chunk_gen(t_chunk *chunk)
 			for (int y = 0; y < chunk->info->height; y++)
 			{
 				/* ////// CAVE GEN ///////// */
-
+				/*
 				float	cave_freq = 200.0f;
 				float	cave_height = cave_freq / 200;
 				float	cave_x = block_world_x / cave_freq;
@@ -107,12 +107,11 @@ int	chunk_gen(t_chunk *chunk)
 				rep /= 1 + 0.5 + 0.25 + 0.125;
 				if (rep > 0)
 					rep = powf(rep, cave_height);
-			//	ft_printf("to_use_x : %f, to_use_y : %f, to_use_z : %f\n", to_use_x, to_use_y, to_use_z);
-			//	ft_printf("perlin3 : %f\n", rep);
+					*/
 				chunk->blocks[i].chunk = chunk;
 				vec3_new(chunk->blocks[i].pos, x, y, z);
-				if (rep > -0.10f
-					&& y <= whatchumacallit)
+				if (/*rep > -0.10f
+					&&*/ y <= whatchumacallit)
 				{
 					if (y <= whatchumacallit - 1) // if we have 3 dirt block on top we make the rest stone blocks;
 						chunk->blocks[i].type = BLOCK_STONE;
