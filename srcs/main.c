@@ -364,37 +364,37 @@ int	main(void)
 			prev_player_chunk[2] = player_chunk[2];
 
 			ft_timer_start();
-			if (0)
+			if (1)
 				regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);	
 			ft_printf("Vol2 chunk update timer : %f\n", ft_timer_end());
 		}
 
-		thread_manager_check_threadiness(&tm);
+		//thread_manager_check_threadiness(&tm);
 
 		nth_chunk = 0;
 		int sent_to_gpu = 0;
 		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
 		{
+			if (chunks[nth_chunk].needs_to_update)
+			{
+				update_chunk_visible_blocks(&chunks[nth_chunk]);
+				update_chunk_matrices(&chunks[nth_chunk]);
+				// Matrices
+				glBindBuffer(GL_ARRAY_BUFFER, chunks[nth_chunk].vbo_matrices);
+				glBufferData(GL_ARRAY_BUFFER, chunks[nth_chunk].block_matrices_size,
+				&chunks[nth_chunk].block_matrices[0], GL_STATIC_DRAW);
+				// Texture ID
+				glBindBuffer(GL_ARRAY_BUFFER, chunks[nth_chunk].vbo_texture_ids);
+				glBufferData(GL_ARRAY_BUFFER, chunks[nth_chunk].block_textures_size,
+					&chunks[nth_chunk].block_textures[0], GL_STATIC_DRAW);
+
+				glBindBuffer(GL_ARRAY_BUFFER, 0);
+				chunks[nth_chunk].needs_to_update = 0;
+			}
 			// Create aabb for each chunk;
 			chunk_aabb_update(&chunks[nth_chunk]);
 			if (chunks[nth_chunk].blocks_visible_amount > 0)
 			{
-				if (chunks[nth_chunk].needs_to_update)
-				{
-					update_chunk_visible_blocks(&chunks[nth_chunk]);
-					update_chunk_matrices(&chunks[nth_chunk]);
-					// Matrices
-					glBindBuffer(GL_ARRAY_BUFFER, chunks[nth_chunk].vbo_matrices);
-					glBufferData(GL_ARRAY_BUFFER, chunks[nth_chunk].block_matrices_size,
-					&chunks[nth_chunk].block_matrices[0], GL_STATIC_DRAW);
-					// Texture ID
-					glBindBuffer(GL_ARRAY_BUFFER, chunks[nth_chunk].vbo_texture_ids);
-					glBufferData(GL_ARRAY_BUFFER, chunks[nth_chunk].block_textures_size,
-						&chunks[nth_chunk].block_textures[0], GL_STATIC_DRAW);
-
-					glBindBuffer(GL_ARRAY_BUFFER, 0);
-					chunks[nth_chunk].needs_to_update = 0;
-				}
 				// TODO: Cull chunk if camera far plane is nearer than chunk;
 				if (aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum)) // Check if frustum intersects chunk aabb;
 				{
