@@ -204,11 +204,10 @@ int	main(void)
 			new_chunk(&chunks[nth_chunk], &chunk_info, (float []){999, 0, 999});
 		}
 		ft_timer_start();
-		if (1)
-			regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);
-//		update_surrounding_chunk(chunks, chunk); // for example the visible blocks;
-		update_surrounding_chunk_aabbs(chunks, player_chunk); // for now only the aabb;
-		//exit(0);
+		regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);
+		for (int i = 0; i < chunk_info.chunks_loaded; i++)
+			update_chunk_visible_blocks(&chunks[i]);
+//		update_surrounding_chunk_aabbs(chunks, player_chunk); // for now only the aabb;
 		ft_printf("Time : %f\n", ft_timer_end());
 		ft_printf("Chunks created : %d\n", nth_chunk);
 
@@ -382,6 +381,8 @@ int	main(void)
 			{
 				if (chunks[nth_chunk].needs_to_update)
 				{
+					update_chunk_visible_blocks(&chunks[nth_chunk]);
+					update_chunk_matrices(&chunks[nth_chunk]);
 					// Matrices
 					glBindBuffer(GL_ARRAY_BUFFER, chunks[nth_chunk].vbo_matrices);
 					glBufferData(GL_ARRAY_BUFFER, chunks[nth_chunk].block_matrices_size,

@@ -179,14 +179,6 @@ void	render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader)
 		LG_ERROR("(%d)", error);
 }
 
-int	is_adjacent_and_air(t_block *block0, t_block *block1)
-{
-	if (block1->type == BLOCK_AIR &&
-		vec3_dist(block0->pos, block1->pos) <= 1.0f)
-		return (1);
-	return (0);
-}
-
 /*
  * Returns pointer to chunk if we can find the correct one;
  * 	else NULL;
@@ -226,7 +218,7 @@ t_chunk	*get_chunk(t_chunk_info	*info, float *chunk_pos)
 
 int	get_block_index(t_chunk_info *info, int x, int y, int z)
 {
-	return ((z * info->width * info->breadth) + (y * info->height) + x);
+	return ((x * info->width * info->breadth) + (z * info->height) + y);
 }
 
 /*
@@ -248,8 +240,8 @@ t_block	*get_block(t_chunk_info	*info, float *block_pos)
 	if (!in)
 		return (NULL);
 	int	x = (int)block_pos[0] % info->width;
-	int	y = (int)block_pos[1] % info->width;
-	int	z = (int)block_pos[1] % info->width;
+	int	y = (int)block_pos[1] % info->height;
+	int	z = (int)block_pos[2] % info->breadth;
 	if (x < 0 || x > 15 || y < 0 || y > 15 || z < 0 || z > 15)
 		return (NULL);
 	return (&in->blocks[get_block_index(info, x, y, z)]);
@@ -257,9 +249,21 @@ t_block	*get_block(t_chunk_info	*info, float *block_pos)
 
 float	*get_block_world_pos(float *res, t_block *block)
 {
-	res[0] = (block->chunk->world_coordinate[0] * block->chunk->info->chunk_size[0]) + (block->pos[0] * block->chunk->info->block_size);
-	res[1] = (block->chunk->world_coordinate[1] * block->chunk->info->chunk_size[1]) + (block->pos[1] * block->chunk->info->block_size);
-	res[2] = (block->chunk->world_coordinate[2] * block->chunk->info->chunk_size[2]) + (block->pos[2] * block->chunk->info->block_size);
+	res[0] = (block->chunk->world_coordinate[0]) + (block->pos[0] * block->chunk->info->block_size);
+	res[1] = (block->chunk->world_coordinate[1]) + (block->pos[1] * block->chunk->info->block_size);
+	res[2] = (block->chunk->world_coordinate[2]) + (block->pos[2] * block->chunk->info->block_size);
+	return (res);
+}
+
+/*
+ * From 'index' in 'chunk->blocks' get the x,y,z pos in the chunk coordinates;
+ * 	'max' is the max width, breadth and height of the chunk;
+*/
+int	*get_block_chunk_pos_from_index(int *res, int *max, int index)
+{
+	res[0] = index / (16 * 16);
+	res[2] = (index / 16) % 16;
+	res[1] = index % 16;
 	return (res);
 }
 
@@ -306,17 +310,17 @@ int	get_blocks_visible(t_chunk *chunk)
 	int		enable_adjacent_chunk = 1;
 	t_chunk	*adj_chunk = NULL;
 	t_block	*tmp_block = NULL;
+	int		pos[3];
+	int	j;// = get_block_index(chunk->info, x, y, z);
 	for (int i = 0; i < chunk->block_amount; i++)
 	{
-		if (blocks[i].type == BLOCK_AIR)
+		if (blocks[i].type == BLOCK_AIR) // <-- very important, im not sure what happens if we are trying to render an air block;
 			continue ;
 
-		int index = i;
-		int z = index / (chunk->info->width * chunk->info->height);
-		index -= (z * chunk->info->width * chunk->info->height);
-		int y = index / chunk->info->width;
-		int x = index % chunk->info->width;
-		int	j;// = get_block_index(chunk->info, x, y, z);
+		get_block_chunk_pos_from_index(pos, (int []){16, 16, 16}, i);
+		int x = pos[0];
+		int y = pos[1];
+		int z = pos[2];
 
 		get_block_world_pos(i_block_w, &blocks[i]);
 
@@ -324,103 +328,108 @@ int	get_blocks_visible(t_chunk *chunk)
 		if (x - 1 >= 0)
 		{
 			j = get_block_index(chunk->info, x - 1, y, z);
-			if (is_adjacent_and_air(&blocks[i], &blocks[j]))
+			if (blocks[j].type == BLOCK_AIR)
 				chunk->blocks_visible[++a] = blocks[i];
 		}
 		else if (enable_adjacent_chunk)
 		{
-			j_block_w[0] = i_block_w[0] - chunk->info->block_size;
-			j_block_w[1] = i_block_w[1];
-			j_block_w[2] = i_block_w[2];
-			tmp_block = get_block(chunk->info, j_block_w);
-			if (tmp_block && tmp_block->type == BLOCK_AIR)
-				chunk->blocks_visible[++a] = blocks[i];
+			adj_chunk = get_adjacent_chunk(chunk, chunk->info->chunks, (float []){-1, 0, 0});
+			if (adj_chunk)
+			{
+				tmp_block = &adj_chunk->blocks[get_block_index(chunk->info, 15, y, z)];
+				if (tmp_block && tmp_block->type == BLOCK_AIR)
+					chunk->blocks_visible[++a] = blocks[i];
+			}
 		}
 
 		// right
 		if (x + 1 < 16)
 		{
 			j = get_block_index(chunk->info, x + 1, y, z);
-			if (is_adjacent_and_air(&blocks[i], &blocks[j]))
+			if (blocks[j].type == BLOCK_AIR)
 				chunk->blocks_visible[++a] = blocks[i];
 		}
 		else if (enable_adjacent_chunk)
 		{
-			j_block_w[0] = i_block_w[0] + chunk->info->block_size;
-			j_block_w[1] = i_block_w[1];
-			j_block_w[2] = i_block_w[2];
-			tmp_block = get_block(chunk->info, j_block_w);
-			if (tmp_block && tmp_block->type == BLOCK_AIR)
-				chunk->blocks_visible[++a] = blocks[i];
+			adj_chunk = get_adjacent_chunk(chunk, chunk->info->chunks, (float []){1, 0, 0});
+			if (adj_chunk)
+			{
+				tmp_block = &adj_chunk->blocks[get_block_index(chunk->info, 0, y, z)];
+				if (tmp_block && tmp_block->type == BLOCK_AIR)
+					chunk->blocks_visible[++a] = blocks[i];
+			}
 		}
 
 		// top
 		if (y + 1 < 16)
 		{
 			j = get_block_index(chunk->info, x, y + 1, z);
-			if (is_adjacent_and_air(&blocks[i], &blocks[j]))
+			if (blocks[j].type == BLOCK_AIR)
 				chunk->blocks_visible[++a] = blocks[i];
 		}
 		else if (enable_adjacent_chunk)
 		{
-			j_block_w[0] = i_block_w[0];
-			j_block_w[1] = i_block_w[1] + chunk->info->block_size;
-			j_block_w[2] = i_block_w[2];
-			tmp_block = get_block(chunk->info, j_block_w);
-			if (tmp_block && tmp_block->type == BLOCK_AIR)
-				chunk->blocks_visible[++a] = blocks[i];
+			adj_chunk = get_adjacent_chunk(chunk, chunk->info->chunks, (float []){0, 1, 0});
+			if (adj_chunk)
+			{
+				tmp_block = &adj_chunk->blocks[get_block_index(chunk->info, x, 0, z)];
+				if (tmp_block && tmp_block->type == BLOCK_AIR)
+					chunk->blocks_visible[++a] = blocks[i];
+			}
 		}
 
 		// bot
 		if (y - 1 >= 0)
 		{
 			j = get_block_index(chunk->info, x, y - 1, z);
-			if (is_adjacent_and_air(&blocks[i], &blocks[j]))
+			if (blocks[j].type == BLOCK_AIR)
 				chunk->blocks_visible[++a] = blocks[i];
 		}
 		else if (enable_adjacent_chunk)
 		{
-			j_block_w[0] = i_block_w[0];
-			j_block_w[1] = i_block_w[1] - chunk->info->block_size;
-			j_block_w[2] = i_block_w[2];
-			tmp_block = get_block(chunk->info, j_block_w);
-			if (tmp_block && tmp_block->type == BLOCK_AIR)
-				chunk->blocks_visible[++a] = blocks[i];
+			adj_chunk = get_adjacent_chunk(chunk, chunk->info->chunks, (float []){0, -1, 0});
+			if (adj_chunk)
+			{
+				tmp_block = &adj_chunk->blocks[get_block_index(chunk->info, x, 15, z)];
+				if (tmp_block && tmp_block->type == BLOCK_AIR)
+					chunk->blocks_visible[++a] = blocks[i];
+			}
 		}
 
 		// forward
 		if (z + 1 < 16)
 		{
 			j = get_block_index(chunk->info, x, y, z + 1);
-			if (is_adjacent_and_air(&blocks[i], &blocks[j]))
+			if (blocks[j].type == BLOCK_AIR)
 				chunk->blocks_visible[++a] = blocks[i];
 		}
 		else if (enable_adjacent_chunk)
 		{
-			j_block_w[0] = i_block_w[0];
-			j_block_w[1] = i_block_w[1];
-			j_block_w[2] = i_block_w[2] + chunk->info->block_size;
-			tmp_block = get_block(chunk->info, j_block_w);
-			if (tmp_block && tmp_block->type == BLOCK_AIR)
-				chunk->blocks_visible[++a] = blocks[i];
-
+			adj_chunk = get_adjacent_chunk(chunk, chunk->info->chunks, (float []){0, 0, 1});
+			if (adj_chunk)
+			{
+				tmp_block = &adj_chunk->blocks[get_block_index(chunk->info, x, y, 0)];
+				if (tmp_block && tmp_block->type == BLOCK_AIR)
+					chunk->blocks_visible[++a] = blocks[i];
+			}
 		}
 
 		// backward
 		if (z - 1 >= 0)
 		{
 			j = get_block_index(chunk->info, x, y, z - 1);
-			if (is_adjacent_and_air(&blocks[i], &blocks[j]))
+			if (blocks[j].type == BLOCK_AIR)
 				chunk->blocks_visible[++a] = blocks[i];
 		}
 		else if (enable_adjacent_chunk)
 		{
-			j_block_w[0] = i_block_w[0];
-			j_block_w[1] = i_block_w[1];
-			j_block_w[2] = i_block_w[2] - chunk->info->block_size;
-			tmp_block = get_block(chunk->info, j_block_w);
-			if (tmp_block && tmp_block->type == BLOCK_AIR)
-				chunk->blocks_visible[++a] = blocks[i];
+			adj_chunk = get_adjacent_chunk(chunk, chunk->info->chunks, (float []){0, 0, -1});
+			if (adj_chunk)
+			{
+				tmp_block = &adj_chunk->blocks[get_block_index(chunk->info, x, y, 15)];
+				if (tmp_block && tmp_block->type == BLOCK_AIR)
+					chunk->blocks_visible[++a] = blocks[i];
+			}
 		}
 
 
@@ -456,12 +465,19 @@ void	update_chunk(t_chunk *chunk, float *coord)
 	chunk->block_amount = chunk_gen(chunk); // should always return max amount of blocks in a chunk;
 
 	// Check which are touching air;
+	/*
 	chunk->blocks_visible_amount = get_blocks_visible(chunk);
 	chunk->block_matrices_size = sizeof(float) * 16 * chunk->blocks_visible_amount;
 	chunk->block_textures_size = sizeof(int) * chunk->blocks_visible_amount;
+	*/
+	/* Call update_chunk_visible_blocks() instead of the lines above. */
 
 	ft_printf("Rendered %d/%d\n", chunk->blocks_visible_amount, chunk->block_amount);
+	chunk->needs_to_update = 1;
+}
 
+void	update_chunk_matrices(t_chunk *chunk)
+{
 	float	tmp[VEC3_SIZE];
 	float	model[MAT4_SIZE];
 	float	scale[MAT4_SIZE];
@@ -489,8 +505,6 @@ void	update_chunk(t_chunk *chunk, float *coord)
 		memcpy(chunk->block_matrices + (i * 16), model, sizeof(float) * 16);
 		memcpy(chunk->block_textures + (i), &chunk->blocks_visible[i].type, sizeof(int));
 	}
-
-	chunk->needs_to_update = 1;
 }
 
 void	*update_chunk_threaded(void *arg)
@@ -786,4 +800,16 @@ void	update_surrounding_chunk_aabbs(t_chunk *chunks, float *player_chunk_v3)
 	info = chunks[0].info;
 	vec3_string("player_chunk :", player_chunk_v3);
 	player_chunk = get_chunk(info, player_chunk_v3);
+}
+
+/*
+ * I think this has to be called after all the chunk creation since we need all the adjacent
+ *	chunks to already exist, and if the update_chunk is multithreaded we might not have 
+ *	created the needed chunks yet;
+*/
+void	update_chunk_visible_blocks(t_chunk *chunk)
+{
+	chunk->blocks_visible_amount = get_blocks_visible(chunk);
+	chunk->block_matrices_size = sizeof(float) * 16 * chunk->blocks_visible_amount;
+	chunk->block_textures_size = sizeof(int) * chunk->blocks_visible_amount;
 }
