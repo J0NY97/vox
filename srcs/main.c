@@ -338,7 +338,9 @@ int	main(void)
 		// Chunk things
 /////////////////
 		player_in_chunk(player_chunk, player.camera.pos, &chunk_info);
+
 		regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);	
+//		regenerate_chunks_v3(chunk_reloading, chunks, &chunk_info, player_chunk);	
 
 		thread_manager_check_threadiness(&tm);
 
@@ -346,7 +348,7 @@ int	main(void)
 		int sent_to_gpu = 0;
 		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
 		{
-			if (chunks[nth_chunk].needs_to_update)
+			if (1 && chunks[nth_chunk].needs_to_update)
 			{
 				update_chunk_visible_blocks(&chunks[nth_chunk]);
 				update_chunk_matrices(&chunks[nth_chunk]);

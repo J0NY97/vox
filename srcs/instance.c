@@ -92,7 +92,8 @@ int	chunk_gen(t_chunk *chunk)
 
 			for (int y = 0; y < chunk->info->height; y++)
 			{
-				/* ////// CAVE GEN /////////
+				/* ////// CAVE GEN ///////// */
+
 				float	cave_freq = 200.0f;
 				float	cave_height = cave_freq / 200;
 				float	cave_x = block_world_x / cave_freq;
@@ -108,11 +109,10 @@ int	chunk_gen(t_chunk *chunk)
 					rep = powf(rep, cave_height);
 			//	ft_printf("to_use_x : %f, to_use_y : %f, to_use_z : %f\n", to_use_x, to_use_y, to_use_z);
 			//	ft_printf("perlin3 : %f\n", rep);
-				if (rep > -0.10f)
-				*/
 				chunk->blocks[i].chunk = chunk;
 				vec3_new(chunk->blocks[i].pos, x, y, z);
-				if (y <= whatchumacallit)
+				if (rep > -0.10f
+					&& y <= whatchumacallit)
 				{
 					if (y <= whatchumacallit - 1) // if we have 3 dirt block on top we make the rest stone blocks;
 						chunk->blocks[i].type = BLOCK_STONE;
@@ -517,6 +517,7 @@ void	*update_chunk_threaded(void *arg)
  *	new chunk info into those 'chunks' indices;
  * Takes 0.000000 seconds;
 */
+/*
 int	get_chunks_to_reload(int *chunks, int *start_coord, t_chunk_info *info, float *player_chunk_v3)
 {
 	int	reload_amount = 0;
@@ -544,17 +545,48 @@ int	get_chunks_to_reload(int *chunks, int *start_coord, t_chunk_info *info, floa
 //	LG_INFO("Chunk amount to reload : %d", reload_amount);
 	return (reload_amount);
 }
+*/
+int	get_chunks_to_reload(int *chunks, int *start_coord, t_chunk_info *info, float *player_chunk_v3)
+{
+	int	reload_amount = 0;
+	int	found = 0;
+
+	start_coord[0] = player_chunk_v3[0] - (info->render_distance / 2);
+	start_coord[1] = 0;
+	start_coord[2] = player_chunk_v3[2] - (info->render_distance / 2);
+	for (int i = 0; i < info->chunks_loaded; i++)
+	{
+		found = 0;
+		for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
+		{
+			for (int z = start_coord[2], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
+			{
+				if (info->chunks[i].coordinate[0] == x && info->chunks[i].coordinate[2] == z)
+					found = 1;
+			}
+		}
+		if (!found)
+		{
+			chunks[reload_amount] = i;
+			reload_amount++;
+		}
+	}
+//	LG_INFO("Chunk amount to reload : %d", reload_amount);
+	return (reload_amount);
+}
 
 void	regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3)
 {
 	int	reload_these_chunks[info->chunks_loaded];
-	int	start_coord[2];
+	int	start_coord[3];
 	int found = 0;
 	int reload_amount;
 	
 	reload_amount = get_chunks_to_reload(reload_these_chunks, start_coord, info, player_chunk_v3);
 	if (reload_amount <= 0)
 		return ;
+	
+//	ft_timer_start();
 
 	// Go through all the coordinates that will be loaded next time, and
 	//  check if any of the loaded chunks have those coordinates, if not
@@ -562,13 +594,12 @@ void	regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *pla
 	// 	and update the new chunk into that memory;
 	int				max_threads = 16; // minimum amount of chunks on height;
 	pthread_t		threads[max_threads];
-	t_chunk_args	args[max_threads];
 	int				nth_thread = 0;
 	int				nth_chunk = 0;
 
 	for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
 	{
-		for (int z = start_coord[1], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
+		for (int z = start_coord[2], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
 		{
 			found = 0;
 			for (int i = 0; i < info->chunks_loaded; i++)
@@ -581,7 +612,7 @@ void	regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *pla
 			}
 			if (!found)
 			{
-				for (int y = 0, y_amount = 0; y_amount < info->y_chunk_amount; y++, y_amount++)
+				for (int y = start_coord[1], y_amount = 0; y_amount < info->y_chunk_amount; y++, y_amount++)
 				{
 					if (nth_thread >= max_threads)
 					{
@@ -595,9 +626,10 @@ void	regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *pla
 						}
 						nth_thread = 0;
 					}
-					args[nth_thread].chunk = &chunks[reload_these_chunks[nth_chunk]];
-					vec3_new(args[nth_thread].coords, x, y, z);
-					if (pthread_create(&threads[nth_thread], NULL, update_chunk_threaded, &args[nth_thread]))
+					int index = reload_these_chunks[nth_chunk];
+					chunks[index].args.chunk = &chunks[index];
+					vec3_new(chunks[index].args.coords, x, y, z);
+					if (pthread_create(&threads[nth_thread], NULL, update_chunk_threaded, &chunks[index].args))
 						LG_ERROR("Couldnt create thread.");
 					nth_chunk++;
 					nth_thread++;
@@ -622,12 +654,14 @@ void	regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *pla
 
 	res[0] = reload_amount;
 	res[1] = nth_chunk;
+
+//	ft_printf("One chunk timer : %f\n", ft_timer_end());
 }
 
 void	regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3, t_thread_manager *tm)
 {
 	int	reload_these_chunks[info->chunks_loaded];
-	int	start_coord[2];
+	int	start_coord[3];
 	int found = 0;
 	int reload_amount;
 	
@@ -645,7 +679,7 @@ void	regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float *
 
 	for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
 	{
-		for (int z = start_coord[1], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
+		for (int z = start_coord[2], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
 		{
 			found = 0;
 			for (int i = 0; i < info->chunks_loaded; i++)
@@ -658,7 +692,7 @@ void	regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float *
 			}
 			if (!found)
 			{
-				for (int y = 0, y_amount = 0; y_amount < info->y_chunk_amount; y++, y_amount++)
+				for (int y = start_coord[1], y_amount = 0; y_amount < info->y_chunk_amount; y++, y_amount++)
 				{
 					while (chunks[reload_these_chunks[nth_chunk]].args.being_threaded == 1 &&
 						nth_chunk < info->chunks_loaded && nth_chunk < reload_amount)
