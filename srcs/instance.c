@@ -553,12 +553,14 @@ void	regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *pla
 	int reload_amount;
 	
 	reload_amount = get_chunks_to_reload(reload_these_chunks, start_coord, info, player_chunk_v3);
+	if (reload_amount <= 0)
+		return ;
 
 	// Go through all the coordinates that will be loaded next time, and
 	//  check if any of the loaded chunks have those coordinates, if not
 	//	we take one of the chunks that are not going to be loaded next time
 	// 	and update the new chunk into that memory;
-	int				max_threads = 64;
+	int				max_threads = 16; // minimum amount of chunks on height;
 	pthread_t		threads[max_threads];
 	t_chunk_args	args[max_threads];
 	int				nth_thread = 0;
@@ -583,7 +585,7 @@ void	regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *pla
 				{
 					if (nth_thread >= max_threads)
 					{
-						//break ;
+						break ;
 						int i = 0;
 						while (i < nth_thread)
 						{

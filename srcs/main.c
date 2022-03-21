@@ -191,31 +191,15 @@ int	main(void)
 
 		int		nth_chunk = 0;
 		float	player_chunk[VEC3_SIZE];
-		int		prev_player_chunk[VEC3_SIZE];
 		
 		player_in_chunk(player_chunk, player.camera.pos, &chunk_info);
-		prev_player_chunk[0] = player_chunk[0];
-		prev_player_chunk[1] = player_chunk[1];
-		prev_player_chunk[2] = player_chunk[2];
 
 		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
 		{
 			new_model(&chunks[nth_chunk].model, &cube_obj);
 			new_chunk(&chunks[nth_chunk], &chunk_info, (float []){999, 0, 999});
 		}
-		ft_timer_start();
-		regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);
-		for (int i = 0; i < chunk_info.chunks_loaded; i++)
-			update_chunk_visible_blocks(&chunks[i]);
-//		update_surrounding_chunk_aabbs(chunks, player_chunk); // for now only the aabb;
-		ft_printf("Time : %f\n", ft_timer_end());
 		ft_printf("Chunks created : %d\n", nth_chunk);
-
-		// Check total visible blocks;
-		int total_visible = 0;
-		for (int i = 0; i < chunk_info.chunks_loaded; i++)
-			total_visible += chunks[i].blocks_visible_amount;	
-		ft_printf("Total Blocks Visible : %d\n", total_visible);
 //////////////////////////////
 	// END Instance testing
 //////////////////////////////
@@ -354,20 +338,7 @@ int	main(void)
 		// Chunk things
 /////////////////
 		player_in_chunk(player_chunk, player.camera.pos, &chunk_info);
-		if (1 && ((prev_player_chunk[0] != (int)(player_chunk[0]) ||
-			prev_player_chunk[2] != (int)(player_chunk[2]))/* ||
-			(chunk_reloading[0] != chunk_reloading[1])*/))
-		{
-			ft_printf("Update Chunks\n");
-			prev_player_chunk[0] = player_chunk[0];
-			prev_player_chunk[1] = player_chunk[1];
-			prev_player_chunk[2] = player_chunk[2];
-
-			ft_timer_start();
-//			regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);	
-			ft_printf("Vol2 chunk update timer : %f\n", ft_timer_end());
-		}
-		regenerate_chunks_v3(chunk_reloading, chunks, &chunk_info, player_chunk, &tm);
+		regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);	
 
 		thread_manager_check_threadiness(&tm);
 
