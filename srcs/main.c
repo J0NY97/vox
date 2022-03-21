@@ -156,7 +156,7 @@ int	main(void)
 		new_shader(&cube_shader, SHADER_PATH"simple_instance.vs", SHADER_PATH"simple_instance.fs");
 
 		t_thread_manager	tm;
-		thread_manager_new(&tm, 16);
+		thread_manager_new(&tm, 64);
 
 		t_chunk_info	chunk_info;
 		chunk_info.render_distance = 10; // dont have less than 3;
@@ -355,8 +355,8 @@ int	main(void)
 /////////////////
 		player_in_chunk(player_chunk, player.camera.pos, &chunk_info);
 		if (1 && ((prev_player_chunk[0] != (int)(player_chunk[0]) ||
-			prev_player_chunk[2] != (int)(player_chunk[2])) ||
-			(chunk_reloading[0] != chunk_reloading[1])))
+			prev_player_chunk[2] != (int)(player_chunk[2]))/* ||
+			(chunk_reloading[0] != chunk_reloading[1])*/))
 		{
 			ft_printf("Update Chunks\n");
 			prev_player_chunk[0] = player_chunk[0];
@@ -364,12 +364,12 @@ int	main(void)
 			prev_player_chunk[2] = player_chunk[2];
 
 			ft_timer_start();
-			if (1)
-				regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);	
+//			regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);	
 			ft_printf("Vol2 chunk update timer : %f\n", ft_timer_end());
 		}
+		regenerate_chunks_v3(chunk_reloading, chunks, &chunk_info, player_chunk, &tm);
 
-		//thread_manager_check_threadiness(&tm);
+		thread_manager_check_threadiness(&tm);
 
 		nth_chunk = 0;
 		int sent_to_gpu = 0;
@@ -390,9 +390,9 @@ int	main(void)
 
 				glBindBuffer(GL_ARRAY_BUFFER, 0);
 				chunks[nth_chunk].needs_to_update = 0;
+				// Create aabb for each chunk;
+				chunk_aabb_update(&chunks[nth_chunk]);
 			}
-			// Create aabb for each chunk;
-			chunk_aabb_update(&chunks[nth_chunk]);
 			if (chunks[nth_chunk].blocks_visible_amount > 0)
 			{
 				// TODO: Cull chunk if camera far plane is nearer than chunk;

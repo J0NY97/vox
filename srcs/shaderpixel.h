@@ -289,6 +289,15 @@ typedef struct s_chunk_info
 	t_chunk		*chunks; // you should not store the chunks here mainly; its just here so you can acces from places you need, without having to pass them in the function as argumnet;
 }	t_chunk_info;
 
+/* Used for threading */
+typedef struct s_chunk_args
+{
+	t_chunk	*chunk;
+	float	coords[VEC3_SIZE];
+	int		being_threaded;
+}	t_chunk_args;
+
+
 struct	s_chunk
 {
 	t_chunk_info	*info;
@@ -312,6 +321,8 @@ struct	s_chunk
 	GLuint		vbo_texture_ids;
 
 	int			needs_to_update;
+
+	t_chunk_args	args;
 };
 
 void		new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord);
@@ -322,13 +333,14 @@ void		update_chunk(t_chunk *chunk, float *coord);
 void		update_chunk_matrices(t_chunk *chunk);
 void		update_chunk_visible_blocks(t_chunk *chunk);
 float		*player_in_chunk(float *res, float *player_coord, t_chunk_info *info);
-void		regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2);
-void		regenerate_chunks_v2(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2, t_thread_manager *tm);
 void		chunk_aabb_update(t_chunk *chunk);
 void		show_chunk_borders(t_chunk *chunk, t_camera *camera, float *col);
 t_chunk		*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, float *dir);
 void		update_surrounding_chunks(t_chunk *chunks, float *player_chunk_v3);
 int			*get_block_chunk_pos_from_index(int *res, int *max, int index);
+
+void		regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2);
+void		regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3, t_thread_manager *tm);
 
 ///////////////////
 //	NOISE
