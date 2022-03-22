@@ -23,7 +23,8 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord)
 	mat4_identity(chunk->block_matrices);
 	chunk->block_textures[0] = 0;
 
-	vec3_new(chunk->coordinate, coord[0], coord[1], coord[2]);
+	for (int i = 0; i < 3; i++)
+		chunk->coordinate[i] = coord[i];
 	vec3_new(chunk->world_coordinate,
 		chunk->coordinate[0] * chunk->info->chunk_size[0],
 		chunk->coordinate[1] * chunk->info->chunk_size[1],
@@ -77,6 +78,8 @@ int	chunk_gen(t_chunk *chunk)
 	float	height = freq * 100; // less is more;
 	int		i = 0;
 
+	chunk->has_blocks = 0;
+
 	for (int x = 0; x < chunk->info->width; x++)
 	{
 		float	block_world_x = (chunk->world_coordinate[0] + ((float)x * chunk->info->block_size));
@@ -121,6 +124,7 @@ int	chunk_gen(t_chunk *chunk)
 						chunk->blocks[i].type = BLOCK_STONE;
 					else
 						chunk->blocks[i].type = BLOCK_DIRT;
+					chunk->has_blocks = 1;
 				}
 				else
 					chunk->blocks[i].type = BLOCK_AIR;
@@ -192,23 +196,23 @@ void	render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader)
 */
 t_chunk	*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, float *dir)
 {
+	int	from_coord[3];
+
+	from_coord[0] = from->coordinate[0] + dir[0];
+	from_coord[1] = from->coordinate[1] + dir[1];
+	from_coord[2] = from->coordinate[2] + dir[2];
 	for (int i = 0; i < from->info->chunks_loaded; i++)
 	{
-		if (chunks[i].coordinate[0] == from->coordinate[0] + dir[0] &&
-			chunks[i].coordinate[1] == from->coordinate[1] + dir[1] &&
-			chunks[i].coordinate[2] == from->coordinate[2] + dir[2])
+		if (chunks[i].coordinate[0] == from_coord[0] &&
+			chunks[i].coordinate[1] == from_coord[1] &&
+			chunks[i].coordinate[2] == from_coord[2])
 			return (&chunks[i]);
 	}
 	return (NULL);
 }
 
-t_chunk	*get_chunk(t_chunk_info	*info, float *chunk_pos)
+t_chunk	*get_chunk(t_chunk_info	*info, int *pos)
 {
-	float	pos[VEC3_SIZE];
-
-	pos[0] = floor(chunk_pos[0]);
-	pos[1] = floor(chunk_pos[1]);
-	pos[2] = floor(chunk_pos[2]);
 	for (int i = 0; i < info->chunks_loaded; i++)
 	{
 		if (info->chunks[i].coordinate[0] == pos[0] && 
@@ -219,6 +223,9 @@ t_chunk	*get_chunk(t_chunk_info	*info, float *chunk_pos)
 	return (NULL);
 }
 
+/*
+ * From local chunk block pos to the index in the 'chunk->blocks' array;
+*/
 int	get_block_index(t_chunk_info *info, int x, int y, int z)
 {
 	return ((x * info->width * info->breadth) + (z * info->height) + y);
@@ -228,26 +235,28 @@ int	get_block_index(t_chunk_info *info, int x, int y, int z)
  * Dont use this before you know how slow this is;
  *
  * !!!!!REMEMBER!!!!!
- * This block_pos is the world coordinates of the block;
- * The t_block->pos is the chunk coordinate;
+ * This 'block_pos' is the world coordinates of the block;
+ * The t_block->pos is the chunk coordinate; (local coordinates)
 */
 t_block	*get_block(t_chunk_info	*info, float *block_pos)
 {
-	float	chunk_coord[3];
+	int		chunk_coord[3];
 	t_chunk	*in;
 
-	chunk_coord[0] = block_pos[0] / info->width;
-	chunk_coord[1] = block_pos[1] / info->height;
-	chunk_coord[2] = block_pos[2] / info->breadth;
+	chunk_coord[0] = (int)block_pos[0] / info->width;
+	chunk_coord[1] = (int)block_pos[1] / info->height;
+	chunk_coord[2] = (int)block_pos[2] / info->breadth;
 	in = get_chunk(info, chunk_coord);
 	if (!in)
 		return (NULL);
-	int	x = (int)block_pos[0] % info->width;
-	int	y = (int)block_pos[1] % info->height;
-	int	z = (int)block_pos[2] % info->breadth;
-	if (x < 0 || x > 15 || y < 0 || y > 15 || z < 0 || z > 15)
+	int	loc_pos[3];
+	block_world_to_local_pos(loc_pos, block_pos);
+	// TODO use chunk size
+	if (loc_pos[0] < 0 || loc_pos[0] > 15 ||
+		loc_pos[1] < 0 || loc_pos[1] > 15 ||
+		loc_pos[2] < 0 || loc_pos[2] > 15)
 		return (NULL);
-	return (&in->blocks[get_block_index(info, x, y, z)]);
+	return (&in->blocks[get_block_index(info, loc_pos[0], loc_pos[1], loc_pos[2])]);
 }
 
 float	*get_block_world_pos(float *res, t_block *block)
@@ -258,16 +267,40 @@ float	*get_block_world_pos(float *res, t_block *block)
 	return (res);
 }
 
+int	*block_world_to_local_pos(int *res, float *world)
+{
+	// TODO use chunk size;
+	res[0] = (int)world[0] % 16;
+	res[1] = (int)world[1] % 16;
+	res[2] = (int)world[2] % 16;
+	return (res);
+}
+
 /*
  * From 'index' in 'chunk->blocks' get the x,y,z pos in the chunk coordinates;
  * 	'max' is the max width, breadth and height of the chunk;
 */
-int	*get_block_chunk_pos_from_index(int *res, int *max, int index)
+int	*get_block_local_pos_from_index(int *res, int *max, int index)
 {
+	// TODO use chunk->w, h, b;
 	res[0] = index / (16 * 16);
 	res[2] = (index / 16) % 16;
 	res[1] = index % 16;
 	return (res);
+}
+
+/*
+ * Give chunk where you prioritize the block to be in;
+ * If not found in that chunk try to find it from another chunk in the world;
+*/
+t_block	*get_block_helper(t_chunk *chunk, int *local_pos, float *world_pos)
+{
+	// TODO make chunk size;
+	if (local_pos[0] < 0 || local_pos[0] > 15 ||
+		local_pos[1] < 0 || local_pos[1] > 15 ||
+		local_pos[2] < 0 || local_pos[2] > 15)
+		return (get_block(chunk->info, world_pos));
+	return (&chunk->blocks[get_block_index(chunk->info, local_pos[0], local_pos[1], local_pos[2])]);
 }
 
 /*
@@ -285,6 +318,8 @@ int	get_blocks_visible(t_chunk *chunk)
 	t_block	*blocks;
 	int		a = -1;
 
+	if (!chunk->has_blocks)
+		return (0);
 	blocks = chunk->blocks;
 
 	/* MAKE ONLY TOUCHING AIR VISIBLE */
@@ -320,12 +355,50 @@ int	get_blocks_visible(t_chunk *chunk)
 		if (blocks[i].type == BLOCK_AIR) // <-- very important, im not sure what happens if we are trying to render an air block;
 			continue ;
 
-		get_block_chunk_pos_from_index(pos, (int []){16, 16, 16}, i);
+		get_block_local_pos_from_index(pos, (int []){16, 16, 16}, i);
 		int x = pos[0];
 		int y = pos[1];
 		int z = pos[2];
 
 		get_block_world_pos(i_block_w, &blocks[i]);
+
+		// left
+		/*
+		tmp_block = get_block_helper(chunk, (int []){x - 1, y, z},
+			(float []){i_block_w[0] - 1, i_block_w[1], i_block_w[2]});
+		if (tmp_block && tmp_block->type == BLOCK_AIR)
+			chunk->blocks_visible[++a] = blocks[i];
+
+		// right
+		tmp_block = get_block_helper(chunk, (int []){x + 1, y, z},
+			(float []){i_block_w[0] + 1, i_block_w[1], i_block_w[2]});
+		if (tmp_block && tmp_block->type == BLOCK_AIR)
+			chunk->blocks_visible[++a] = blocks[i];
+
+		// down
+		tmp_block = get_block_helper(chunk, (int []){x, y - 1, z},
+			(float []){i_block_w[0], i_block_w[1] - 1, i_block_w[2]});
+		if (tmp_block && tmp_block->type == BLOCK_AIR)
+			chunk->blocks_visible[++a] = blocks[i];
+
+		// up
+		tmp_block = get_block_helper(chunk, (int []){x, y + 1, z},
+			(float []){i_block_w[0], i_block_w[1] + 1, i_block_w[2]});
+		if (tmp_block && tmp_block->type == BLOCK_AIR)
+			chunk->blocks_visible[++a] = blocks[i];
+
+		// forward
+		tmp_block = get_block_helper(chunk, (int []){x, y, z - 1},
+			(float []){i_block_w[0], i_block_w[1], i_block_w[2] - 1});
+		if (tmp_block && tmp_block->type == BLOCK_AIR)
+			chunk->blocks_visible[++a] = blocks[i];
+
+		// backwards
+		tmp_block = get_block_helper(chunk, (int []){x, y, z + 1},
+			(float []){i_block_w[0], i_block_w[1], i_block_w[2] + 1});
+		if (tmp_block && tmp_block->type == BLOCK_AIR)
+			chunk->blocks_visible[++a] = blocks[i];
+			*/
 
 		// left
 		if (x - 1 >= 0)
@@ -434,8 +507,6 @@ int	get_blocks_visible(t_chunk *chunk)
 					chunk->blocks_visible[++a] = blocks[i];
 			}
 		}
-
-
 	}
 
 	/* MAKE ALL VISIBLE */
@@ -452,7 +523,8 @@ int	get_blocks_visible(t_chunk *chunk)
 
 void	update_chunk(t_chunk *chunk, float *coord)
 {
-	vec3_new(chunk->coordinate, coord[0], coord[1], coord[2]);
+	for (int i = 0; i < 3; i++)
+		chunk->coordinate[i] = coord[i];
 	vec3_new(chunk->world_coordinate,
 		chunk->coordinate[0] * chunk->info->chunk_size[0],
 		chunk->coordinate[1] * chunk->info->chunk_size[1],
@@ -840,6 +912,7 @@ void	update_surrounding_chunk_aabbs(t_chunk *chunks, float *player_chunk_v3)
 */
 void	update_chunk_visible_blocks(t_chunk *chunk)
 {
+	// TODO: only update if it has all its neighbors (do this whenever the get_chunk is faster;)
 	chunk->blocks_visible_amount = get_blocks_visible(chunk);
 	chunk->block_matrices_size = sizeof(float) * 16 * chunk->blocks_visible_amount;
 	chunk->block_textures_size = sizeof(int) * chunk->blocks_visible_amount;

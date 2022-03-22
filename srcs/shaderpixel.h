@@ -286,6 +286,7 @@ typedef struct s_chunk_info
 	t_chunk_block_aabb	*chunk_block_aabbs; // every chunk has t_chunk_aabb, which has an aabb for every block in the chunk;
 	int					chunk_block_aabb_amount; // 27;
 
+
 	t_chunk		*chunks; // you should not store the chunks here mainly; its just here so you can acces from places you need, without having to pass them in the function as argumnet;
 }	t_chunk_info;
 
@@ -301,7 +302,7 @@ typedef struct s_chunk_args
 struct	s_chunk
 {
 	t_chunk_info	*info;
-	float		coordinate[VEC3_SIZE];
+	int			coordinate[VEC3_SIZE];
 	float		world_coordinate[VEC3_SIZE];
 
 	int			block_amount;
@@ -310,6 +311,8 @@ struct	s_chunk
 	float		*block_matrices;
 	int			block_textures_size;
 	int			*block_textures;
+
+	int			has_blocks; // 1/0 whether the chunk has other than air blocks;
 
 	t_block		*blocks_visible; // blocks that are touching air, which means we want to render them;
 	int			blocks_visible_amount; // amount of blocks in the array that we want to render;
@@ -338,6 +341,7 @@ void		show_chunk_borders(t_chunk *chunk, t_camera *camera, float *col);
 t_chunk		*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, float *dir);
 void		update_surrounding_chunks(t_chunk *chunks, float *player_chunk_v3);
 int			*get_block_chunk_pos_from_index(int *res, int *max, int index);
+int			*block_world_to_local_pos(int *res, float *world);
 
 void		regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2);
 void		regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3, t_thread_manager *tm);
