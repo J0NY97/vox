@@ -346,9 +346,10 @@ void		regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float 
 //	NOISE
 ///////////////////
 
-int			random_number(int x, int y);
 float		perlin(float x, float y, unsigned int seed);
 float		perlin3(float x, float y, float z, unsigned int seed);
+float		perlin_v2(float x, float y, float z);
+float		octave_perlin(float x, float y, float z, int octaves, float persistence);
 
 ///////////////////
 //	PLAYER

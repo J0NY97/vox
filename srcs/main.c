@@ -158,8 +158,10 @@ int	main(void)
 		t_thread_manager	tm;
 		thread_manager_new(&tm, 64);
 
+		int	regen_chunks = 1;
+
 		t_chunk_info	chunk_info;
-		chunk_info.render_distance = 10; // dont have less than 3;
+		chunk_info.render_distance = 10;
 		chunk_info.seed = 896868766;
 		chunk_info.width = 16;
 		chunk_info.breadth = 16;
@@ -280,6 +282,15 @@ int	main(void)
 		if (keys[GLFW_KEY_5].state == GLFW_PRESS)
 			vec3_new(player.camera.pos, 0, 200, 0);
 
+		if (keys[GLFW_KEY_SPACE].state == GLFW_PRESS)
+		{
+			regen_chunks = regen_chunks != 1;
+			if (regen_chunks)
+				LG_INFO("Regeneration of chunks turned ON.");
+			else
+				LG_INFO("Regeneration of chunks turned OFF.");
+		}
+
 		update_fps(&fps);
 		player_events(&player, keys, sp.win);
 		player_movement(&player, sp.win, fps);
@@ -339,7 +350,8 @@ int	main(void)
 /////////////////
 		player_in_chunk(player_chunk, player.camera.pos, &chunk_info);
 
-		regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);	
+		if (regen_chunks)
+			regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);	
 //		regenerate_chunks_v3(chunk_reloading, chunks, &chunk_info, player_chunk);	
 
 		thread_manager_check_threadiness(&tm);
@@ -368,8 +380,11 @@ int	main(void)
 			}
 			if (chunks[nth_chunk].blocks_visible_amount > 0)
 			{
-				// TODO: Cull chunk if camera far plane is nearer than chunk;
-				if (aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum)) // Check if frustum intersects chunk aabb;
+				// Dont render chunk if the chunk is further away than the farplane of the camear;
+				// Dont render if the chunk is outside the view fustrum;
+				if (vec3_dist(player.camera.pos, chunks[nth_chunk].world_coordinate) <
+					player.camera.far_plane + chunks[nth_chunk].info->chunk_size[0] &&
+					aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum))
 				{
 					render_chunk(&chunks[nth_chunk], &player.camera, &cube_shader);
 					sent_to_gpu++;
@@ -397,7 +412,7 @@ int	main(void)
 
 			}
 		}
-		//ft_printf("CPU : %d, GPU : %d\n", chunk_info.chunks_loaded, sent_to_gpu);
+		ft_printf("CPU : %d, GPU : %d\n", chunk_info.chunks_loaded, sent_to_gpu);
 
 /////////////////
 		// END Chunk things

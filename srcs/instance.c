@@ -72,20 +72,22 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord)
 int	chunk_gen(t_chunk *chunk)
 {
 	int		start_y = 64;
-	float	freq = 120.0f;
-	float	height = freq / 100; // less is more;
+//	float	freq = 120.0f;
+	float	freq = 0.008f;
+	float	height = freq * 100; // less is more;
 	int		i = 0;
 
 	for (int x = 0; x < chunk->info->width; x++)
 	{
 		float	block_world_x = (chunk->world_coordinate[0] + ((float)x * chunk->info->block_size));
-		float	to_use_x = block_world_x / freq;
+		float	to_use_x = block_world_x * freq;
 		for (int z = 0; z < chunk->info->breadth; z++)
 		{
 			float	block_world_z = (chunk->world_coordinate[2] + ((float)z * chunk->info->block_size));
-			float	to_use_z = block_world_z / freq;
+			float	to_use_z = block_world_z * freq;
 
 			float	perper = 1 * perlin(1 * to_use_x, 1 * to_use_z, chunk->info->seed);
+//			float	perper2 = 1 * perlin_v2(1 * to_use_x, chunk->info->seed, 1 * to_use_z);
 			int		wanted_y = start_y + (start_y * perper);
 			int		whatchumacallit = wanted_y - (chunk->coordinate[1] * chunk->info->height);
 			int		amount = ft_clamp(whatchumacallit, 0, chunk->info->height - 1);
@@ -94,12 +96,14 @@ int	chunk_gen(t_chunk *chunk)
 			{
 				/* ////// CAVE GEN ///////// */
 				/*
-				float	cave_freq = 200.0f;
-				float	cave_height = cave_freq / 200;
-				float	cave_x = block_world_x / cave_freq;
-				float	cave_z = block_world_z / cave_freq;
-				float	cave_y = ((float)y * chunk->info->block_size) / cave_freq;
+				float	cave_freq = 0.005f;
+				float	cave_height = cave_freq * 200;
+				float	cave_x = block_world_x * cave_freq;
+				float	cave_z = block_world_z * cave_freq;
+				float	cave_y = (chunk->world_coordinate[1] + ((float)y * chunk->info->block_size)) * cave_freq;
+				*/
 				float	rep = 1.0f;
+				/*
 				rep = perlin3(cave_x, cave_y, cave_z, chunk->info->seed)
 					+ 0.5 * perlin3(2 * cave_x, 2 * cave_y, 2 * cave_z, chunk->info->seed)
 					+ 0.25 * perlin3(4 * cave_x, 4 * cave_y, 4 * cave_z, chunk->info->seed)
@@ -107,11 +111,11 @@ int	chunk_gen(t_chunk *chunk)
 				rep /= 1 + 0.5 + 0.25 + 0.125;
 				if (rep > 0)
 					rep = powf(rep, cave_height);
+				rep = octave_perlin(cave_x, cave_y, cave_z, 1, 0.5);
 					*/
 				chunk->blocks[i].chunk = chunk;
 				vec3_new(chunk->blocks[i].pos, x, y, z);
-				if (/*rep > -0.10f
-					&&*/ y <= whatchumacallit)
+				if (rep > 0.0f && y <= whatchumacallit)
 				{
 					if (y <= whatchumacallit - 1) // if we have 3 dirt block on top we make the rest stone blocks;
 						chunk->blocks[i].type = BLOCK_STONE;

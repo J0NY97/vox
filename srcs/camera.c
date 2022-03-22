@@ -11,7 +11,7 @@ void	new_camera(t_camera *camera)
 	camera->pitch = 0.0f;
 	camera->yaw = -90.0f;
 	camera->near_plane = 0.1f;
-	camera->far_plane = 200.0f;
+	camera->far_plane = 400.0f;
 	camera->viewport_w = 1280;
 	camera->viewport_h = 720;
 	camera->aspect = camera->viewport_w / camera->viewport_h;
