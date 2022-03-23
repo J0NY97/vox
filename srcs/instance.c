@@ -108,9 +108,7 @@ int	chunk_gen(t_chunk *chunk)
 				float	cave_x = block_world_x * cave_freq;
 				float	cave_z = block_world_z * cave_freq;
 				float	cave_y = (chunk->world_coordinate[1] + ((float)y * chunk->info->block_size)) * cave_freq;
-				*/
 				float	rep = 1.0f;
-				/*
 				rep = perlin3(cave_x, cave_y, cave_z, chunk->info->seed)
 					+ 0.5 * perlin3(2 * cave_x, 2 * cave_y, 2 * cave_z, chunk->info->seed)
 					+ 0.25 * perlin3(4 * cave_x, 4 * cave_y, 4 * cave_z, chunk->info->seed)
@@ -119,10 +117,10 @@ int	chunk_gen(t_chunk *chunk)
 				if (rep > 0)
 					rep = powf(rep, cave_height);
 				rep = octave_perlin(cave_x, cave_y, cave_z, 1, 0.5);
-					*/
+				*/
 				chunk->blocks[i].chunk = chunk;
 				vec3_new(chunk->blocks[i].pos, x, y, z);
-				if (rep > 0.0f && y <= whatchumacallit)
+				if (/*rep > 0.0f &&*/ y <= whatchumacallit)
 				{
 					if (y <= whatchumacallit - 1) // if we have 3 dirt block on top we make the rest stone blocks;
 						chunk->blocks[i].type = BLOCK_STONE;
@@ -236,6 +234,19 @@ int	get_block_index(t_chunk_info *info, int x, int y, int z)
 }
 
 /*
+ * From 'block_pos' aka the block's world position, get which chunk it is in;
+*/
+int	*which_chunk(int *res, float *block_pos)
+{
+	int	chunk_size = 16;
+
+	res[0] = (int)(block_pos[0]) / chunk_size;
+	res[1] = (int)(block_pos[1]) / chunk_size;
+	res[2] = (int)(block_pos[2]) / chunk_size;
+	return (res);
+}
+
+/*
  * Dont use this before you know how slow this is;
  *
  * !!!!!REMEMBER!!!!!
@@ -245,12 +256,14 @@ int	get_block_index(t_chunk_info *info, int x, int y, int z)
 t_block	*get_block(t_chunk_info	*info, float *block_pos)
 {
 	int		local_pos[3];
+	int		in_chunk[3];
 	t_chunk	*in;
 
-	block_world_to_local_pos(local_pos, block_pos);
-	in = get_chunk(info, local_pos);
+	which_chunk(in_chunk, block_pos);
+	in = get_chunk(info, in_chunk);
 	if (!in)
 		return (NULL);
+	block_world_to_local_pos(local_pos, block_pos);
 	return (&in->blocks[get_block_index(info, local_pos[0], local_pos[1], local_pos[2])]);
 }
 
@@ -264,9 +277,9 @@ float	*get_block_world_pos(float *res, t_block *block)
 
 int	*block_world_to_local_pos(int *res, float *world)
 {
-	res[0] = (int)world[0] / 16;
-	res[1] = (int)world[1] / 16;
-	res[2] = (int)world[2] / 16;
+	res[0] = mod(world[0], 16);
+	res[1] = mod(world[1], 16);
+	res[2] = mod(world[2], 16);
 	return (res);
 }
 
@@ -336,13 +349,43 @@ int	get_blocks_visible(t_chunk *chunk)
 		int z = pos[2];
 
 		get_block_world_pos(i_block_w, &blocks[i]);
-
+	
 	if (1)
+	{
+		tmp_block = get_block(chunk->info, (float []){i_block_w[0] - 1, i_block_w[1], i_block_w[2]});
+		if (tmp_block && tmp_block->type == BLOCK_AIR)
+		{
+			chunk->blocks_visible[++a] = blocks[i];
+			continue ;
+		}
+
+		tmp_block = get_block(chunk->info, (float []){i_block_w[0] + 1, i_block_w[1], i_block_w[2]});
+		if (tmp_block && tmp_block->type == BLOCK_AIR)
+		{
+			chunk->blocks_visible[++a] = blocks[i];
+			continue ;
+		}
+
+		tmp_block = get_block(chunk->info, (float []){i_block_w[0], i_block_w[1] - 1, i_block_w[2]});
+		if (tmp_block && tmp_block->type == BLOCK_AIR)
+		{
+			chunk->blocks_visible[++a] = blocks[i];
+			continue ;
+		}
+
+		tmp_block = get_block(chunk->info, (float []){i_block_w[0], i_block_w[1] + 1, i_block_w[2]});
+		if (tmp_block && tmp_block->type == BLOCK_AIR)
+		{
+			chunk->blocks_visible[++a] = blocks[i];
+			continue ;
+		}
+	}
+
+	if (0)
 	{
 		// LEFT
 		tmp_block = get_block_helper(chunk, (int []){x - 1, y, z},
-			(float []){i_block_w[0] - chunk->info->block_size,
-			i_block_w[1], i_block_w[2]});
+			(float []){i_block_w[0] - 1, i_block_w[1], i_block_w[2]});
 		if (tmp_block && tmp_block->type == BLOCK_AIR)
 		{
 			chunk->blocks_visible[++a] = blocks[i];
@@ -351,8 +394,7 @@ int	get_blocks_visible(t_chunk *chunk)
 
 		// RIGHT
 		tmp_block = get_block_helper(chunk, (int []){x + 1, y, z},
-			(float []){i_block_w[0] + chunk->info->block_size,
-			i_block_w[1], i_block_w[2]});
+			(float []){i_block_w[0] + 1, i_block_w[1], i_block_w[2]});
 		if (tmp_block && tmp_block->type == BLOCK_AIR)
 		{
 			chunk->blocks_visible[++a] = blocks[i];
@@ -361,9 +403,7 @@ int	get_blocks_visible(t_chunk *chunk)
 
 		// UP
 		tmp_block = get_block_helper(chunk, (int []){x, y + 1, z},
-			(float []){i_block_w[0],
-			i_block_w[1] + chunk->info->block_size,
-			i_block_w[2]});
+			(float []){i_block_w[0], i_block_w[1] + 1, i_block_w[2]});
 		if (tmp_block && tmp_block->type == BLOCK_AIR)
 		{
 			chunk->blocks_visible[++a] = blocks[i];
@@ -372,9 +412,7 @@ int	get_blocks_visible(t_chunk *chunk)
 
 		// DOWN
 		tmp_block = get_block_helper(chunk, (int []){x, y - 1, z},
-			(float []){i_block_w[0],
-			i_block_w[1] - chunk->info->block_size,
-			i_block_w[2]});
+			(float []){i_block_w[0], i_block_w[1] - 1, i_block_w[2]});
 		if (tmp_block && tmp_block->type == BLOCK_AIR)
 		{
 			chunk->blocks_visible[++a] = blocks[i];
@@ -383,8 +421,7 @@ int	get_blocks_visible(t_chunk *chunk)
 
 		// FORWARD
 		tmp_block = get_block_helper(chunk, (int []){x, y, z - 1},
-			(float []){i_block_w[0], i_block_w[1],
-			i_block_w[2] - chunk->info->block_size});
+			(float []){i_block_w[0], i_block_w[1], i_block_w[2] - 1});
 		if (tmp_block && tmp_block->type == BLOCK_AIR)
 		{
 			chunk->blocks_visible[++a] = blocks[i];
@@ -393,8 +430,7 @@ int	get_blocks_visible(t_chunk *chunk)
 
 		// BACKWARD
 		tmp_block = get_block_helper(chunk, (int []){x, y, z + 1},
-			(float []){i_block_w[0], i_block_w[1],
-			i_block_w[2] + chunk->info->block_size});
+			(float []){i_block_w[0], i_block_w[1], i_block_w[2] + 1});
 		if (tmp_block && tmp_block->type == BLOCK_AIR)
 		{
 			chunk->blocks_visible[++a] = blocks[i];
@@ -669,7 +705,7 @@ void	regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *pla
 	//  check if any of the loaded chunks have those coordinates, if not
 	//	we take one of the chunks that are not going to be loaded next time
 	// 	and update the new chunk into that memory;
-	int				max_threads = 16; // minimum amount of chunks on height;
+	int				max_threads = 64; // minimum amount of chunks on height;
 	pthread_t		threads[max_threads];
 	int				nth_thread = 0;
 	int				nth_chunk = 0;

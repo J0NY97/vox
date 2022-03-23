@@ -12,6 +12,9 @@
 # define MAT4_SIZE 16
 # define QUAT_SIZE 4
 
+// OTHER EXTRAS
+int		mod(int a, int b);
+
 // VEC3
 float	*new_vec3(float *src, float x, float y, float z);
 float	*vec3_new(float *src, float x, float y, float z);

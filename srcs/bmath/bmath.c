@@ -1,5 +1,13 @@
 #include "bmath.h"
 
+int	mod(int a, int b)
+{
+	int	r;
+
+	r = a % b;
+    return (r < 0 ? r + b : r);
+}
+
 float	*new_vec3(float *src, float x, float y, float z)
 {
 	return (vec3_new(src, x, y, z));
