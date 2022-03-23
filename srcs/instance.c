@@ -88,7 +88,6 @@ int	chunk_gen(t_chunk *chunk)
 			float	block_world_z = (chunk->world_coordinate[2] + ((float)z * chunk->info->block_size));
 			float	to_use_z = block_world_z * freq;
 
-//			float	perper = 1 * perlin(1 * to_use_x, 1 * to_use_z, chunk->info->seed);
 			float	perper =
 				1 * perlin(1 * to_use_x, 1 * to_use_z, chunk->info->seed) +
 				0.5 * perlin(2 * to_use_x, 2 * to_use_z, chunk->info->seed) +
@@ -96,7 +95,7 @@ int	chunk_gen(t_chunk *chunk)
 				0.125 * perlin(8 * to_use_x, 8 * to_use_z, chunk->info->seed);
 			perper /= 1 + 0.5 + 0.25 + 0.125;
 			int		wanted_y = start_y + (start_y * perper);
-			int		whatchumacallit = wanted_y - (chunk->coordinate[1] * chunk->info->height);
+			int		whatchumacallit = wanted_y - (chunk->world_coordinate[1]);
 			int		amount = ft_clamp(whatchumacallit, 0, chunk->info->height - 1);
 
 			for (int y = 0; y < chunk->info->height; y++)
@@ -350,7 +349,7 @@ int	get_blocks_visible(t_chunk *chunk)
 
 		get_block_world_pos(i_block_w, &blocks[i]);
 	
-	if (1)
+	if (0)
 	{
 		tmp_block = get_block(chunk->info, (float []){i_block_w[0] - 1, i_block_w[1], i_block_w[2]});
 		if (tmp_block && tmp_block->type == BLOCK_AIR)
@@ -438,7 +437,7 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 	}
 
-	if (0)
+	if (1)
 	{
 		// left
 		tmp_block = NULL;
