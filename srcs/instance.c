@@ -73,9 +73,8 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord)
 int	chunk_gen(t_chunk *chunk)
 {
 	int		start_y = 64;
-//	float	freq = 120.0f;
-	float	freq = 0.008f;
-	float	height = freq * 100; // less is more;
+	float	freq = 0.005f;
+	float	height = freq * 300; // less is more;
 	int		i = 0;
 
 	chunk->has_blocks = 0;
@@ -89,8 +88,13 @@ int	chunk_gen(t_chunk *chunk)
 			float	block_world_z = (chunk->world_coordinate[2] + ((float)z * chunk->info->block_size));
 			float	to_use_z = block_world_z * freq;
 
-			float	perper = 1 * perlin(1 * to_use_x, 1 * to_use_z, chunk->info->seed);
-//			float	perper2 = 1 * perlin_v2(1 * to_use_x, chunk->info->seed, 1 * to_use_z);
+//			float	perper = 1 * perlin(1 * to_use_x, 1 * to_use_z, chunk->info->seed);
+			float	perper =
+				1 * perlin(1 * to_use_x, 1 * to_use_z, chunk->info->seed) +
+				0.5 * perlin(2 * to_use_x, 2 * to_use_z, chunk->info->seed) +
+				0.25 * perlin(4 * to_use_x, 4 * to_use_z, chunk->info->seed) +
+				0.125 * perlin(8 * to_use_x, 8 * to_use_z, chunk->info->seed);
+			perper /= 1 + 0.5 + 0.25 + 0.125;
 			int		wanted_y = start_y + (start_y * perper);
 			int		whatchumacallit = wanted_y - (chunk->coordinate[1] * chunk->info->height);
 			int		amount = ft_clamp(whatchumacallit, 0, chunk->info->height - 1);
@@ -240,23 +244,14 @@ int	get_block_index(t_chunk_info *info, int x, int y, int z)
 */
 t_block	*get_block(t_chunk_info	*info, float *block_pos)
 {
-	int		chunk_coord[3];
+	int		local_pos[3];
 	t_chunk	*in;
 
-	chunk_coord[0] = (int)block_pos[0] / info->width;
-	chunk_coord[1] = (int)block_pos[1] / info->height;
-	chunk_coord[2] = (int)block_pos[2] / info->breadth;
-	in = get_chunk(info, chunk_coord);
+	block_world_to_local_pos(local_pos, block_pos);
+	in = get_chunk(info, local_pos);
 	if (!in)
 		return (NULL);
-	int	loc_pos[3];
-	block_world_to_local_pos(loc_pos, block_pos);
-	// TODO use chunk size
-	if (loc_pos[0] < 0 || loc_pos[0] > 15 ||
-		loc_pos[1] < 0 || loc_pos[1] > 15 ||
-		loc_pos[2] < 0 || loc_pos[2] > 15)
-		return (NULL);
-	return (&in->blocks[get_block_index(info, loc_pos[0], loc_pos[1], loc_pos[2])]);
+	return (&in->blocks[get_block_index(info, local_pos[0], local_pos[1], local_pos[2])]);
 }
 
 float	*get_block_world_pos(float *res, t_block *block)
@@ -269,10 +264,9 @@ float	*get_block_world_pos(float *res, t_block *block)
 
 int	*block_world_to_local_pos(int *res, float *world)
 {
-	// TODO use chunk size;
-	res[0] = (int)world[0] % 16;
-	res[1] = (int)world[1] % 16;
-	res[2] = (int)world[2] % 16;
+	res[0] = (int)world[0] / 16;
+	res[1] = (int)world[1] / 16;
+	res[2] = (int)world[2] / 16;
 	return (res);
 }
 
@@ -295,10 +289,9 @@ int	*get_block_local_pos_from_index(int *res, int *max, int index)
 */
 t_block	*get_block_helper(t_chunk *chunk, int *local_pos, float *world_pos)
 {
-	// TODO make chunk size;
-	if (local_pos[0] < 0 || local_pos[0] > 15 ||
-		local_pos[1] < 0 || local_pos[1] > 15 ||
-		local_pos[2] < 0 || local_pos[2] > 15)
+	if (local_pos[0] < 0 || local_pos[0] > chunk->info->width - 1 ||
+		local_pos[1] < 0 || local_pos[1] > chunk->info->height - 1 ||
+		local_pos[2] < 0 || local_pos[2] > chunk->info->breadth - 1)
 		return (get_block(chunk->info, world_pos));
 	return (&chunk->blocks[get_block_index(chunk->info, local_pos[0], local_pos[1], local_pos[2])]);
 }
@@ -323,24 +316,6 @@ int	get_blocks_visible(t_chunk *chunk)
 	blocks = chunk->blocks;
 
 	/* MAKE ONLY TOUCHING AIR VISIBLE */
-	/*
-	for (int i = 0; i < chunk->block_amount; i++)
-	{
-		if (blocks[i].type == BLOCK_AIR)
-			continue ;
-		for (int j = 0; j < chunk->block_amount; j++)
-		{
-			if (blocks[j].type == BLOCK_AIR && // <- checking this first with 10 render distance takes time from 24s to 8s;
-				vec3_dist(blocks[i].pos, blocks[j].pos) <= 1.0f)
-			{
-				chunk->blocks_visible[++a] = blocks[i];
-				break ;
-			}
-		}
-	}
-	*/
-
-	/* MAKE ONLY TOUCHING AIR VISIBLE */
 	/* More improvements, instead of looping twice through all the blocks */
 	/* We can just yoink the correct block from the array, now that they are all in order */
 	float	i_block_w[VEC3_SIZE]; // block world pos for index i;
@@ -362,162 +337,189 @@ int	get_blocks_visible(t_chunk *chunk)
 
 		get_block_world_pos(i_block_w, &blocks[i]);
 
-		// left
-		/*
+	if (1)
+	{
+		// LEFT
 		tmp_block = get_block_helper(chunk, (int []){x - 1, y, z},
-			(float []){i_block_w[0] - 1, i_block_w[1], i_block_w[2]});
+			(float []){i_block_w[0] - chunk->info->block_size,
+			i_block_w[1], i_block_w[2]});
 		if (tmp_block && tmp_block->type == BLOCK_AIR)
+		{
 			chunk->blocks_visible[++a] = blocks[i];
+			continue ;
+		}
 
-		// right
+		// RIGHT
 		tmp_block = get_block_helper(chunk, (int []){x + 1, y, z},
-			(float []){i_block_w[0] + 1, i_block_w[1], i_block_w[2]});
+			(float []){i_block_w[0] + chunk->info->block_size,
+			i_block_w[1], i_block_w[2]});
 		if (tmp_block && tmp_block->type == BLOCK_AIR)
+		{
 			chunk->blocks_visible[++a] = blocks[i];
+			continue ;
+		}
 
-		// down
-		tmp_block = get_block_helper(chunk, (int []){x, y - 1, z},
-			(float []){i_block_w[0], i_block_w[1] - 1, i_block_w[2]});
-		if (tmp_block && tmp_block->type == BLOCK_AIR)
-			chunk->blocks_visible[++a] = blocks[i];
-
-		// up
+		// UP
 		tmp_block = get_block_helper(chunk, (int []){x, y + 1, z},
-			(float []){i_block_w[0], i_block_w[1] + 1, i_block_w[2]});
+			(float []){i_block_w[0],
+			i_block_w[1] + chunk->info->block_size,
+			i_block_w[2]});
 		if (tmp_block && tmp_block->type == BLOCK_AIR)
+		{
 			chunk->blocks_visible[++a] = blocks[i];
+			continue ;
+		}
 
-		// forward
+		// DOWN
+		tmp_block = get_block_helper(chunk, (int []){x, y - 1, z},
+			(float []){i_block_w[0],
+			i_block_w[1] - chunk->info->block_size,
+			i_block_w[2]});
+		if (tmp_block && tmp_block->type == BLOCK_AIR)
+		{
+			chunk->blocks_visible[++a] = blocks[i];
+			continue ;
+		}
+
+		// FORWARD
 		tmp_block = get_block_helper(chunk, (int []){x, y, z - 1},
-			(float []){i_block_w[0], i_block_w[1], i_block_w[2] - 1});
+			(float []){i_block_w[0], i_block_w[1],
+			i_block_w[2] - chunk->info->block_size});
 		if (tmp_block && tmp_block->type == BLOCK_AIR)
+		{
 			chunk->blocks_visible[++a] = blocks[i];
+			continue ;
+		}
 
-		// backwards
+		// BACKWARD
 		tmp_block = get_block_helper(chunk, (int []){x, y, z + 1},
-			(float []){i_block_w[0], i_block_w[1], i_block_w[2] + 1});
+			(float []){i_block_w[0], i_block_w[1],
+			i_block_w[2] + chunk->info->block_size});
 		if (tmp_block && tmp_block->type == BLOCK_AIR)
+		{
 			chunk->blocks_visible[++a] = blocks[i];
-			*/
+			continue ;
+		}
+	}
 
+	if (0)
+	{
 		// left
+		tmp_block = NULL;
 		if (x - 1 >= 0)
 		{
 			j = get_block_index(chunk->info, x - 1, y, z);
-			if (blocks[j].type == BLOCK_AIR)
-				chunk->blocks_visible[++a] = blocks[i];
+			tmp_block = &blocks[j];
 		}
 		else if (enable_adjacent_chunk)
 		{
 			adj_chunk = get_adjacent_chunk(chunk, chunk->info->chunks, (float []){-1, 0, 0});
 			if (adj_chunk)
-			{
 				tmp_block = &adj_chunk->blocks[get_block_index(chunk->info, 15, y, z)];
-				if (tmp_block && tmp_block->type == BLOCK_AIR)
-					chunk->blocks_visible[++a] = blocks[i];
-			}
+		}
+		if (tmp_block && tmp_block->type == BLOCK_AIR)
+		{
+			chunk->blocks_visible[++a] = blocks[i];
+			continue ;
 		}
 
 		// right
+		tmp_block = NULL;
 		if (x + 1 < 16)
 		{
 			j = get_block_index(chunk->info, x + 1, y, z);
-			if (blocks[j].type == BLOCK_AIR)
-				chunk->blocks_visible[++a] = blocks[i];
+			tmp_block = &blocks[j];
 		}
 		else if (enable_adjacent_chunk)
 		{
 			adj_chunk = get_adjacent_chunk(chunk, chunk->info->chunks, (float []){1, 0, 0});
 			if (adj_chunk)
-			{
 				tmp_block = &adj_chunk->blocks[get_block_index(chunk->info, 0, y, z)];
-				if (tmp_block && tmp_block->type == BLOCK_AIR)
-					chunk->blocks_visible[++a] = blocks[i];
-			}
+		}
+		if (tmp_block && tmp_block->type == BLOCK_AIR)
+		{
+			chunk->blocks_visible[++a] = blocks[i];
+			continue ;
 		}
 
 		// top
+		tmp_block = NULL;
 		if (y + 1 < 16)
 		{
 			j = get_block_index(chunk->info, x, y + 1, z);
-			if (blocks[j].type == BLOCK_AIR)
-				chunk->blocks_visible[++a] = blocks[i];
+			tmp_block = &blocks[j];
 		}
 		else if (enable_adjacent_chunk)
 		{
 			adj_chunk = get_adjacent_chunk(chunk, chunk->info->chunks, (float []){0, 1, 0});
 			if (adj_chunk)
-			{
 				tmp_block = &adj_chunk->blocks[get_block_index(chunk->info, x, 0, z)];
-				if (tmp_block && tmp_block->type == BLOCK_AIR)
-					chunk->blocks_visible[++a] = blocks[i];
-			}
+		}
+		if (tmp_block && tmp_block->type == BLOCK_AIR)
+		{
+			chunk->blocks_visible[++a] = blocks[i];
+			continue ;
 		}
 
 		// bot
+		tmp_block = NULL;
 		if (y - 1 >= 0)
 		{
 			j = get_block_index(chunk->info, x, y - 1, z);
-			if (blocks[j].type == BLOCK_AIR)
-				chunk->blocks_visible[++a] = blocks[i];
+			tmp_block = &blocks[j];
 		}
 		else if (enable_adjacent_chunk)
 		{
 			adj_chunk = get_adjacent_chunk(chunk, chunk->info->chunks, (float []){0, -1, 0});
 			if (adj_chunk)
-			{
 				tmp_block = &adj_chunk->blocks[get_block_index(chunk->info, x, 15, z)];
-				if (tmp_block && tmp_block->type == BLOCK_AIR)
-					chunk->blocks_visible[++a] = blocks[i];
-			}
+		}
+		if (tmp_block && tmp_block->type == BLOCK_AIR)
+		{
+			chunk->blocks_visible[++a] = blocks[i];
+			continue ;
 		}
 
 		// forward
+		tmp_block = NULL;
 		if (z + 1 < 16)
 		{
 			j = get_block_index(chunk->info, x, y, z + 1);
-			if (blocks[j].type == BLOCK_AIR)
-				chunk->blocks_visible[++a] = blocks[i];
+			tmp_block = &blocks[j];
 		}
 		else if (enable_adjacent_chunk)
 		{
 			adj_chunk = get_adjacent_chunk(chunk, chunk->info->chunks, (float []){0, 0, 1});
 			if (adj_chunk)
-			{
 				tmp_block = &adj_chunk->blocks[get_block_index(chunk->info, x, y, 0)];
-				if (tmp_block && tmp_block->type == BLOCK_AIR)
-					chunk->blocks_visible[++a] = blocks[i];
-			}
+		}
+		if (tmp_block && tmp_block->type == BLOCK_AIR)
+		{
+			chunk->blocks_visible[++a] = blocks[i];
+			continue ;
 		}
 
 		// backward
+		tmp_block = NULL;
 		if (z - 1 >= 0)
 		{
 			j = get_block_index(chunk->info, x, y, z - 1);
-			if (blocks[j].type == BLOCK_AIR)
-				chunk->blocks_visible[++a] = blocks[i];
+			tmp_block = &blocks[j];
 		}
 		else if (enable_adjacent_chunk)
 		{
 			adj_chunk = get_adjacent_chunk(chunk, chunk->info->chunks, (float []){0, 0, -1});
 			if (adj_chunk)
-			{
 				tmp_block = &adj_chunk->blocks[get_block_index(chunk->info, x, y, 15)];
-				if (tmp_block && tmp_block->type == BLOCK_AIR)
-					chunk->blocks_visible[++a] = blocks[i];
-			}
+		}
+		if (tmp_block && tmp_block->type == BLOCK_AIR)
+		{
+			chunk->blocks_visible[++a] = blocks[i];
+			continue ;
 		}
 	}
-
-	/* MAKE ALL VISIBLE */
-	/*
-	for (int i = 0; i < chunk->block_amount; i++)
-	{
-		if (blocks[i].type == BLOCK_AIR)
-			continue ;
-		chunk->blocks_visible[++a] = blocks[i];
 	}
-	*/
+
 	return (a + 1); // '+ 1' because we start at '-1';
 }
 
@@ -902,7 +904,8 @@ void	update_surrounding_chunk_aabbs(t_chunk *chunks, float *player_chunk_v3)
 
 	info = chunks[0].info;
 	vec3_string("player_chunk :", player_chunk_v3);
-	player_chunk = get_chunk(info, player_chunk_v3);
+	player_chunk = get_chunk(info,
+		(int []){player_chunk_v3[0], player_chunk_v3[1], player_chunk_v3[2]});
 }
 
 /*

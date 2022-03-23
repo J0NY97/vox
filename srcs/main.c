@@ -75,7 +75,7 @@ int	main(void)
 
 	t_player	player;
 	new_player(&player);
-	new_vec3(player.camera.pos, 15, 200, 15);
+	new_vec3(player.camera.pos, 5, 85, 5);
 //	new_vec3(player.camera.pos, 16384, 80, 16384);
 	player.camera.pitch = -20;
 	player.camera.yaw = 50;
@@ -168,7 +168,7 @@ int	main(void)
 		chunk_info.height = 16;
 		chunk_info.y_chunk_amount = 256 / chunk_info.height;
 		chunk_info.chunks_loaded = chunk_info.y_chunk_amount * ((int)chunk_info.render_distance * (int)chunk_info.render_distance);
-		chunk_info.block_scale = 1.0f;
+		chunk_info.block_scale = 0.5f;
 		chunk_info.block_size = chunk_info.block_scale * 2;
 		chunk_info.chunk_size[0] = chunk_info.width * chunk_info.block_size;
 		chunk_info.chunk_size[1] = chunk_info.height * chunk_info.block_size;
@@ -412,7 +412,7 @@ int	main(void)
 
 			}
 		}
-		ft_printf("CPU : %d, GPU : %d\n", chunk_info.chunks_loaded, sent_to_gpu);
+//		ft_printf("CPU : %d, GPU : %d\n", chunk_info.chunks_loaded, sent_to_gpu);
 
 /////////////////
 		// END Chunk things
