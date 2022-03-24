@@ -91,7 +91,7 @@ $(ODIR)/%.o: $(CDIR)/%.c
 	@printf $(YELLOW)"Compiling $<\n"$(RESET)
 
 $(NAME): $(OBJ)
-	@gcc -o $(NAME) $(OBJ) $(INCS) $(LIB_DIRS) $(LIBS) $(FLAGS)
+	@gcc -o $(NAME) $(OBJ) $(INCS) $(LIB_DIRS) $(LIBS) $(CLFLAGS)
 	@echo "$(NAME) was successfully created."
 
 clean:
