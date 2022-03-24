@@ -26,6 +26,7 @@ CFILES = \
 	frustum.c \
 	thread.c \
 	help.c \
+	hashtable.c \
 	bimgf/bimgf_bmp.c \
 	bimgf/bimgf_help.c \
 	bimgf/bimgf_jpg.c \
@@ -72,7 +73,7 @@ else
 LIBS += -lOpenGl32 -lgdi32
 endif
 
-FLAGS = -Wall -Wextra -Wno-unused-variable -MMD -O3 #-g -fsanitize=address
+FLAGS = -Wall -Wextra -Wno-unused-variable -MMD #-O3 #-g -fsanitize=address
 
 all: $(ODIR) $(NAME)
 

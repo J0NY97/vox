@@ -2,7 +2,7 @@
 
 // Basically everything needed for minecraft : https://www.redblobgames.com/maps/terrain-from-noise/
 
-void	new_chunk(t_chunk *chunk, t_chunk_info *info, float *coord)
+void	new_chunk(t_chunk *chunk, t_chunk_info *info, int *coord)
 {
 	int error = glGetError();
 	if (error)
@@ -558,14 +558,42 @@ int	get_blocks_visible(t_chunk *chunk)
 	return (a + 1); // '+ 1' because we start at '-1';
 }
 
-void	update_chunk(t_chunk *chunk, float *coord)
+int	get_chunk_hash_key(t_chunk *chunk)
 {
+	int		res;
+
+	res = chunk->coordinate[0] +
+		(31 * chunk->coordinate[1]) +
+		(31 * 31 * chunk->coordinate[2]);
+	return (res);
+}
+
+void	update_chunk(t_chunk *chunk, int *coord)
+{
+	int		old_key = get_chunk_hash_key(chunk);
+	int		old_data = -1;
+	t_hash_item	*old_item;
+	// Get old data (aka the index in the chunks array.)
+	old_item = hash_item_search(chunk->info->table, chunk->info->table_size, old_key);
+	if (old_item)
+		old_data = old_item->data;
+		/*
+	else
+		LG_ERROR("Couldnt find old item. (old_hash : %d, %d %d %d)\n", old_key, chunk->coordinate[0], chunk->coordinate[1], chunk->coordinate[2]);
+		*/
+
+	// Remove old from chunk->info->table.
+	hash_item_delete(chunk->info->table, chunk->info->table_size, old_key);
+
 	for (int i = 0; i < 3; i++)
 		chunk->coordinate[i] = coord[i];
 	vec3_new(chunk->world_coordinate,
 		chunk->coordinate[0] * chunk->info->chunk_size[0],
 		chunk->coordinate[1] * chunk->info->chunk_size[1],
 		chunk->coordinate[2] * chunk->info->chunk_size[2]);
+
+	// Add new to chunk->info->table. with the same data (aka index to chunks array)
+	hash_item_insert(chunk->info->table, chunk->info->table_size, get_chunk_hash_key(chunk), old_data);
 	
 	// Generate Chunks	
 	chunk->block_amount = chunk_gen(chunk); // should always return max amount of blocks in a chunk;
@@ -740,7 +768,9 @@ void	regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *pla
 					}
 					int index = reload_these_chunks[nth_chunk];
 					chunks[index].args.chunk = &chunks[index];
-					vec3_new(chunks[index].args.coords, x, y, z);
+					chunks[index].args.coords[0] = x;
+					chunks[index].args.coords[1] = y;
+					chunks[index].args.coords[2] = z;
 					if (pthread_create(&threads[nth_thread], NULL, update_chunk_threaded, &chunks[index].args))
 						LG_ERROR("Couldnt create thread.");
 					nth_chunk++;
@@ -813,9 +843,11 @@ void	regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float *
 						break ;
 					int index = reload_these_chunks[nth_chunk];
 					chunks[index].args.chunk = &chunks[index];
-					vec3_new(chunks[index].args.coords, x, y, z);
+					chunks[index].args.coords[0] = x;
+					chunks[index].args.coords[1] = y;
+					chunks[index].args.coords[2] = z;
 					chunks[index].args.being_threaded = 1;
-					LG_INFO("Threading Chunk at %f %f %f", chunks[index].coordinate[0], chunks[index].coordinate[1], chunks[index].coordinate[2]);
+					LG_INFO("Threading Chunk at %d %d %d", chunks[index].coordinate[0], chunks[index].coordinate[1], chunks[index].coordinate[2]);
 					if (!thread_manager_new_thread(tm, update_chunk_threaded, &chunks[index].args))
 						LG_WARN("Couldnt created new thread, better luck next time.");
 					nth_chunk++;

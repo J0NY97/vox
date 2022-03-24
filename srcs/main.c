@@ -161,6 +161,7 @@ int	main(void)
 		int	regen_chunks = 1;
 
 		t_chunk_info	chunk_info;
+
 		chunk_info.render_distance = 10;
 		chunk_info.seed = 896868766;
 		chunk_info.width = 16;
@@ -181,6 +182,9 @@ int	main(void)
 			chunk_info.chunk_block_aabbs[i].aabb = malloc(sizeof(t_aabb) * chunk_info.chunk_block_aabbs[i].block_amount);
 			chunk_info.chunk_block_aabbs[i].block_pointers = malloc(sizeof(t_block *) * chunk_info.chunk_block_aabbs[i].block_amount);
 		}
+		chunk_info.table_size = chunk_info.chunks_loaded;
+		chunk_info.table = malloc(sizeof(t_hash_item) * chunk_info.table_size);
+		hash_table_clear(chunk_info.table, chunk_info.table_size);
 
 		int	chunk_reloading[2]; // 0 : reload_amount, 1: reloaded amount
 		chunk_reloading[0] = 0;
@@ -199,7 +203,8 @@ int	main(void)
 		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
 		{
 			new_model(&chunks[nth_chunk].model, &cube_obj);
-			new_chunk(&chunks[nth_chunk], &chunk_info, (float []){999, 0, 999});
+			new_chunk(&chunks[nth_chunk], &chunk_info, (int []){999 - nth_chunk, 0, 999});
+			hash_item_insert(chunk_info.table, chunk_info.table_size, get_chunk_hash_key(&chunks[nth_chunk]), nth_chunk);
 		}
 		ft_printf("Chunks created : %d\n", nth_chunk);
 //////////////////////////////
