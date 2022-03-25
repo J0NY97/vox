@@ -501,21 +501,6 @@ int	get_chunk_hash_key(int *coords)
 
 void	update_chunk(t_chunk *chunk, int *coord)
 {
-	/*
-	int		old_key = get_chunk_hash_key(chunk->coordinate);
-	int		old_data = -1;
-	t_hash_item	*old_item;
-	// Get old data (aka the index in the chunks array.)
-	old_item = hash_item_search(chunk->info->table, chunk->info->table_size, old_key);
-	if (old_item)
-		old_data = old_item->data;
-	else
-		LG_ERROR("Couldnt find old item. (old_hash : %d, %d %d %d)\n", old_key, chunk->coordinate[0], chunk->coordinate[1], chunk->coordinate[2]);
-		*/
-
-	// Remove old from chunk->info->table.
-//	hash_item_delete(chunk->info->table, chunk->info->table_size, old_key);
-
 	for (int i = 0; i < 3; i++)
 		chunk->coordinate[i] = coord[i];
 	vec3_new(chunk->world_coordinate,
@@ -523,9 +508,6 @@ void	update_chunk(t_chunk *chunk, int *coord)
 		chunk->coordinate[1] * chunk->info->chunk_size[1],
 		chunk->coordinate[2] * chunk->info->chunk_size[2]);
 
-	// Add new to chunk->info->table. with the same data (aka index to chunks array)
-//	hash_item_insert(chunk->info->table, chunk->info->table_size, get_chunk_hash_key(chunk->coordinate), old_data);
-	
 	// Generate Chunks	
 	chunk->block_amount = chunk_gen(chunk); // should always return max amount of blocks in a chunk;
 
@@ -816,9 +798,11 @@ void	regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float *
 
 void	show_chunk_borders(t_chunk *chunk, t_camera *camera, float *col)
 {
-	t_aabb *a;
-	
-	a = &chunk->aabb;
+	render_aabb(&chunk->aabb, camera, col);
+}
+
+void	render_aabb(t_aabb *a, t_camera *camera, float *col)
+{
 	// VERTICAL LINES
 	render_3d_line(
 		(float []){a->min[0], a->min[1], a->min[2]},
@@ -887,9 +871,11 @@ void	show_chunk_borders(t_chunk *chunk, t_camera *camera, float *col)
 
 void	block_aabb_update(t_aabb *res, t_block *block)
 {
-	res->min[0] = block->chunk->world_coordinate[0] * block->chunk->info->block_size - (block->chunk->info->block_size / 2);
-	res->min[1] = block->chunk->world_coordinate[1] * block->chunk->info->block_size - (block->chunk->info->block_size / 2);
-	res->min[2] = block->chunk->world_coordinate[2] * block->chunk->info->block_size - (block->chunk->info->block_size / 2);
+	float	half_block_size = (block->chunk->info->block_size / 2);
+
+	res->min[0] = block->chunk->world_coordinate[0] + (block->pos[0] * block->chunk->info->block_size) - half_block_size;
+	res->min[1] = block->chunk->world_coordinate[1] + (block->pos[1] * block->chunk->info->block_size) - half_block_size;
+	res->min[2] = block->chunk->world_coordinate[2] + (block->pos[2] * block->chunk->info->block_size) - half_block_size;
 	res->max[0] = res->min[0] + block->chunk->info->block_size;
 	res->max[1] = res->min[1] + block->chunk->info->block_size;
 	res->max[2] = res->min[2] + block->chunk->info->block_size;
@@ -900,27 +886,12 @@ void	block_aabb_update(t_aabb *res, t_block *block)
 */
 void	update_chunk_aabb(t_chunk_block_aabb *chunk_block_aabb, t_chunk *chunk)
 {
+	chunk_block_aabb->block_amount = chunk->blocks_visible_amount;
 	for (int i = 0; i < chunk_block_aabb->block_amount; i++)
 	{
-		chunk_block_aabb->block_pointers[i] = &chunk->blocks[i];
-		block_aabb_update(&chunk_block_aabb->aabb[i],
-			chunk_block_aabb->block_pointers[i]);
+		chunk_block_aabb->block_pointers[i] = &chunk->blocks_visible[i];
+		block_aabb_update(&chunk_block_aabb->aabb[i], chunk_block_aabb->block_pointers[i]);
 	}
-}
-
-/*
- * Update all the chunks surrounding the player;
-*/
-void	update_surrounding_chunk_aabbs(t_chunk *chunks, float *player_chunk_v3)
-{
-	t_chunk_info	*info;
-	t_chunk			*tmp;
-	t_chunk			*player_chunk;
-
-	info = chunks[0].info;
-	vec3_string("player_chunk :", player_chunk_v3);
-	player_chunk = get_chunk(info,
-		(int []){player_chunk_v3[0], player_chunk_v3[1], player_chunk_v3[2]});
 }
 
 /*

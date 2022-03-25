@@ -262,7 +262,8 @@ typedef struct	s_chunk_block_aabb
 {
 	t_aabb		*aabb; // one for each block needs to be created (w * b * h);
 	t_block		**block_pointers; // pointer to the correspoinding block, same index;
-	int			block_amount; // (chunk.w * chunk.b * chunk.h);
+	int			max_block_amount; // (chunk.w * chunk.b * chunk.h);
+	int			block_amount;
 }	t_chunk_block_aabb;
 
 typedef struct s_chunk_info
@@ -290,8 +291,6 @@ typedef struct s_chunk_info
 
 
 	t_chunk		*chunks; // you should not store the chunks here mainly; its just here so you can acces from places you need, without having to pass them in the function as argumnet;
-	t_hash_item	*table; // hash table of indices for the chunks; key is generated from the chunk->coordinate, since that is unique for all of them;
-	int			table_size;
 }	t_chunk_info;
 
 /* Used for threading */
@@ -342,11 +341,14 @@ void		update_chunk_visible_blocks(t_chunk *chunk);
 float		*player_in_chunk(float *res, float *player_coord, t_chunk_info *info);
 void		chunk_aabb_update(t_chunk *chunk);
 void		show_chunk_borders(t_chunk *chunk, t_camera *camera, float *col);
+void		render_aabb(t_aabb *a, t_camera *camera, float *col);
 t_chunk		*get_chunk(t_chunk_info *info, int *pos);
 t_chunk		*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, int *dir);
 void		update_surrounding_chunks(t_chunk *chunks, float *player_chunk_v3);
 int			*get_block_chunk_pos_from_index(int *res, int *max, int index);
 int			*block_world_to_local_pos(int *res, float *world);
+
+void		update_chunk_aabb(t_chunk_block_aabb *chunk_block_aabb, t_chunk *chunk);
 
 int			get_chunk_hash_key(int *coords);
 
