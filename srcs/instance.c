@@ -195,13 +195,16 @@ void	render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader)
  * 'chunks' is all the loaded chunks,
  * 'dir' is the direction you want to look for the chunk in; (v3)
 */
-t_chunk	*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, float *dir)
+t_chunk	*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, int *dir)
 {
 	int	from_coord[3];
 
 	from_coord[0] = from->coordinate[0] + dir[0];
 	from_coord[1] = from->coordinate[1] + dir[1];
 	from_coord[2] = from->coordinate[2] + dir[2];
+	/*
+	return (get_chunk(from->info, from_coord));
+	*/
 	for (int i = 0; i < from->info->chunks_loaded; i++)
 	{
 		if (chunks[i].coordinate[0] == from_coord[0] &&
@@ -214,6 +217,16 @@ t_chunk	*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, float *dir)
 
 t_chunk	*get_chunk(t_chunk_info	*info, int *pos)
 {
+/*	
+	int			hash;
+	t_hash_item	*item;
+
+	hash = get_chunk_hash_key(pos);
+	item = hash_item_search(info->table, info->table_size, hash);
+	if (item)
+		return (&info->chunks[item->data]);
+	return (NULL);
+	*/
 	for (int i = 0; i < info->chunks_loaded; i++)
 	{
 		if (info->chunks[i].coordinate[0] == pos[0] && 
@@ -335,6 +348,15 @@ int	get_blocks_visible(t_chunk *chunk)
 	int		enable_adjacent_chunk = 1;
 	t_chunk	*adj_chunk = NULL;
 	t_block	*tmp_block = NULL;
+
+	t_chunk *neighbors[6];
+	neighbors[0] = get_adjacent_chunk(chunk, chunk->info->chunks, (int []){-1, 0, 0});
+	neighbors[1] = get_adjacent_chunk(chunk, chunk->info->chunks, (int []){1, 0, 0});
+	neighbors[2] = get_adjacent_chunk(chunk, chunk->info->chunks, (int []){0, 1, 0});
+	neighbors[3] = get_adjacent_chunk(chunk, chunk->info->chunks, (int []){0, -1, 0});
+	neighbors[4] = get_adjacent_chunk(chunk, chunk->info->chunks, (int []){0, 0, 1});
+	neighbors[5] = get_adjacent_chunk(chunk, chunk->info->chunks, (int []){0, 0, -1});
+
 	int		pos[3];
 	int	j;// = get_block_index(chunk->info, x, y, z);
 	for (int i = 0; i < chunk->block_amount; i++)
@@ -349,94 +371,6 @@ int	get_blocks_visible(t_chunk *chunk)
 
 		get_block_world_pos(i_block_w, &blocks[i]);
 	
-	if (0)
-	{
-		tmp_block = get_block(chunk->info, (float []){i_block_w[0] - 1, i_block_w[1], i_block_w[2]});
-		if (tmp_block && tmp_block->type == BLOCK_AIR)
-		{
-			chunk->blocks_visible[++a] = blocks[i];
-			continue ;
-		}
-
-		tmp_block = get_block(chunk->info, (float []){i_block_w[0] + 1, i_block_w[1], i_block_w[2]});
-		if (tmp_block && tmp_block->type == BLOCK_AIR)
-		{
-			chunk->blocks_visible[++a] = blocks[i];
-			continue ;
-		}
-
-		tmp_block = get_block(chunk->info, (float []){i_block_w[0], i_block_w[1] - 1, i_block_w[2]});
-		if (tmp_block && tmp_block->type == BLOCK_AIR)
-		{
-			chunk->blocks_visible[++a] = blocks[i];
-			continue ;
-		}
-
-		tmp_block = get_block(chunk->info, (float []){i_block_w[0], i_block_w[1] + 1, i_block_w[2]});
-		if (tmp_block && tmp_block->type == BLOCK_AIR)
-		{
-			chunk->blocks_visible[++a] = blocks[i];
-			continue ;
-		}
-	}
-
-	if (0)
-	{
-		// LEFT
-		tmp_block = get_block_helper(chunk, (int []){x - 1, y, z},
-			(float []){i_block_w[0] - 1, i_block_w[1], i_block_w[2]});
-		if (tmp_block && tmp_block->type == BLOCK_AIR)
-		{
-			chunk->blocks_visible[++a] = blocks[i];
-			continue ;
-		}
-
-		// RIGHT
-		tmp_block = get_block_helper(chunk, (int []){x + 1, y, z},
-			(float []){i_block_w[0] + 1, i_block_w[1], i_block_w[2]});
-		if (tmp_block && tmp_block->type == BLOCK_AIR)
-		{
-			chunk->blocks_visible[++a] = blocks[i];
-			continue ;
-		}
-
-		// UP
-		tmp_block = get_block_helper(chunk, (int []){x, y + 1, z},
-			(float []){i_block_w[0], i_block_w[1] + 1, i_block_w[2]});
-		if (tmp_block && tmp_block->type == BLOCK_AIR)
-		{
-			chunk->blocks_visible[++a] = blocks[i];
-			continue ;
-		}
-
-		// DOWN
-		tmp_block = get_block_helper(chunk, (int []){x, y - 1, z},
-			(float []){i_block_w[0], i_block_w[1] - 1, i_block_w[2]});
-		if (tmp_block && tmp_block->type == BLOCK_AIR)
-		{
-			chunk->blocks_visible[++a] = blocks[i];
-			continue ;
-		}
-
-		// FORWARD
-		tmp_block = get_block_helper(chunk, (int []){x, y, z - 1},
-			(float []){i_block_w[0], i_block_w[1], i_block_w[2] - 1});
-		if (tmp_block && tmp_block->type == BLOCK_AIR)
-		{
-			chunk->blocks_visible[++a] = blocks[i];
-			continue ;
-		}
-
-		// BACKWARD
-		tmp_block = get_block_helper(chunk, (int []){x, y, z + 1},
-			(float []){i_block_w[0], i_block_w[1], i_block_w[2] + 1});
-		if (tmp_block && tmp_block->type == BLOCK_AIR)
-		{
-			chunk->blocks_visible[++a] = blocks[i];
-			continue ;
-		}
-	}
-
 	if (1)
 	{
 		// left
@@ -448,9 +382,8 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		else if (enable_adjacent_chunk)
 		{
-			adj_chunk = get_adjacent_chunk(chunk, chunk->info->chunks, (float []){-1, 0, 0});
-			if (adj_chunk)
-				tmp_block = &adj_chunk->blocks[get_block_index(chunk->info, 15, y, z)];
+			if (neighbors[0])
+				tmp_block = &neighbors[0]->blocks[get_block_index(chunk->info, 15, y, z)];
 		}
 		if (tmp_block && tmp_block->type == BLOCK_AIR)
 		{
@@ -467,9 +400,8 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		else if (enable_adjacent_chunk)
 		{
-			adj_chunk = get_adjacent_chunk(chunk, chunk->info->chunks, (float []){1, 0, 0});
-			if (adj_chunk)
-				tmp_block = &adj_chunk->blocks[get_block_index(chunk->info, 0, y, z)];
+			if (neighbors[1])
+				tmp_block = &neighbors[1]->blocks[get_block_index(chunk->info, 0, y, z)];
 		}
 		if (tmp_block && tmp_block->type == BLOCK_AIR)
 		{
@@ -486,9 +418,8 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		else if (enable_adjacent_chunk)
 		{
-			adj_chunk = get_adjacent_chunk(chunk, chunk->info->chunks, (float []){0, 1, 0});
-			if (adj_chunk)
-				tmp_block = &adj_chunk->blocks[get_block_index(chunk->info, x, 0, z)];
+			if (neighbors[2])
+				tmp_block = &neighbors[2]->blocks[get_block_index(chunk->info, x, 0, z)];
 		}
 		if (tmp_block && tmp_block->type == BLOCK_AIR)
 		{
@@ -505,9 +436,8 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		else if (enable_adjacent_chunk)
 		{
-			adj_chunk = get_adjacent_chunk(chunk, chunk->info->chunks, (float []){0, -1, 0});
-			if (adj_chunk)
-				tmp_block = &adj_chunk->blocks[get_block_index(chunk->info, x, 15, z)];
+			if (neighbors[3])
+				tmp_block = &neighbors[3]->blocks[get_block_index(chunk->info, x, 15, z)];
 		}
 		if (tmp_block && tmp_block->type == BLOCK_AIR)
 		{
@@ -524,9 +454,8 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		else if (enable_adjacent_chunk)
 		{
-			adj_chunk = get_adjacent_chunk(chunk, chunk->info->chunks, (float []){0, 0, 1});
-			if (adj_chunk)
-				tmp_block = &adj_chunk->blocks[get_block_index(chunk->info, x, y, 0)];
+			if (neighbors[4])
+				tmp_block = &neighbors[4]->blocks[get_block_index(chunk->info, x, y, 0)];
 		}
 		if (tmp_block && tmp_block->type == BLOCK_AIR)
 		{
@@ -543,9 +472,8 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		else if (enable_adjacent_chunk)
 		{
-			adj_chunk = get_adjacent_chunk(chunk, chunk->info->chunks, (float []){0, 0, -1});
-			if (adj_chunk)
-				tmp_block = &adj_chunk->blocks[get_block_index(chunk->info, x, y, 15)];
+			if (neighbors[5])
+				tmp_block = &neighbors[5]->blocks[get_block_index(chunk->info, x, y, 15)];
 		}
 		if (tmp_block && tmp_block->type == BLOCK_AIR)
 		{
@@ -558,19 +486,20 @@ int	get_blocks_visible(t_chunk *chunk)
 	return (a + 1); // '+ 1' because we start at '-1';
 }
 
-int	get_chunk_hash_key(t_chunk *chunk)
+int	get_chunk_hash_key(int *coords)
 {
 	int		res;
 
-	res = chunk->coordinate[0] +
-		(31 * chunk->coordinate[1]) +
-		(31 * 31 * chunk->coordinate[2]);
+	res = coords[0] +
+		(31 * coords[1]) +
+		(31 * 31 * coords[2]);
 	return (res);
 }
 
 void	update_chunk(t_chunk *chunk, int *coord)
 {
-	int		old_key = get_chunk_hash_key(chunk);
+	/*
+	int		old_key = get_chunk_hash_key(chunk->coordinate);
 	int		old_data = -1;
 	t_hash_item	*old_item;
 	// Get old data (aka the index in the chunks array.)
@@ -579,9 +508,10 @@ void	update_chunk(t_chunk *chunk, int *coord)
 		old_data = old_item->data;
 	else
 		LG_ERROR("Couldnt find old item. (old_hash : %d, %d %d %d)\n", old_key, chunk->coordinate[0], chunk->coordinate[1], chunk->coordinate[2]);
+		*/
 
 	// Remove old from chunk->info->table.
-	hash_item_delete(chunk->info->table, chunk->info->table_size, old_key);
+//	hash_item_delete(chunk->info->table, chunk->info->table_size, old_key);
 
 	for (int i = 0; i < 3; i++)
 		chunk->coordinate[i] = coord[i];
@@ -591,7 +521,7 @@ void	update_chunk(t_chunk *chunk, int *coord)
 		chunk->coordinate[2] * chunk->info->chunk_size[2]);
 
 	// Add new to chunk->info->table. with the same data (aka index to chunks array)
-	hash_item_insert(chunk->info->table, chunk->info->table_size, get_chunk_hash_key(chunk), old_data);
+//	hash_item_insert(chunk->info->table, chunk->info->table_size, get_chunk_hash_key(chunk->coordinate), old_data);
 	
 	// Generate Chunks	
 	chunk->block_amount = chunk_gen(chunk); // should always return max amount of blocks in a chunk;

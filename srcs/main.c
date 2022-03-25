@@ -204,7 +204,7 @@ int	main(void)
 		{
 			new_model(&chunks[nth_chunk].model, &cube_obj);
 			new_chunk(&chunks[nth_chunk], &chunk_info, (int []){999 - nth_chunk, 0, 999});
-			hash_item_insert(chunk_info.table, chunk_info.table_size, get_chunk_hash_key(&chunks[nth_chunk]), nth_chunk);
+			hash_item_insert(chunk_info.table, chunk_info.table_size, get_chunk_hash_key(chunks[nth_chunk].coordinate), nth_chunk);
 		}
 		ft_printf("Chunks created : %d\n", nth_chunk);
 //////////////////////////////
@@ -405,16 +405,16 @@ int	main(void)
 				//aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum);
 				show_chunk_borders(&chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
 
-				t_chunk	*north_chunk = get_adjacent_chunk(&chunks[nth_chunk], chunks, (float []){0, 0, -1});
+				t_chunk	*north_chunk = get_adjacent_chunk(&chunks[nth_chunk], chunks, (int []){0, 0, -1});
 				if (north_chunk)
 					show_chunk_borders(north_chunk, &player.camera, (float []){0, 0, 1});
-				t_chunk	*south_chunk = get_adjacent_chunk(&chunks[nth_chunk], chunks, (float []){0, 0, 1});
+				t_chunk	*south_chunk = get_adjacent_chunk(&chunks[nth_chunk], chunks, (int []){0, 0, 1});
 				if (south_chunk)
 					show_chunk_borders(south_chunk, &player.camera, (float []){0, 1, 0});
-				t_chunk	*east_chunk = get_adjacent_chunk(&chunks[nth_chunk], chunks, (float []){1, 0, 0});
+				t_chunk	*east_chunk = get_adjacent_chunk(&chunks[nth_chunk], chunks, (int []){1, 0, 0});
 				if (east_chunk)
 					show_chunk_borders(east_chunk, &player.camera, (float []){0, 1, 1});
-				t_chunk	*west_chunk = get_adjacent_chunk(&chunks[nth_chunk], chunks, (float []){-1, 0, 0});
+				t_chunk	*west_chunk = get_adjacent_chunk(&chunks[nth_chunk], chunks, (int []){-1, 0, 0});
 				if (west_chunk)
 					show_chunk_borders(west_chunk, &player.camera, (float []){1, 1, 0});
 

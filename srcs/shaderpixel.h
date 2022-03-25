@@ -341,12 +341,13 @@ void		update_chunk_visible_blocks(t_chunk *chunk);
 float		*player_in_chunk(float *res, float *player_coord, t_chunk_info *info);
 void		chunk_aabb_update(t_chunk *chunk);
 void		show_chunk_borders(t_chunk *chunk, t_camera *camera, float *col);
-t_chunk		*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, float *dir);
+t_chunk		*get_chunk(t_chunk_info *info, int *pos);
+t_chunk		*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, int *dir);
 void		update_surrounding_chunks(t_chunk *chunks, float *player_chunk_v3);
 int			*get_block_chunk_pos_from_index(int *res, int *max, int index);
 int			*block_world_to_local_pos(int *res, float *world);
 
-int			get_chunk_hash_key(t_chunk *chunk);
+int			get_chunk_hash_key(int *coords);
 
 void		regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2);
 void		regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3, t_thread_manager *tm);
