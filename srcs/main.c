@@ -163,7 +163,8 @@ int	main(void)
 		t_chunk_info	chunk_info;
 
 		chunk_info.render_distance = 10;
-		chunk_info.seed = 896868766;
+//		chunk_info.seed = 896868766;
+		chunk_info.seed = 596547633;
 		chunk_info.width = 16;
 		chunk_info.breadth = 16;
 		chunk_info.height = 16;

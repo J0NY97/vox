@@ -107,6 +107,8 @@ int	bimgf_load_bmp(t_bimgf *image, const char *file_path)
 	FILE				*fd;
 	t_bmp_file_header	header;
 	t_bmp_info_header	info;
+	int					skip_bytes;
+	char				tmp;
 
 	if (!file_path)
 	{
@@ -129,18 +131,45 @@ int	bimgf_load_bmp(t_bimgf *image, const char *file_path)
 	get_info_header(&info, fd);
 	//show_info_header(info);
 	memset(image, 0, sizeof(t_bimgf));
+
+	image->bpp = info.bit_count / 8; // bytes per pixel
+	image->line_w = (info.width * image->bpp);
+
+	int	extra = image->line_w % 4;
+	ft_printf("extra %d\n", extra);
+	skip_bytes = 0;
+	if (extra != 0)
+		skip_bytes = 4 - extra;
+
 	image->w = info.width;
 	image->h = info.height;
-	image->bpp = info.bit_count / 8;
 	image->size = info.size_image;
-	image->line_w = image->w * image->bpp;
 	image->pixels = malloc(image->size);
-	image->format = 0;
+	if (image->bpp == 4)
+		image->format = BIMGF_RGBA;
+	else
+		image->format = BIMGF_RGB;
 	image->flip = 0;
 	image->rgb = 1;
 
+	printf("Skip bytes : %d\n", skip_bytes);
+	printf("BPP : %d\n", image->bpp);
+	printf("info.width : %d\n", info.width);
+	printf("line_w : %d\n", image->line_w);
+
 	if (image->flip == 0)
-		fread(image->pixels, 1, image->size, fd);
+	{
+		int	y;
+
+		y = 0;
+		while (y < image->h)
+		{
+			fread(&image->pixels[y * image->line_w], image->w, image->bpp, fd);
+			if (skip_bytes > 0)
+				fread(&tmp, 1, skip_bytes, fd);
+			y++;
+		}
+	}
 	else if (image->flip == 1)
 	{
 		int	y;
@@ -149,14 +178,18 @@ int	bimgf_load_bmp(t_bimgf *image, const char *file_path)
 		while (y >= 0)
 		{
 			fread(&image->pixels[y * image->line_w], image->w, image->bpp, fd);
+			if (skip_bytes > 0)
+				fread(&tmp, 1, skip_bytes, fd);
 			y--;
 		}
 	}
-	if (image->rgb) // convert to RGB
+
+	if (image->rgb) // convert to RGB // or RGBA
 	{
-		image->format = 1;
-		char temp;
-		unsigned char *ptr;
+//		image->format = 1;
+		char			temp;
+		unsigned char	*ptr;
+
 		for (int y = 0; y < image->h; y++)
 		{
 			ptr = image->pixels + y * image->line_w;

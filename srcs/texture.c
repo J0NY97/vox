@@ -4,13 +4,17 @@ int	new_texture(GLuint *texture, const char *image_file)
 {
 	t_bimgf	image;
 	char	buffer[256];
-	int		orig_img_format = GL_RGB;
+	int		orig_img_format;
 
 	if (!bimgf_load(&image, image_file))
 	{	
 		LG_WARN("Couldnt load image <%s>", image_file);
 		return (0);
 	}
+	if (image.format == BIMGF_RGBA)
+		orig_img_format = GL_RGBA;
+	else
+		orig_img_format = GL_RGB;
 	glBindTexture(GL_TEXTURE_2D, *texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);

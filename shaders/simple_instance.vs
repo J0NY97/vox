@@ -17,7 +17,7 @@ out vec3 inViewPos;
 uniform mat4 view;
 uniform mat4 projection;
 
-int		texture_in_pack = 3;
+int		texture_in_pack = 4;
 float	per_tex_w = 1.0f / texture_in_pack;
 
 int		nth_texture = 0;

@@ -245,6 +245,7 @@ enum e_block_type
 	BLOCK_DIRT = 0,
 	BLOCK_STONE = 1,
 	BLOCK_BEDROCK = 2,
+	BLOCK_WATER = 3,
 	BLOCK_TYPE_AMOUNT
 };
 
