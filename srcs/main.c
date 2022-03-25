@@ -162,7 +162,7 @@ int	main(void)
 
 		t_chunk_info	chunk_info;
 
-		chunk_info.render_distance = 10;
+		chunk_info.render_distance = 15;
 //		chunk_info.seed = 896868766;
 		chunk_info.seed = 596547633;
 		chunk_info.width = 16;
@@ -223,6 +223,8 @@ int	main(void)
 
 	glfwSwapInterval(0);
 	glEnable(GL_CULL_FACE);
+
+	char	fps_str[10];
 	while (!glfwWindowShouldClose(sp.win))
 	{
 		glCullFace(GL_BACK);
@@ -231,6 +233,11 @@ int	main(void)
 		render_fractal2d(&fractal, &mandelbrot_shader);
 		*/
 //		ft_printf("FPS : %d\n", fps.fps);
+		if (fps.count % 60 == 0)
+		{
+			ft_b_itoa(fps.fps, fps_str);
+			glfwSetWindowTitle(sp.win, fps_str);
+		}
 
 		update_all_keys(keys, sp.win);
 		glfwPollEvents();

@@ -136,7 +136,6 @@ int	bimgf_load_bmp(t_bimgf *image, const char *file_path)
 	image->line_w = (info.width * image->bpp);
 
 	int	extra = image->line_w % 4;
-	ft_printf("extra %d\n", extra);
 	skip_bytes = 0;
 	if (extra != 0)
 		skip_bytes = 4 - extra;
@@ -151,11 +150,6 @@ int	bimgf_load_bmp(t_bimgf *image, const char *file_path)
 		image->format = BIMGF_RGB;
 	image->flip = 0;
 	image->rgb = 1;
-
-	printf("Skip bytes : %d\n", skip_bytes);
-	printf("BPP : %d\n", image->bpp);
-	printf("info.width : %d\n", info.width);
-	printf("line_w : %d\n", image->line_w);
 
 	if (image->flip == 0)
 	{
