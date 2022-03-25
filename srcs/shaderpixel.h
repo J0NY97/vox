@@ -301,6 +301,10 @@ typedef struct s_chunk_args
 	int		being_threaded;
 }	t_chunk_args;
 
+typedef struct s_chunk_mesh
+{
+	float	*vertices;
+}			t_chunk_mesh;
 
 struct	s_chunk
 {
@@ -319,6 +323,8 @@ struct	s_chunk
 
 	t_block		*blocks_visible; // blocks that are touching air, which means we want to render them;
 	int			blocks_visible_amount; // amount of blocks in the array that we want to render;
+
+	t_chunk_mesh	mesh;
 
 	t_aabb		aabb;
 
@@ -347,6 +353,8 @@ t_chunk		*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, int *dir);
 void		update_surrounding_chunks(t_chunk *chunks, float *player_chunk_v3);
 int			*get_block_chunk_pos_from_index(int *res, int *max, int index);
 int			*block_world_to_local_pos(int *res, float *world);
+
+void		update_chunk_mesh(t_chunk *chunk);
 
 void		update_chunk_aabb(t_chunk_block_aabb *chunk_block_aabb, t_chunk *chunk);
 

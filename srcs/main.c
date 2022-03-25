@@ -377,6 +377,7 @@ int	main(void)
 			if (1 && chunks[nth_chunk].needs_to_update)
 			{
 				update_chunk_visible_blocks(&chunks[nth_chunk]);
+				update_chunk_mesh(&chunks[nth_chunk]);
 				update_chunk_matrices(&chunks[nth_chunk]);
 				// Matrices
 				glBindBuffer(GL_ARRAY_BUFFER, chunks[nth_chunk].vbo_matrices);

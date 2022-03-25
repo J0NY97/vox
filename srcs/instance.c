@@ -220,16 +220,6 @@ t_chunk	*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, int *dir)
 
 t_chunk	*get_chunk(t_chunk_info	*info, int *pos)
 {
-/*	
-	int			hash;
-	t_hash_item	*item;
-
-	hash = get_chunk_hash_key(pos);
-	item = hash_item_search(info->table, info->table_size, hash);
-	if (item)
-		return (&info->chunks[item->data]);
-	return (NULL);
-	*/
 	for (int i = 0; i < info->chunks_loaded; i++)
 	{
 		if (info->chunks[i].coordinate[0] == pos[0] && 
@@ -905,4 +895,9 @@ void	update_chunk_visible_blocks(t_chunk *chunk)
 	chunk->blocks_visible_amount = get_blocks_visible(chunk);
 	chunk->block_matrices_size = sizeof(float) * 16 * chunk->blocks_visible_amount;
 	chunk->block_textures_size = sizeof(int) * chunk->blocks_visible_amount;
+}
+
+void	update_chunk_mesh(t_chunk *chunk)
+{
+
 }
