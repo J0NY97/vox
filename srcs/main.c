@@ -356,7 +356,10 @@ int	main(void)
 		player_in_chunk(player_chunk, player.camera.pos, &chunk_info);
 
 		if (regen_chunks)
-			regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);	
+		{
+		//	regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);	
+			regenerate_chunks_v32(chunks, &chunk_info, player_chunk);	
+		}
 //		regenerate_chunks_v3(chunk_reloading, chunks, &chunk_info, player_chunk);	
 
 		thread_manager_check_threadiness(&tm);

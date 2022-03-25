@@ -577,10 +577,8 @@ void	update_chunk(t_chunk *chunk, int *coord)
 	old_item = hash_item_search(chunk->info->table, chunk->info->table_size, old_key);
 	if (old_item)
 		old_data = old_item->data;
-		/*
 	else
 		LG_ERROR("Couldnt find old item. (old_hash : %d, %d %d %d)\n", old_key, chunk->coordinate[0], chunk->coordinate[1], chunk->coordinate[2]);
-		*/
 
 	// Remove old from chunk->info->table.
 	hash_item_delete(chunk->info->table, chunk->info->table_size, old_key);
@@ -598,15 +596,6 @@ void	update_chunk(t_chunk *chunk, int *coord)
 	// Generate Chunks	
 	chunk->block_amount = chunk_gen(chunk); // should always return max amount of blocks in a chunk;
 
-	// Check which are touching air;
-	/*
-	chunk->blocks_visible_amount = get_blocks_visible(chunk);
-	chunk->block_matrices_size = sizeof(float) * 16 * chunk->blocks_visible_amount;
-	chunk->block_textures_size = sizeof(int) * chunk->blocks_visible_amount;
-	*/
-	/* Call update_chunk_visible_blocks() instead of the lines above. */
-
-//	ft_printf("Rendered %d/%d\n", chunk->blocks_visible_amount, chunk->block_amount);
 	chunk->needs_to_update = 1;
 }
 
@@ -657,35 +646,6 @@ void	*update_chunk_threaded(void *arg)
  *	new chunk info into those 'chunks' indices;
  * Takes 0.000000 seconds;
 */
-/*
-int	get_chunks_to_reload(int *chunks, int *start_coord, t_chunk_info *info, float *player_chunk_v3)
-{
-	int	reload_amount = 0;
-	int	found = 0;
-
-	start_coord[0] = player_chunk_v3[0] - (info->render_distance / 2);
-	start_coord[1] = player_chunk_v3[2] - (info->render_distance / 2);
-	for (int i = 0; i < info->chunks_loaded; i++)
-	{
-		found = 0;
-		for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
-		{
-			for (int z = start_coord[1], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
-			{
-				if (info->chunks[i].coordinate[0] == x && info->chunks[i].coordinate[2] == z)
-					found = 1;
-			}
-		}
-		if (!found)
-		{
-			chunks[reload_amount] = i;
-			reload_amount++;
-		}
-	}
-//	LG_INFO("Chunk amount to reload : %d", reload_amount);
-	return (reload_amount);
-}
-*/
 int	get_chunks_to_reload(int *chunks, int *start_coord, t_chunk_info *info, float *player_chunk_v3)
 {
 	int	reload_amount = 0;
@@ -713,6 +673,61 @@ int	get_chunks_to_reload(int *chunks, int *start_coord, t_chunk_info *info, floa
 	}
 //	LG_INFO("Chunk amount to reload : %d", reload_amount);
 	return (reload_amount);
+}
+
+void	regenerate_chunks_v32(t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3)
+{
+	int	reload_these_chunks[info->chunks_loaded];
+	int	start_coord[3];
+	int found = 0;
+	int reload_amount;
+	
+	reload_amount = get_chunks_to_reload(reload_these_chunks, start_coord, info, player_chunk_v3);
+	if (reload_amount <= 0)
+		return ;
+	
+	// Go through all the coordinates that will be loaded next time, and
+	//  check if any of the loaded chunks have those coordinates, if not
+	//	we take one of the chunks that are not going to be loaded next time
+	// 	and update the new chunk into that memory;
+	int				nth_chunk = 0;
+
+	for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
+	{
+		for (int z = start_coord[2], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
+		{
+			found = 0;
+			for (int i = 0; i < info->chunks_loaded; i++)
+			{
+				if (chunks[i].coordinate[0] == x && chunks[i].coordinate[2] == z)
+				{
+					found = 1;
+					break ;
+				}
+			}
+			if (!found)
+			{
+				for (int y = start_coord[1], y_amount = 0; y_amount < info->y_chunk_amount; y++, y_amount++)
+				{
+					if (nth_chunk >= 15)
+						break ;
+					int index = reload_these_chunks[nth_chunk];
+					chunks[index].args.chunk = &chunks[index];
+					chunks[index].args.coords[0] = x;
+					chunks[index].args.coords[1] = y;
+					chunks[index].args.coords[2] = z;
+					update_chunk_threaded(&chunks[index].args);
+					nth_chunk++;
+					if (nth_chunk >= info->chunks_loaded) 
+						break ;
+				}
+			}
+			if (nth_chunk >= info->chunks_loaded) 
+				break ;
+		}
+		if (nth_chunk >= info->chunks_loaded) 
+			break ;
+	}
 }
 
 void	regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3)
