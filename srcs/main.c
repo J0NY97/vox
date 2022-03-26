@@ -149,6 +149,9 @@ int	main(void)
 	test_cube->rot_y_angle = 0;
 	test_cube->rot_z_angle = 0;
 
+	t_cube_model	cube_model;
+	init_cube_model(&cube_model);
+
 //////////////////////////////
 	// Instance testing
 //////////////////////////////
@@ -162,7 +165,7 @@ int	main(void)
 
 		t_chunk_info	chunk_info;
 
-		chunk_info.render_distance = 15;
+		chunk_info.render_distance = 10;
 //		chunk_info.seed = 896868766;
 		chunk_info.seed = 596547633;
 		chunk_info.width = 16;
@@ -379,6 +382,9 @@ int	main(void)
 				update_chunk_visible_blocks(&chunks[nth_chunk]);
 				update_chunk_mesh(&chunks[nth_chunk]);
 				update_chunk_matrices(&chunks[nth_chunk]);
+
+				// TODO: Remove these 2;
+				glBindVertexArray(chunks[nth_chunk].model.info[0].vao);
 				// Matrices
 				glBindBuffer(GL_ARRAY_BUFFER, chunks[nth_chunk].vbo_matrices);
 				glBufferData(GL_ARRAY_BUFFER, chunks[nth_chunk].block_matrices_size,
@@ -388,8 +394,20 @@ int	main(void)
 				glBufferData(GL_ARRAY_BUFFER, chunks[nth_chunk].block_textures_size,
 					&chunks[nth_chunk].block_textures[0], GL_STATIC_DRAW);
 
+				glBindVertexArray(chunks[nth_chunk].mesh.vao);
+				// Matrices
+				glBindBuffer(GL_ARRAY_BUFFER, chunks[nth_chunk].mesh.vbo_matrices);
+				glBufferData(GL_ARRAY_BUFFER, chunks[nth_chunk].block_matrices_size,
+				&chunks[nth_chunk].block_matrices[0], GL_STATIC_DRAW);
+				// Texture ID
+				glBindBuffer(GL_ARRAY_BUFFER, chunks[nth_chunk].mesh.vbo_texture_ids);
+				glBufferData(GL_ARRAY_BUFFER, chunks[nth_chunk].block_textures_size,
+					&chunks[nth_chunk].block_textures[0], GL_STATIC_DRAW);
+				
 				glBindBuffer(GL_ARRAY_BUFFER, 0);
+				glBindVertexArray(0);
 				chunks[nth_chunk].needs_to_update = 0;
+
 				// Create aabb for each chunk;
 				chunk_aabb_update(&chunks[nth_chunk]);
 			}

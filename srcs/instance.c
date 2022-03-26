@@ -30,6 +30,9 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, int *coord)
 		chunk->coordinate[1] * chunk->info->chunk_size[1],
 		chunk->coordinate[2] * chunk->info->chunk_size[2]);
 	
+	init_chunk_mesh(&chunk->mesh);
+	// TODO REMOVE EVERYTHING UNDER HERE
+	
 	// Matrices
 	glGenBuffers(1, &chunk->vbo_matrices);
 	glBindBuffer(GL_ARRAY_BUFFER, chunk->vbo_matrices);
@@ -179,7 +182,7 @@ void	render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader)
 		glBindTexture(GL_TEXTURE_2D, chunk->model.info[0].elem_info[0].material->texture);
 	}
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunk->model.info[0].elem_info[0].ebo);
-	glDrawElementsInstanced(GL_TRIANGLES, chunk->model.info[0].elem_info[0].element.indices_value_amount , GL_UNSIGNED_INT, NULL, chunk->block_amount);
+	glDrawElementsInstanced(GL_TRIANGLES, chunk->model.info[0].elem_info[0].element.indices_value_amount , GL_UNSIGNED_INT, NULL, chunk->blocks_visible_amount);
 
 	glUseProgram(0);
 	glBindVertexArray(0);
@@ -895,6 +898,178 @@ void	update_chunk_visible_blocks(t_chunk *chunk)
 	chunk->blocks_visible_amount = get_blocks_visible(chunk);
 	chunk->block_matrices_size = sizeof(float) * 16 * chunk->blocks_visible_amount;
 	chunk->block_textures_size = sizeof(int) * chunk->blocks_visible_amount;
+}
+
+void	init_cube_model(t_cube_model *model)
+{
+	int	error = glGetError();
+	if (error)
+		LG_ERROR("Before this function (%d)", error);
+
+	float	vertices[] = {
+		// Front
+		-1, 1, 1,	// top left
+		1, 1, 1,	// top right
+		-1, -1, 1,	// bot left
+		1, -1, 1,	// bot right
+		// Back
+		-1, 1, -1,	// top left
+		1, 1, -1,	// top right
+		-1, -1, -1,	// bot left
+		1, -1, -1,	// bot right
+	};
+	unsigned int	indices[] = {
+		// Front
+		0, 1, 3,
+		0, 3, 2,
+		// Back
+		4, 5, 7,
+		4, 7, 6,
+		// Top
+		4, 5, 1,
+		4, 1, 0,
+		// Bot
+		6, 7, 3,
+		6, 3, 2,
+		// Left
+		4, 0, 2,
+		4, 2, 6,
+		// Right
+		1, 5, 7,
+		1, 7, 3
+	};
+
+	model->vertices_size = sizeof(vertices);
+	model->vertices = malloc(model->vertices_size);
+
+	model->indices_size = sizeof(indices);
+	model->indices = malloc(model->indices_size);
+
+	glGenBuffers(1, &model->ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, model->indices_size, &model->indices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("(%d)", error);
+
+	glGenTextures(1, &model->texture);
+	new_texture(&model->texture, MODEL_PATH"cube/retry_cube_texture.bmp");
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("(%d)", error);
+}
+
+/*
+ * Creates all the opengl stuff that needs to be created only once;
+*/
+void	init_chunk_mesh(t_chunk_mesh *mesh)
+{
+	GLuint	vbo[6];
+	int		error;
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("BFORE (%d)", error);
+
+	glGenVertexArrays(1, &mesh->vao);
+	glBindVertexArray(mesh->vao);
+	if (1)
+		glEnableVertexAttribArray(0); // pos
+	if (0)
+		glEnableVertexAttribArray(1); // col
+	if (1)
+		glEnableVertexAttribArray(2); // uvs
+	if (0)
+		glEnableVertexAttribArray(3); // nor
+
+
+
+	glGenBuffers(6, vbo);
+	mesh->vbo_pos = vbo[0];
+	mesh->vbo_color = vbo[1];
+	mesh->vbo_tex = vbo[2];
+	mesh->vbo_norm = vbo[3];
+
+	mesh->vbo_matrices = vbo[4];
+	mesh->vbo_texture_ids = vbo[5];
+
+	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_pos);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
+
+	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_color);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
+
+	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_tex);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_TRUE, sizeof(float) * 2, NULL);
+
+	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_norm);
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
+
+
+	float	tmp[MAT4_SIZE];
+	mat4_identity(tmp);
+	// Matrices
+	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_matrices);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 16, &tmp[0], GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(4);
+	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), NULL);
+	glVertexAttribDivisor(4, 1);
+
+	glEnableVertexAttribArray(5);
+	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void *)(1 * 4 * sizeof(float)));
+	glVertexAttribDivisor(5, 1);
+
+	glEnableVertexAttribArray(6);
+	glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void *)(2 * 4 * sizeof(float)));
+	glVertexAttribDivisor(6, 1);
+
+	glEnableVertexAttribArray(7);
+	glVertexAttribPointer(7, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void *)(3 * 4 * sizeof(float)));
+	glVertexAttribDivisor(7, 1);
+
+	int	tmp_tex[1];
+	tmp_tex[0] = 0;
+	// Texture ID
+	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_texture_ids);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(int), &tmp_tex[0], GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(8);
+	glVertexAttribIPointer(8, 1, GL_INT, GL_FALSE, NULL);
+	glVertexAttribDivisor(8, 1);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("ERROR (%d)", error);
+}
+
+void	render_chunk_mesh(t_chunk *chunk, t_camera *camera, t_shader *shader)
+{
+	t_chunk_mesh	*mesh;
+
+	mesh = &chunk->mesh;
+
+	glUseProgram(shader->program);
+	glUniformMatrix4fv(glGetUniformLocation(shader->program, "view"), 1, GL_FALSE, &camera->view[0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader->program, "projection"), 1, GL_FALSE, &camera->projection[0]);
+
+	glBindVertexArray(mesh->vao);
+
+	glActiveTexture(GL_TEXTURE0 + 0);
+	glBindTexture(GL_TEXTURE_2D, mesh->model->texture);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->model->ebo);
+	glDrawElementsInstanced(GL_TRIANGLES, 3 , GL_UNSIGNED_INT, NULL, chunk->block_amount);
+
+	glUseProgram(0);
+	glBindVertexArray(0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 void	update_chunk_mesh(t_chunk *chunk)

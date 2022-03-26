@@ -301,9 +301,38 @@ typedef struct s_chunk_args
 	int		being_threaded;
 }	t_chunk_args;
 
+typedef struct s_cube_model
+{
+	float			*vertices;
+	size_t			vertices_size;
+
+	unsigned int	*indices;
+	size_t			indices_size;
+
+	/*
+	float	*normals;
+	size_t	normals_size;
+	*/
+
+	GLuint			texture;
+	GLuint			ebo;
+}	t_cube_model;
+
 typedef struct s_chunk_mesh
 {
+	GLuint	vao;
+	GLuint	vbo_pos;
+	GLuint	vbo_color;
+	GLuint	vbo_norm;
+	GLuint	vbo_tex;
+
+	t_cube_model	*model; // pointer to the cube_model;
+
 	float	*vertices;
+	float	*indices;
+
+	GLuint		vbo_matrices;
+	GLuint		vbo_texture_ids;
 }			t_chunk_mesh;
 
 struct	s_chunk
@@ -314,6 +343,7 @@ struct	s_chunk
 
 	int			block_amount;
 	t_block		*blocks; //x*y*z real amount should be : 20 736
+
 	int			block_matrices_size; // sizeof (block_positions)
 	float		*block_matrices;
 	int			block_textures_size;
@@ -362,6 +392,10 @@ int			get_chunk_hash_key(int *coords);
 
 void		regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2);
 void		regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3, t_thread_manager *tm);
+
+void		init_cube_model(t_cube_model *model);
+void		init_chunk_mesh(t_chunk_mesh *mesh);
+void		render_chunk_mesh(t_chunk *chunk, t_camera *camera, t_shader *shader);
 
 ///////////////////
 //	NOISE

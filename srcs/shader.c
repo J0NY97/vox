@@ -58,6 +58,12 @@ void	new_shader(t_shader *shader, const char *vs, const char *fs)
 	char	*fs_cont;
 	GLuint	v_shader;
 	GLuint	f_shader;
+	int		error;
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("before this func <%s> <%s>", vs, fs);
+
 
 	vs_cont = get_file_content((char *)vs);
 	fs_cont = get_file_content((char *)fs);
@@ -86,5 +92,8 @@ void	new_shader(t_shader *shader, const char *vs, const char *fs)
 	glDeleteShader(v_shader);
 	glDeleteShader(f_shader);
 
-	LG_INFO("new shader made. (%d)", glGetError());
+	error = glGetError();
+	LG_INFO("new shader made. (%d)", error);
+	if (error)
+		LG_ERROR("<%s> <%s>", vs, fs);
 }

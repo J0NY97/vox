@@ -1,10 +1,17 @@
 #include "shaderpixel.h"
 
+/*
+ * 'texture' needs to be generated with glGenTextures(); before this func;
+*/
 int	new_texture(GLuint *texture, const char *image_file)
 {
 	t_bimgf	image;
-	char	buffer[256];
 	int		orig_img_format;
+	int		error;
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("Before (%d) <%s>", error, image_file);
 
 	if (!bimgf_load(&image, image_file))
 	{	
@@ -27,11 +34,16 @@ int	new_texture(GLuint *texture, const char *image_file)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	*/
+
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.w, image.h,
 		0, orig_img_format, GL_UNSIGNED_BYTE, image.pixels);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	bimgf_free(&image);
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("(%d) <%s>", error, image_file);
 	return (1);
 }
