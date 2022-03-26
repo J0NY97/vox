@@ -189,6 +189,8 @@ int	main(void)
 			chunk_info.chunk_block_aabbs[i].block_pointers = malloc(sizeof(t_block *) * chunk_info.chunk_block_aabbs[i].max_block_amount);
 		}
 
+		chunk_info.cube_model = &cube_model;
+
 		int	chunk_reloading[2]; // 0 : reload_amount, 1: reloaded amount
 		chunk_reloading[0] = 0;
 		chunk_reloading[1] = 0;
@@ -204,10 +206,7 @@ int	main(void)
 		player_in_chunk(player_chunk, player.camera.pos, &chunk_info);
 
 		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
-		{
-			new_model(&chunks[nth_chunk].model, &cube_obj);
 			new_chunk(&chunks[nth_chunk], &chunk_info, (int []){999 - nth_chunk, 0, 999});
-		}
 		ft_printf("Chunks created : %d\n", nth_chunk);
 //////////////////////////////
 	// END Instance testing
@@ -380,36 +379,11 @@ int	main(void)
 			if (1 && chunks[nth_chunk].needs_to_update)
 			{
 				update_chunk_visible_blocks(&chunks[nth_chunk]);
-				update_chunk_mesh(&chunks[nth_chunk]);
 				update_chunk_matrices(&chunks[nth_chunk]);
-
-				// TODO: Remove these 2;
-				glBindVertexArray(chunks[nth_chunk].model.info[0].vao);
-				// Matrices
-				glBindBuffer(GL_ARRAY_BUFFER, chunks[nth_chunk].vbo_matrices);
-				glBufferData(GL_ARRAY_BUFFER, chunks[nth_chunk].block_matrices_size,
-				&chunks[nth_chunk].block_matrices[0], GL_STATIC_DRAW);
-				// Texture ID
-				glBindBuffer(GL_ARRAY_BUFFER, chunks[nth_chunk].vbo_texture_ids);
-				glBufferData(GL_ARRAY_BUFFER, chunks[nth_chunk].block_textures_size,
-					&chunks[nth_chunk].block_textures[0], GL_STATIC_DRAW);
-
-				glBindVertexArray(chunks[nth_chunk].mesh.vao);
-				// Matrices
-				glBindBuffer(GL_ARRAY_BUFFER, chunks[nth_chunk].mesh.vbo_matrices);
-				glBufferData(GL_ARRAY_BUFFER, chunks[nth_chunk].block_matrices_size,
-				&chunks[nth_chunk].block_matrices[0], GL_STATIC_DRAW);
-				// Texture ID
-				glBindBuffer(GL_ARRAY_BUFFER, chunks[nth_chunk].mesh.vbo_texture_ids);
-				glBufferData(GL_ARRAY_BUFFER, chunks[nth_chunk].block_textures_size,
-					&chunks[nth_chunk].block_textures[0], GL_STATIC_DRAW);
-				
-				glBindBuffer(GL_ARRAY_BUFFER, 0);
-				glBindVertexArray(0);
-				chunks[nth_chunk].needs_to_update = 0;
-
-				// Create aabb for each chunk;
+				update_chunk_mesh(&chunks[nth_chunk]);
 				chunk_aabb_update(&chunks[nth_chunk]);
+
+				chunks[nth_chunk].needs_to_update = 0;
 			}
 			if (chunks[nth_chunk].blocks_visible_amount > 0)
 			{
@@ -419,7 +393,7 @@ int	main(void)
 					player.camera.far_plane + chunks[nth_chunk].info->chunk_size[0] &&
 					aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum))
 				{
-					render_chunk(&chunks[nth_chunk], &player.camera, &cube_shader);
+					render_chunk_mesh(&chunks[nth_chunk], &player.camera, &cube_shader);
 					sent_to_gpu++;
 				}
 			}

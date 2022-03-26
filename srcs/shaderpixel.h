@@ -249,7 +249,8 @@ enum e_block_type
 	BLOCK_TYPE_AMOUNT
 };
 
-typedef struct s_chunk	t_chunk;
+typedef struct s_cube_model	t_cube_model;
+typedef struct s_chunk		t_chunk;
 
 typedef struct s_block
 {
@@ -291,6 +292,7 @@ typedef struct s_chunk_info
 
 
 	t_chunk		*chunks; // you should not store the chunks here mainly; its just here so you can acces from places you need, without having to pass them in the function as argumnet;
+	t_cube_model	*cube_model; // poitner to the cube_model;
 }	t_chunk_info;
 
 /* Used for threading */
@@ -301,13 +303,17 @@ typedef struct s_chunk_args
 	int		being_threaded;
 }	t_chunk_args;
 
-typedef struct s_cube_model
+struct s_cube_model
 {
 	float			*vertices;
 	size_t			vertices_size;
 
+	float			*uvs;
+	size_t			uvs_size;
+
 	unsigned int	*indices;
 	size_t			indices_size;
+	size_t			index_amount;
 
 	/*
 	float	*normals;
@@ -316,7 +322,7 @@ typedef struct s_cube_model
 
 	GLuint			texture;
 	GLuint			ebo;
-}	t_cube_model;
+};
 
 typedef struct s_chunk_mesh
 {
@@ -328,8 +334,10 @@ typedef struct s_chunk_mesh
 
 	t_cube_model	*model; // pointer to the cube_model;
 
+/*
 	float	*vertices;
 	float	*indices;
+*/
 
 	GLuint		vbo_matrices;
 	GLuint		vbo_texture_ids;
@@ -358,10 +366,6 @@ struct	s_chunk
 
 	t_aabb		aabb;
 
-	t_model		model;
-	GLuint		vbo_matrices;
-	GLuint		vbo_texture_ids;
-
 	int			needs_to_update;
 
 	t_chunk_args	args;
@@ -370,7 +374,6 @@ struct	s_chunk
 void		new_chunk(t_chunk *chunk, t_chunk_info *info, int *coord);
 void		gen_chunk_blocks(t_block *blocks, int *dim);
 int			chunk_gen(t_chunk *chunk);
-void		render_chunk(t_chunk *chunk, t_camera *camera, t_shader *shader);
 void		update_chunk(t_chunk *chunk, int *coord);
 void		update_chunk_matrices(t_chunk *chunk);
 void		update_chunk_visible_blocks(t_chunk *chunk);
@@ -394,7 +397,7 @@ void		regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *pl
 void		regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3, t_thread_manager *tm);
 
 void		init_cube_model(t_cube_model *model);
-void		init_chunk_mesh(t_chunk_mesh *mesh);
+void		init_chunk_mesh(t_chunk_mesh *mesh, t_cube_model *model);
 void		render_chunk_mesh(t_chunk *chunk, t_camera *camera, t_shader *shader);
 
 ///////////////////
