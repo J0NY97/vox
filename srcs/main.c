@@ -165,7 +165,7 @@ int	main(void)
 
 		t_chunk_info	chunk_info;
 
-		chunk_info.render_distance = 10;
+		chunk_info.render_distance = 15;
 //		chunk_info.seed = 896868766;
 		chunk_info.seed = 596547633;
 		chunk_info.width = 16;
@@ -191,10 +191,6 @@ int	main(void)
 
 		chunk_info.cube_model = &cube_model;
 
-		int	chunk_reloading[2]; // 0 : reload_amount, 1: reloaded amount
-		chunk_reloading[0] = 0;
-		chunk_reloading[1] = 0;
-
 		t_chunk	*chunks;
 		chunks = malloc(sizeof(t_chunk) * chunk_info.chunks_loaded);
 
@@ -205,8 +201,12 @@ int	main(void)
 		
 		player_in_chunk(player_chunk, player.camera.pos, &chunk_info);
 
+		LG_INFO("Inits done, lets create some chunks (%d wanted)\n", chunk_info.chunks_loaded);
 		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
-			new_chunk(&chunks[nth_chunk], &chunk_info, (int []){999 - nth_chunk, 0, 999});
+		{
+			new_chunk(&chunks[nth_chunk], &chunk_info);
+			LG_INFO("#%d created.", nth_chunk);
+		}
 		ft_printf("Chunks created : %d\n", nth_chunk);
 //////////////////////////////
 	// END Instance testing
@@ -368,7 +368,6 @@ int	main(void)
 		//	regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);	
 			regenerate_chunks_v32(chunks, &chunk_info, player_chunk);	
 		}
-//		regenerate_chunks_v3(chunk_reloading, chunks, &chunk_info, player_chunk);	
 
 		thread_manager_check_threadiness(&tm);
 

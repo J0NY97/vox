@@ -371,7 +371,7 @@ struct	s_chunk
 	t_chunk_args	args;
 };
 
-void		new_chunk(t_chunk *chunk, t_chunk_info *info, int *coord);
+void		new_chunk(t_chunk *chunk, t_chunk_info *info);
 void		gen_chunk_blocks(t_block *blocks, int *dim);
 int			chunk_gen(t_chunk *chunk);
 void		update_chunk(t_chunk *chunk, int *coord);

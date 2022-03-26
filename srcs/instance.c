@@ -1,8 +1,7 @@
 #include "shaderpixel.h"
 
 // Basically everything needed for minecraft : https://www.redblobgames.com/maps/terrain-from-noise/
-
-void	new_chunk(t_chunk *chunk, t_chunk_info *info, int *coord)
+void	new_chunk(t_chunk *chunk, t_chunk_info *info)
 {
 	int error = glGetError();
 	if (error)
@@ -23,12 +22,12 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, int *coord)
 	mat4_identity(chunk->block_matrices);
 	chunk->block_textures[0] = 0;
 
+	// Set INT_MAX to coordinates, so that the chunk regenerator knows to regenerate these chunks;
 	for (int i = 0; i < 3; i++)
-		chunk->coordinate[i] = coord[i];
-	vec3_new(chunk->world_coordinate,
-		chunk->coordinate[0] * chunk->info->chunk_size[0],
-		chunk->coordinate[1] * chunk->info->chunk_size[1],
-		chunk->coordinate[2] * chunk->info->chunk_size[2]);
+	{
+		chunk->coordinate[i] = INT_MAX;
+		chunk->world_coordinate[i] = INT_MAX;
+	}
 	
 	init_chunk_mesh(&chunk->mesh, info->cube_model);
 
