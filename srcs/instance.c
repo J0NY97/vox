@@ -40,7 +40,7 @@ int	chunk_gen(t_chunk *chunk)
 {
 	int		start_y = 64;
 	float	freq = 0.005f;
-	float	height = freq * 300; // less is more;
+	float	pers = 0.5;
 	int		i = 0;
 
 	chunk->has_blocks = 0;
@@ -54,11 +54,12 @@ int	chunk_gen(t_chunk *chunk)
 			float	block_world_z = (chunk->world_coordinate[2] + z);
 			float	to_use_z = block_world_z * freq;
 			float	perper =
-				octave_perlin(to_use_x, 65 * freq, to_use_z, 2, 0.5) +
-				octave_perlin(to_use_x, 65 * freq, to_use_z, 4, 0.5) +
-				octave_perlin(to_use_x, 65 * freq, to_use_z, 8, 0.5);
-
-			int		wanted_y = (start_y * perper);
+				octave_perlin(to_use_x, start_y * freq, to_use_z, 1, pers) +
+				octave_perlin(to_use_x, start_y * freq, to_use_z, 2, pers) +
+				octave_perlin(to_use_x, start_y * freq, to_use_z, 4, pers) +
+				octave_perlin(to_use_x, start_y * freq, to_use_z, 8, pers);
+			float	e = pers * 3;
+			int		wanted_y = (start_y * (perper / e));
 			int		whatchumacallit = wanted_y - (chunk->world_coordinate[1]);
 			int		amount = ft_clamp(whatchumacallit, 0, chunk->info->height - 1);
 
@@ -835,6 +836,8 @@ void	update_chunk_aabb(t_chunk_block_aabb *chunk_block_aabb, t_chunk *chunk)
 */
 void	update_chunk_visible_blocks(t_chunk *chunk)
 {
+	chunk->mesh.vertices_amount = 0;
+	chunk->mesh.indices_amount = 0;
 	// TODO: only update if it has all its neighbors (do this whenever the get_chunk is faster;)
 	chunk->blocks_visible_amount = get_blocks_visible(chunk);
 	chunk->block_matrices_size = sizeof(float) * 16 * chunk->blocks_visible_amount;

@@ -213,7 +213,7 @@ int	main(void)
 		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
 		{
 			new_chunk(&chunks[nth_chunk], &chunk_info);
-			LG_INFO("#%d created.", nth_chunk);
+//			LG_INFO("#%d created.", nth_chunk);
 		}
 		ft_printf("Chunks created : %d\n", nth_chunk);
 //////////////////////////////
@@ -320,14 +320,6 @@ int	main(void)
 					most_vertices = chunks[j].mesh.vertices_amount;
 				if (chunks[j].mesh.indices_amount > most_indices)
 					most_indices = chunks[j].mesh.indices_amount;
-				/*
-				for (int i = 0; i < chunks[j].mesh.vertices_amount; i++)
-				{
-					if (i % 3 == 0)
-						ft_printf("\n");
-					ft_printf("%f ", chunks[0].mesh.vertices[i]);
-				}
-				*/
 			}
 			LG_INFO("Most vertices : %d", most_vertices);
 			LG_INFO("Most indices : %d", most_indices);
