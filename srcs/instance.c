@@ -81,14 +81,8 @@ int	chunk_gen(t_chunk *chunk)
 					octave_perlin(cave_x, cave_y, cave_z, 16, 0.5);
 					*/
 
-				chunk->blocks[i].chunk = chunk;
 				vec3_new(chunk->blocks[i].pos, x, y, z);
-				if (block_world_y == 65)
-				{
-					chunk->blocks[i].type = BLOCK_WATER;
-					chunk->has_blocks = 1;
-				}
-				else if (/*rep > 1.0f &&*/ y <= whatchumacallit)
+				if (/*rep > 1.0f &&*/ y <= whatchumacallit)
 				{
 					if (y <= whatchumacallit - 1) // if we have 3 dirt block on top we make the rest stone blocks;
 						chunk->blocks[i].type = BLOCK_STONE;
@@ -97,7 +91,15 @@ int	chunk_gen(t_chunk *chunk)
 					chunk->has_blocks = 1;
 				}
 				else
-					chunk->blocks[i].type = BLOCK_AIR;
+				{
+					if (block_world_y == 65)
+					{
+						chunk->blocks[i].type = BLOCK_WATER;
+						chunk->has_blocks = 1;
+					}
+					else
+						chunk->blocks[i].type = BLOCK_AIR;
+				}
 				i++;
 			}
 		}
@@ -208,11 +210,11 @@ t_block	*get_block(t_chunk_info	*info, float *block_pos)
 	return (&in->blocks[get_block_index(info, local_pos[0], local_pos[1], local_pos[2])]);
 }
 
-float	*get_block_world_pos(float *res, t_block *block)
+float	*get_block_world_pos(float *res, t_block *block, t_chunk *chunk)
 {
-	res[0] = (block->chunk->world_coordinate[0]) + (block->pos[0] * block->chunk->info->block_size);
-	res[1] = (block->chunk->world_coordinate[1]) + (block->pos[1] * block->chunk->info->block_size);
-	res[2] = (block->chunk->world_coordinate[2]) + (block->pos[2] * block->chunk->info->block_size);
+	res[0] = (chunk->world_coordinate[0]) + (block->pos[0] * chunk->info->block_size);
+	res[1] = (chunk->world_coordinate[1]) + (block->pos[1] * chunk->info->block_size);
+	res[2] = (chunk->world_coordinate[2]) + (block->pos[2] * chunk->info->block_size);
 	return (res);
 }
 
@@ -270,11 +272,7 @@ int	get_blocks_visible(t_chunk *chunk)
 	blocks = chunk->blocks;
 
 	/* MAKE ONLY TOUCHING AIR VISIBLE */
-	/* More improvements, instead of looping twice through all the blocks */
-	/* We can just yoink the correct block from the array, now that they are all in order */
 	float	i_block_w[VEC3_SIZE]; // block world pos for index i;
-	float	j_block_w[VEC3_SIZE]; // block world pos for index j;
-	int		enable_adjacent_chunk = 1;
 	t_chunk	*adj_chunk = NULL;
 	t_block	*tmp_block = NULL;
 
@@ -298,7 +296,7 @@ int	get_blocks_visible(t_chunk *chunk)
 		int y = pos[1];
 		int z = pos[2];
 
-		get_block_world_pos(i_block_w, &blocks[i]);
+		get_block_world_pos(i_block_w, &blocks[i], chunk);
 	
 	if (1)
 	{
@@ -309,14 +307,19 @@ int	get_blocks_visible(t_chunk *chunk)
 			j = get_block_index(chunk->info, x - 1, y, z);
 			tmp_block = &blocks[j];
 		}
-		else if (enable_adjacent_chunk)
+		else
 		{
 			if (neighbors[0])
 				tmp_block = &neighbors[0]->blocks[get_block_index(chunk->info, 15, y, z)];
 		}
-		if (tmp_block && tmp_block->type == BLOCK_AIR)
+		if (tmp_block &&
+			(tmp_block->type == BLOCK_AIR || tmp_block->type == BLOCK_WATER))
 		{
 			chunk->blocks_visible[++a] = blocks[i];
+
+			// testing
+			add_to_chunk_mesh(chunk, &blocks[i], FACE_LEFT);
+
 			continue ;
 		}
 
@@ -327,12 +330,13 @@ int	get_blocks_visible(t_chunk *chunk)
 			j = get_block_index(chunk->info, x + 1, y, z);
 			tmp_block = &blocks[j];
 		}
-		else if (enable_adjacent_chunk)
+		else
 		{
 			if (neighbors[1])
 				tmp_block = &neighbors[1]->blocks[get_block_index(chunk->info, 0, y, z)];
 		}
-		if (tmp_block && tmp_block->type == BLOCK_AIR)
+		if (tmp_block &&
+			(tmp_block->type == BLOCK_AIR || tmp_block->type == BLOCK_WATER))
 		{
 			chunk->blocks_visible[++a] = blocks[i];
 			continue ;
@@ -345,12 +349,13 @@ int	get_blocks_visible(t_chunk *chunk)
 			j = get_block_index(chunk->info, x, y + 1, z);
 			tmp_block = &blocks[j];
 		}
-		else if (enable_adjacent_chunk)
+		else
 		{
 			if (neighbors[2])
 				tmp_block = &neighbors[2]->blocks[get_block_index(chunk->info, x, 0, z)];
 		}
-		if (tmp_block && tmp_block->type == BLOCK_AIR)
+		if (tmp_block &&
+			(tmp_block->type == BLOCK_AIR || tmp_block->type == BLOCK_WATER))
 		{
 			chunk->blocks_visible[++a] = blocks[i];
 			continue ;
@@ -363,12 +368,13 @@ int	get_blocks_visible(t_chunk *chunk)
 			j = get_block_index(chunk->info, x, y - 1, z);
 			tmp_block = &blocks[j];
 		}
-		else if (enable_adjacent_chunk)
+		else
 		{
 			if (neighbors[3])
 				tmp_block = &neighbors[3]->blocks[get_block_index(chunk->info, x, 15, z)];
 		}
-		if (tmp_block && tmp_block->type == BLOCK_AIR)
+		if (tmp_block &&
+			(tmp_block->type == BLOCK_AIR || tmp_block->type == BLOCK_WATER))
 		{
 			chunk->blocks_visible[++a] = blocks[i];
 			continue ;
@@ -381,12 +387,13 @@ int	get_blocks_visible(t_chunk *chunk)
 			j = get_block_index(chunk->info, x, y, z + 1);
 			tmp_block = &blocks[j];
 		}
-		else if (enable_adjacent_chunk)
+		else
 		{
 			if (neighbors[4])
 				tmp_block = &neighbors[4]->blocks[get_block_index(chunk->info, x, y, 0)];
 		}
-		if (tmp_block && tmp_block->type == BLOCK_AIR)
+		if (tmp_block &&
+			(tmp_block->type == BLOCK_AIR || tmp_block->type == BLOCK_WATER))
 		{
 			chunk->blocks_visible[++a] = blocks[i];
 			continue ;
@@ -399,12 +406,13 @@ int	get_blocks_visible(t_chunk *chunk)
 			j = get_block_index(chunk->info, x, y, z - 1);
 			tmp_block = &blocks[j];
 		}
-		else if (enable_adjacent_chunk)
+		else
 		{
 			if (neighbors[5])
 				tmp_block = &neighbors[5]->blocks[get_block_index(chunk->info, x, y, 15)];
 		}
-		if (tmp_block && tmp_block->type == BLOCK_AIR)
+		if (tmp_block &&
+			(tmp_block->type == BLOCK_AIR || tmp_block->type == BLOCK_WATER))
 		{
 			chunk->blocks_visible[++a] = blocks[i];
 			continue ;
@@ -795,16 +803,16 @@ void	render_aabb(t_aabb *a, t_camera *camera, float *col)
 		camera->view, camera->projection);
 }
 
-void	block_aabb_update(t_aabb *res, t_block *block)
+void	block_aabb_update(t_aabb *res, t_chunk *chunk, t_block *block)
 {
-	float	half_block_size = (block->chunk->info->block_size / 2);
+	float	half_block_size = (chunk->info->block_size / 2);
 
-	res->min[0] = block->chunk->world_coordinate[0] + (block->pos[0] * block->chunk->info->block_size) - half_block_size;
-	res->min[1] = block->chunk->world_coordinate[1] + (block->pos[1] * block->chunk->info->block_size) - half_block_size;
-	res->min[2] = block->chunk->world_coordinate[2] + (block->pos[2] * block->chunk->info->block_size) - half_block_size;
-	res->max[0] = res->min[0] + block->chunk->info->block_size;
-	res->max[1] = res->min[1] + block->chunk->info->block_size;
-	res->max[2] = res->min[2] + block->chunk->info->block_size;
+	res->min[0] = chunk->world_coordinate[0] + (block->pos[0] * chunk->info->block_size) - half_block_size;
+	res->min[1] = chunk->world_coordinate[1] + (block->pos[1] * chunk->info->block_size) - half_block_size;
+	res->min[2] = chunk->world_coordinate[2] + (block->pos[2] * chunk->info->block_size) - half_block_size;
+	res->max[0] = res->min[0] + chunk->info->block_size;
+	res->max[1] = res->min[1] + chunk->info->block_size;
+	res->max[2] = res->min[2] + chunk->info->block_size;
 }
 
 /*
@@ -816,7 +824,7 @@ void	update_chunk_aabb(t_chunk_block_aabb *chunk_block_aabb, t_chunk *chunk)
 	for (int i = 0; i < chunk_block_aabb->block_amount; i++)
 	{
 		chunk_block_aabb->block_pointers[i] = &chunk->blocks_visible[i];
-		block_aabb_update(&chunk_block_aabb->aabb[i], chunk_block_aabb->block_pointers[i]);
+		block_aabb_update(&chunk_block_aabb->aabb[i], chunk, chunk_block_aabb->block_pointers[i]);
 	}
 }
 
@@ -882,6 +890,15 @@ void	init_chunk_mesh(t_chunk_mesh *mesh, t_cube_model *model)
 
 	mesh->model = model;
 
+	// TESTING //
+	mesh->vertices_allocated = 8476;
+	mesh->vertices = malloc(sizeof(float) * mesh->vertices_allocated);
+	mesh->vertices_amount = 0;
+	mesh->indices_allocated = 4236;
+	mesh->indices = malloc(sizeof(unsigned int) * mesh->indices_allocated);
+	mesh->indices_amount = 0;
+	// TESTING //
+
 	error = glGetError();
 	if (error)
 		LG_ERROR("BFORE (%d)", error);
@@ -896,8 +913,6 @@ void	init_chunk_mesh(t_chunk_mesh *mesh, t_cube_model *model)
 		glEnableVertexAttribArray(2); // uvs
 	if (0)
 		glEnableVertexAttribArray(3); // nor
-
-
 
 	glGenBuffers(6, vbo);
 	mesh->vbo_pos = vbo[0];
@@ -1004,4 +1019,85 @@ void	update_chunk_mesh(t_chunk *chunk)
 	
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
+}
+
+static const float g_vertices[] = {
+	// FRONT
+	-1, 1, 1,	// top left
+	1, 1, 1,	// top right
+	-1, -1, 1,	// bot left
+	1, -1, 1,	// bot right
+	// BACK
+	-1, 1, -1,	// top left
+	1, 1, -1,	// top right
+	-1, -1, -1,	// bot left
+	1, -1, -1	// bot right
+};
+static const unsigned int g_faces[] = {
+	// front
+	0, 2, 3, 1,
+	// left
+	4, 6, 2, 0,
+	// back
+	4, 6, 7, 5,
+	// right
+	1, 3, 7, 5,
+	// top
+	4, 0, 1, 5,
+	// bot
+	6, 2, 3, 7
+};
+
+/*
+ * 'block_face' 'e_block_face';
+*/
+void	add_to_chunk_mesh(t_chunk *chunk, t_block *block, int block_face)
+{
+	t_chunk_mesh	*mesh;
+	int				ind;
+
+	mesh = &chunk->mesh;
+	ind = block_face * 4;
+
+	if (mesh->vertices_allocated <= mesh->vertices_amount + 12)
+	{
+		mesh->vertices_allocated += 256;
+		mesh->vertices = realloc(mesh->vertices, sizeof(float) * mesh->vertices_allocated);
+		LG_WARN("Reallocating Vertices from %d to %d", mesh->indices_allocated - 256, mesh->indices_allocated);
+	}
+	mesh->vertices[mesh->vertices_amount + 0] = g_vertices[g_faces[ind + 0] * 3 + 0] * block->pos[0];
+	mesh->vertices[mesh->vertices_amount + 1] = g_vertices[g_faces[ind + 0] * 3 + 1] * block->pos[1];
+	mesh->vertices[mesh->vertices_amount + 2] = g_vertices[g_faces[ind + 0] * 3 + 2] * block->pos[2];
+
+	mesh->vertices[mesh->vertices_amount + 3] = g_vertices[g_faces[ind + 1] * 3 + 0] * block->pos[0];
+	mesh->vertices[mesh->vertices_amount + 4] = g_vertices[g_faces[ind + 1] * 3 + 1] * block->pos[1];
+	mesh->vertices[mesh->vertices_amount + 5] = g_vertices[g_faces[ind + 1] * 3 + 2] * block->pos[2];
+
+	mesh->vertices[mesh->vertices_amount + 6] = g_vertices[g_faces[ind + 2] * 3 + 0] * block->pos[0];
+	mesh->vertices[mesh->vertices_amount + 7] = g_vertices[g_faces[ind + 2] * 3 + 1] * block->pos[1];
+	mesh->vertices[mesh->vertices_amount + 8] = g_vertices[g_faces[ind + 2] * 3 + 2] * block->pos[2];
+
+	mesh->vertices[mesh->vertices_amount + 9] = g_vertices[g_faces[ind + 3] * 3 + 0] * block->pos[0];
+	mesh->vertices[mesh->vertices_amount + 10] = g_vertices[g_faces[ind + 3] * 3 + 1] * block->pos[1];
+	mesh->vertices[mesh->vertices_amount + 11] = g_vertices[g_faces[ind + 3] * 3 + 2] * block->pos[2];
+
+	mesh->vertices_amount += 12;
+
+	int next_index = mesh->indices_amount / 6;
+	if (mesh->indices_allocated < mesh->indices_amount + 6)
+	{
+		mesh->indices_allocated += 256;
+		mesh->indices = realloc(mesh->indices, sizeof(float) * mesh->indices_allocated);
+		LG_WARN("Reallocating Indices from %d to %d", mesh->indices_allocated - 256, mesh->indices_allocated);
+	}
+
+	mesh->indices[mesh->indices_amount + 0] = next_index;
+	mesh->indices[mesh->indices_amount + 1] = next_index + 1;
+	mesh->indices[mesh->indices_amount + 2] = next_index + 2;
+
+	mesh->indices[mesh->indices_amount + 3] = next_index;
+	mesh->indices[mesh->indices_amount + 4] = next_index + 2;
+	mesh->indices[mesh->indices_amount + 5] = next_index + 3;
+
+	mesh->indices_amount += 6;
 }

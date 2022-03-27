@@ -191,6 +191,14 @@ int	main(void)
 
 		chunk_info.cube_model = &cube_model;
 
+		for (int i = 0; i < cube_model.vertices_size / sizeof(float); i++)
+		{
+			if (i % 3 == 0)
+				ft_printf("\n");
+			ft_printf("%f ", cube_model.vertices[i]);
+		}
+//		exit(0);
+
 		t_chunk	*chunks;
 		chunks = malloc(sizeof(t_chunk) * chunk_info.chunks_loaded);
 
@@ -302,6 +310,28 @@ int	main(void)
 				LG_INFO("Regeneration of chunks turned ON.");
 			else
 				LG_INFO("Regeneration of chunks turned OFF.");
+
+			// TESTING ///
+			int	most_vertices = 0;
+			int	most_indices = 0;
+			for (int j = 0; j < chunk_info.chunks_loaded; j++)
+			{
+				if (chunks[j].mesh.vertices_amount > most_vertices)
+					most_vertices = chunks[j].mesh.vertices_amount;
+				if (chunks[j].mesh.indices_amount > most_indices)
+					most_indices = chunks[j].mesh.indices_amount;
+				/*
+				for (int i = 0; i < chunks[j].mesh.vertices_amount; i++)
+				{
+					if (i % 3 == 0)
+						ft_printf("\n");
+					ft_printf("%f ", chunks[0].mesh.vertices[i]);
+				}
+				*/
+			}
+			LG_INFO("Most vertices : %d", most_vertices);
+			LG_INFO("Most indices : %d", most_indices);
+			// TESTING ///
 		}
 
 		update_fps(&fps);

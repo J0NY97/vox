@@ -249,6 +249,17 @@ enum e_block_type
 	BLOCK_TYPE_AMOUNT
 };
 
+enum e_block_face
+{
+	FACE_FRONT = 0,
+	FACE_BACK,
+	FACE_TOP,
+	FACE_BOT,
+	FACE_LEFT,
+	FACE_RIGHT,
+	FACE_AMOUNT
+};
+
 typedef struct s_cube_model	t_cube_model;
 typedef struct s_chunk		t_chunk;
 
@@ -256,7 +267,6 @@ typedef struct s_block
 {
 	float	pos[VEC3_SIZE]; // in chunk coordinates, add chunk world coordinate to this to get world coordinate;
 	int		type; // e_block_type;
-	t_chunk	*chunk; // pointer to the chunk it is a part of;
 }	t_block;
 
 typedef struct	s_chunk_block_aabb
@@ -289,7 +299,6 @@ typedef struct s_chunk_info
 
 	t_chunk_block_aabb	*chunk_block_aabbs; // every chunk has t_chunk_aabb, which has an aabb for every block in the chunk;
 	int					chunk_block_aabb_amount; // 27;
-
 
 	t_chunk		*chunks; // you should not store the chunks here mainly; its just here so you can acces from places you need, without having to pass them in the function as argumnet;
 	t_cube_model	*cube_model; // poitner to the cube_model;
@@ -334,10 +343,16 @@ typedef struct s_chunk_mesh
 
 	t_cube_model	*model; // pointer to the cube_model;
 
-/*
-	float	*vertices;
-	float	*indices;
-*/
+	// These are the values gotten from the mesh creator in code, from
+	//	all visible blocks in the chunk;
+	float			*vertices;
+	float			*uvs;
+	unsigned int	*indices;
+	size_t			vertices_amount;
+	size_t			uvs_amount;
+	size_t			indices_amount;
+	size_t			vertices_allocated;
+	size_t			indices_allocated;
 
 	GLuint		vbo_matrices;
 	GLuint		vbo_texture_ids;
@@ -388,6 +403,7 @@ int			*get_block_chunk_pos_from_index(int *res, int *max, int index);
 int			*block_world_to_local_pos(int *res, float *world);
 
 void		update_chunk_mesh(t_chunk *chunk);
+void		add_to_chunk_mesh(t_chunk *chunk, t_block *block, int block_face);
 
 void		update_chunk_aabb(t_chunk_block_aabb *chunk_block_aabb, t_chunk *chunk);
 
