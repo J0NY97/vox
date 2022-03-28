@@ -317,7 +317,7 @@ int	get_blocks_visible(t_chunk *chunk)
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
 			chunk->blocks_visible[++a] = blocks[i];
-//			add_to_chunk_mesh_v2(chunk, &blocks[i], g_left_face, g_block_data[blocks[i].type + 1].left_texture);
+			add_to_chunk_mesh_v2(chunk, &blocks[i], g_left_face, g_block_data[blocks[i].type + 1].left_texture);
 			continue ;
 		}
 
@@ -1008,7 +1008,7 @@ void	init_chunk_mesh_v2(t_chunk_mesh *mesh)
 
 	// Texture ID
 	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_texture_ids);
-	glVertexAttribPointer(1, 1, GL_INT, GL_TRUE, sizeof(int), NULL);
+	glVertexAttribIPointer(1, 1, GL_INT, sizeof(int), NULL);
 
 	glGenBuffers(1, &mesh->ebo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
@@ -1164,14 +1164,7 @@ void	add_to_chunk_mesh_v2(t_chunk *chunk, t_block *block, float *face_vertices, 
 
 		tex = texture_id | i << 16;
 		mesh->texture_ids[mesh->texture_id_amount + i] = tex;
-
-/*
-		int	uv_index = (tex >> 16) & 0x0000FFFF;	
-		int	texture_index = tex & 0x0000FFFF;	
-		ft_printf("uv_index : %d, texture_index : %d\n", uv_index, texture_index);
-		*/
 	}
-//	exit(0);
 	mesh->vertices_amount += 4 * 3;
 	mesh->texture_id_amount += 4;
 

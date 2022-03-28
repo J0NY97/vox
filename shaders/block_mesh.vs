@@ -8,10 +8,10 @@ uniform mat4 view;
 uniform mat4 projection;
 
 vec2	uvs[4] = vec2[4](
-	vec2(0.0f, 0.0f),
-	vec2(0.0f, 1.0f),
+	vec2(1.0f, 1.0f),
 	vec2(1.0f, 0.0f),
-	vec2(1.0f, 1.0f)
+	vec2(0.0f, 0.0f),
+	vec2(0.0f, 1.0f)
 );
 
 out vec2 inTex;
