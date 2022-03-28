@@ -29,7 +29,8 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info)
 		chunk->world_coordinate[i] = INT_MAX;
 	}
 	
-	init_chunk_mesh(&chunk->mesh, info->cube_model);
+	//init_chunk_mesh(&chunk->mesh, info->cube_model);
+	init_chunk_mesh_v2(&chunk->mesh);
 
 	error = glGetError();
 	if (error)
@@ -319,7 +320,7 @@ int	get_blocks_visible(t_chunk *chunk)
 			chunk->blocks_visible[++a] = blocks[i];
 
 			// testing
-			add_to_chunk_mesh(chunk, &blocks[i], FACE_LEFT);
+			add_to_chunk_mesh_v2(chunk, &blocks[i], g_left_face, g_block_data[blocks[i].type + 1].left_texture);
 
 			continue ;
 		}
@@ -837,7 +838,9 @@ void	update_chunk_aabb(t_chunk_block_aabb *chunk_block_aabb, t_chunk *chunk)
 void	update_chunk_visible_blocks(t_chunk *chunk)
 {
 	chunk->mesh.vertices_amount = 0;
+	chunk->mesh.texture_id_amount = 0;
 	chunk->mesh.indices_amount = 0;
+	chunk->mesh.index_amount = 0;
 	// TODO: only update if it has all its neighbors (do this whenever the get_chunk is faster;)
 	chunk->blocks_visible_amount = get_blocks_visible(chunk);
 	chunk->block_matrices_size = sizeof(float) * 16 * chunk->blocks_visible_amount;
@@ -888,7 +891,7 @@ void	init_cube_model(t_cube_model *model)
 */
 void	init_chunk_mesh(t_chunk_mesh *mesh, t_cube_model *model)
 {
-	GLuint	vbo[6];
+	GLuint	vbo[4];
 	int		error;
 
 	mesh->model = model;
@@ -897,6 +900,11 @@ void	init_chunk_mesh(t_chunk_mesh *mesh, t_cube_model *model)
 	mesh->vertices_allocated = 8476;
 	mesh->vertices = malloc(sizeof(float) * mesh->vertices_allocated);
 	mesh->vertices_amount = 0;
+
+	mesh->texture_ids_allocated = 2120; 
+	mesh->texture_ids = malloc(sizeof(int) * mesh->texture_ids_allocated);
+	mesh->texture_id_amount = 0;
+
 	mesh->indices_allocated = 4236;
 	mesh->indices = malloc(sizeof(unsigned int) * mesh->indices_allocated);
 	mesh->indices_amount = 0;
@@ -910,36 +918,23 @@ void	init_chunk_mesh(t_chunk_mesh *mesh, t_cube_model *model)
 	glBindVertexArray(mesh->vao);
 	if (1)
 		glEnableVertexAttribArray(0); // pos
-	if (0)
-		glEnableVertexAttribArray(1); // col
 	if (1)
-		glEnableVertexAttribArray(2); // uvs
-	if (0)
-		glEnableVertexAttribArray(3); // nor
+		glEnableVertexAttribArray(1); // tex
 
-	glGenBuffers(6, vbo);
+	glGenBuffers(4, vbo);
 	mesh->vbo_pos = vbo[0];
-	mesh->vbo_color = vbo[1];
-	mesh->vbo_tex = vbo[2];
-	mesh->vbo_norm = vbo[3];
+	mesh->vbo_tex = vbo[1];
 
-	mesh->vbo_matrices = vbo[4];
-	mesh->vbo_texture_ids = vbo[5];
+	mesh->vbo_matrices = vbo[2];
+	mesh->vbo_texture_ids = vbo[3];
 
 	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_pos);
 	glBufferData(GL_ARRAY_BUFFER, mesh->model->vertices_size, &mesh->model->vertices[0], GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
 
-	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_color);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
-
 	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_tex);
 	glBufferData(GL_ARRAY_BUFFER, mesh->model->uvs_size, &mesh->model->uvs[0], GL_STATIC_DRAW);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_TRUE, sizeof(float) * 2, NULL);
-
-	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_norm);
-	glVertexAttribPointer(3, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
-
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_TRUE, sizeof(float) * 2, NULL);
 
 	float	tmp[MAT4_SIZE];
 	mat4_identity(tmp);
@@ -947,21 +942,21 @@ void	init_chunk_mesh(t_chunk_mesh *mesh, t_cube_model *model)
 	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_matrices);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 16, &tmp[0], GL_STATIC_DRAW);
 
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), NULL);
+	glVertexAttribDivisor(2, 1);
+
+	glEnableVertexAttribArray(3);
+	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void *)(1 * 4 * sizeof(float)));
+	glVertexAttribDivisor(3, 1);
+
 	glEnableVertexAttribArray(4);
-	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), NULL);
+	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void *)(2 * 4 * sizeof(float)));
 	glVertexAttribDivisor(4, 1);
 
 	glEnableVertexAttribArray(5);
-	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void *)(1 * 4 * sizeof(float)));
+	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void *)(3 * 4 * sizeof(float)));
 	glVertexAttribDivisor(5, 1);
-
-	glEnableVertexAttribArray(6);
-	glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void *)(2 * 4 * sizeof(float)));
-	glVertexAttribDivisor(6, 1);
-
-	glEnableVertexAttribArray(7);
-	glVertexAttribPointer(7, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void *)(3 * 4 * sizeof(float)));
-	glVertexAttribDivisor(7, 1);
 
 	int	tmp_tex[1];
 	tmp_tex[0] = 0;
@@ -969,9 +964,9 @@ void	init_chunk_mesh(t_chunk_mesh *mesh, t_cube_model *model)
 	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_texture_ids);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(int), &tmp_tex[0], GL_STATIC_DRAW);
 
-	glEnableVertexAttribArray(8);
-	glVertexAttribIPointer(8, 1, GL_INT, GL_FALSE, NULL);
-	glVertexAttribDivisor(8, 1);
+	glEnableVertexAttribArray(6);
+	glVertexAttribIPointer(6, 1, GL_INT, GL_FALSE, NULL);
+	glVertexAttribDivisor(6, 1);
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -979,6 +974,70 @@ void	init_chunk_mesh(t_chunk_mesh *mesh, t_cube_model *model)
 	error = glGetError();
 	if (error)
 		LG_ERROR("ERROR (%d)", error);
+}
+
+void	init_chunk_mesh_v2(t_chunk_mesh *mesh)
+{
+	GLuint	vbo[2];
+	int		error;
+	error = glGetError();
+	if (error)
+		LG_ERROR("BEFORE (%d)", error);
+
+	// TESTING //
+	mesh->vertices_allocated = 8476;
+	mesh->vertices = malloc(sizeof(float) * mesh->vertices_allocated);
+	mesh->vertices_amount = 0;
+
+	mesh->texture_ids_allocated = 2120; 
+	mesh->texture_ids = malloc(sizeof(int) * mesh->texture_ids_allocated);
+	mesh->texture_id_amount = 0;
+
+	mesh->indices_allocated = 4236;
+	mesh->indices = malloc(sizeof(unsigned int) * mesh->indices_allocated);
+	mesh->indices_amount = 0;
+	// TESTING //
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("BFORE (%d)", error);
+
+	glGenVertexArrays(1, &mesh->vao);
+	glBindVertexArray(mesh->vao);
+	if (1)
+		glEnableVertexAttribArray(0); // pos
+	if (1)
+		glEnableVertexAttribArray(1); // tex
+
+	glGenBuffers(2, vbo);
+	mesh->vbo_pos = vbo[0];
+	mesh->vbo_texture_ids = vbo[1];
+
+	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_pos);
+	glBufferData(GL_ARRAY_BUFFER, mesh->vertices_amount * sizeof(float), &mesh->vertices[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
+
+	int	tmp_tex[1];
+	tmp_tex[0] = 0;
+	// Texture ID
+	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_texture_ids);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(int), &tmp_tex[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 1, GL_INT, GL_TRUE, sizeof(int), NULL);
+
+	glGenBuffers(1, &mesh->ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->indices_amount * sizeof(unsigned int), &mesh->indices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	glGenTextures(1, &mesh->texture);
+	new_texture(&mesh->texture, MODEL_PATH"cube/retry_cube_texture.bmp");
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("(%d)", error);
 }
 
 void	render_chunk_mesh(t_chunk *chunk, t_camera *camera, t_shader *shader)
@@ -1005,6 +1064,42 @@ void	render_chunk_mesh(t_chunk *chunk, t_camera *camera, t_shader *shader)
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
+void	render_chunk_mesh_v2(t_chunk *chunk, t_camera *camera, t_shader *shader)
+{
+	t_chunk_mesh	*mesh;
+
+	int	error;
+	error = glGetError();
+	if (error)
+		LG_ERROR("BEFORE (%d)", error);
+
+	mesh = &chunk->mesh;
+
+
+	glUseProgram(shader->program);
+	glUniformMatrix4fv(glGetUniformLocation(shader->program, "view"), 1, GL_FALSE, &camera->view[0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader->program, "projection"), 1, GL_FALSE, &camera->projection[0]);
+
+	glUniform3fv(glGetUniformLocation(shader->program, "chunkPosition"), 1, &chunk->world_coordinate[0]);
+
+	glBindVertexArray(mesh->vao);
+
+	glActiveTexture(GL_TEXTURE0 + 0);
+	glBindTexture(GL_TEXTURE_2D, mesh->texture);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
+	glDrawElementsInstanced(GL_TRIANGLES, mesh->index_amount, GL_UNSIGNED_INT,
+		NULL, mesh->index_amount / 3);
+
+	glUseProgram(0);
+	glBindVertexArray(0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("(%d)", error);
+}
+
 /*
  * Matrices need to be updated before this function;
 */
@@ -1022,6 +1117,36 @@ void	update_chunk_mesh(t_chunk *chunk)
 	
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
+}
+
+void	update_chunk_mesh_v2(t_chunk *chunk)
+{
+	int error;
+	error = glGetError();
+	if (error)
+		LG_ERROR("BEFORE (%d)", error);
+
+	glBindVertexArray(chunk->mesh.vao);
+	// Matrices
+	glBindBuffer(GL_ARRAY_BUFFER, chunk->mesh.vbo_pos);
+	glBufferData(GL_ARRAY_BUFFER, chunk->mesh.vertices_amount * sizeof(float),
+		&chunk->mesh.vertices[0], GL_STATIC_DRAW);
+	// Texture ID
+	glBindBuffer(GL_ARRAY_BUFFER, chunk->mesh.vbo_texture_ids);
+	glBufferData(GL_ARRAY_BUFFER, chunk->mesh.texture_id_amount * sizeof(int),
+		&chunk->mesh.texture_ids[0], GL_STATIC_DRAW);
+	// EBO
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunk->mesh.ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, chunk->mesh.indices_amount * sizeof(unsigned int),
+		&chunk->mesh.indices[0], GL_STATIC_DRAW);
+	
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("(%d)", error);
 }
 
 static const float g_vertices[] = {
@@ -1051,42 +1176,40 @@ static const unsigned int g_faces[] = {
 	6, 2, 3, 7
 };
 
-/*
- * 'block_face' 'e_block_face';
-*/
-void	add_to_chunk_mesh(t_chunk *chunk, t_block *block, int block_face)
+void	add_to_chunk_mesh_v2(t_chunk *chunk, t_block *block, float *face_vertices, int texture_id)
 {
 	t_chunk_mesh	*mesh;
 	int				ind;
 
 	mesh = &chunk->mesh;
-	ind = block_face * 4;
 
-	if (mesh->vertices_allocated <= mesh->vertices_amount + 12)
+// Vertices and Texture
+	if (mesh->vertices_allocated < mesh->vertices_amount + 12)
 	{
 		mesh->vertices_allocated += 256;
 		mesh->vertices = realloc(mesh->vertices, sizeof(float) * mesh->vertices_allocated);
 		LG_WARN("Reallocating Vertices from %d to %d", mesh->indices_allocated - 256, mesh->indices_allocated);
 	}
-	mesh->vertices[mesh->vertices_amount + 0] = g_vertices[g_faces[ind + 0] * 3 + 0] * block->pos[0];
-	mesh->vertices[mesh->vertices_amount + 1] = g_vertices[g_faces[ind + 0] * 3 + 1] * block->pos[1];
-	mesh->vertices[mesh->vertices_amount + 2] = g_vertices[g_faces[ind + 0] * 3 + 2] * block->pos[2];
+	if (mesh->texture_ids_allocated < mesh->texture_id_amount + 4)
+	{
+		mesh->texture_ids_allocated += 256;
+		mesh->texture_ids = realloc(mesh->texture_ids, sizeof(int) * mesh->texture_ids_allocated);
+		LG_WARN("Reallocating Texture Ids from %d to %d", mesh->texture_ids_allocated - 256, mesh->texture_ids_allocated);
+	}
 
-	mesh->vertices[mesh->vertices_amount + 3] = g_vertices[g_faces[ind + 1] * 3 + 0] * block->pos[0];
-	mesh->vertices[mesh->vertices_amount + 4] = g_vertices[g_faces[ind + 1] * 3 + 1] * block->pos[1];
-	mesh->vertices[mesh->vertices_amount + 5] = g_vertices[g_faces[ind + 1] * 3 + 2] * block->pos[2];
+	for (int i = 0; i < 4; i++)
+	{
+		mesh->vertices[mesh->vertices_amount + (3 * i) + 0] = face_vertices[i] + block->pos[0];
+		mesh->vertices[mesh->vertices_amount + (3 * i) + 1] = face_vertices[i] + block->pos[1];
+		mesh->vertices[mesh->vertices_amount + (3 * i) + 2] = face_vertices[i] + block->pos[2];
 
-	mesh->vertices[mesh->vertices_amount + 6] = g_vertices[g_faces[ind + 2] * 3 + 0] * block->pos[0];
-	mesh->vertices[mesh->vertices_amount + 7] = g_vertices[g_faces[ind + 2] * 3 + 1] * block->pos[1];
-	mesh->vertices[mesh->vertices_amount + 8] = g_vertices[g_faces[ind + 2] * 3 + 2] * block->pos[2];
+		int tex = texture_id << 4 | i << 8;
+		mesh->texture_ids[mesh->texture_id_amount + i] = tex;
+	}
+	mesh->vertices_amount += 4 * 3;
+	mesh->texture_id_amount += 4;
 
-	mesh->vertices[mesh->vertices_amount + 9] = g_vertices[g_faces[ind + 3] * 3 + 0] * block->pos[0];
-	mesh->vertices[mesh->vertices_amount + 10] = g_vertices[g_faces[ind + 3] * 3 + 1] * block->pos[1];
-	mesh->vertices[mesh->vertices_amount + 11] = g_vertices[g_faces[ind + 3] * 3 + 2] * block->pos[2];
-
-	mesh->vertices_amount += 12;
-
-	int next_index = mesh->indices_amount / 6;
+// Indices
 	if (mesh->indices_allocated < mesh->indices_amount + 6)
 	{
 		mesh->indices_allocated += 256;
@@ -1094,13 +1217,14 @@ void	add_to_chunk_mesh(t_chunk *chunk, t_block *block, int block_face)
 		LG_WARN("Reallocating Indices from %d to %d", mesh->indices_allocated - 256, mesh->indices_allocated);
 	}
 
-	mesh->indices[mesh->indices_amount + 0] = next_index;
-	mesh->indices[mesh->indices_amount + 1] = next_index + 1;
-	mesh->indices[mesh->indices_amount + 2] = next_index + 2;
+	mesh->indices[mesh->indices_amount + 0] = mesh->index_amount;
+	mesh->indices[mesh->indices_amount + 1] = mesh->index_amount + 1;
+	mesh->indices[mesh->indices_amount + 2] = mesh->index_amount + 2;
 
-	mesh->indices[mesh->indices_amount + 3] = next_index;
-	mesh->indices[mesh->indices_amount + 4] = next_index + 2;
-	mesh->indices[mesh->indices_amount + 5] = next_index + 3;
+	mesh->indices[mesh->indices_amount + 3] = mesh->index_amount;
+	mesh->indices[mesh->indices_amount + 4] = mesh->index_amount + 2;
+	mesh->indices[mesh->indices_amount + 5] = mesh->index_amount + 3;
 
 	mesh->indices_amount += 6;
+	mesh->index_amount += 4;
 }

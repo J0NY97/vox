@@ -157,6 +157,8 @@ int	main(void)
 //////////////////////////////
 		t_shader	cube_shader;
 		new_shader(&cube_shader, SHADER_PATH"simple_instance.vs", SHADER_PATH"simple_instance.fs");
+		t_shader	cube_shader_v2;
+		new_shader(&cube_shader_v2, SHADER_PATH"block_mesh.vs", SHADER_PATH"block_mesh.fs");
 
 		t_thread_manager	tm;
 		thread_manager_new(&tm, 64);
@@ -190,14 +192,6 @@ int	main(void)
 		}
 
 		chunk_info.cube_model = &cube_model;
-
-		for (int i = 0; i < cube_model.vertices_size / sizeof(float); i++)
-		{
-			if (i % 3 == 0)
-				ft_printf("\n");
-			ft_printf("%f ", cube_model.vertices[i]);
-		}
-//		exit(0);
 
 		t_chunk	*chunks;
 		chunks = malloc(sizeof(t_chunk) * chunk_info.chunks_loaded);
@@ -313,15 +307,19 @@ int	main(void)
 
 			// TESTING ///
 			int	most_vertices = 0;
+			int	most_textures = 0;
 			int	most_indices = 0;
 			for (int j = 0; j < chunk_info.chunks_loaded; j++)
 			{
 				if (chunks[j].mesh.vertices_amount > most_vertices)
 					most_vertices = chunks[j].mesh.vertices_amount;
+				if (chunks[j].mesh.texture_id_amount > most_textures)
+					most_textures = chunks[j].mesh.texture_id_amount;
 				if (chunks[j].mesh.indices_amount > most_indices)
 					most_indices = chunks[j].mesh.indices_amount;
 			}
 			LG_INFO("Most vertices : %d", most_vertices);
+			LG_INFO("Most texture ids : %d", most_textures);
 			LG_INFO("Most indices : %d", most_indices);
 			// TESTING ///
 		}
@@ -400,8 +398,9 @@ int	main(void)
 			if (1 && chunks[nth_chunk].needs_to_update)
 			{
 				update_chunk_visible_blocks(&chunks[nth_chunk]);
-				update_chunk_matrices(&chunks[nth_chunk]);
-				update_chunk_mesh(&chunks[nth_chunk]);
+//				update_chunk_matrices(&chunks[nth_chunk]);
+//				update_chunk_mesh(&chunks[nth_chunk]);
+				update_chunk_mesh_v2(&chunks[nth_chunk]);
 				chunk_aabb_update(&chunks[nth_chunk]);
 
 				chunks[nth_chunk].needs_to_update = 0;
@@ -414,7 +413,8 @@ int	main(void)
 					player.camera.far_plane + chunks[nth_chunk].info->chunk_size[0] &&
 					aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum))
 				{
-					render_chunk_mesh(&chunks[nth_chunk], &player.camera, &cube_shader);
+//					render_chunk_mesh(&chunks[nth_chunk], &player.camera, &cube_shader);
+					render_chunk_mesh_v2(&chunks[nth_chunk], &player.camera, &cube_shader_v2);
 					sent_to_gpu++;
 				}
 			}
