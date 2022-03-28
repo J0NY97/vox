@@ -3,7 +3,7 @@
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in int aTextureID; // 2 bytes nth texture, 2 bytes of uv index;
 
-uniform vec3 chunkPosition;
+uniform vec3 chunkPos;
 uniform mat4 view;
 uniform mat4 projection;
 
@@ -27,5 +27,8 @@ void	main()
 	inTex =	vec2(uvs[uv_index].x * per_tex_w + (texture_index * per_tex_w),
 				uvs[uv_index].y);
 
-	gl_Position = projection * view * vec4(aPos + chunkPosition, 1.0);
+	float	x = aPos.x + chunkPos.x;
+	float	y = aPos.y + chunkPos.y;
+	float	z = aPos.z + chunkPos.z;
+	gl_Position = projection * view * vec4(x, y, z, 1.0);
 }

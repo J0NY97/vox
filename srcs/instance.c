@@ -318,10 +318,7 @@ int	get_blocks_visible(t_chunk *chunk)
 			(tmp_block->type == BLOCK_AIR || tmp_block->type == BLOCK_WATER))
 		{
 			chunk->blocks_visible[++a] = blocks[i];
-
-			// testing
 			add_to_chunk_mesh_v2(chunk, &blocks[i], g_left_face, g_block_data[blocks[i].type + 1].left_texture);
-
 			continue ;
 		}
 
@@ -360,6 +357,7 @@ int	get_blocks_visible(t_chunk *chunk)
 			(tmp_block->type == BLOCK_AIR || tmp_block->type == BLOCK_WATER))
 		{
 			chunk->blocks_visible[++a] = blocks[i];
+			add_to_chunk_mesh_v2(chunk, &blocks[i], g_top_face, g_block_data[blocks[i].type + 1].top_texture);
 			continue ;
 		}
 
@@ -841,6 +839,7 @@ void	update_chunk_visible_blocks(t_chunk *chunk)
 	chunk->mesh.texture_id_amount = 0;
 	chunk->mesh.indices_amount = 0;
 	chunk->mesh.index_amount = 0;
+
 	// TODO: only update if it has all its neighbors (do this whenever the get_chunk is faster;)
 	chunk->blocks_visible_amount = get_blocks_visible(chunk);
 	chunk->block_matrices_size = sizeof(float) * 16 * chunk->blocks_visible_amount;
@@ -1080,7 +1079,7 @@ void	render_chunk_mesh_v2(t_chunk *chunk, t_camera *camera, t_shader *shader)
 	glUniformMatrix4fv(glGetUniformLocation(shader->program, "view"), 1, GL_FALSE, &camera->view[0]);
 	glUniformMatrix4fv(glGetUniformLocation(shader->program, "projection"), 1, GL_FALSE, &camera->projection[0]);
 
-	glUniform3fv(glGetUniformLocation(shader->program, "chunkPosition"), 1, &chunk->world_coordinate[0]);
+	glUniform3fv(glGetUniformLocation(shader->program, "chunkPos"), 1, &chunk->world_coordinate[0]);
 
 	glBindVertexArray(mesh->vao);
 
@@ -1088,8 +1087,7 @@ void	render_chunk_mesh_v2(t_chunk *chunk, t_camera *camera, t_shader *shader)
 	glBindTexture(GL_TEXTURE_2D, mesh->texture);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
-	glDrawElementsInstanced(GL_TRIANGLES, mesh->index_amount, GL_UNSIGNED_INT,
-		NULL, mesh->index_amount / 3);
+	glDrawElements(GL_TRIANGLES, mesh->indices_amount, GL_UNSIGNED_INT, NULL);
 
 	glUseProgram(0);
 	glBindVertexArray(0);
@@ -1149,37 +1147,9 @@ void	update_chunk_mesh_v2(t_chunk *chunk)
 		LG_ERROR("(%d)", error);
 }
 
-static const float g_vertices[] = {
-	// FRONT
-	-1, 1, 1,	// top left
-	1, 1, 1,	// top right
-	-1, -1, 1,	// bot left
-	1, -1, 1,	// bot right
-	// BACK
-	-1, 1, -1,	// top left
-	1, 1, -1,	// top right
-	-1, -1, -1,	// bot left
-	1, -1, -1	// bot right
-};
-static const unsigned int g_faces[] = {
-	// front
-	0, 2, 3, 1,
-	// left
-	4, 6, 2, 0,
-	// back
-	4, 6, 7, 5,
-	// right
-	1, 3, 7, 5,
-	// top
-	4, 0, 1, 5,
-	// bot
-	6, 2, 3, 7
-};
-
 void	add_to_chunk_mesh_v2(t_chunk *chunk, t_block *block, float *face_vertices, int texture_id)
 {
 	t_chunk_mesh	*mesh;
-	int				ind;
 
 	mesh = &chunk->mesh;
 
@@ -1197,11 +1167,13 @@ void	add_to_chunk_mesh_v2(t_chunk *chunk, t_block *block, float *face_vertices, 
 		LG_WARN("Reallocating Texture Ids from %d to %d", mesh->texture_ids_allocated - 256, mesh->texture_ids_allocated);
 	}
 
+	int ind = 0;
 	for (int i = 0; i < 4; i++)
 	{
-		mesh->vertices[mesh->vertices_amount + (3 * i) + 0] = face_vertices[i] + block->pos[0];
-		mesh->vertices[mesh->vertices_amount + (3 * i) + 1] = face_vertices[i] + block->pos[1];
-		mesh->vertices[mesh->vertices_amount + (3 * i) + 2] = face_vertices[i] + block->pos[2];
+		ind = 3 * i;
+		mesh->vertices[mesh->vertices_amount + ind + 0] = (face_vertices[ind + 0] * chunk->info->block_scale) + block->pos[0];
+		mesh->vertices[mesh->vertices_amount + ind + 1] = (face_vertices[ind + 1] * chunk->info->block_scale) + block->pos[1];
+		mesh->vertices[mesh->vertices_amount + ind + 2] = (face_vertices[ind + 2] * chunk->info->block_scale) + block->pos[2];
 
 		int tex = texture_id << 4 | i << 8;
 		mesh->texture_ids[mesh->texture_id_amount + i] = tex;

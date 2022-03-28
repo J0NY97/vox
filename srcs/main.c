@@ -167,7 +167,7 @@ int	main(void)
 
 		t_chunk_info	chunk_info;
 
-		chunk_info.render_distance = 15;
+		chunk_info.render_distance = 3;
 //		chunk_info.seed = 896868766;
 		chunk_info.seed = 596547633;
 		chunk_info.width = 16;
@@ -224,7 +224,7 @@ int	main(void)
 	int			toggle_rot_z = 0;
 
 	glfwSwapInterval(0);
-	glEnable(GL_CULL_FACE);
+//	glEnable(GL_CULL_FACE);
 
 	char	fps_str[10];
 	while (!glfwWindowShouldClose(sp.win))
@@ -422,7 +422,7 @@ int	main(void)
 				(int)player_chunk[1] == chunks[nth_chunk].coordinate[1] &&
 				(int)player_chunk[2] == chunks[nth_chunk].coordinate[2])
 			{
-				update_chunk_aabb(&chunk_info.chunk_block_aabbs[0], &chunks[nth_chunk]); // temp using 0th elem;
+//				update_chunk_aabb(&chunk_info.chunk_block_aabbs[0], &chunks[nth_chunk]); // temp using 0th elem;
 
 /*
 				for (int i = 0; i < chunk_info.chunk_block_aabbs[0].block_amount; i++)
