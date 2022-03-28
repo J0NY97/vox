@@ -14,13 +14,6 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info)
 	int	max_blocks = chunk->info->width * chunk->info->breadth * chunk->info->height;
 
 	chunk->blocks = malloc(sizeof(t_block) * (max_blocks));
-	chunk->block_matrices = malloc(sizeof(float) * 16 * max_blocks);
-	chunk->block_textures = malloc(sizeof(int) * max_blocks);
-
-	chunk->blocks_visible = malloc(sizeof(t_block) * max_blocks);
-
-	mat4_identity(chunk->block_matrices);
-	chunk->block_textures[0] = 0;
 
 	// Set INT_MAX to coordinates, so that the chunk regenerator knows to regenerate these chunks;
 	for (int i = 0; i < 3; i++)
@@ -29,8 +22,7 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info)
 		chunk->world_coordinate[i] = INT_MAX;
 	}
 	
-	//init_chunk_mesh(&chunk->mesh, info->cube_model);
-	init_chunk_mesh_v2(&chunk->mesh);
+	init_chunk_mesh(&chunk->mesh);
 
 	error = glGetError();
 	if (error)
@@ -267,7 +259,7 @@ t_block	*get_block_helper(t_chunk *chunk, int *local_pos, float *world_pos)
 int	get_blocks_visible(t_chunk *chunk)
 {
 	t_block	*blocks;
-	int		a = -1;
+	int		blocks_visible = 0;
 
 	if (!chunk->has_blocks)
 		return (0);
@@ -290,6 +282,7 @@ int	get_blocks_visible(t_chunk *chunk)
 	int	j;// = get_block_index(chunk->info, x, y, z);
 	for (int i = 0; i < chunk->block_amount; i++)
 	{
+		int	a = 0;
 		if (blocks[i].type == BLOCK_AIR) // <-- very important, im not sure what happens if we are trying to render an air block;
 			continue ;
 
@@ -316,9 +309,8 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			chunk->blocks_visible[++a] = blocks[i];
-			add_to_chunk_mesh_v2(chunk, &blocks[i], g_left_face, g_block_data[blocks[i].type + 1].left_texture);
-			continue ;
+			add_to_chunk_mesh(chunk, &blocks[i], g_left_face, g_block_data[blocks[i].type + 1].left_texture);
+			a++;
 		}
 
 		// right
@@ -335,9 +327,8 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			chunk->blocks_visible[++a] = blocks[i];
-//			add_to_chunk_mesh_v2(chunk, &blocks[i], g_right_face, g_block_data[blocks[i].type + 1].right_texture);
-			continue ;
+			add_to_chunk_mesh(chunk, &blocks[i], g_right_face, g_block_data[blocks[i].type + 1].right_texture);
+			a++;
 		}
 
 		// top
@@ -354,9 +345,8 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			chunk->blocks_visible[++a] = blocks[i];
-			add_to_chunk_mesh_v2(chunk, &blocks[i], g_top_face, g_block_data[blocks[i].type + 1].top_texture);
-			continue ;
+			add_to_chunk_mesh(chunk, &blocks[i], g_top_face, g_block_data[blocks[i].type + 1].top_texture);
+			a++;
 		}
 
 		// bot
@@ -373,9 +363,8 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			chunk->blocks_visible[++a] = blocks[i];
-			add_to_chunk_mesh_v2(chunk, &blocks[i], g_bot_face, g_block_data[blocks[i].type + 1].bot_texture);
-			continue ;
+			add_to_chunk_mesh(chunk, &blocks[i], g_bot_face, g_block_data[blocks[i].type + 1].bot_texture);
+			a++;
 		}
 
 		// forward
@@ -392,9 +381,8 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			chunk->blocks_visible[++a] = blocks[i];
-		//	add_to_chunk_mesh_v2(chunk, &blocks[i], g_back_face, g_block_data[blocks[i].type + 1].back_texture);
-			continue ;
+			add_to_chunk_mesh(chunk, &blocks[i], g_front_face, g_block_data[blocks[i].type + 1].front_texture);
+			a++;
 		}
 
 		// backward
@@ -411,14 +399,15 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			chunk->blocks_visible[++a] = blocks[i];
-		//	add_to_chunk_mesh_v2(chunk, &blocks[i], g_front_face, g_block_data[blocks[i].type + 1].front_texture);
-			continue ;
+			add_to_chunk_mesh(chunk, &blocks[i], g_back_face, g_block_data[blocks[i].type + 1].back_texture);
+			a++;
 		}
 	}
+		if (a)
+			++blocks_visible;
 	}
 
-	return (a + 1); // '+ 1' because we start at '-1';
+	return (blocks_visible);
 }
 
 int	get_chunk_hash_key(int *coords)
@@ -444,37 +433,6 @@ void	update_chunk(t_chunk *chunk, int *coord)
 	chunk->block_amount = chunk_gen(chunk); // should always return max amount of blocks in a chunk;
 
 	chunk->needs_to_update = 1;
-}
-
-void	update_chunk_matrices(t_chunk *chunk)
-{
-	float	tmp[VEC3_SIZE];
-	float	model[MAT4_SIZE];
-	float	scale[MAT4_SIZE];
-//	float	rot[MAT4_SIZE];
-	float	trans[MAT4_SIZE];
-
-	for (int i = 0; i < chunk->blocks_visible_amount; i++)
-	{
-		mat4_identity(trans);
-		mat4_translate(trans, trans, vec3_new(tmp,
-			(chunk->blocks_visible[i].pos[0] * chunk->info->block_size) + chunk->world_coordinate[0],
-			(chunk->blocks_visible[i].pos[1] * chunk->info->block_size) + chunk->world_coordinate[1],
-			(chunk->blocks_visible[i].pos[2] * chunk->info->block_size) + chunk->world_coordinate[2]));
-
-		mat4_identity(scale);
-		mat4_scale(scale, scale, vec3_new(tmp,
-			chunk->info->block_scale,
-			chunk->info->block_scale,
-			chunk->info->block_scale));
-
-		mat4_identity(model);
-		mat4_multiply(model, scale, model);
-		mat4_multiply(model, trans, model);
-
-		memcpy(chunk->block_matrices + (i * 16), model, sizeof(float) * 16);
-		memcpy(chunk->block_textures + (i), &chunk->blocks_visible[i].type, sizeof(int));
-	}
 }
 
 void	*update_chunk_threaded(void *arg)
@@ -801,31 +759,6 @@ void	render_aabb(t_aabb *a, t_camera *camera, float *col)
 		camera->view, camera->projection);
 }
 
-void	block_aabb_update(t_aabb *res, t_chunk *chunk, t_block *block)
-{
-	float	half_block_size = (chunk->info->block_size / 2);
-
-	res->min[0] = chunk->world_coordinate[0] + (block->pos[0] * chunk->info->block_size) - half_block_size;
-	res->min[1] = chunk->world_coordinate[1] + (block->pos[1] * chunk->info->block_size) - half_block_size;
-	res->min[2] = chunk->world_coordinate[2] + (block->pos[2] * chunk->info->block_size) - half_block_size;
-	res->max[0] = res->min[0] + chunk->info->block_size;
-	res->max[1] = res->min[1] + chunk->info->block_size;
-	res->max[2] = res->min[2] + chunk->info->block_size;
-}
-
-/*
- * update 'chunk_aabb' with the info from the 'chunk';
-*/
-void	update_chunk_aabb(t_chunk_block_aabb *chunk_block_aabb, t_chunk *chunk)
-{
-	chunk_block_aabb->block_amount = chunk->blocks_visible_amount;
-	for (int i = 0; i < chunk_block_aabb->block_amount; i++)
-	{
-		chunk_block_aabb->block_pointers[i] = &chunk->blocks_visible[i];
-		block_aabb_update(&chunk_block_aabb->aabb[i], chunk, chunk_block_aabb->block_pointers[i]);
-	}
-}
-
 /*
  * I think this has to be called after all the chunk creation since we need all the adjacent
  *	chunks to already exist, and if the update_chunk is multithreaded we might not have 
@@ -840,140 +773,12 @@ void	update_chunk_visible_blocks(t_chunk *chunk)
 
 	// TODO: only update if it has all its neighbors (do this whenever the get_chunk is faster;)
 	chunk->blocks_visible_amount = get_blocks_visible(chunk);
-	chunk->block_matrices_size = sizeof(float) * 16 * chunk->blocks_visible_amount;
-	chunk->block_textures_size = sizeof(int) * chunk->blocks_visible_amount;
-}
-
-void	init_cube_model(t_cube_model *model)
-{
-	int	error = glGetError();
-	if (error)
-		LG_ERROR("Before this function (%d)", error);
-
-	t_obj	obj;
-	obj_load(&obj, MODEL_PATH"cube/cube.obj");
-
-	model->vertices_size = obj.meshes[0].vertices_size;
-	model->vertices = malloc(model->vertices_size);
-	memcpy(model->vertices, obj.meshes[0].vertices, model->vertices_size);
-
-	model->uvs_size = obj.meshes[0].uvs_size;
-	model->uvs = malloc(model->uvs_size);
-	memcpy(model->uvs, obj.meshes[0].uvs, model->uvs_size);
-
-	model->indices_size = obj.meshes[0].elements[0].indices_size;
-	model->indices = malloc(model->indices_size);
-	model->index_amount = obj.meshes[0].elements[0].indices_value_amount;
-	memcpy(model->indices, obj.meshes[0].elements[0].indices, model->indices_size);
-
-	glGenBuffers(1, &model->ebo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, model->indices_size, &model->indices[0], GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-	error = glGetError();
-	if (error)
-		LG_ERROR("(%d)", error);
-
-	glGenTextures(1, &model->texture);
-	new_texture(&model->texture, MODEL_PATH"cube/retry_cube_texture.bmp");
-
-	error = glGetError();
-	if (error)
-		LG_ERROR("(%d)", error);
 }
 
 /*
  * Creates all the opengl stuff that needs to be created only once;
 */
-void	init_chunk_mesh(t_chunk_mesh *mesh, t_cube_model *model)
-{
-	GLuint	vbo[4];
-	int		error;
-
-	mesh->model = model;
-
-	// TESTING //
-	mesh->vertices_allocated = 8476;
-	mesh->vertices = malloc(sizeof(float) * mesh->vertices_allocated);
-	mesh->vertices_amount = 0;
-
-	mesh->texture_ids_allocated = 2120; 
-	mesh->texture_ids = malloc(sizeof(int) * mesh->texture_ids_allocated);
-	mesh->texture_id_amount = 0;
-
-	mesh->indices_allocated = 4236;
-	mesh->indices = malloc(sizeof(unsigned int) * mesh->indices_allocated);
-	mesh->indices_amount = 0;
-	// TESTING //
-
-	error = glGetError();
-	if (error)
-		LG_ERROR("BFORE (%d)", error);
-
-	glGenVertexArrays(1, &mesh->vao);
-	glBindVertexArray(mesh->vao);
-	if (1)
-		glEnableVertexAttribArray(0); // pos
-	if (1)
-		glEnableVertexAttribArray(1); // tex
-
-	glGenBuffers(4, vbo);
-	mesh->vbo_pos = vbo[0];
-	mesh->vbo_tex = vbo[1];
-
-	mesh->vbo_matrices = vbo[2];
-	mesh->vbo_texture_ids = vbo[3];
-
-	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_pos);
-	glBufferData(GL_ARRAY_BUFFER, mesh->model->vertices_size, &mesh->model->vertices[0], GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
-
-	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_tex);
-	glBufferData(GL_ARRAY_BUFFER, mesh->model->uvs_size, &mesh->model->uvs[0], GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_TRUE, sizeof(float) * 2, NULL);
-
-	float	tmp[MAT4_SIZE];
-	mat4_identity(tmp);
-	// Matrices
-	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_matrices);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 16, &tmp[0], GL_STATIC_DRAW);
-
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), NULL);
-	glVertexAttribDivisor(2, 1);
-
-	glEnableVertexAttribArray(3);
-	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void *)(1 * 4 * sizeof(float)));
-	glVertexAttribDivisor(3, 1);
-
-	glEnableVertexAttribArray(4);
-	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void *)(2 * 4 * sizeof(float)));
-	glVertexAttribDivisor(4, 1);
-
-	glEnableVertexAttribArray(5);
-	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void *)(3 * 4 * sizeof(float)));
-	glVertexAttribDivisor(5, 1);
-
-	int	tmp_tex[1];
-	tmp_tex[0] = 0;
-	// Texture ID
-	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_texture_ids);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(int), &tmp_tex[0], GL_STATIC_DRAW);
-
-	glEnableVertexAttribArray(6);
-	glVertexAttribIPointer(6, 1, GL_INT, GL_FALSE, NULL);
-	glVertexAttribDivisor(6, 1);
-
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	error = glGetError();
-	if (error)
-		LG_ERROR("ERROR (%d)", error);
-}
-
-void	init_chunk_mesh_v2(t_chunk_mesh *mesh)
+void	init_chunk_mesh(t_chunk_mesh *mesh)
 {
 	GLuint	vbo[2];
 	int		error;
@@ -981,15 +786,15 @@ void	init_chunk_mesh_v2(t_chunk_mesh *mesh)
 	if (error)
 		LG_ERROR("BEFORE (%d)", error);
 
-	mesh->vertices_allocated = 8476;
+	mesh->vertices_allocated = 28056;
 	mesh->vertices = malloc(sizeof(float) * mesh->vertices_allocated);
 	mesh->vertices_amount = 0;
 
-	mesh->texture_ids_allocated = 2120; 
+	mesh->texture_ids_allocated = 9352; 
 	mesh->texture_ids = malloc(sizeof(int) * mesh->texture_ids_allocated);
 	mesh->texture_id_amount = 0;
 
-	mesh->indices_allocated = 4236;
+	mesh->indices_allocated = 14028;
 	mesh->indices = malloc(sizeof(unsigned int) * mesh->indices_allocated);
 	mesh->indices_amount = 0;
 
@@ -1014,7 +819,7 @@ void	init_chunk_mesh_v2(t_chunk_mesh *mesh)
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
 
 	glGenTextures(1, &mesh->texture);
-	new_texture(&mesh->texture, MODEL_PATH"cube/retry_cube_texture.bmp");
+	new_texture(&mesh->texture, MODEL_PATH"cube/version_3_texture.bmp");
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -1026,30 +831,6 @@ void	init_chunk_mesh_v2(t_chunk_mesh *mesh)
 }
 
 void	render_chunk_mesh(t_chunk *chunk, t_camera *camera, t_shader *shader)
-{
-	t_chunk_mesh	*mesh;
-
-	mesh = &chunk->mesh;
-
-	glUseProgram(shader->program);
-	glUniformMatrix4fv(glGetUniformLocation(shader->program, "view"), 1, GL_FALSE, &camera->view[0]);
-	glUniformMatrix4fv(glGetUniformLocation(shader->program, "projection"), 1, GL_FALSE, &camera->projection[0]);
-
-	glBindVertexArray(mesh->vao);
-
-	glActiveTexture(GL_TEXTURE0 + 0);
-	glBindTexture(GL_TEXTURE_2D, mesh->model->texture);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->model->ebo);
-	glDrawElementsInstanced(GL_TRIANGLES, mesh->model->index_amount,
-		GL_UNSIGNED_INT, NULL, chunk->blocks_visible_amount);
-
-	glUseProgram(0);
-	glBindVertexArray(0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-
-void	render_chunk_mesh_v2(t_chunk *chunk, t_camera *camera, t_shader *shader)
 {
 	t_chunk_mesh	*mesh;
 
@@ -1084,26 +865,7 @@ void	render_chunk_mesh_v2(t_chunk *chunk, t_camera *camera, t_shader *shader)
 		LG_ERROR("(%d)", error);
 }
 
-/*
- * Matrices need to be updated before this function;
-*/
 void	update_chunk_mesh(t_chunk *chunk)
-{
-	glBindVertexArray(chunk->mesh.vao);
-	// Matrices
-	glBindBuffer(GL_ARRAY_BUFFER, chunk->mesh.vbo_matrices);
-	glBufferData(GL_ARRAY_BUFFER, chunk->block_matrices_size,
-		&chunk->block_matrices[0], GL_STATIC_DRAW);
-	// Texture ID
-	glBindBuffer(GL_ARRAY_BUFFER, chunk->mesh.vbo_texture_ids);
-	glBufferData(GL_ARRAY_BUFFER, chunk->block_textures_size,
-		&chunk->block_textures[0], GL_STATIC_DRAW);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-}
-
-void	update_chunk_mesh_v2(t_chunk *chunk)
 {
 	int error;
 	error = glGetError();
@@ -1133,7 +895,7 @@ void	update_chunk_mesh_v2(t_chunk *chunk)
 		LG_ERROR("(%d)", error);
 }
 
-void	add_to_chunk_mesh_v2(t_chunk *chunk, t_block *block, float *face_vertices, int texture_id)
+void	add_to_chunk_mesh(t_chunk *chunk, t_block *block, float *face_vertices, int texture_id)
 {
 	t_chunk_mesh	*mesh;
 

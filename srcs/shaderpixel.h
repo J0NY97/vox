@@ -251,7 +251,6 @@ enum e_block_face
 	FACE_AMOUNT
 };
 
-typedef struct s_cube_model	t_cube_model;
 typedef struct s_chunk		t_chunk;
 
 typedef struct s_block
@@ -259,14 +258,6 @@ typedef struct s_block
 	float	pos[VEC3_SIZE]; // in chunk coordinates, add chunk world coordinate to this to get world coordinate;
 	int		type; // e_block_type;
 }	t_block;
-
-typedef struct	s_chunk_block_aabb
-{
-	t_aabb		*aabb; // one for each block needs to be created (w * b * h);
-	t_block		**block_pointers; // pointer to the correspoinding block, same index;
-	int			max_block_amount; // (chunk.w * chunk.b * chunk.h);
-	int			block_amount;
-}	t_chunk_block_aabb;
 
 typedef struct s_chunk_info
 {
@@ -285,14 +276,7 @@ typedef struct s_chunk_info
 	int			chunks_loaded; // amount of chunks currently loaded;
 	int			render_distance;
 
-	float		scale_matrix[MAT4_SIZE];
-	//t_model		model; // at some point this;
-
-	t_chunk_block_aabb	*chunk_block_aabbs; // every chunk has t_chunk_aabb, which has an aabb for every block in the chunk;
-	int					chunk_block_aabb_amount; // 27;
-
 	t_chunk		*chunks; // you should not store the chunks here mainly; its just here so you can acces from places you need, without having to pass them in the function as argumnet;
-	t_cube_model	*cube_model; // poitner to the cube_model;
 }	t_chunk_info;
 
 /* Used for threading */
@@ -303,83 +287,54 @@ typedef struct s_chunk_args
 	int		being_threaded;
 }	t_chunk_args;
 
-struct s_cube_model
-{
-	float			*vertices;
-	size_t			vertices_size;
-
-	float			*uvs;
-	size_t			uvs_size;
-
-	unsigned int	*indices;
-	size_t			indices_size;
-	size_t			index_amount;
-
-	GLuint			texture;
-	GLuint			ebo;
-};
-
 typedef struct s_chunk_mesh
 {
-	GLuint	vao;
-	GLuint	vbo_pos;
-	GLuint	vbo_tex;
-
-	t_cube_model	*model; // pointer to the cube_model;
+	GLuint			vao;
+	GLuint			vbo_pos;
+	GLuint			vbo_texture_ids;
+	GLuint			ebo;
+	GLuint			texture; // TODO: make this a pointer so we dont have extra textures uploaded to gpu;
 
 	// These are the values gotten from the mesh creator in code, from
 	//	all visible blocks in the chunk;
 	float			*vertices;
-	int				*texture_ids;
-	unsigned int	*indices;
-	size_t			index_amount; // how many indices we have;
 	size_t			vertices_amount;
-	size_t			texture_id_amount;
-	size_t			indices_amount; // how many values in the array;
 	size_t			vertices_allocated;
+
+	int				*texture_ids;
+	size_t			texture_id_amount;
 	size_t			texture_ids_allocated;
+
+	unsigned int	*indices;
+	size_t			indices_amount; // how many values in the array;
 	size_t			indices_allocated;
-
-	GLuint		vbo_matrices;
-	GLuint		vbo_texture_ids;
-
-	GLuint			texture; // make this a pointer so we dont have extra textures uploaded to gpu;
-	GLuint			ebo;
+	size_t			index_amount; // how many indices we have;
 }			t_chunk_mesh;
 
 struct	s_chunk
 {
 	t_chunk_info	*info;
-	int			coordinate[VEC3_SIZE];
-	float		world_coordinate[VEC3_SIZE];
+	int				coordinate[VEC3_SIZE];
+	float			world_coordinate[VEC3_SIZE];
 
-	int			block_amount;
-	t_block		*blocks; //x*y*z real amount should be : 20 736
+	int				block_amount;
+	t_block			*blocks; //x*y*z real amount should be : 20 736
 
-	int			block_matrices_size; // sizeof (block_positions)
-	float		*block_matrices;
-	int			block_textures_size;
-	int			*block_textures;
-
-	int			has_blocks; // 1/0 whether the chunk has other than air blocks;
-
-	t_block		*blocks_visible; // blocks that are touching air, which means we want to render them;
-	int			blocks_visible_amount; // amount of blocks in the array that we want to render;
+	int				has_blocks; // 1/0 whether the chunk has other than air blocks;
+	int				blocks_visible_amount; // amount of blocks in the array that we want to render;
 
 	t_chunk_mesh	mesh;
 
-	t_aabb		aabb;
+	t_aabb			aabb;
 
-	int			needs_to_update;
+	int				needs_to_update;
 
 	t_chunk_args	args;
 };
 
 void		new_chunk(t_chunk *chunk, t_chunk_info *info);
-void		gen_chunk_blocks(t_block *blocks, int *dim);
 int			chunk_gen(t_chunk *chunk);
 void		update_chunk(t_chunk *chunk, int *coord);
-void		update_chunk_matrices(t_chunk *chunk);
 void		update_chunk_visible_blocks(t_chunk *chunk);
 float		*player_in_chunk(float *res, float *player_coord, t_chunk_info *info);
 void		chunk_aabb_update(t_chunk *chunk);
@@ -387,24 +342,17 @@ void		show_chunk_borders(t_chunk *chunk, t_camera *camera, float *col);
 void		render_aabb(t_aabb *a, t_camera *camera, float *col);
 t_chunk		*get_chunk(t_chunk_info *info, int *pos);
 t_chunk		*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, int *dir);
-void		update_surrounding_chunks(t_chunk *chunks, float *player_chunk_v3);
-int			*get_block_chunk_pos_from_index(int *res, int *max, int index);
 int			*block_world_to_local_pos(int *res, float *world);
 
-void		update_chunk_mesh(t_chunk *chunk);
-void		add_to_chunk_mesh(t_chunk *chunk, t_block *block, int block_face);
-void		add_to_chunk_mesh_v2(t_chunk *chunk, t_block *block, float *face_vertices, int texture_id);
-
-void		update_chunk_aabb(t_chunk_block_aabb *chunk_block_aabb, t_chunk *chunk);
 
 int			get_chunk_hash_key(int *coords);
 
 void		regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2);
 void		regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3, t_thread_manager *tm);
 
-void		init_cube_model(t_cube_model *model);
-void		init_chunk_mesh(t_chunk_mesh *mesh, t_cube_model *model);
-void		init_chunk_mesh_v2(t_chunk_mesh *mesh);
+void		init_chunk_mesh(t_chunk_mesh *mesh);
+void		add_to_chunk_mesh(t_chunk *chunk, t_block *block, float *face_vertices, int texture_id);
+void		update_chunk_mesh(t_chunk *chunk);
 void		render_chunk_mesh(t_chunk *chunk, t_camera *camera, t_shader *shader);
 
 ///////////////////

@@ -149,9 +149,6 @@ int	main(void)
 	test_cube->rot_y_angle = 0;
 	test_cube->rot_z_angle = 0;
 
-	t_cube_model	cube_model;
-	init_cube_model(&cube_model);
-
 //////////////////////////////
 	// Instance testing
 //////////////////////////////
@@ -180,18 +177,6 @@ int	main(void)
 		chunk_info.chunk_size[0] = chunk_info.width * chunk_info.block_size;
 		chunk_info.chunk_size[1] = chunk_info.height * chunk_info.block_size;
 		chunk_info.chunk_size[2] = chunk_info.breadth * chunk_info.block_size;
-
-		chunk_info.chunk_block_aabb_amount = 27;
-		chunk_info.chunk_block_aabbs = malloc(sizeof(t_chunk_block_aabb) * chunk_info.chunk_block_aabb_amount);
-		for (int i = 0; i < chunk_info.chunk_block_aabb_amount; i++)
-		{
-			chunk_info.chunk_block_aabbs[i].max_block_amount = chunk_info.width * chunk_info.breadth * chunk_info.height;
-			chunk_info.chunk_block_aabbs[i].block_amount = 0; // will be gotten from the chunk.blocks_visible_amount;
-			chunk_info.chunk_block_aabbs[i].aabb = malloc(sizeof(t_aabb) * chunk_info.chunk_block_aabbs[i].max_block_amount);
-			chunk_info.chunk_block_aabbs[i].block_pointers = malloc(sizeof(t_block *) * chunk_info.chunk_block_aabbs[i].max_block_amount);
-		}
-
-		chunk_info.cube_model = &cube_model;
 
 		t_chunk	*chunks;
 		chunks = malloc(sizeof(t_chunk) * chunk_info.chunks_loaded);
@@ -398,9 +383,7 @@ int	main(void)
 			if (1 && chunks[nth_chunk].needs_to_update)
 			{
 				update_chunk_visible_blocks(&chunks[nth_chunk]);
-//				update_chunk_matrices(&chunks[nth_chunk]);
-//				update_chunk_mesh(&chunks[nth_chunk]);
-				update_chunk_mesh_v2(&chunks[nth_chunk]);
+				update_chunk_mesh(&chunks[nth_chunk]);
 				chunk_aabb_update(&chunks[nth_chunk]);
 
 				chunks[nth_chunk].needs_to_update = 0;
@@ -413,8 +396,7 @@ int	main(void)
 					player.camera.far_plane + chunks[nth_chunk].info->chunk_size[0] &&
 					aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum))
 				{
-//					render_chunk_mesh(&chunks[nth_chunk], &player.camera, &cube_shader);
-					render_chunk_mesh_v2(&chunks[nth_chunk], &player.camera, &cube_shader_v2);
+					render_chunk_mesh(&chunks[nth_chunk], &player.camera, &cube_shader_v2);
 					sent_to_gpu++;
 				}
 			}
@@ -422,8 +404,6 @@ int	main(void)
 				(int)player_chunk[1] == chunks[nth_chunk].coordinate[1] &&
 				(int)player_chunk[2] == chunks[nth_chunk].coordinate[2])
 			{
-//				update_chunk_aabb(&chunk_info.chunk_block_aabbs[0], &chunks[nth_chunk]); // temp using 0th elem;
-
 /*
 				for (int i = 0; i < chunk_info.chunk_block_aabbs[0].block_amount; i++)
 					render_aabb(&chunk_info.chunk_block_aabbs[0].aabb[i], &player.camera, (float []){1, 0, 0});
