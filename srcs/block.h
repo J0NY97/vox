@@ -31,19 +31,19 @@ static const t_block_data g_block_data[] = {
 	},
 	{
 		BLOCK_DIRT, 1,
-		1, 1, 1, 1, 0, 2 
+		0, 1, 2, 3, 4, 5 
 	},
 	{
 		BLOCK_STONE, 1,
-		3, 3, 3, 3, 3, 3
+		0, 1, 2, 3, 4, 5 
 	},
 	{
 		BLOCK_BEDROCK, 1,
-		6, 6, 6, 6, 6, 6
+		0, 1, 2, 3, 4, 5 
 	},
 	{
 		BLOCK_WATER, 0,
-		9, 9, 9, 9, 9, 9
+		0, 1, 2, 3, 4, 5 
 	}
 };
 

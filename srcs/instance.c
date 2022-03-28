@@ -314,11 +314,10 @@ int	get_blocks_visible(t_chunk *chunk)
 			if (neighbors[0])
 				tmp_block = &neighbors[0]->blocks[get_block_index(chunk->info, 15, y, z)];
 		}
-		if (tmp_block &&
-			(tmp_block->type == BLOCK_AIR || tmp_block->type == BLOCK_WATER))
+		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
 			chunk->blocks_visible[++a] = blocks[i];
-			add_to_chunk_mesh_v2(chunk, &blocks[i], g_left_face, g_block_data[blocks[i].type + 1].left_texture);
+//			add_to_chunk_mesh_v2(chunk, &blocks[i], g_left_face, g_block_data[blocks[i].type + 1].left_texture);
 			continue ;
 		}
 
@@ -334,10 +333,10 @@ int	get_blocks_visible(t_chunk *chunk)
 			if (neighbors[1])
 				tmp_block = &neighbors[1]->blocks[get_block_index(chunk->info, 0, y, z)];
 		}
-		if (tmp_block &&
-			(tmp_block->type == BLOCK_AIR || tmp_block->type == BLOCK_WATER))
+		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
 			chunk->blocks_visible[++a] = blocks[i];
+//			add_to_chunk_mesh_v2(chunk, &blocks[i], g_right_face, g_block_data[blocks[i].type + 1].right_texture);
 			continue ;
 		}
 
@@ -353,8 +352,7 @@ int	get_blocks_visible(t_chunk *chunk)
 			if (neighbors[2])
 				tmp_block = &neighbors[2]->blocks[get_block_index(chunk->info, x, 0, z)];
 		}
-		if (tmp_block &&
-			(tmp_block->type == BLOCK_AIR || tmp_block->type == BLOCK_WATER))
+		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
 			chunk->blocks_visible[++a] = blocks[i];
 			add_to_chunk_mesh_v2(chunk, &blocks[i], g_top_face, g_block_data[blocks[i].type + 1].top_texture);
@@ -373,10 +371,10 @@ int	get_blocks_visible(t_chunk *chunk)
 			if (neighbors[3])
 				tmp_block = &neighbors[3]->blocks[get_block_index(chunk->info, x, 15, z)];
 		}
-		if (tmp_block &&
-			(tmp_block->type == BLOCK_AIR || tmp_block->type == BLOCK_WATER))
+		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
 			chunk->blocks_visible[++a] = blocks[i];
+			add_to_chunk_mesh_v2(chunk, &blocks[i], g_bot_face, g_block_data[blocks[i].type + 1].bot_texture);
 			continue ;
 		}
 
@@ -392,10 +390,10 @@ int	get_blocks_visible(t_chunk *chunk)
 			if (neighbors[4])
 				tmp_block = &neighbors[4]->blocks[get_block_index(chunk->info, x, y, 0)];
 		}
-		if (tmp_block &&
-			(tmp_block->type == BLOCK_AIR || tmp_block->type == BLOCK_WATER))
+		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
 			chunk->blocks_visible[++a] = blocks[i];
+		//	add_to_chunk_mesh_v2(chunk, &blocks[i], g_back_face, g_block_data[blocks[i].type + 1].back_texture);
 			continue ;
 		}
 
@@ -411,10 +409,10 @@ int	get_blocks_visible(t_chunk *chunk)
 			if (neighbors[5])
 				tmp_block = &neighbors[5]->blocks[get_block_index(chunk->info, x, y, 15)];
 		}
-		if (tmp_block &&
-			(tmp_block->type == BLOCK_AIR || tmp_block->type == BLOCK_WATER))
+		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
 			chunk->blocks_visible[++a] = blocks[i];
+		//	add_to_chunk_mesh_v2(chunk, &blocks[i], g_front_face, g_block_data[blocks[i].type + 1].front_texture);
 			continue ;
 		}
 	}
@@ -983,7 +981,6 @@ void	init_chunk_mesh_v2(t_chunk_mesh *mesh)
 	if (error)
 		LG_ERROR("BEFORE (%d)", error);
 
-	// TESTING //
 	mesh->vertices_allocated = 8476;
 	mesh->vertices = malloc(sizeof(float) * mesh->vertices_allocated);
 	mesh->vertices_amount = 0;
@@ -995,44 +992,33 @@ void	init_chunk_mesh_v2(t_chunk_mesh *mesh)
 	mesh->indices_allocated = 4236;
 	mesh->indices = malloc(sizeof(unsigned int) * mesh->indices_allocated);
 	mesh->indices_amount = 0;
-	// TESTING //
-
-	error = glGetError();
-	if (error)
-		LG_ERROR("BFORE (%d)", error);
 
 	glGenVertexArrays(1, &mesh->vao);
 	glBindVertexArray(mesh->vao);
-	if (1)
-		glEnableVertexAttribArray(0); // pos
-	if (1)
-		glEnableVertexAttribArray(1); // tex
+
+	glEnableVertexAttribArray(0); // pos
+	glEnableVertexAttribArray(1); // tex
 
 	glGenBuffers(2, vbo);
 	mesh->vbo_pos = vbo[0];
 	mesh->vbo_texture_ids = vbo[1];
 
 	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_pos);
-	glBufferData(GL_ARRAY_BUFFER, mesh->vertices_amount * sizeof(float), &mesh->vertices[0], GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
 
-	int	tmp_tex[1];
-	tmp_tex[0] = 0;
 	// Texture ID
 	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_texture_ids);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(int), &tmp_tex[0], GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 1, GL_INT, GL_TRUE, sizeof(int), NULL);
 
 	glGenBuffers(1, &mesh->ebo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->indices_amount * sizeof(unsigned int), &mesh->indices[0], GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	glGenTextures(1, &mesh->texture);
 	new_texture(&mesh->texture, MODEL_PATH"cube/retry_cube_texture.bmp");
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	error = glGetError();
 	if (error)
@@ -1168,6 +1154,7 @@ void	add_to_chunk_mesh_v2(t_chunk *chunk, t_block *block, float *face_vertices, 
 	}
 
 	int ind = 0;
+	int	tex = 0;
 	for (int i = 0; i < 4; i++)
 	{
 		ind = 3 * i;
@@ -1175,9 +1162,16 @@ void	add_to_chunk_mesh_v2(t_chunk *chunk, t_block *block, float *face_vertices, 
 		mesh->vertices[mesh->vertices_amount + ind + 1] = (face_vertices[ind + 1] * chunk->info->block_scale) + block->pos[1];
 		mesh->vertices[mesh->vertices_amount + ind + 2] = (face_vertices[ind + 2] * chunk->info->block_scale) + block->pos[2];
 
-		int tex = texture_id << 4 | i << 8;
+		tex = texture_id | i << 16;
 		mesh->texture_ids[mesh->texture_id_amount + i] = tex;
+
+/*
+		int	uv_index = (tex >> 16) & 0x0000FFFF;	
+		int	texture_index = tex & 0x0000FFFF;	
+		ft_printf("uv_index : %d, texture_index : %d\n", uv_index, texture_index);
+		*/
 	}
+//	exit(0);
 	mesh->vertices_amount += 4 * 3;
 	mesh->texture_id_amount += 4;
 

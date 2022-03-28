@@ -9,9 +9,9 @@ uniform mat4 projection;
 
 vec2	uvs[4] = vec2[4](
 	vec2(0.0f, 0.0f),
+	vec2(0.0f, 1.0f),
 	vec2(1.0f, 0.0f),
-	vec2(1.0f, 1.0f),
-	vec2(0.0f, 1.0f)
+	vec2(1.0f, 1.0f)
 );
 
 out vec2 inTex;
@@ -21,14 +21,11 @@ float	per_tex_w = 1.0f / texture_in_pack;
 
 void	main()
 {
-	int	texture_index = (aTextureID >> 16) & 0x0000FFFF;	
-	int	uv_index = aTextureID & 0x0000FFFF;	
+	int	uv_index = (aTextureID >> 16) & 0x0000FFFF;	
+	int	texture_index = aTextureID & 0x0000FFFF;	
 
 	inTex =	vec2(uvs[uv_index].x * per_tex_w + (texture_index * per_tex_w),
 				uvs[uv_index].y);
 
-	float	x = aPos.x + chunkPos.x;
-	float	y = aPos.y + chunkPos.y;
-	float	z = aPos.z + chunkPos.z;
-	gl_Position = projection * view * vec4(x, y, z, 1.0);
+	gl_Position = projection * view * vec4(aPos + chunkPos, 1.0);
 }
