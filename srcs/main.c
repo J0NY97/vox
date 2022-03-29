@@ -96,10 +96,10 @@ int	main(void)
 	new_model(&retrotv->model, &retrotv_obj);
 	//new_vec3(retrotv->pos, 0, 0, -2.5);
 	new_vec3(retrotv->pos, 0, 90, 0);
-	retrotv->collision_detection_enabled = 1;
-	retrotv->collision_use_precise = 1;
-	retrotv->render_aabb = 0;
 	size_t	retrotv_index = add_entity_to_scene(&scene, retrotv);
+	retrotv->collision_detection_enabled = 1;
+//	retrotv->collision_use_precise = 1;
+	retrotv->render_aabb = 1;
 
 	t_obj		dust2_obj;
 //	obj_load(&dust2_obj, MODEL_PATH"de_dust2/de_dust2.obj");
@@ -121,7 +121,7 @@ int	main(void)
 	new_entity(display);
 	new_model(&display->model, &display_obj);
 	size_t display_index = add_entity_to_scene(&scene, display);
-	new_vec3(display->pos, 1.2, 0.6, -2.0);
+	new_vec3(display->pos, 1.2, 90, -2.0);
 	display->collision_detection_enabled = 1;
 	display->scale_value = 0.1;
 	display->rot_x_angle = 0;
@@ -143,7 +143,7 @@ int	main(void)
 	new_entity(test_cube);
 	new_model(&test_cube->model, &cube_obj);
 	add_entity_to_scene(&scene, test_cube);
-	new_vec3(test_cube->pos, 2, 0.6, -2.0);
+	new_vec3(test_cube->pos, 2, 90, -2.0);
 	test_cube->scale_value = 0.1f;
 	test_cube->rot_x_angle = 0;
 	test_cube->rot_y_angle = 0;
@@ -212,7 +212,8 @@ int	main(void)
 	int			toggle_rot_z = 0;
 
 	glfwSwapInterval(0);
-//	glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_LINE_SMOOTH);
 
 	char	fps_str[10];
 	while (!glfwWindowShouldClose(sp.win))
@@ -284,6 +285,14 @@ int	main(void)
 
 		if (keys[GLFW_KEY_5].state == GLFW_PRESS)
 			vec3_new(player.camera.pos, 0, 200, 0);
+		if (keys[GLFW_KEY_LEFT].state == GLFW_PRESS)
+			vec3_add(player.camera.pos, player.camera.pos, (float []){-10, 0, 0});
+		if (keys[GLFW_KEY_RIGHT].state == GLFW_PRESS)
+			vec3_add(player.camera.pos, player.camera.pos, (float []){10, 0, 0});
+		if (keys[GLFW_KEY_UP].state == GLFW_PRESS)
+			vec3_add(player.camera.pos, player.camera.pos, (float []){0, -10, 0});
+		if (keys[GLFW_KEY_DOWN].state == GLFW_PRESS)
+			vec3_add(player.camera.pos, player.camera.pos, (float []){0, 10, 0});
 
 		if (keys[GLFW_KEY_SPACE].state == GLFW_PRESS)
 		{
@@ -318,7 +327,7 @@ int	main(void)
 		if (player.enabled_mouse)
 			player_looking(&player, sp.win, fps);
 
-		if (0)
+		if (1)
 		{
 		size_t	entities_collisioned = 0;
 		for (size_t i = 0; i < scene.entities_allocated && entities_collisioned < scene.entity_amount; i++)

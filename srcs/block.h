@@ -48,9 +48,9 @@ static const t_block_data g_block_data[] = {
 };
 
 static const float g_front_face[] = {-1, 1, 1,  -1, -1, 1,  1, -1, 1,  1, 1, 1};
-static const float g_back_face[] = {-1, 1, -1,  -1, -1, -1,  1, -1, -1,  1, 1, -1};
+static const float g_back_face[] = {1, 1, -1,  1, -1, -1,  -1, -1, -1,  -1, 1, -1};
 static const float g_left_face[] = {-1, 1, -1,  -1, -1, -1,  -1, -1, 1,  -1, 1, 1};
-static const float g_right_face[] = {1, 1, -1,  1, -1, -1,  1, -1, 1,  1, 1, 1};
+static const float g_right_face[] = {1, 1, 1,  1, -1, 1,  1, -1, -1,  1, 1, -1};
 static const float g_top_face[] = {-1, 1, -1,  -1, 1, 1,  1, 1, 1,  1, 1, -1};
 static const float g_bot_face[] = {-1, -1, -1,  -1, -1, 1,  -1, 1, 1,  -1, 1, -1};
 

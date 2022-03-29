@@ -152,35 +152,23 @@ unsigned int	*create_bb_indices(unsigned int *res)
 {
 	unsigned int	indices[] = {
 		// front
-			//ftl, ftr, fbl,
-			//ftr, fbr, fbl
-			0, 1, 2,
-			1, 3, 2,
+			0, 2, 3,
+			0, 3, 1,
 		// right
-			//ftr, btr, fbr,
-			//btr, bbr, fbr,
-			1, 5, 3,
-			5, 7, 3,
+			1, 3, 7,
+			1, 7, 5,
 		// back
-			//btl, btr, bbl,
-			//btr, bbr, bbl,
-			4, 5, 6,
 			5, 7, 6,
+			5, 6, 4,
 		// left
-			//btl, ftl, bbl,
-			//ftl, fbl, bbl,
-			4, 0, 6,
-			0, 2, 6,
+			4, 6, 2,
+			4, 2, 0,
 		// top
-			//btl, btr, ftl,
-			//btr, ftr, ftl,
-			4, 5, 0,
-			5, 1, 0,
+			4, 0, 1,
+			4, 1, 5,
 		// bot
-			//bbl, bbr, fbl,
-			//bbr, fbr, fbl
-			6, 7, 2,
-			7, 3, 2
+			6, 7, 3,
+			6, 3, 2
 	};
 	memcpy(res, indices, sizeof(unsigned int) * 36);
 	return (res);

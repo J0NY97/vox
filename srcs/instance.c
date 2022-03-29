@@ -308,7 +308,7 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			add_to_chunk_mesh(chunk, (int []){x, y, z}, g_left_face, g_block_data[blocks[i].type + 1].left_texture);
+			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_left_face, g_block_data[blocks[i].type + 1].left_texture);
 			a++;
 		}
 
@@ -326,7 +326,7 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			add_to_chunk_mesh(chunk, (int []){x, y, z}, g_right_face, g_block_data[blocks[i].type + 1].right_texture);
+			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_right_face, g_block_data[blocks[i].type + 1].right_texture);
 			a++;
 		}
 
@@ -344,7 +344,7 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			add_to_chunk_mesh(chunk, (int []){x, y, z}, g_top_face, g_block_data[blocks[i].type + 1].top_texture);
+			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_top_face, g_block_data[blocks[i].type + 1].top_texture);
 			a++;
 		}
 
@@ -362,7 +362,7 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			add_to_chunk_mesh(chunk, (int []){x, y, z}, g_bot_face, g_block_data[blocks[i].type + 1].bot_texture);
+			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_bot_face, g_block_data[blocks[i].type + 1].bot_texture);
 			a++;
 		}
 
@@ -380,7 +380,7 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			add_to_chunk_mesh(chunk, (int []){x, y, z}, g_front_face, g_block_data[blocks[i].type + 1].front_texture);
+			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_front_face, g_block_data[blocks[i].type + 1].front_texture);
 			a++;
 		}
 
@@ -398,7 +398,7 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			add_to_chunk_mesh(chunk, (int []){x, y, z}, g_back_face, g_block_data[blocks[i].type + 1].back_texture);
+			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_back_face, g_block_data[blocks[i].type + 1].back_texture);
 			a++;
 		}
 	}

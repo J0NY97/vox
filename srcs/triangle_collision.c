@@ -1,17 +1,19 @@
 #include "shaderpixel.h"
 
-float	*triangle_face_normal(float *res, float *n0, float *n1, float *n2)
+/*
+ * Counter Clock Wise; winding, normals pointing outward;
+*/
+float	*triangle_face_normal(float *res, float *p1, float *p2, float *p3)
 {
-	float	norm[3];
-	float	n10[3];
-	float	n20[3];
+	float	u[3];
+	float	v[3];
 
-	vec3_sub(n10, n1, n0);
-	vec3_sub(n20, n2, n0);
-	vec3_cross(norm, n10, n20);
-	res[0] = norm[0];
-	res[1] = norm[1];
-	res[2] = norm[2];
+	vec3_sub(u, p2, p1);
+	vec3_sub(v, p3, p1);
+	res[0] = (u[1] * v[2]) - (u[2] * v[1]);
+	res[1] = (u[2] * v[0]) - (u[0] * v[2]);
+	res[2] = (u[0] * v[1]) - (u[1] * v[0]);
+	vec3_normalize(res, res);
 	return (res);
 }
 
@@ -31,9 +33,9 @@ int	ray_triangle_intersect(float *orig, float *dir, float *v0, float *v1, float 
 
 	// back face culler
 	/* Enable for only one sided collision detection;
-	if (vec3_dot(dir, N) < 0)
-		return (0);
 		*/
+	if (vec3_dot(dir, N) > 0)
+		return (0);
 
 	float	area2 = vec3_length(N);
 
