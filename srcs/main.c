@@ -98,7 +98,7 @@ int	main(void)
 	new_vec3(retrotv->pos, 0, 90, 0);
 	size_t	retrotv_index = add_entity_to_scene(&scene, retrotv);
 	retrotv->collision_detection_enabled = 1;
-//	retrotv->collision_use_precise = 1;
+	retrotv->collision_use_precise = 1;
 	retrotv->render_aabb = 1;
 
 	t_obj		dust2_obj;
@@ -347,13 +347,8 @@ int	main(void)
 				aabb_create(&scene.entities[i]->aabb,
 					scene.entities[i]->aabb.vertices, 8);
 
-
-				// At some point, so it doenst get done somewhere im not sure where....
-				// aabb_vertify();
-					//player_entity_collision_precise(&player, scene.entities[i]);
-
 				if (scene.entities[i]->collision_use_precise)
-					testing_triangle_collision(&player, scene.entities[i]);
+					player_entity_mesh_collision(&player, scene.entities[i]);
 				else
 					player_entity_collision(&player, scene.entities[i]);
 				entities_collisioned += 1;

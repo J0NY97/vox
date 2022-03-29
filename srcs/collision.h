@@ -59,28 +59,4 @@ float		ray_plane_intersect(float *orig, float *dir, float *pos, float *norm);
 
 int			ellipsoid_collision(float *pos, float *velocity, float *p1, float *p2, float *p3);
 
-///////////////////
-//	DETECTOR
-///////////////////
-
-typedef struct s_collision_detector
-{
-	t_list		*nodes;
-	int			show_aabb; // DEBUG purposes;
-}				t_collision_detector;
-
-typedef struct s_collision_node
-{
-	t_entity	*entity;
-	t_aabb		aabb;
-	int			collided;
-}				t_collision_node;
-
-void	new_collision_detector(t_collision_detector *detector);
-void	add_collision_entity(t_collision_detector *detector, t_entity *entity);
-void	remove_collision_entity(t_collision_detector *detector, t_entity *entity);
-void	free_collision_detector(t_collision_detector *detector);
-void	free_collision_node(void *pointer, size_t size);
-void	update_collision_detector(t_collision_detector *detector);
-
 #endif

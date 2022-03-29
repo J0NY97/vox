@@ -304,76 +304,60 @@ void	testing_triangle_collision(t_player *player, t_entity *entity)
 	}
 }
 
-void	new_collision_detector(t_collision_detector *detector)
-{
-	(void)detector;
-}
-
 /*
- * NOTE:
- *	the aabbs are created in the event handling loop;
+ * Checks collision with player and entity mesh;
 */
-void	add_collision_entity(t_collision_detector *detector, t_entity *entity)
+int	player_entity_mesh_collision(t_player *player, t_entity *entity)
 {
-	t_collision_node	*node;
-	t_list				*new;
+	// Convert player world position to entity local position;
+	//		Get inverse transformation matrix of entity model;
+	float	inverse_trans[MAT4_SIZE];
 
-	if (!entity)
+	mat4_identity(inverse_trans);
+	mat4_inverse(inverse_trans, entity->model_mat);
+
+	//		Apply inverse transformation matrix on player position;
+	float	local_player_pos[VEC4_SIZE];
+
+	vec3_to_vec4(local_player_pos, player->camera.pos);
+	vec4_multiply_mat4(local_player_pos, local_player_pos, inverse_trans);
+
+	// Compare player to all the meshes in entity model;
+	float	intersection_p[VEC3_SIZE];
+	float	*vertices;
+	unsigned int	*indices;
+	float	p1[3];
+	float	p2[3];
+	float	p3[3];
+
+	for (int i = 0; i < entity->model.info_amount; i++)
 	{
-		LG_WARN("Youre giving NULL entity.");
-		return ;
-	}
-	new = ft_lstnew(0, 0);
-	node = new->content;
-	node->entity = entity;
-}
-
-void	remove_collision_entity(t_collision_detector *detector, t_entity *entity)
-{
-	t_list	*curr;
-
-	curr = detector->nodes;
-	while (curr)
-	{
-		if (entity == curr->content)
+		vertices = entity->model.info[i].mesh.vertices;
+		for (int j = 0; j < entity->model.info[i].mesh.element_amount; j++)
 		{
-			ft_lstdelone(&detector->nodes, &free_collision_node);
-			return ;
+			indices = entity->model.info[i].elem_info[j].element.indices;
+			for (int k = 0; k < entity->model.info[i].elem_info[j].element.index_amount; k++)
+			{
+				int ind = k * 3;
+				vec3_new(p1,
+					vertices[indices[k + 0] * 3 + 0],
+					vertices[indices[k + 0] * 3 + 1],
+					vertices[indices[k + 0] * 3 + 2]);
+				vec3_new(p2,
+					vertices[indices[k + 1] * 3 + 0],
+					vertices[indices[k + 1] * 3 + 1],
+					vertices[indices[k + 1] * 3 + 2]);
+				vec3_new(p3,
+					vertices[indices[k + 2] * 3 + 0],
+					vertices[indices[k + 2] * 3 + 1],
+					vertices[indices[k + 2] * 3 + 2]);
+				if (ray_triangle_intersect(local_player_pos, player->camera.front,
+					p1, p2, p3, intersection_p))
+					LG_INFO("Intersection !!!!!!!!");
+			}
 		}
-		curr = curr->next;
 	}
-}
 
-void	free_collision_detector(t_collision_detector *detector)
-{
-	ft_lstdel(&detector->nodes, &free_collision_node);
-}
-
-void	free_collision_node(void *pointer, size_t size)
-{
-	t_collision_node	*node;
-
-	node = pointer;
-	if (!node)
-		return ;
-	(void)size;
-	node->entity = NULL;
-//	free(node);
-}
-
-void	update_collision_detector(t_collision_detector *detector)
-{
-	t_list				*curr;
-	t_collision_node	*node;
-
-	curr = detector->nodes;
-	while (curr)
-	{
-		node = curr->content;
-		aabb_create(&node->aabb, node->entity->model.info->mesh.vertices,
-			node->entity->model.info->mesh.vertex_amount);
-		aabb_transform(&node->aabb, node->entity->model_mat);
-		node->collided = 0;
-		curr = curr->next;
-	}
+	// Return intersection;
+	return (1);
 }

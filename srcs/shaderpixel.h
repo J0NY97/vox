@@ -392,6 +392,7 @@ void		player_apply_velocity(t_player *player);
 void		player_looking(t_player *player, GLFWwindow *win, t_fps fps);
 void		player_entity_collision(t_player *player, t_entity *entity);
 void		player_entity_collision_precise(t_player *player, t_entity *entity);
+int			player_entity_mesh_collision(t_player *player, t_entity *entity);
 void		testing_triangle_collision(t_player *player, t_entity *entity);
 void		player_print(t_player *player);
 
