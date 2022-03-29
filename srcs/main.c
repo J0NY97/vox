@@ -164,7 +164,7 @@ int	main(void)
 
 		t_chunk_info	chunk_info;
 
-		chunk_info.render_distance = 15;
+		chunk_info.render_distance = 20;
 //		chunk_info.seed = 896868766;
 		chunk_info.seed = 596547633;
 		chunk_info.width = 16;
@@ -177,6 +177,9 @@ int	main(void)
 		chunk_info.chunk_size[0] = chunk_info.width * chunk_info.block_size;
 		chunk_info.chunk_size[1] = chunk_info.height * chunk_info.block_size;
 		chunk_info.chunk_size[2] = chunk_info.breadth * chunk_info.block_size;
+
+		glGenTextures(1, &chunk_info.texture);
+		new_texture(&chunk_info.texture, MODEL_PATH"cube/version_3_texture.bmp");
 
 		t_chunk	*chunks;
 		chunks = malloc(sizeof(t_chunk) * chunk_info.chunks_loaded);
@@ -192,6 +195,7 @@ int	main(void)
 		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
 		{
 			new_chunk(&chunks[nth_chunk], &chunk_info);
+			chunks[nth_chunk].mesh.texture = chunk_info.texture;
 //			LG_INFO("#%d created.", nth_chunk);
 		}
 		ft_printf("Chunks created : %d\n", nth_chunk);

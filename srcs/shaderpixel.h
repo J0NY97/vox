@@ -277,6 +277,7 @@ typedef struct s_chunk_info
 	int			render_distance;
 
 	t_chunk		*chunks; // you should not store the chunks here mainly; its just here so you can acces from places you need, without having to pass them in the function as argumnet;
+	GLuint		texture; // the texture is stored here so we dont load a texture per chunk_mesh;
 }	t_chunk_info;
 
 /* Used for threading */

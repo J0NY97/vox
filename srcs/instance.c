@@ -818,8 +818,8 @@ void	init_chunk_mesh(t_chunk_mesh *mesh)
 	glGenBuffers(1, &mesh->ebo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
 
-	glGenTextures(1, &mesh->texture);
-	new_texture(&mesh->texture, MODEL_PATH"cube/version_3_texture.bmp");
+//	glGenTextures(1, &mesh->texture);
+//	new_texture(&mesh->texture, MODEL_PATH"cube/version_3_texture.bmp");
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
