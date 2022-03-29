@@ -164,7 +164,7 @@ int	main(void)
 
 		t_chunk_info	chunk_info;
 
-		chunk_info.render_distance = 20;
+		chunk_info.render_distance = 22;
 //		chunk_info.seed = 896868766;
 		chunk_info.seed = 596547633;
 		chunk_info.width = 16;
@@ -196,7 +196,6 @@ int	main(void)
 		{
 			new_chunk(&chunks[nth_chunk], &chunk_info);
 			chunks[nth_chunk].mesh.texture = chunk_info.texture;
-//			LG_INFO("#%d created.", nth_chunk);
 		}
 		ft_printf("Chunks created : %d\n", nth_chunk);
 //////////////////////////////
@@ -384,7 +383,7 @@ int	main(void)
 		int sent_to_gpu = 0;
 		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
 		{
-			if (1 && chunks[nth_chunk].needs_to_update)
+			if (chunks[nth_chunk].needs_to_update)
 			{
 				update_chunk_visible_blocks(&chunks[nth_chunk]);
 				update_chunk_mesh(&chunks[nth_chunk]);
@@ -408,12 +407,6 @@ int	main(void)
 				(int)player_chunk[1] == chunks[nth_chunk].coordinate[1] &&
 				(int)player_chunk[2] == chunks[nth_chunk].coordinate[2])
 			{
-/*
-				for (int i = 0; i < chunk_info.chunk_block_aabbs[0].block_amount; i++)
-					render_aabb(&chunk_info.chunk_block_aabbs[0].aabb[i], &player.camera, (float []){1, 0, 0});
-*/
-
-				//aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum);
 				show_chunk_borders(&chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
 
 				t_chunk	*north_chunk = get_adjacent_chunk(&chunks[nth_chunk], chunks, (int []){0, 0, -1});

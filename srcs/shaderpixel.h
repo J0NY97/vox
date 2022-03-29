@@ -255,7 +255,6 @@ typedef struct s_chunk		t_chunk;
 
 typedef struct s_block
 {
-	float	pos[VEC3_SIZE]; // in chunk coordinates, add chunk world coordinate to this to get world coordinate;
 	int		type; // e_block_type;
 }	t_block;
 
@@ -352,7 +351,7 @@ void		regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *pl
 void		regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3, t_thread_manager *tm);
 
 void		init_chunk_mesh(t_chunk_mesh *mesh);
-void		add_to_chunk_mesh(t_chunk *chunk, t_block *block, float *face_vertices, int texture_id);
+void		add_to_chunk_mesh(t_chunk *chunk, int *coord, float *face_vertices, int texture_id);
 void		update_chunk_mesh(t_chunk *chunk);
 void		render_chunk_mesh(t_chunk *chunk, t_camera *camera, t_shader *shader);
 

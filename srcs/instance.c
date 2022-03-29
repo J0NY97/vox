@@ -75,7 +75,7 @@ int	chunk_gen(t_chunk *chunk)
 					octave_perlin(cave_x, cave_y, cave_z, 16, 0.5);
 					*/
 
-				vec3_new(chunk->blocks[i].pos, x, y, z);
+//				vec3_new(chunk->blocks[i].pos, x, y, z);
 				if (/*rep > 1.0f &&*/ y <= whatchumacallit)
 				{
 					if (y <= whatchumacallit - 1) // if we have 3 dirt block on top we make the rest stone blocks;
@@ -204,6 +204,7 @@ t_block	*get_block(t_chunk_info	*info, float *block_pos)
 	return (&in->blocks[get_block_index(info, local_pos[0], local_pos[1], local_pos[2])]);
 }
 
+/* REMOVE OR edit so that its not using block->pos, but xyz or something from the chunk->blocks array;
 float	*get_block_world_pos(float *res, t_block *block, t_chunk *chunk)
 {
 	res[0] = (chunk->world_coordinate[0]) + (block->pos[0] * chunk->info->block_size);
@@ -211,6 +212,7 @@ float	*get_block_world_pos(float *res, t_block *block, t_chunk *chunk)
 	res[2] = (chunk->world_coordinate[2]) + (block->pos[2] * chunk->info->block_size);
 	return (res);
 }
+*/
 
 int	*block_world_to_local_pos(int *res, float *world)
 {
@@ -266,7 +268,6 @@ int	get_blocks_visible(t_chunk *chunk)
 	blocks = chunk->blocks;
 
 	/* MAKE ONLY TOUCHING AIR VISIBLE */
-	float	i_block_w[VEC3_SIZE]; // block world pos for index i;
 	t_chunk	*adj_chunk = NULL;
 	t_block	*tmp_block = NULL;
 
@@ -291,8 +292,6 @@ int	get_blocks_visible(t_chunk *chunk)
 		int y = pos[1];
 		int z = pos[2];
 
-		get_block_world_pos(i_block_w, &blocks[i], chunk);
-	
 	if (1)
 	{
 		// left
@@ -309,7 +308,7 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			add_to_chunk_mesh(chunk, &blocks[i], g_left_face, g_block_data[blocks[i].type + 1].left_texture);
+			add_to_chunk_mesh(chunk, (int []){x, y, z}, g_left_face, g_block_data[blocks[i].type + 1].left_texture);
 			a++;
 		}
 
@@ -327,7 +326,7 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			add_to_chunk_mesh(chunk, &blocks[i], g_right_face, g_block_data[blocks[i].type + 1].right_texture);
+			add_to_chunk_mesh(chunk, (int []){x, y, z}, g_right_face, g_block_data[blocks[i].type + 1].right_texture);
 			a++;
 		}
 
@@ -345,7 +344,7 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			add_to_chunk_mesh(chunk, &blocks[i], g_top_face, g_block_data[blocks[i].type + 1].top_texture);
+			add_to_chunk_mesh(chunk, (int []){x, y, z}, g_top_face, g_block_data[blocks[i].type + 1].top_texture);
 			a++;
 		}
 
@@ -363,7 +362,7 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			add_to_chunk_mesh(chunk, &blocks[i], g_bot_face, g_block_data[blocks[i].type + 1].bot_texture);
+			add_to_chunk_mesh(chunk, (int []){x, y, z}, g_bot_face, g_block_data[blocks[i].type + 1].bot_texture);
 			a++;
 		}
 
@@ -381,7 +380,7 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			add_to_chunk_mesh(chunk, &blocks[i], g_front_face, g_block_data[blocks[i].type + 1].front_texture);
+			add_to_chunk_mesh(chunk, (int []){x, y, z}, g_front_face, g_block_data[blocks[i].type + 1].front_texture);
 			a++;
 		}
 
@@ -399,7 +398,7 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			add_to_chunk_mesh(chunk, &blocks[i], g_back_face, g_block_data[blocks[i].type + 1].back_texture);
+			add_to_chunk_mesh(chunk, (int []){x, y, z}, g_back_face, g_block_data[blocks[i].type + 1].back_texture);
 			a++;
 		}
 	}
@@ -841,7 +840,6 @@ void	render_chunk_mesh(t_chunk *chunk, t_camera *camera, t_shader *shader)
 
 	mesh = &chunk->mesh;
 
-
 	glUseProgram(shader->program);
 	glUniformMatrix4fv(glGetUniformLocation(shader->program, "view"), 1, GL_FALSE, &camera->view[0]);
 	glUniformMatrix4fv(glGetUniformLocation(shader->program, "projection"), 1, GL_FALSE, &camera->projection[0]);
@@ -895,7 +893,10 @@ void	update_chunk_mesh(t_chunk *chunk)
 		LG_ERROR("(%d)", error);
 }
 
-void	add_to_chunk_mesh(t_chunk *chunk, t_block *block, float *face_vertices, int texture_id)
+/*
+ * 'coord' position of block in the chunk->blocks array;
+*/
+void	add_to_chunk_mesh(t_chunk *chunk, int *coord, float *face_vertices, int texture_id)
 {
 	t_chunk_mesh	*mesh;
 
@@ -920,9 +921,9 @@ void	add_to_chunk_mesh(t_chunk *chunk, t_block *block, float *face_vertices, int
 	for (int i = 0; i < 4; i++)
 	{
 		ind = 3 * i;
-		mesh->vertices[mesh->vertices_amount + ind + 0] = (face_vertices[ind + 0] * chunk->info->block_scale) + block->pos[0];
-		mesh->vertices[mesh->vertices_amount + ind + 1] = (face_vertices[ind + 1] * chunk->info->block_scale) + block->pos[1];
-		mesh->vertices[mesh->vertices_amount + ind + 2] = (face_vertices[ind + 2] * chunk->info->block_scale) + block->pos[2];
+		mesh->vertices[mesh->vertices_amount + ind + 0] = (face_vertices[ind + 0] * chunk->info->block_scale) + coord[0];
+		mesh->vertices[mesh->vertices_amount + ind + 1] = (face_vertices[ind + 1] * chunk->info->block_scale) + coord[1];
+		mesh->vertices[mesh->vertices_amount + ind + 2] = (face_vertices[ind + 2] * chunk->info->block_scale) + coord[2];
 
 		tex = texture_id | i << 16;
 		mesh->texture_ids[mesh->texture_id_amount + i] = tex;
