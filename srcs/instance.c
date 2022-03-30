@@ -950,3 +950,42 @@ void	add_to_chunk_mesh(t_chunk *chunk, int *coord, float *face_vertices, int tex
 	mesh->indices_amount += 6;
 	mesh->index_amount += 4;
 }
+
+void	player_chunk_mesh_collision(t_player *player, t_chunk *chunk)
+{
+	float			*vertices;
+	unsigned int	*indices;
+	float			p1[3];
+	float			p2[3];
+	float			p3[3];
+	float			intersect_p[3];
+
+	vertices = chunk->mesh.vertices;
+	indices = chunk->mesh.indices;
+
+	for (int i = 0; i < chunk->mesh.index_amount / 3; i++)
+	{
+		int k = i * 3;
+		vec3_new(p1,
+			vertices[indices[k + 0] * 3 + 0],
+			vertices[indices[k + 0] * 3 + 1],
+			vertices[indices[k + 0] * 3 + 2]);
+		vec3_new(p2,
+			vertices[indices[k + 1] * 3 + 0],
+			vertices[indices[k + 1] * 3 + 1],
+			vertices[indices[k + 1] * 3 + 2]);
+		vec3_new(p3,
+			vertices[indices[k + 2] * 3 + 0],
+			vertices[indices[k + 2] * 3 + 1],
+			vertices[indices[k + 2] * 3 + 2]);
+		
+		// We have to add the chunk position to the chunk mesh, since that is 
+		//		what we are doing in the shader;
+		vec3_add(p1, p1, chunk->world_coordinate);
+		vec3_add(p2, p2, chunk->world_coordinate);
+		vec3_add(p3, p3, chunk->world_coordinate);
+		if (ray_triangle_intersect(player->camera.pos, player->velocity,
+			p1, p2, p3, intersect_p))
+			LG_INFO("Intersection time cmon.");
+	}
+}

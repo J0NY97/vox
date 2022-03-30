@@ -97,9 +97,9 @@ int	main(void)
 	//new_vec3(retrotv->pos, 0, 0, -2.5);
 	new_vec3(retrotv->pos, 0, 90, 0);
 	size_t	retrotv_index = add_entity_to_scene(&scene, retrotv);
-	retrotv->collision_detection_enabled = 1;
-	retrotv->collision_use_precise = 1;
-	retrotv->render_aabb = 1;
+	retrotv->collision_detection_enabled = 0;
+	retrotv->collision_use_precise = 0;
+	retrotv->render_aabb = 0;
 
 	t_obj		dust2_obj;
 //	obj_load(&dust2_obj, MODEL_PATH"de_dust2/de_dust2.obj");
@@ -122,7 +122,7 @@ int	main(void)
 	new_model(&display->model, &display_obj);
 	size_t display_index = add_entity_to_scene(&scene, display);
 	new_vec3(display->pos, 1.2, 90, -2.0);
-	display->collision_detection_enabled = 1;
+	display->collision_detection_enabled = 0;
 	display->scale_value = 0.1;
 	display->rot_x_angle = 0;
 	display->rot_y_angle = 90;
@@ -138,6 +138,19 @@ int	main(void)
 
 	t_obj		cube_obj;
 	obj_load(&cube_obj, MODEL_PATH"cube/cube.obj");
+	/*
+	LG_INFO("Index Amount : %d", cube_obj.meshes[0].elements[0].index_amount);
+	LG_INFO("Indices Amount : %d", cube_obj.meshes[0].elements[0].indices_value_amount);
+	for (int i = 0; i < cube_obj.meshes[0].elements[0].index_amount / 3; i++)
+	{
+		int k = i * 3;
+		ft_printf("%d %d %d\n",
+			cube_obj.meshes[0].elements[0].indices[k + 0],
+			cube_obj.meshes[0].elements[0].indices[k + 1],
+			cube_obj.meshes[0].elements[0].indices[k + 2]);
+	}
+	exit(0);
+	*/
 
 	t_entity	*test_cube = malloc(sizeof(t_entity));
 	new_entity(test_cube);
@@ -148,6 +161,9 @@ int	main(void)
 	test_cube->rot_x_angle = 0;
 	test_cube->rot_y_angle = 0;
 	test_cube->rot_z_angle = 0;
+	test_cube->collision_detection_enabled = 1;
+	test_cube->collision_use_precise = 1;
+	test_cube->render_aabb = 0;
 
 //////////////////////////////
 	// Instance testing
@@ -177,6 +193,8 @@ int	main(void)
 		chunk_info.chunk_size[0] = chunk_info.width * chunk_info.block_size;
 		chunk_info.chunk_size[1] = chunk_info.height * chunk_info.block_size;
 		chunk_info.chunk_size[2] = chunk_info.breadth * chunk_info.block_size;
+
+		chunk_info.chunk_collision_enabled = 0;
 
 		glGenTextures(1, &chunk_info.texture);
 		new_texture(&chunk_info.texture, MODEL_PATH"cube/version_3_texture.bmp");
@@ -294,6 +312,16 @@ int	main(void)
 		if (keys[GLFW_KEY_DOWN].state == GLFW_PRESS)
 			vec3_add(player.camera.pos, player.camera.pos, (float []){0, 10, 0});
 
+		if (keys[GLFW_KEY_C].state == GLFW_PRESS)
+		{
+			chunk_info.chunk_collision_enabled = chunk_info.chunk_collision_enabled != 1;
+			if (chunk_info.chunk_collision_enabled)
+				LG_INFO("Collision detection of chunks turned ON.");
+			else
+				LG_INFO("Collision detection of chunks turned OFF.");
+
+		}
+
 		if (keys[GLFW_KEY_SPACE].state == GLFW_PRESS)
 		{
 			regen_chunks = regen_chunks != 1;
@@ -404,6 +432,12 @@ int	main(void)
 					aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum))
 				{
 					render_chunk_mesh(&chunks[nth_chunk], &player.camera, &cube_shader_v2);
+					if (chunk_info.chunk_collision_enabled &&
+						vec3_dist(player_chunk, (float []){chunks[nth_chunk].coordinate[0], chunks[nth_chunk].coordinate[1], chunks[nth_chunk].coordinate[2]}) < 2)
+					{
+						show_chunk_borders(&chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
+						player_chunk_mesh_collision(&player, &chunks[nth_chunk]);
+					}
 					sent_to_gpu++;
 				}
 			}
@@ -411,6 +445,7 @@ int	main(void)
 				(int)player_chunk[1] == chunks[nth_chunk].coordinate[1] &&
 				(int)player_chunk[2] == chunks[nth_chunk].coordinate[2])
 			{
+				/*
 				show_chunk_borders(&chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
 
 				t_chunk	*north_chunk = get_adjacent_chunk(&chunks[nth_chunk], chunks, (int []){0, 0, -1});
@@ -425,7 +460,7 @@ int	main(void)
 				t_chunk	*west_chunk = get_adjacent_chunk(&chunks[nth_chunk], chunks, (int []){-1, 0, 0});
 				if (west_chunk)
 					show_chunk_borders(west_chunk, &player.camera, (float []){1, 1, 0});
-
+				*/
 			}
 		}
 //		ft_printf("CPU : %d, GPU : %d\n", chunk_info.chunks_loaded, sent_to_gpu);

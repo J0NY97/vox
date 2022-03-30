@@ -34,6 +34,7 @@
 # define MODEL_PATH ROOT_PATH"models/"
 # define SHADER_PATH ROOT_PATH"shaders/"
 
+typedef struct	s_player	t_player;
 typedef struct	s_camera	t_camera;
 typedef struct	s_model		t_model;
 typedef struct	s_shader	t_shader;
@@ -275,6 +276,8 @@ typedef struct s_chunk_info
 	int			chunks_loaded; // amount of chunks currently loaded;
 	int			render_distance;
 
+	int			chunk_collision_enabled;
+
 	t_chunk		*chunks; // you should not store the chunks here mainly; its just here so you can acces from places you need, without having to pass them in the function as argumnet;
 	GLuint		texture; // the texture is stored here so we dont load a texture per chunk_mesh;
 }	t_chunk_info;
@@ -354,6 +357,7 @@ void		init_chunk_mesh(t_chunk_mesh *mesh);
 void		add_to_chunk_mesh(t_chunk *chunk, int *coord, float *face_vertices, int texture_id);
 void		update_chunk_mesh(t_chunk *chunk);
 void		render_chunk_mesh(t_chunk *chunk, t_camera *camera, t_shader *shader);
+void		player_chunk_mesh_collision(t_player *player, t_chunk *chunk);
 
 ///////////////////
 //	NOISE
@@ -368,7 +372,7 @@ float		octave_perlin(float x, float y, float z, int octaves, float persistence);
 //	PLAYER
 ///////////////////
 
-typedef struct s_player
+struct s_player
 {
 	t_camera	camera;
 
@@ -383,7 +387,7 @@ typedef struct s_player
 
 	t_aabb		aabb;
 
-}	t_player;
+};
 
 void		new_player(t_player *player);
 void		player_events(t_player *player, t_key *keys, GLFWwindow *win);
@@ -391,9 +395,7 @@ void		player_movement(t_player *player, GLFWwindow *win, t_fps fps);
 void		player_apply_velocity(t_player *player);
 void		player_looking(t_player *player, GLFWwindow *win, t_fps fps);
 void		player_entity_collision(t_player *player, t_entity *entity);
-void		player_entity_collision_precise(t_player *player, t_entity *entity);
 int			player_entity_mesh_collision(t_player *player, t_entity *entity);
-void		testing_triangle_collision(t_player *player, t_entity *entity);
 void		player_print(t_player *player);
 
 ///////////////////
