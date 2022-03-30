@@ -384,8 +384,8 @@ int	main(void)
 		}
 		}
 
-		player_apply_velocity(&player);
-		update_camera(&player.camera);
+//		player_apply_velocity(&player);
+//		update_camera(&player.camera);
 
 		glEnable(GL_DEPTH_TEST);
 		size_t	entities_rendered = 0;
@@ -436,7 +436,9 @@ int	main(void)
 						vec3_dist(player_chunk, (float []){chunks[nth_chunk].coordinate[0], chunks[nth_chunk].coordinate[1], chunks[nth_chunk].coordinate[2]}) < 2)
 					{
 						show_chunk_borders(&chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
-						player_chunk_mesh_collision(&player, &chunks[nth_chunk]);
+//						if (glfwGetMouseButton(sp.win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+						if (player.moving)
+							player_chunk_mesh_collision(&player, &chunks[nth_chunk]);
 					}
 					sent_to_gpu++;
 				}
