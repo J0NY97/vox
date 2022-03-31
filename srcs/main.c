@@ -194,6 +194,10 @@ int	main(void)
 		chunk_info.chunk_size[1] = chunk_info.height * chunk_info.block_size;
 		chunk_info.chunk_size[2] = chunk_info.breadth * chunk_info.block_size;
 
+		chunk_info.hash_table_size = chunk_info.chunks_loaded;
+		chunk_info.hash_table = malloc(sizeof(t_hash_item) * chunk_info.hash_table_size);
+		hash_table_clear(chunk_info.hash_table, chunk_info.hash_table_size);
+
 		chunk_info.chunk_collision_enabled = 0;
 
 		glGenTextures(1, &chunk_info.texture);
@@ -212,7 +216,7 @@ int	main(void)
 		LG_INFO("Inits done, lets create some chunks (%d wanted)\n", chunk_info.chunks_loaded);
 		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
 		{
-			new_chunk(&chunks[nth_chunk], &chunk_info);
+			new_chunk(&chunks[nth_chunk], &chunk_info, nth_chunk);
 			chunks[nth_chunk].mesh.texture = chunk_info.texture;
 		}
 		ft_printf("Chunks created : %d\n", nth_chunk);
@@ -322,7 +326,7 @@ int	main(void)
 
 		}
 
-		if (keys[GLFW_KEY_SPACE].state == GLFW_PRESS)
+		if (keys[GLFW_KEY_G].state == GLFW_PRESS)
 		{
 			regen_chunks = regen_chunks != 1;
 			if (regen_chunks)
@@ -417,13 +421,32 @@ int	main(void)
 		{
 			if (chunks[nth_chunk].needs_to_update)
 			{
-				update_chunk_visible_blocks(&chunks[nth_chunk]);
-				update_chunk_mesh(&chunks[nth_chunk]);
-				chunk_aabb_update(&chunks[nth_chunk]);
-
-				chunks[nth_chunk].needs_to_update = 0;
+				t_chunk *neighbors[6];
+				int		all_neighbors = 1;
+				neighbors[0] = get_adjacent_chunk(&chunks[nth_chunk], chunk_info.chunks, (int []){-1, 0, 0});
+				neighbors[1] = get_adjacent_chunk(&chunks[nth_chunk], chunk_info.chunks, (int []){1, 0, 0});
+				neighbors[2] = get_adjacent_chunk(&chunks[nth_chunk], chunk_info.chunks, (int []){0, 1, 0});
+				neighbors[3] = get_adjacent_chunk(&chunks[nth_chunk], chunk_info.chunks, (int []){0, -1, 0});
+				neighbors[4] = get_adjacent_chunk(&chunks[nth_chunk], chunk_info.chunks, (int []){0, 0, 1});
+				neighbors[5] = get_adjacent_chunk(&chunks[nth_chunk], chunk_info.chunks, (int []){0, 0, -1});
+				for (int i = 0; i < 6; i++)
+				{
+					if (!neighbors[i])
+					{
+						all_neighbors = 0;
+						break ;
+					}
+				}
+				if (all_neighbors)
+				{
+					update_chunk_visible_blocks(&chunks[nth_chunk]);
+					update_chunk_mesh(&chunks[nth_chunk]);
+					chunk_aabb_update(&chunks[nth_chunk]);
+					chunks[nth_chunk].needs_to_update = 0;
+				}
 			}
-			if (chunks[nth_chunk].blocks_visible_amount > 0)
+			if (chunks[nth_chunk].blocks_visible_amount > 0 ||
+				chunks[nth_chunk].needs_to_update == 0)
 			{
 				// Dont render chunk if the chunk is further away than the farplane of the camear;
 				// Dont render if the chunk is outside the view fustrum;

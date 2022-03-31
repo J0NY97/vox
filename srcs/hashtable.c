@@ -8,7 +8,20 @@ void	hash_table_clear(t_hash_item *table, int table_size)
 	while (index < table_size)
 	{
 		table[index].data = -1;
-		table[index].key = -1;
+		table[index].key = 0;
+		++index;
+	}
+}
+
+void	hash_table_print(t_hash_item *table, int table_size)
+{
+	int	index;
+
+	index = 0;
+	printf("Hash Table Print :\n");
+	while (index < table_size)
+	{
+		printf("%u : %d\n", table[index].key, table[index].data);
 		++index;
 	}
 }
@@ -37,7 +50,7 @@ int	hash_index(int key, int table_size)
 */
 int	hash_is_empty(t_hash_item *item)
 {
-	if (item->data == -1 && item->key == -1)
+	if (item->data == -1 && item->key == 0)
 		return (1);
 	return (0);
 }
@@ -57,7 +70,7 @@ t_hash_item	*hash_item_search(t_hash_item *table, int table_size, int key)
 	{
 		if (amount >= table_size)
 		{
-			printf("Search : We have gone through whole table and cant find it.\n");
+	//		printf("Search : We have gone through whole table and cant find it.\n");
 			return (NULL);
 		}
 		if (table[index].key == key)
@@ -123,7 +136,7 @@ int	hash_item_delete(t_hash_item *table, int table_size, int key)
 		if (table[index].key == key)
 		{
 			table[index].data = -1;
-			table[index].key = -1;
+			table[index].key = 0;
 			return (1);
 		}
 		++index;

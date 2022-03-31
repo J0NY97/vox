@@ -1,7 +1,7 @@
 #include "shaderpixel.h"
 
 // Basically everything needed for minecraft : https://www.redblobgames.com/maps/terrain-from-noise/
-void	new_chunk(t_chunk *chunk, t_chunk_info *info)
+void	new_chunk(t_chunk *chunk, t_chunk_info *info, int nth)
 {
 	int error = glGetError();
 	if (error)
@@ -18,10 +18,12 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info)
 	// Set INT_MAX to coordinates, so that the chunk regenerator knows to regenerate these chunks;
 	for (int i = 0; i < 3; i++)
 	{
-		chunk->coordinate[i] = INT_MAX;
-		chunk->world_coordinate[i] = INT_MAX;
+		chunk->coordinate[i] = 999 - (i * nth);
+		chunk->world_coordinate[i] = 999 - (i * nth);
 	}
-	
+	int key = get_chunk_hash_key(chunk->coordinate);
+	hash_item_insert(info->hash_table, info->hash_table_size, key, nth);
+
 	init_chunk_mesh(&chunk->mesh);
 
 	error = glGetError();
@@ -137,9 +139,14 @@ t_chunk	*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, int *dir)
 	from_coord[0] = from->coordinate[0] + dir[0];
 	from_coord[1] = from->coordinate[1] + dir[1];
 	from_coord[2] = from->coordinate[2] + dir[2];
-	/*
-	return (get_chunk(from->info, from_coord));
+/*
+	int key = get_chunk_hash_key(from_coord);
+	t_hash_item *item = hash_item_search(from->info->hash_table, from->info->hash_table_size, key);
+	if (!item)
+		return (NULL);
+	return (&from->info->chunks[item->data]);
 	*/
+
 	for (int i = 0; i < from->info->chunks_loaded; i++)
 	{
 		if (chunks[i].coordinate[0] == from_coord[0] &&
@@ -148,6 +155,8 @@ t_chunk	*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, int *dir)
 			return (&chunks[i]);
 	}
 	return (NULL);
+	/*
+	*/
 }
 
 t_chunk	*get_chunk(t_chunk_info	*info, int *pos)
@@ -170,50 +179,6 @@ int	get_block_index(t_chunk_info *info, int x, int y, int z)
 	return ((x * info->width * info->breadth) + (z * info->height) + y);
 }
 
-/*
- * From 'block_pos' aka the block's world position, get which chunk it is in;
-*/
-int	*which_chunk(int *res, float *block_pos)
-{
-	int	chunk_size = 16;
-
-	res[0] = (int)(block_pos[0]) / chunk_size;
-	res[1] = (int)(block_pos[1]) / chunk_size;
-	res[2] = (int)(block_pos[2]) / chunk_size;
-	return (res);
-}
-
-/*
- * Dont use this before you know how slow this is;
- *
- * !!!!!REMEMBER!!!!!
- * This 'block_pos' is the world coordinates of the block;
- * The t_block->pos is the chunk coordinate; (local coordinates)
-*/
-t_block	*get_block(t_chunk_info	*info, float *block_pos)
-{
-	int		local_pos[3];
-	int		in_chunk[3];
-	t_chunk	*in;
-
-	which_chunk(in_chunk, block_pos);
-	in = get_chunk(info, in_chunk);
-	if (!in)
-		return (NULL);
-	block_world_to_local_pos(local_pos, block_pos);
-	return (&in->blocks[get_block_index(info, local_pos[0], local_pos[1], local_pos[2])]);
-}
-
-/* REMOVE OR edit so that its not using block->pos, but xyz or something from the chunk->blocks array;
-float	*get_block_world_pos(float *res, t_block *block, t_chunk *chunk)
-{
-	res[0] = (chunk->world_coordinate[0]) + (block->pos[0] * chunk->info->block_size);
-	res[1] = (chunk->world_coordinate[1]) + (block->pos[1] * chunk->info->block_size);
-	res[2] = (chunk->world_coordinate[2]) + (block->pos[2] * chunk->info->block_size);
-	return (res);
-}
-*/
-
 int	*block_world_to_local_pos(int *res, float *world)
 {
 	res[0] = mod(world[0], 16);
@@ -233,19 +198,6 @@ int	*get_block_local_pos_from_index(int *res, int *max, int index)
 	res[2] = (index / 16) % 16;
 	res[1] = index % 16;
 	return (res);
-}
-
-/*
- * Give chunk where you prioritize the block to be in;
- * If not found in that chunk try to find it from another chunk in the world;
-*/
-t_block	*get_block_helper(t_chunk *chunk, int *local_pos, float *world_pos)
-{
-	if (local_pos[0] < 0 || local_pos[0] > chunk->info->width - 1 ||
-		local_pos[1] < 0 || local_pos[1] > chunk->info->height - 1 ||
-		local_pos[2] < 0 || local_pos[2] > chunk->info->breadth - 1)
-		return (get_block(chunk->info, world_pos));
-	return (&chunk->blocks[get_block_index(chunk->info, local_pos[0], local_pos[1], local_pos[2])]);
 }
 
 /*
@@ -411,22 +363,30 @@ int	get_blocks_visible(t_chunk *chunk)
 
 int	get_chunk_hash_key(int *coords)
 {
-	int		res;
+	int	res;
 
 	res = coords[0] +
-		(31 * coords[1]) +
-		(31 * 31 * coords[2]);
+		(8 * coords[1]) +
+		(8 * 8 * coords[2]);
 	return (res);
 }
 
 void	update_chunk(t_chunk *chunk, int *coord)
 {
+	int	old_key = get_chunk_hash_key(chunk->coordinate);
+	t_hash_item	*old_item = hash_item_search(chunk->info->hash_table, chunk->info->hash_table_size, old_key);
+	int				old_data = old_item->data;
+	hash_item_delete(chunk->info->hash_table, chunk->info->hash_table_size, old_key);
+
 	for (int i = 0; i < 3; i++)
 		chunk->coordinate[i] = coord[i];
 	vec3_new(chunk->world_coordinate,
 		chunk->coordinate[0] * chunk->info->chunk_size[0],
 		chunk->coordinate[1] * chunk->info->chunk_size[1],
 		chunk->coordinate[2] * chunk->info->chunk_size[2]);
+
+	int	new_key = get_chunk_hash_key(chunk->coordinate);	
+	hash_item_insert(chunk->info->hash_table, chunk->info->hash_table_size, new_key, old_data);
 
 	// Generate Chunks	
 	chunk->block_amount = chunk_gen(chunk); // should always return max amount of blocks in a chunk;
@@ -770,7 +730,9 @@ void	update_chunk_visible_blocks(t_chunk *chunk)
 	chunk->mesh.indices_amount = 0;
 	chunk->mesh.index_amount = 0;
 
-	// TODO: only update if it has all its neighbors (do this whenever the get_chunk is faster;)
+	chunk->blocks_visible_amount_prev = chunk->blocks_visible_amount;
+
+	// TODO: only update if it has all its neighbors;
 	chunk->blocks_visible_amount = get_blocks_visible(chunk);
 }
 
@@ -868,14 +830,31 @@ void	update_chunk_mesh(t_chunk *chunk)
 		LG_ERROR("BEFORE (%d)", error);
 
 	glBindVertexArray(chunk->mesh.vao);
-	// Matrices
+
+error = glGetError();
+	if (error)
+		LG_ERROR("(%d)", error);
+	// Pos
 	glBindBuffer(GL_ARRAY_BUFFER, chunk->mesh.vbo_pos);
 	glBufferData(GL_ARRAY_BUFFER, chunk->mesh.vertices_amount * sizeof(float),
 		&chunk->mesh.vertices[0], GL_STATIC_DRAW);
+
+	error = glGetError();
+	if (error)
+	{
+		LG_INFO("Vertices Amount : %d", chunk->mesh.vertices_amount);
+		LG_ERROR("(%d)", error);
+	}
+
 	// Texture ID
 	glBindBuffer(GL_ARRAY_BUFFER, chunk->mesh.vbo_texture_ids);
 	glBufferData(GL_ARRAY_BUFFER, chunk->mesh.texture_id_amount * sizeof(int),
 		&chunk->mesh.texture_ids[0], GL_STATIC_DRAW);
+
+error = glGetError();
+	if (error)
+		LG_ERROR("(%d)", error);
+
 	// EBO
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunk->mesh.ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, chunk->mesh.indices_amount * sizeof(unsigned int),

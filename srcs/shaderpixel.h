@@ -280,6 +280,9 @@ typedef struct s_chunk_info
 
 	t_chunk		*chunks; // you should not store the chunks here mainly; its just here so you can acces from places you need, without having to pass them in the function as argumnet;
 	GLuint		texture; // the texture is stored here so we dont load a texture per chunk_mesh;
+
+	t_hash_item	*hash_table;
+	int			hash_table_size;
 }	t_chunk_info;
 
 /* Used for threading */
@@ -325,6 +328,7 @@ struct	s_chunk
 
 	int				has_blocks; // 1/0 whether the chunk has other than air blocks;
 	int				blocks_visible_amount; // amount of blocks in the array that we want to render;
+	int				blocks_visible_amount_prev; // previous time block amount
 
 	t_chunk_mesh	mesh;
 
@@ -335,7 +339,7 @@ struct	s_chunk
 	t_chunk_args	args;
 };
 
-void		new_chunk(t_chunk *chunk, t_chunk_info *info);
+void		new_chunk(t_chunk *chunk, t_chunk_info *info, int nth);
 int			chunk_gen(t_chunk *chunk);
 void		update_chunk(t_chunk *chunk, int *coord);
 void		update_chunk_visible_blocks(t_chunk *chunk);
