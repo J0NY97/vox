@@ -16,12 +16,12 @@ typedef struct s_block_data
 {
 	char	type; // 'e_block_type', at some point maybe same array index in 'g_block_data';
 	char	solid; // if solid or not;
-	unsigned char	front_texture; // texture id from the texture atlas;
-	unsigned char	left_texture;
-	unsigned char	back_texture;
-	unsigned char	right_texture;
-	unsigned char	top_texture;
-	unsigned char	bot_texture;
+	unsigned short	front_texture; // texture id from the texture atlas;
+	unsigned short	left_texture;
+	unsigned short	back_texture;
+	unsigned short	right_texture;
+	unsigned short	top_texture;
+	unsigned short	bot_texture;
 }	t_block_data;
 
 static const t_block_data g_block_data[] = {
@@ -31,7 +31,7 @@ static const t_block_data g_block_data[] = {
 	},
 	{
 		BLOCK_DIRT, 1,
-		2, 2, 2, 2, 3, 10 
+		132, 132, 132, 132, 135, 224 
 	},
 	{
 		BLOCK_STONE, 1,
@@ -43,7 +43,7 @@ static const t_block_data g_block_data[] = {
 	},
 	{
 		BLOCK_WATER, 0,
-		21, 21, 21, 21, 21, 21 
+		362, 362, 362, 362, 362, 362 
 	}
 };
 

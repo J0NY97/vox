@@ -2,11 +2,11 @@
 
 in vec2 inTex;
 
-out vec4 FragColor;
+out vec4 gl_FragColor;
 
 uniform sampler2D aTexture;
 
 void main()
 {
-	FragColor = texture(aTexture, inTex);
+	gl_FragColor = texture(aTexture, inTex);
 }

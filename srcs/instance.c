@@ -280,7 +280,7 @@ int	get_blocks_visible(t_chunk *chunk)
 	neighbors[5] = get_adjacent_chunk(chunk, chunk->info->chunks, (int []){0, 0, -1});
 
 	int		pos[3];
-	int	j;// = get_block_index(chunk->info, x, y, z);
+	int		j;// = get_block_index(chunk->info, x, y, z);
 	for (int i = 0; i < chunk->block_amount; i++)
 	{
 		int	a = 0;
@@ -816,9 +816,6 @@ void	init_chunk_mesh(t_chunk_mesh *mesh)
 
 	glGenBuffers(1, &mesh->ebo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
-
-//	glGenTextures(1, &mesh->texture);
-//	new_texture(&mesh->texture, MODEL_PATH"cube/version_3_texture.bmp");
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);

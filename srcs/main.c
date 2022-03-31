@@ -108,8 +108,8 @@ int	main(void)
 	t_entity	*dust2 = malloc(sizeof(t_entity));
 	new_entity(dust2);
 	new_model(&dust2->model, &dust2_obj);
-	//size_t	dust2_index = add_entity_to_scene(&scene, dust2);
-	dust2->collision_detection_enabled = 1;
+	size_t	dust2_index = add_entity_to_scene(&scene, dust2);
+	dust2->collision_detection_enabled = 0;
 //	dust2->collision_use_precise = 1;
 	dust2->rot_x_angle = -90;
 	dust2->scale_value = 0.005;
@@ -384,8 +384,8 @@ int	main(void)
 		}
 		}
 
-//		player_apply_velocity(&player);
-//		update_camera(&player.camera);
+		player_apply_velocity(&player);
+		update_camera(&player.camera);
 
 		glEnable(GL_DEPTH_TEST);
 		size_t	entities_rendered = 0;
