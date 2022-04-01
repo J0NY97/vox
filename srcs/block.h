@@ -8,6 +8,7 @@ enum e_block_type
 	BLOCK_STONE = 1,
 	BLOCK_BEDROCK = 2,
 	BLOCK_WATER = 3,
+	BLOCK_SAND = 4,
 	BLOCK_TYPE_AMOUNT
 };
 
@@ -44,6 +45,10 @@ static const t_block_data g_block_data[] = {
 	{
 		BLOCK_WATER, 0,
 		362, 362, 362, 362, 362, 362 
+	},
+	{
+		BLOCK_SAND, 1,
+		211, 211, 211, 211, 211, 211 
 	}
 };
 

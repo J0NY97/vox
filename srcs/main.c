@@ -96,7 +96,7 @@ int	main(void)
 	new_model(&retrotv->model, &retrotv_obj);
 	//new_vec3(retrotv->pos, 0, 0, -2.5);
 	new_vec3(retrotv->pos, 0, 90, 0);
-	size_t	retrotv_index = add_entity_to_scene(&scene, retrotv);
+//	size_t	retrotv_index = add_entity_to_scene(&scene, retrotv);
 	retrotv->collision_detection_enabled = 0;
 	retrotv->collision_use_precise = 0;
 	retrotv->render_aabb = 0;
@@ -108,7 +108,7 @@ int	main(void)
 	t_entity	*dust2 = malloc(sizeof(t_entity));
 	new_entity(dust2);
 	new_model(&dust2->model, &dust2_obj);
-	size_t	dust2_index = add_entity_to_scene(&scene, dust2);
+//	size_t	dust2_index = add_entity_to_scene(&scene, dust2);
 	dust2->collision_detection_enabled = 0;
 //	dust2->collision_use_precise = 1;
 	dust2->rot_x_angle = -90;
@@ -120,7 +120,8 @@ int	main(void)
 	t_entity	*display = malloc(sizeof(t_entity));
 	new_entity(display);
 	new_model(&display->model, &display_obj);
-	size_t display_index = add_entity_to_scene(&scene, display);
+	size_t display_index;
+//	display_index = add_entity_to_scene(&scene, display);
 	new_vec3(display->pos, 1.2, 90, -2.0);
 	display->collision_detection_enabled = 0;
 	display->scale_value = 0.1;
@@ -138,19 +139,6 @@ int	main(void)
 
 	t_obj		cube_obj;
 	obj_load(&cube_obj, MODEL_PATH"cube/cube.obj");
-	/*
-	LG_INFO("Index Amount : %d", cube_obj.meshes[0].elements[0].index_amount);
-	LG_INFO("Indices Amount : %d", cube_obj.meshes[0].elements[0].indices_value_amount);
-	for (int i = 0; i < cube_obj.meshes[0].elements[0].index_amount / 3; i++)
-	{
-		int k = i * 3;
-		ft_printf("%d %d %d\n",
-			cube_obj.meshes[0].elements[0].indices[k + 0],
-			cube_obj.meshes[0].elements[0].indices[k + 1],
-			cube_obj.meshes[0].elements[0].indices[k + 2]);
-	}
-	exit(0);
-	*/
 
 	t_entity	*test_cube = malloc(sizeof(t_entity));
 	new_entity(test_cube);
@@ -428,6 +416,7 @@ int	main(void)
 				chunk_aabb_update(&chunks[nth_chunk]);
 				chunks[nth_chunk].needs_to_update = 0;
 
+				// Update all 6 neighbors of the chunk;
 				t_chunk *neighbor;
 				for (int i = 0; i < 6; i++)
 				{

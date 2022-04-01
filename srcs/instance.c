@@ -44,11 +44,11 @@ int	chunk_gen(t_chunk *chunk)
 
 	for (int x = 0; x < chunk->info->width; x++)
 	{
-		float	block_world_x = (chunk->world_coordinate[0] + x);
+		float	block_world_x = fabs(chunk->world_coordinate[0] + x);
 		float	to_use_x = block_world_x * freq;
 		for (int z = 0; z < chunk->info->breadth; z++)
 		{
-			float	block_world_z = (chunk->world_coordinate[2] + z);
+			float	block_world_z = fabs(chunk->world_coordinate[2] + z);
 			float	to_use_z = block_world_z * freq;
 			float	perper =
 				octave_perlin(to_use_x, start_y * freq, to_use_z, 1, pers) +
@@ -83,9 +83,16 @@ int	chunk_gen(t_chunk *chunk)
 				if (/*rep > 1.0f &&*/ y <= whatchumacallit)
 				{
 					if (y <= whatchumacallit - 1) // if we have 3 dirt block on top we make the rest stone blocks;
+					{
 						chunk->blocks[i].type = BLOCK_STONE;
+					}
 					else
-						chunk->blocks[i].type = BLOCK_DIRT;
+					{
+						if (block_world_y <= 67 && block_world_y >= 65)
+							chunk->blocks[i].type = BLOCK_SAND;
+						else
+							chunk->blocks[i].type = BLOCK_DIRT;
+					}
 					chunk->has_blocks = 1;
 				}
 				else
@@ -749,15 +756,15 @@ void	init_chunk_mesh(t_chunk_mesh *mesh)
 	if (error)
 		LG_ERROR("BEFORE (%d)", error);
 
-	mesh->vertices_allocated = 28056;
+	mesh->vertices_allocated = 28296;
 	mesh->vertices = malloc(sizeof(float) * mesh->vertices_allocated);
 	mesh->vertices_amount = 0;
 
-	mesh->texture_ids_allocated = 9352; 
+	mesh->texture_ids_allocated = 9432; 
 	mesh->texture_ids = malloc(sizeof(int) * mesh->texture_ids_allocated);
 	mesh->texture_id_amount = 0;
 
-	mesh->indices_allocated = 14028;
+	mesh->indices_allocated = 14148;
 	mesh->indices = malloc(sizeof(unsigned int) * mesh->indices_allocated);
 	mesh->indices_amount = 0;
 
