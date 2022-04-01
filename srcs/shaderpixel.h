@@ -252,6 +252,15 @@ enum e_block_face
 	FACE_AMOUNT
 };
 
+static const int g_neighbors[6][3] = {
+	{-1, 0, 0},
+	{1, 0, 0},
+	{0, 1, 0},
+	{0, -1, 0},
+	{0, 0, 1},
+	{0, 0, -1}
+};
+
 typedef struct s_chunk		t_chunk;
 
 typedef struct s_block
@@ -281,8 +290,10 @@ typedef struct s_chunk_info
 	t_chunk		*chunks; // you should not store the chunks here mainly; its just here so you can acces from places you need, without having to pass them in the function as argumnet;
 	GLuint		texture; // the texture is stored here so we dont load a texture per chunk_mesh;
 
+/*
 	t_hash_item	*hash_table;
 	int			hash_table_size;
+	*/
 }	t_chunk_info;
 
 /* Used for threading */

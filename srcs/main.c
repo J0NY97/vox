@@ -194,9 +194,11 @@ int	main(void)
 		chunk_info.chunk_size[1] = chunk_info.height * chunk_info.block_size;
 		chunk_info.chunk_size[2] = chunk_info.breadth * chunk_info.block_size;
 
+/*
 		chunk_info.hash_table_size = chunk_info.chunks_loaded;
 		chunk_info.hash_table = malloc(sizeof(t_hash_item) * chunk_info.hash_table_size);
 		hash_table_clear(chunk_info.hash_table, chunk_info.hash_table_size);
+		*/
 
 		chunk_info.chunk_collision_enabled = 0;
 
@@ -359,7 +361,7 @@ int	main(void)
 		if (player.enabled_mouse)
 			player_looking(&player, sp.win, fps);
 
-		if (1)
+		if (0)
 		{
 		size_t	entities_collisioned = 0;
 		for (size_t i = 0; i < scene.entities_allocated && entities_collisioned < scene.entity_amount; i++)
@@ -421,32 +423,24 @@ int	main(void)
 		{
 			if (chunks[nth_chunk].needs_to_update)
 			{
-				t_chunk *neighbors[6];
-				int		all_neighbors = 1;
-				neighbors[0] = get_adjacent_chunk(&chunks[nth_chunk], chunk_info.chunks, (int []){-1, 0, 0});
-				neighbors[1] = get_adjacent_chunk(&chunks[nth_chunk], chunk_info.chunks, (int []){1, 0, 0});
-				neighbors[2] = get_adjacent_chunk(&chunks[nth_chunk], chunk_info.chunks, (int []){0, 1, 0});
-				neighbors[3] = get_adjacent_chunk(&chunks[nth_chunk], chunk_info.chunks, (int []){0, -1, 0});
-				neighbors[4] = get_adjacent_chunk(&chunks[nth_chunk], chunk_info.chunks, (int []){0, 0, 1});
-				neighbors[5] = get_adjacent_chunk(&chunks[nth_chunk], chunk_info.chunks, (int []){0, 0, -1});
+				update_chunk_visible_blocks(&chunks[nth_chunk]);
+				update_chunk_mesh(&chunks[nth_chunk]);
+				chunk_aabb_update(&chunks[nth_chunk]);
+				chunks[nth_chunk].needs_to_update = 0;
+
+				t_chunk *neighbor;
 				for (int i = 0; i < 6; i++)
 				{
-					if (!neighbors[i])
+					neighbor = get_adjacent_chunk(&chunks[nth_chunk], chunk_info.chunks, (int *)g_neighbors[i]);
+					if (neighbor)
 					{
-						all_neighbors = 0;
-						break ;
+						update_chunk_visible_blocks(neighbor);
+						update_chunk_mesh(neighbor);
+						chunk_aabb_update(neighbor);
 					}
 				}
-				if (all_neighbors)
-				{
-					update_chunk_visible_blocks(&chunks[nth_chunk]);
-					update_chunk_mesh(&chunks[nth_chunk]);
-					chunk_aabb_update(&chunks[nth_chunk]);
-					chunks[nth_chunk].needs_to_update = 0;
-				}
 			}
-			if (chunks[nth_chunk].blocks_visible_amount > 0 ||
-				chunks[nth_chunk].needs_to_update == 0)
+			if (chunks[nth_chunk].blocks_visible_amount > 0)
 			{
 				// Dont render chunk if the chunk is further away than the farplane of the camear;
 				// Dont render if the chunk is outside the view fustrum;

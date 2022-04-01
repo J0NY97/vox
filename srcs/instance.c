@@ -21,8 +21,10 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, int nth)
 		chunk->coordinate[i] = 999 - (i * nth);
 		chunk->world_coordinate[i] = 999 - (i * nth);
 	}
+	/*
 	int key = get_chunk_hash_key(chunk->coordinate);
 	hash_item_insert(info->hash_table, info->hash_table_size, key, nth);
+	*/
 
 	init_chunk_mesh(&chunk->mesh);
 
@@ -224,12 +226,8 @@ int	get_blocks_visible(t_chunk *chunk)
 	t_block	*tmp_block = NULL;
 
 	t_chunk *neighbors[6];
-	neighbors[0] = get_adjacent_chunk(chunk, chunk->info->chunks, (int []){-1, 0, 0});
-	neighbors[1] = get_adjacent_chunk(chunk, chunk->info->chunks, (int []){1, 0, 0});
-	neighbors[2] = get_adjacent_chunk(chunk, chunk->info->chunks, (int []){0, 1, 0});
-	neighbors[3] = get_adjacent_chunk(chunk, chunk->info->chunks, (int []){0, -1, 0});
-	neighbors[4] = get_adjacent_chunk(chunk, chunk->info->chunks, (int []){0, 0, 1});
-	neighbors[5] = get_adjacent_chunk(chunk, chunk->info->chunks, (int []){0, 0, -1});
+	for (int i = 0; i < 6; i++)
+		neighbors[i] = get_adjacent_chunk(chunk, chunk->info->chunks, (int *)g_neighbors[i]);
 
 	int		pos[3];
 	int		j;// = get_block_index(chunk->info, x, y, z);
@@ -373,10 +371,12 @@ int	get_chunk_hash_key(int *coords)
 
 void	update_chunk(t_chunk *chunk, int *coord)
 {
+	/*
 	int	old_key = get_chunk_hash_key(chunk->coordinate);
 	t_hash_item	*old_item = hash_item_search(chunk->info->hash_table, chunk->info->hash_table_size, old_key);
 	int				old_data = old_item->data;
 	hash_item_delete(chunk->info->hash_table, chunk->info->hash_table_size, old_key);
+	*/
 
 	for (int i = 0; i < 3; i++)
 		chunk->coordinate[i] = coord[i];
@@ -385,8 +385,10 @@ void	update_chunk(t_chunk *chunk, int *coord)
 		chunk->coordinate[1] * chunk->info->chunk_size[1],
 		chunk->coordinate[2] * chunk->info->chunk_size[2]);
 
+/*
 	int	new_key = get_chunk_hash_key(chunk->coordinate);	
 	hash_item_insert(chunk->info->hash_table, chunk->info->hash_table_size, new_key, old_data);
+	*/
 
 	// Generate Chunks	
 	chunk->block_amount = chunk_gen(chunk); // should always return max amount of blocks in a chunk;
