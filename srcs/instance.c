@@ -210,6 +210,16 @@ int	*get_block_local_pos_from_index(int *res, int *max, int index)
 }
 
 /*
+ * Returns pointer to block anywhere in the world with the 'coord's given;
+ * World coordinates btw;
+*/
+t_block	*get_block(t_chunk_info *info, float *coords)
+{
+	
+	return (NULL);
+}
+
+/*
  * For each block in chunk;
  *	Go through each block in chunk;
  *		check if not touching air blocks;
@@ -337,7 +347,7 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_faces[i], g_block_data[blocks[i].type + 1].front_texture);
+			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_front_face, g_block_data[blocks[i].type + 1].front_texture);
 			a++;
 		}
 
@@ -961,7 +971,12 @@ int	point_in_triangle(float *p, float *v1, float *v2, float *v3)
 	return (1);
 }
 
-t_block	*get_block_from_chunk_mesh(t_chunk *chunk, float *point)
+/*
+ * If block found : we save the position of the block in 'block_pos' and
+ *	the face, of the block the point belongs to, in 'face' and
+ *	return the pointer of the block;
+*/
+t_block	*get_block_from_chunk_mesh(t_chunk *chunk, float *point, int *block_pos, int *face)
 {
 	float	p1[VEC3_SIZE];
 	float	p2[VEC3_SIZE];
@@ -979,37 +994,46 @@ t_block	*get_block_from_chunk_mesh(t_chunk *chunk, float *point)
 		pos[1] += chunk->world_coordinate[1];
 		pos[2] += chunk->world_coordinate[2];
 
-		for (int i = 0; i < FACE_AMOUNT; i++)
+		for (int f = 0; f < FACE_AMOUNT; f++)
 		{
-			p1[0] = (g_faces[i][0] * chunk->info->block_scale) + pos[0];
-			p1[1] = (g_faces[i][1] * chunk->info->block_scale) + pos[1];
-			p1[2] = (g_faces[i][2] * chunk->info->block_scale) + pos[2];
+			p1[0] = (g_faces[f][0] * chunk->info->block_scale) + pos[0];
+			p1[1] = (g_faces[f][1] * chunk->info->block_scale) + pos[1];
+			p1[2] = (g_faces[f][2] * chunk->info->block_scale) + pos[2];
 
-			p2[0] = (g_faces[i][3] * chunk->info->block_scale) + pos[0];
-			p2[1] = (g_faces[i][4] * chunk->info->block_scale) + pos[1];
-			p2[2] = (g_faces[i][5] * chunk->info->block_scale) + pos[2];
+			p2[0] = (g_faces[f][3] * chunk->info->block_scale) + pos[0];
+			p2[1] = (g_faces[f][4] * chunk->info->block_scale) + pos[1];
+			p2[2] = (g_faces[f][5] * chunk->info->block_scale) + pos[2];
 
-			p3[0] = (g_faces[i][6] * chunk->info->block_scale) + pos[0];
-			p3[1] = (g_faces[i][7] * chunk->info->block_scale) + pos[1];
-			p3[2] = (g_faces[i][8] * chunk->info->block_scale) + pos[2];
+			p3[0] = (g_faces[f][6] * chunk->info->block_scale) + pos[0];
+			p3[1] = (g_faces[f][7] * chunk->info->block_scale) + pos[1];
+			p3[2] = (g_faces[f][8] * chunk->info->block_scale) + pos[2];
 
 			if (point_in_triangle(point, p1, p2, p3))
+			{
+				for (int c = 0; c < 3; c++)
+					block_pos[c] = pos[c];
+				*face = f;
 				return (&chunk->blocks[i]);
+			}
 
-			p1[0] = (g_faces[i][0] * chunk->info->block_scale) + pos[0];
-			p1[1] = (g_faces[i][1] * chunk->info->block_scale) + pos[1];
-			p1[2] = (g_faces[i][2] * chunk->info->block_scale) + pos[2];
+			p1[0] = (g_faces[f][0] * chunk->info->block_scale) + pos[0];
+			p1[1] = (g_faces[f][1] * chunk->info->block_scale) + pos[1];
+			p1[2] = (g_faces[f][2] * chunk->info->block_scale) + pos[2];
 
-			p2[0] = (g_faces[i][6] * chunk->info->block_scale) + pos[0];
-			p2[1] = (g_faces[i][7] * chunk->info->block_scale) + pos[1];
-			p2[2] = (g_faces[i][8] * chunk->info->block_scale) + pos[2];
+			p2[0] = (g_faces[f][6] * chunk->info->block_scale) + pos[0];
+			p2[1] = (g_faces[f][7] * chunk->info->block_scale) + pos[1];
+			p2[2] = (g_faces[f][8] * chunk->info->block_scale) + pos[2];
 
-			p3[0] = (g_faces[i][9] * chunk->info->block_scale) + pos[0];
-			p3[1] = (g_faces[i][10] * chunk->info->block_scale) + pos[1];
-			p3[2] = (g_faces[i][11] * chunk->info->block_scale) + pos[2];
+			p3[0] = (g_faces[f][9] * chunk->info->block_scale) + pos[0];
+			p3[1] = (g_faces[f][10] * chunk->info->block_scale) + pos[1];
+			p3[2] = (g_faces[f][11] * chunk->info->block_scale) + pos[2];
 			if (point_in_triangle(point, p1, p2, p3))
-
+			{
+				for (int c = 0; c < 3; c++)
+					block_pos[c] = pos[c];
+				*face = f;
 				return (&chunk->blocks[i]);
+			}
 		}
 	}
 	return (NULL);
@@ -1087,4 +1111,70 @@ int	chunk_mesh_collision(float *orig, float *dir, t_chunk *chunk, float *interse
 	}
 	*/
 	return (chunk_collision);
+}
+
+void	render_block_outline(int *pos, float *color, float *view, float *projection)
+{
+	// Front
+	float	p1[3]; // top left
+	float	p2[3]; // bot left
+	float	p3[3]; // bot right
+	float	p4[3]; // top right
+
+	p1[0] = (g_faces[0][0] * 0.5) + pos[0];
+	p1[1] = (g_faces[0][1] * 0.5) + pos[1];
+	p1[2] = (g_faces[0][2] * 0.5) + pos[2];
+
+	p2[0] = (g_faces[0][3] * 0.5) + pos[0];
+	p2[1] = (g_faces[0][4] * 0.5) + pos[1];
+	p2[2] = (g_faces[0][5] * 0.5) + pos[2];
+
+	p3[0] = (g_faces[0][6] * 0.5) + pos[0];
+	p3[1] = (g_faces[0][7] * 0.5) + pos[1];
+	p3[2] = (g_faces[0][8] * 0.5) + pos[2];
+
+	p4[0] = (g_faces[0][9] * 0.5) + pos[0];
+	p4[1] = (g_faces[0][10] * 0.5) + pos[1];
+	p4[2] = (g_faces[0][11] * 0.5) + pos[2];
+
+	// Back
+	float	b1[3]; // top left
+	float	b2[3]; // bot left
+	float	b3[3]; // bot right
+	float	b4[3]; // top right
+
+	b1[0] = (g_faces[1][0] * 0.5) + pos[0];
+	b1[1] = (g_faces[1][1] * 0.5) + pos[1];
+	b1[2] = (g_faces[1][2] * 0.5) + pos[2];
+
+	b2[0] = (g_faces[1][3] * 0.5) + pos[0];
+	b2[1] = (g_faces[1][4] * 0.5) + pos[1];
+	b2[2] = (g_faces[1][5] * 0.5) + pos[2];
+
+	b3[0] = (g_faces[1][6] * 0.5) + pos[0];
+	b3[1] = (g_faces[1][7] * 0.5) + pos[1];
+	b3[2] = (g_faces[1][8] * 0.5) + pos[2];
+
+	b4[0] = (g_faces[1][9] * 0.5) + pos[0];
+	b4[1] = (g_faces[1][10] * 0.5) + pos[1];
+	b4[2] = (g_faces[1][11] * 0.5) + pos[2];
+
+	// Front
+	render_3d_line(p1, p2, color, view, projection);
+	render_3d_line(p2, p3, color, view, projection);
+	render_3d_line(p3, p4, color, view, projection);
+	render_3d_line(p4, p1, color, view, projection);
+
+	// Back
+	render_3d_line(b1, b2, color, view, projection);
+	render_3d_line(b2, b3, color, view, projection);
+	render_3d_line(b3, b4, color, view, projection);
+	render_3d_line(b4, b1, color, view, projection);
+
+	// Top / Bot
+	render_3d_line(p1, b4, color, view, projection);
+	render_3d_line(p4, b1, color, view, projection);
+
+	render_3d_line(p2, b3, color, view, projection);
+	render_3d_line(p3, b2, color, view, projection);
 }

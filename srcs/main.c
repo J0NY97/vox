@@ -446,24 +446,30 @@ int	main(void)
 					vec3_dist(player_chunk, (float []){chunks[nth_chunk].coordinate[0], chunks[nth_chunk].coordinate[1], chunks[nth_chunk].coordinate[2]}) < 2)
 				{
 					float	intersect_point[3];
+					int		block_pos[3];
+					int		face = -1; // -1 is no face;
 					int		collision_result = 0;
 					show_chunk_borders(&chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
-					if (glfwGetMouseButton(sp.win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ||
-						glfwGetMouseButton(sp.win, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
-						collision_result = chunk_mesh_collision(player.camera.pos, player.camera.front, &chunks[nth_chunk], intersect_point);
+					collision_result = chunk_mesh_collision(player.camera.pos, player.camera.front, &chunks[nth_chunk], intersect_point);
 						/*
 					if (player.moving)
 						collision_result = chunk_mesh_collision(player.camera.pos, player.velocity, &chunks[nth_chunk], intersect_point);
 						*/
 					if (collision_result)
 					{
-						t_block *clicked_block = get_block_from_chunk_mesh(&chunks[nth_chunk], intersect_point);
-						if (clicked_block)
+						t_block *hovered_block = NULL;
+						int		clicked = 0;
+						if (glfwGetMouseButton(sp.win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ||
+							glfwGetMouseButton(sp.win, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+							clicked = 1;
+						hovered_block = get_block_from_chunk_mesh(&chunks[nth_chunk], intersect_point, block_pos, &face);
+						render_block_outline(block_pos, (float []){0, 0, 0}, player.camera.view, player.camera.projection);
+						if (hovered_block && clicked)
 						{
 							if (glfwGetMouseButton(sp.win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-								clicked_block->type = BLOCK_AIR;
+								hovered_block->type = BLOCK_AIR;
 							else if (glfwGetMouseButton(sp.win, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
-								clicked_block->type = BLOCK_STONE;
+								hovered_block->type = BLOCK_STONE;
 							chunks[nth_chunk].needs_to_update = 1;
 						}
 					}
