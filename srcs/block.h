@@ -52,6 +52,26 @@ static const t_block_data g_block_data[] = {
 	}
 };
 
+enum e_face
+{
+	FACE_FRONT,
+	FACE_BACK,
+	FACE_LEFT,
+	FACE_RIGHT,
+	FACE_TOP,
+	FACE_BOT,
+	FACE_AMOUNT
+};
+
+static const float g_faces[FACE_AMOUNT][12] = {
+/* FRONT */	{-1, 1, 1,  -1, -1, 1,  1, -1, 1,  1, 1, 1},
+/* BACK  */	{1, 1, -1,  1, -1, -1,  -1, -1, -1,  -1, 1, -1},
+/* LEFT  */	{-1, 1, -1,  -1, -1, -1,  -1, -1, 1,  -1, 1, 1},
+/* RIGHT */	{1, 1, 1,  1, -1, 1,  1, -1, -1,  1, 1, -1},
+/* TOP   */	{-1, 1, -1,  -1, 1, 1,  1, 1, 1,  1, 1, -1},
+/* BOT   */	{-1, -1, -1,  -1, -1, 1,  -1, 1, 1,  -1, 1, -1}
+};
+
 static const float g_front_face[] = {-1, 1, 1,  -1, -1, 1,  1, -1, 1,  1, 1, 1};
 static const float g_back_face[] = {1, 1, -1,  1, -1, -1,  -1, -1, -1,  -1, 1, -1};
 static const float g_left_face[] = {-1, 1, -1,  -1, -1, -1,  -1, -1, 1,  -1, 1, 1};

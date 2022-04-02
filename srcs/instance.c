@@ -337,7 +337,7 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_front_face, g_block_data[blocks[i].type + 1].front_texture);
+			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_faces[i], g_block_data[blocks[i].type + 1].front_texture);
 			a++;
 		}
 
@@ -936,17 +936,102 @@ void	add_to_chunk_mesh(t_chunk *chunk, int *coord, float *face_vertices, int tex
 	mesh->index_amount += 4;
 }
 
-void	player_chunk_mesh_collision(t_player *player, t_chunk *chunk)
+int	point_in_triangle(float *p, float *v1, float *v2, float *v3)
+{
+	float	t1[VEC3_SIZE];
+	float	t2[VEC3_SIZE];
+	float	t3[VEC3_SIZE];
+
+	vec3_sub(t1, v1, p);
+	vec3_sub(t2, v2, p);
+	vec3_sub(t3, v3, p);
+
+	float	u[VEC3_SIZE];
+	float	v[VEC3_SIZE];
+	float	w[VEC3_SIZE];
+
+	vec3_cross(u, t2, t3);
+	vec3_cross(v, t3, t1);
+	vec3_cross(w, t1, t2);
+
+	if (vec3_dot(u, v) < 0.01f)
+		return (0);
+	if (vec3_dot(u, w) < 0.01f)
+		return (0);
+	return (1);
+}
+
+t_block	*get_block_from_chunk_mesh(t_chunk *chunk, float *point)
+{
+	float	p1[VEC3_SIZE];
+	float	p2[VEC3_SIZE];
+	float	p3[VEC3_SIZE];
+	int		i = 0;
+
+	for (; i < chunk->block_amount; i++)
+	{
+		if (g_block_data[chunk->blocks[i].type + 1].solid == 0)
+			continue ;
+
+		int	pos[3];	
+		get_block_local_pos_from_index(pos, (int []){16, 16, 16}, i);
+		pos[0] += chunk->world_coordinate[0];
+		pos[1] += chunk->world_coordinate[1];
+		pos[2] += chunk->world_coordinate[2];
+
+		for (int i = 0; i < FACE_AMOUNT; i++)
+		{
+			p1[0] = (g_faces[i][0] * chunk->info->block_scale) + pos[0];
+			p1[1] = (g_faces[i][1] * chunk->info->block_scale) + pos[1];
+			p1[2] = (g_faces[i][2] * chunk->info->block_scale) + pos[2];
+
+			p2[0] = (g_faces[i][3] * chunk->info->block_scale) + pos[0];
+			p2[1] = (g_faces[i][4] * chunk->info->block_scale) + pos[1];
+			p2[2] = (g_faces[i][5] * chunk->info->block_scale) + pos[2];
+
+			p3[0] = (g_faces[i][6] * chunk->info->block_scale) + pos[0];
+			p3[1] = (g_faces[i][7] * chunk->info->block_scale) + pos[1];
+			p3[2] = (g_faces[i][8] * chunk->info->block_scale) + pos[2];
+
+			if (point_in_triangle(point, p1, p2, p3))
+				return (&chunk->blocks[i]);
+
+			p1[0] = (g_faces[i][0] * chunk->info->block_scale) + pos[0];
+			p1[1] = (g_faces[i][1] * chunk->info->block_scale) + pos[1];
+			p1[2] = (g_faces[i][2] * chunk->info->block_scale) + pos[2];
+
+			p2[0] = (g_faces[i][6] * chunk->info->block_scale) + pos[0];
+			p2[1] = (g_faces[i][7] * chunk->info->block_scale) + pos[1];
+			p2[2] = (g_faces[i][8] * chunk->info->block_scale) + pos[2];
+
+			p3[0] = (g_faces[i][9] * chunk->info->block_scale) + pos[0];
+			p3[1] = (g_faces[i][10] * chunk->info->block_scale) + pos[1];
+			p3[2] = (g_faces[i][11] * chunk->info->block_scale) + pos[2];
+			if (point_in_triangle(point, p1, p2, p3))
+
+				return (&chunk->blocks[i]);
+		}
+	}
+	return (NULL);
+}
+
+/*
+ * Returns if collision happens;
+ * Result of intersection point is stored in 'intersect_point';
+ * 
+ * TODO: This should probably returns either an array of points being hit,
+ * 	or just the closest one....?
+*/
+int	chunk_mesh_collision(float *orig, float *dir, t_chunk *chunk, float *intersect_point)
 {
 	float			*vertices;
 	unsigned int	*indices;
 	float			p1[3];
 	float			p2[3];
 	float			p3[3];
-	float			intersect_p[3];
-	float			player_dir[3];
+	float			norm_dir[3];
 
-	vec3_normalize(player_dir, player->velocity);
+	vec3_normalize(norm_dir, dir);
 	vertices = chunk->mesh.vertices;
 	indices = chunk->mesh.indices;
 
@@ -972,22 +1057,26 @@ void	player_chunk_mesh_collision(t_player *player, t_chunk *chunk)
 		vec3_add(p1, p1, chunk->world_coordinate);
 		vec3_add(p2, p2, chunk->world_coordinate);
 		vec3_add(p3, p3, chunk->world_coordinate);
-		if (ray_triangle_intersect(player->camera.pos, player->camera.front,
-			p1, p2, p3, intersect_p))
+		if (ray_triangle_intersect(orig, dir, p1, p2, p3, intersect_point))
 		{
 			chunk_collision = 1;
+			/*
 			render_3d_line(p1, p2, (float []){0, 1, 0}, player->camera.view, player->camera.projection);
 			render_3d_line(p1, p3, (float []){0, 1, 0}, player->camera.view, player->camera.projection);
 			render_3d_line(p3, p2, (float []){0, 1, 0}, player->camera.view, player->camera.projection);
+			*/
 		}
 		else
 		{
+			/*
 			render_3d_line(p1, p2, (float []){1, 0, 1}, player->camera.view, player->camera.projection);
 			render_3d_line(p1, p3, (float []){1, 0, 1}, player->camera.view, player->camera.projection);
 			render_3d_line(p3, p2, (float []){1, 0, 1}, player->camera.view, player->camera.projection);
+			*/
 		}
 
 	}
+	/*
 	if (chunk_collision)
 	{
 		LG_INFO("Intersection time cmon!");
@@ -996,4 +1085,6 @@ void	player_chunk_mesh_collision(t_player *player, t_chunk *chunk)
 		vec3_string("player.front : ", player->camera.front);
 		vec3_string("player.velocity : ", player->velocity);
 	}
+	*/
+	return (chunk_collision);
 }

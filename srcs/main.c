@@ -168,7 +168,7 @@ int	main(void)
 
 		t_chunk_info	chunk_info;
 
-		chunk_info.render_distance = 22;
+		chunk_info.render_distance = 20;
 //		chunk_info.seed = 896868766;
 		chunk_info.seed = 596547633;
 		chunk_info.width = 16;
@@ -438,15 +438,35 @@ int	main(void)
 					aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum))
 				{
 					render_chunk_mesh(&chunks[nth_chunk], &player.camera, &cube_shader_v2);
-					if (chunk_info.chunk_collision_enabled &&
-						vec3_dist(player_chunk, (float []){chunks[nth_chunk].coordinate[0], chunks[nth_chunk].coordinate[1], chunks[nth_chunk].coordinate[2]}) < 2)
-					{
-						show_chunk_borders(&chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
-//						if (glfwGetMouseButton(sp.win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-						if (player.moving)
-							player_chunk_mesh_collision(&player, &chunks[nth_chunk]);
-					}
 					sent_to_gpu++;
+				}
+
+				// Collision Detection
+				if (chunk_info.chunk_collision_enabled &&
+					vec3_dist(player_chunk, (float []){chunks[nth_chunk].coordinate[0], chunks[nth_chunk].coordinate[1], chunks[nth_chunk].coordinate[2]}) < 2)
+				{
+					float	intersect_point[3];
+					int		collision_result = 0;
+					show_chunk_borders(&chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
+					if (glfwGetMouseButton(sp.win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ||
+						glfwGetMouseButton(sp.win, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+						collision_result = chunk_mesh_collision(player.camera.pos, player.camera.front, &chunks[nth_chunk], intersect_point);
+						/*
+					if (player.moving)
+						collision_result = chunk_mesh_collision(player.camera.pos, player.velocity, &chunks[nth_chunk], intersect_point);
+						*/
+					if (collision_result)
+					{
+						t_block *clicked_block = get_block_from_chunk_mesh(&chunks[nth_chunk], intersect_point);
+						if (clicked_block)
+						{
+							if (glfwGetMouseButton(sp.win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+								clicked_block->type = BLOCK_AIR;
+							else if (glfwGetMouseButton(sp.win, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+								clicked_block->type = BLOCK_STONE;
+							chunks[nth_chunk].needs_to_update = 1;
+						}
+					}
 				}
 			}
 			if ((int)player_chunk[0] == chunks[nth_chunk].coordinate[0] &&

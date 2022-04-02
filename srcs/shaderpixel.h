@@ -241,17 +241,6 @@ void				render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shad
 // ENTITY INSTANCED
 /////////////////////
 
-enum e_block_face
-{
-	FACE_FRONT = 0,
-	FACE_BACK,
-	FACE_TOP,
-	FACE_BOT,
-	FACE_LEFT,
-	FACE_RIGHT,
-	FACE_AMOUNT
-};
-
 static const int g_neighbors[6][3] = {
 	{-1, 0, 0},
 	{1, 0, 0},
@@ -361,7 +350,7 @@ void		render_aabb(t_aabb *a, t_camera *camera, float *col);
 t_chunk		*get_chunk(t_chunk_info *info, int *pos);
 t_chunk		*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, int *dir);
 int			*block_world_to_local_pos(int *res, float *world);
-
+int			*get_block_local_pos_from_index(int *res, int *max, int index);
 
 int			get_chunk_hash_key(int *coords);
 
@@ -372,7 +361,8 @@ void		init_chunk_mesh(t_chunk_mesh *mesh);
 void		add_to_chunk_mesh(t_chunk *chunk, int *coord, float *face_vertices, int texture_id);
 void		update_chunk_mesh(t_chunk *chunk);
 void		render_chunk_mesh(t_chunk *chunk, t_camera *camera, t_shader *shader);
-void		player_chunk_mesh_collision(t_player *player, t_chunk *chunk);
+int			chunk_mesh_collision(float *orig, float *dir, t_chunk *chunk, float *intersect_point);
+t_block		*get_block_from_chunk_mesh(t_chunk *chunk, float *point);
 
 ///////////////////
 //	NOISE
@@ -496,6 +486,7 @@ void		render_crosshair(void);
 
 void		render_2d_line(float *p1, float *p2, float *col);
 void		render_3d_line(float *p1, float *p2, float *col, float *view_mat, float *project_mat);
+void		render_3d_point(float *p1, float *col, float *view_mat, float *project_mat);
 
 ///////////////////
 // Box Draw

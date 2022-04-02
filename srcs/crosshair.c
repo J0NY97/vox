@@ -154,3 +154,45 @@ void	render_3d_line(float *p1, float *p2, float *col, float *view_mat, float *pr
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
+
+/////////////////////////////////
+// Point
+/////////////////////////////////
+
+/*
+ * Doesnt work!
+*/
+void	render_3d_point(float *p1, float *col, float *view_mat, float *project_mat)
+{
+	static t_render_line	info = {};
+	static int				set = 0;
+
+	if (!set)
+	{
+		setup_3d_line(&info);
+		set = 1;
+	}
+	int i = 0;
+	for (; i < 3; i++)
+		info.vertices[i] = p1[i];
+
+	glUseProgram(info.shader.program);
+	glBindVertexArray(info.vao);
+	glBindBuffer(GL_ARRAY_BUFFER, info.vbo_pos);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3, &info.vertices[0], GL_DYNAMIC_DRAW);
+
+	glUniform3fv(glGetUniformLocation(info.shader.program, "inColor"), 1, col);
+	glUniformMatrix4fv(glGetUniformLocation(info.shader.program, "view"), 1, GL_FALSE, &view_mat[0]);
+	glUniformMatrix4fv(glGetUniformLocation(info.shader.program, "projection"), 1, GL_FALSE, &project_mat[0]);
+
+	glDrawArrays(GL_POINTS, 0, 1);
+
+	int error = glGetError();
+	if (error)
+		LG_WARN("(%d)", error);
+
+	glUseProgram(0);
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
