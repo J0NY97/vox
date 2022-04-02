@@ -472,26 +472,22 @@ int	main(void)
 							{
 								float	block_world[3];
 								vec3_assign(block_world, block_pos);
-								ft_printf("Face %d clicked.\n", face);
 								if (face == FACE_FRONT)
-									block_world[2] += 0.5;
+									block_world[2] += 1;
 								else if (face == FACE_BACK)
-									block_world[2] -= 0.5;
+									block_world[2] -= 1;
 								else if (face == FACE_LEFT)
-									block_world[0] -= 0.5;
+									block_world[0] -= 1;
 								else if (face == FACE_RIGHT)
-									block_world[0] += 0.5;
+									block_world[0] += 1;
 								else if (face == FACE_TOP)
-									block_world[1] += 0.5;
+									block_world[1] -= 1;
 								else if (face == FACE_BOT)
-									block_world[1] -= 0.5;
+									block_world[1] += 1;
 								t_block *next_to = get_block(&chunk_info, block_world);
 
 								if (next_to)
-								{
-									LG_INFO("That has block");
 									next_to->type = BLOCK_STONE;
-								}
 							}
 							chunks[nth_chunk].needs_to_update = 1;
 						}
