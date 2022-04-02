@@ -201,7 +201,7 @@ int	main(void)
 		int		nth_chunk = 0;
 		float	player_chunk[VEC3_SIZE];
 		
-		player_in_chunk(player_chunk, player.camera.pos, &chunk_info);
+		get_chunk_pos_from_world_pos(player_chunk, player.camera.pos, &chunk_info);
 
 		LG_INFO("Inits done, lets create some chunks (%d wanted)\n", chunk_info.chunks_loaded);
 		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
@@ -395,7 +395,7 @@ int	main(void)
 /////////////////
 		// Chunk things
 /////////////////
-		player_in_chunk(player_chunk, player.camera.pos, &chunk_info);
+		get_chunk_pos_from_world_pos(player_chunk, player.camera.pos, &chunk_info);
 
 		if (regen_chunks)
 		{
@@ -446,7 +446,7 @@ int	main(void)
 					vec3_dist(player_chunk, (float []){chunks[nth_chunk].coordinate[0], chunks[nth_chunk].coordinate[1], chunks[nth_chunk].coordinate[2]}) < 2)
 				{
 					float	intersect_point[3];
-					int		block_pos[3];
+					float	block_pos[3];
 					int		face = -1; // -1 is no face;
 					int		collision_result = 0;
 					show_chunk_borders(&chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
@@ -469,7 +469,30 @@ int	main(void)
 							if (glfwGetMouseButton(sp.win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
 								hovered_block->type = BLOCK_AIR;
 							else if (glfwGetMouseButton(sp.win, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
-								hovered_block->type = BLOCK_STONE;
+							{
+								float	block_world[3];
+								vec3_assign(block_world, block_pos);
+								ft_printf("Face %d clicked.\n", face);
+								if (face == FACE_FRONT)
+									block_world[2] += 0.5;
+								else if (face == FACE_BACK)
+									block_world[2] -= 0.5;
+								else if (face == FACE_LEFT)
+									block_world[0] -= 0.5;
+								else if (face == FACE_RIGHT)
+									block_world[0] += 0.5;
+								else if (face == FACE_TOP)
+									block_world[1] += 0.5;
+								else if (face == FACE_BOT)
+									block_world[1] -= 0.5;
+								t_block *next_to = get_block(&chunk_info, block_world);
+
+								if (next_to)
+								{
+									LG_INFO("That has block");
+									next_to->type = BLOCK_STONE;
+								}
+							}
 							chunks[nth_chunk].needs_to_update = 1;
 						}
 					}

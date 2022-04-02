@@ -343,11 +343,12 @@ void		new_chunk(t_chunk *chunk, t_chunk_info *info, int nth);
 int			chunk_gen(t_chunk *chunk);
 void		update_chunk(t_chunk *chunk, int *coord);
 void		update_chunk_visible_blocks(t_chunk *chunk);
-float		*player_in_chunk(float *res, float *player_coord, t_chunk_info *info);
 void		chunk_aabb_update(t_chunk *chunk);
 void		show_chunk_borders(t_chunk *chunk, t_camera *camera, float *col);
 void		render_aabb(t_aabb *a, t_camera *camera, float *col);
 
+float		*get_chunk_pos_from_world_pos(float *res, float *world_coords, t_chunk_info *info);
+float		*block_world_pos(float *res, float *chunk_world_pos, int *block_local_pos);
 t_chunk		*get_chunk(t_chunk_info *info, int *pos);
 t_chunk		*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, int *dir);
 int			*block_world_to_local_pos(int *res, float *world);
@@ -364,8 +365,8 @@ void		add_to_chunk_mesh(t_chunk *chunk, int *coord, float *face_vertices, int te
 void		update_chunk_mesh(t_chunk *chunk);
 void		render_chunk_mesh(t_chunk *chunk, t_camera *camera, t_shader *shader);
 int			chunk_mesh_collision(float *orig, float *dir, t_chunk *chunk, float *intersect_point);
-t_block		*get_block_from_chunk_mesh(t_chunk *chunk, float *point, int *block_pos, int *face);
-void		render_block_outline(int *pos, float *color, float *view, float *projection);
+t_block		*get_block_from_chunk_mesh(t_chunk *chunk, float *point, float *block_pos, int *face);
+void		render_block_outline(float *pos, float *color, float *view, float *projection);
 
 ///////////////////
 //	NOISE

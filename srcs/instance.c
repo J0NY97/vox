@@ -112,11 +112,15 @@ int	chunk_gen(t_chunk *chunk)
 	return (i);
 }
 
-float	*player_in_chunk(float *res, float *player_coord, t_chunk_info *info)
+/*
+ * Give any world position to 'world_coords' and this calculates the 
+ *	chunk coordinate that you're in;
+*/
+float	*get_chunk_pos_from_world_pos(float *res, float *world_coords, t_chunk_info *info)
 {
-	res[0] = floor(player_coord[0] / info->chunk_size[0]);
-	res[1] = floor(player_coord[1] / info->chunk_size[1]);
-	res[2] = floor(player_coord[2] / info->chunk_size[2]);
+	res[0] = floor(world_coords[0] / info->chunk_size[0]);
+	res[1] = floor(world_coords[1] / info->chunk_size[1]);
+	res[2] = floor(world_coords[2] / info->chunk_size[2]);
 	return (res);
 }
 
@@ -197,6 +201,20 @@ int	*block_world_to_local_pos(int *res, float *world)
 }
 
 /*
+ * Saves answer in 'res';
+ * And returns it;
+*/
+float *block_world_pos(float *res, float *chunk_world_pos, int *block_local_pos)
+{
+	float	scale = 0.5; // t_chunk_info->block_scale;
+
+	res[0] = chunk_world_pos[0] + (block_local_pos[0] * scale);
+	res[1] = chunk_world_pos[0] + (block_local_pos[1] * scale);
+	res[2] = chunk_world_pos[0] + (block_local_pos[2] * scale);
+	return (res);
+}
+
+/*
  * From 'index' in 'chunk->blocks' get the x,y,z pos in the chunk coordinates;
  * 	'max' is the max width, breadth and height of the chunk;
 */
@@ -215,7 +233,18 @@ int	*get_block_local_pos_from_index(int *res, int *max, int index)
 */
 t_block	*get_block(t_chunk_info *info, float *coords)
 {
-	
+	float	chunk_pos[3];
+	t_chunk	*chunk;
+
+	get_chunk_pos_from_world_pos(chunk_pos, coords, info);
+	chunk = get_chunk(info, (int []){chunk_pos[0], chunk_pos[1], chunk_pos[2]});
+	if (chunk)
+	{
+		int	local_pos[3];
+		block_world_to_local_pos(local_pos, coords);
+		int index = get_block_index(info, local_pos[0], local_pos[1], local_pos[2]);
+		return (&chunk->blocks[index]);
+	}
 	return (NULL);
 }
 
@@ -972,11 +1001,12 @@ int	point_in_triangle(float *p, float *v1, float *v2, float *v3)
 }
 
 /*
- * If block found : we save the position of the block in 'block_pos' and
+ * If block found : we save the position of the block in 'block_pos'
+ *	(which is the world position of the block) and
  *	the face, of the block the point belongs to, in 'face' and
  *	return the pointer of the block;
 */
-t_block	*get_block_from_chunk_mesh(t_chunk *chunk, float *point, int *block_pos, int *face)
+t_block	*get_block_from_chunk_mesh(t_chunk *chunk, float *point, float *block_pos, int *face)
 {
 	float	p1[VEC3_SIZE];
 	float	p2[VEC3_SIZE];
@@ -988,11 +1018,12 @@ t_block	*get_block_from_chunk_mesh(t_chunk *chunk, float *point, int *block_pos,
 		if (g_block_data[chunk->blocks[i].type + 1].solid == 0)
 			continue ;
 
-		int	pos[3];	
-		get_block_local_pos_from_index(pos, (int []){16, 16, 16}, i);
-		pos[0] += chunk->world_coordinate[0];
-		pos[1] += chunk->world_coordinate[1];
-		pos[2] += chunk->world_coordinate[2];
+		int	l_pos[3];
+		float	pos[3];
+		get_block_local_pos_from_index(l_pos, (int []){16, 16, 16}, i);
+		pos[0] = l_pos[0] + chunk->world_coordinate[0];
+		pos[1] = l_pos[1] + chunk->world_coordinate[1];
+		pos[2] = l_pos[2] + chunk->world_coordinate[2];
 
 		for (int f = 0; f < FACE_AMOUNT; f++)
 		{
@@ -1113,7 +1144,7 @@ int	chunk_mesh_collision(float *orig, float *dir, t_chunk *chunk, float *interse
 	return (chunk_collision);
 }
 
-void	render_block_outline(int *pos, float *color, float *view, float *projection)
+void	render_block_outline(float *pos, float *color, float *view, float *projection)
 {
 	// Front
 	float	p1[3]; // top left
