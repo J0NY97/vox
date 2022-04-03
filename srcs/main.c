@@ -166,6 +166,11 @@ int	main(void)
 
 		int	regen_chunks = 1;
 
+		t_player_info	player_info;
+
+		player_info.reach = 5;
+		player_info.equipped_block = BLOCK_STONE;
+
 		t_chunk_info	chunk_info;
 
 		chunk_info.render_distance = 20;
@@ -343,6 +348,14 @@ int	main(void)
 			// TESTING ///
 		}
 
+// Select equipped block;
+		if (keys[GLFW_KEY_1].state == GLFW_PRESS)
+			player_info.equipped_block = BLOCK_DIRT;
+		if (keys[GLFW_KEY_2].state == GLFW_PRESS)
+			player_info.equipped_block = BLOCK_STONE;
+		if (keys[GLFW_KEY_3].state == GLFW_PRESS)
+			player_info.equipped_block = BLOCK_SAND;
+
 		update_fps(&fps);
 		player_events(&player, keys, sp.win);
 		player_movement(&player, sp.win, fps);
@@ -451,9 +464,8 @@ int	main(void)
 					float	block_pos[3];
 					int		face = -1; // -1 is no face;
 					int		collision_result = 0; // will be the amount of collisions that has happened;
-					float	reach = 5.0f;
 					show_chunk_borders(&chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
-					collision_result = chunk_mesh_collision(player.camera.pos, player.camera.front, &chunks[nth_chunk], reach, intersect_point);
+					collision_result = chunk_mesh_collision(player.camera.pos, player.camera.front, &chunks[nth_chunk], player_info.reach, intersect_point);
 						/*
 					if (player.moving)
 						collision_result = chunk_mesh_collision(player.camera.pos, player.velocity, &chunks[nth_chunk], intersect_point);
@@ -489,21 +501,20 @@ int	main(void)
 								float	block_world[3];
 								vec3_assign(block_world, block_pos);
 								if (face == FACE_FRONT)
-									block_world[2] += 1;
+									block_world[2] += 1.0f;
 								else if (face == FACE_BACK)
-									block_world[2] -= 1;
+									block_world[2] -= 1.0f;
 								else if (face == FACE_LEFT)
-									block_world[0] -= 1;
+									block_world[0] -= 1.0f;
 								else if (face == FACE_RIGHT)
-									block_world[0] += 1;
+									block_world[0] += 1.0f;
 								else if (face == FACE_TOP)
-									block_world[1] += 1;
+									block_world[1] += 1.0f;
 								else if (face == FACE_BOT)
-									block_world[1] -= 1;
+									block_world[1] -= 1.0f;
 								t_block *next_to = get_block(&chunk_info, block_world);
-
 								if (next_to)
-									next_to->type = BLOCK_STONE;
+									next_to->type = player_info.equipped_block;
 							}
 							chunks[nth_chunk].needs_to_update = 1;
 						}

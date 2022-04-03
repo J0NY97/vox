@@ -241,6 +241,12 @@ void				render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shad
 // ENTITY INSTANCED
 /////////////////////
 
+typedef struct s_player_info
+{
+	float	reach; // how far away player can reach from player position;
+	int		equipped_block; // one from 'e_block_type';
+}	t_player_info;
+
 static const int g_neighbors[6][3] = {
 	{-1, 0, 0},
 	{1, 0, 0},
