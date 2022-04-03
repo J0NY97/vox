@@ -364,7 +364,7 @@ void		init_chunk_mesh(t_chunk_mesh *mesh);
 void		add_to_chunk_mesh(t_chunk *chunk, int *coord, float *face_vertices, int texture_id);
 void		update_chunk_mesh(t_chunk *chunk);
 void		render_chunk_mesh(t_chunk *chunk, t_camera *camera, t_shader *shader);
-int			chunk_mesh_collision(float *orig, float *dir, t_chunk *chunk, float *intersect_point);
+int			chunk_mesh_collision(float *orig, float *dir, t_chunk *chunk, float reach, float intersect_point[16][3]);
 t_block		*get_block_from_chunk_mesh(t_chunk *chunk, float *point, float *block_pos, int *face);
 void		render_block_outline(float *pos, float *color, float *view, float *projection);
 

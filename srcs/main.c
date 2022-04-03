@@ -445,24 +445,40 @@ int	main(void)
 				if (chunk_info.chunk_collision_enabled &&
 					vec3_dist(player_chunk, (float []){chunks[nth_chunk].coordinate[0], chunks[nth_chunk].coordinate[1], chunks[nth_chunk].coordinate[2]}) < 2)
 				{
-					float	intersect_point[3];
+					float	intersect_point[16][3];
+					float	closest_point[3];
+					float	closest_dist;
 					float	block_pos[3];
 					int		face = -1; // -1 is no face;
-					int		collision_result = 0;
+					int		collision_result = 0; // will be the amount of collisions that has happened;
+					float	reach = 5.0f;
 					show_chunk_borders(&chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
-					collision_result = chunk_mesh_collision(player.camera.pos, player.camera.front, &chunks[nth_chunk], intersect_point);
+					collision_result = chunk_mesh_collision(player.camera.pos, player.camera.front, &chunks[nth_chunk], reach, intersect_point);
 						/*
 					if (player.moving)
 						collision_result = chunk_mesh_collision(player.camera.pos, player.velocity, &chunks[nth_chunk], intersect_point);
 						*/
-					if (collision_result)
+					if (collision_result > 0)
 					{
+						// Save the closest point, of a maximum 16 points
+						//	gotten from chunk_mesh_collision, in the closest_point var;
+						closest_dist = 999.999f;
+						for (int colli = 0; colli < collision_result; ++colli)
+						{
+							float distancione = vec3_dist(player.camera.pos, intersect_point[colli]);
+							if (distancione < closest_dist)
+							{
+								closest_dist = distancione;
+								vec3_assign(closest_point, intersect_point[colli]);
+							}
+						}
+		
 						t_block *hovered_block = NULL;
 						int		clicked = 0;
 						if (glfwGetMouseButton(sp.win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ||
 							glfwGetMouseButton(sp.win, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
 							clicked = 1;
-						hovered_block = get_block_from_chunk_mesh(&chunks[nth_chunk], intersect_point, block_pos, &face);
+						hovered_block = get_block_from_chunk_mesh(&chunks[nth_chunk], closest_point, block_pos, &face);
 						render_block_outline(block_pos, (float []){0, 0, 0}, player.camera.view, player.camera.projection);
 						if (hovered_block && clicked)
 						{
@@ -481,9 +497,9 @@ int	main(void)
 								else if (face == FACE_RIGHT)
 									block_world[0] += 1;
 								else if (face == FACE_TOP)
-									block_world[1] -= 1;
-								else if (face == FACE_BOT)
 									block_world[1] += 1;
+								else if (face == FACE_BOT)
+									block_world[1] -= 1;
 								t_block *next_to = get_block(&chunk_info, block_world);
 
 								if (next_to)
@@ -494,6 +510,8 @@ int	main(void)
 					}
 				}
 			}
+
+			// Go in here if player in chunk;
 			if ((int)player_chunk[0] == chunks[nth_chunk].coordinate[0] &&
 				(int)player_chunk[1] == chunks[nth_chunk].coordinate[1] &&
 				(int)player_chunk[2] == chunks[nth_chunk].coordinate[2])

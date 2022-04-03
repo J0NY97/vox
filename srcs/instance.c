@@ -1071,13 +1071,13 @@ t_block	*get_block_from_chunk_mesh(t_chunk *chunk, float *point, float *block_po
 }
 
 /*
- * Returns if collision happens;
- * Result of intersection point is stored in 'intersect_point';
+ * Returns amount of collisions;
+ * Result of intersection points are stored in 'intersect_point';
  * 
  * TODO: This should probably returns either an array of points being hit,
  * 	or just the closest one....?
 */
-int	chunk_mesh_collision(float *orig, float *dir, t_chunk *chunk, float *intersect_point)
+int	chunk_mesh_collision(float *orig, float *dir, t_chunk *chunk, float reach, float intersect_point[16][3])
 {
 	float			*vertices;
 	unsigned int	*indices;
@@ -1085,12 +1085,11 @@ int	chunk_mesh_collision(float *orig, float *dir, t_chunk *chunk, float *interse
 	float			p2[3];
 	float			p3[3];
 	float			norm_dir[3];
+	int				collisions = 0;
 
 	vec3_normalize(norm_dir, dir);
 	vertices = chunk->mesh.vertices;
 	indices = chunk->mesh.indices;
-
-	int	chunk_collision = 0;
 	for (int i = 0; i < chunk->mesh.indices_amount / 3; i++)
 	{
 		int k = i * 3;
@@ -1112,36 +1111,11 @@ int	chunk_mesh_collision(float *orig, float *dir, t_chunk *chunk, float *interse
 		vec3_add(p1, p1, chunk->world_coordinate);
 		vec3_add(p2, p2, chunk->world_coordinate);
 		vec3_add(p3, p3, chunk->world_coordinate);
-		if (ray_triangle_intersect(orig, dir, p1, p2, p3, intersect_point))
-		{
-			chunk_collision = 1;
-			/*
-			render_3d_line(p1, p2, (float []){0, 1, 0}, player->camera.view, player->camera.projection);
-			render_3d_line(p1, p3, (float []){0, 1, 0}, player->camera.view, player->camera.projection);
-			render_3d_line(p3, p2, (float []){0, 1, 0}, player->camera.view, player->camera.projection);
-			*/
-		}
-		else
-		{
-			/*
-			render_3d_line(p1, p2, (float []){1, 0, 1}, player->camera.view, player->camera.projection);
-			render_3d_line(p1, p3, (float []){1, 0, 1}, player->camera.view, player->camera.projection);
-			render_3d_line(p3, p2, (float []){1, 0, 1}, player->camera.view, player->camera.projection);
-			*/
-		}
-
+		if (ray_triangle_intersect(orig, dir, p1, p2, p3, intersect_point[collisions]))
+			if (vec3_dist(orig, intersect_point[collisions]) <= reach)
+				collisions += 1;
 	}
-	/*
-	if (chunk_collision)
-	{
-		LG_INFO("Intersection time cmon!");
-		vec3_string("Chunk At : ", chunk->world_coordinate);
-		vec3_string("Player At : ", player->camera.pos);
-		vec3_string("player.front : ", player->camera.front);
-		vec3_string("player.velocity : ", player->velocity);
-	}
-	*/
-	return (chunk_collision);
+	return (collisions);
 }
 
 void	render_block_outline(float *pos, float *color, float *view, float *projection)
