@@ -70,6 +70,7 @@ int	main(void)
 	t_scene	scene;
 	create_scene(&scene);
 	t_key	keys[GLFW_KEY_LAST];
+	t_key	mouse[GLFW_MOUSE_BUTTON_LAST];
 	t_fps	fps;
 	new_fps(&fps);
 
@@ -247,11 +248,11 @@ int	main(void)
 			glfwSetWindowTitle(sp.win, fps_str);
 		}
 
-		update_all_keys(keys, sp.win);
+		update_all_keys(keys, mouse, sp.win);
 		glfwPollEvents();
-		if (glfwGetKey(sp.win, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		if (keys[GLFW_KEY_ESCAPE].state == BUTTON_PRESS)
 			glfwSetWindowShouldClose(sp.win, GLFW_TRUE);
-		if (keys[GLFW_KEY_X].state == GLFW_PRESS)
+		if (keys[GLFW_KEY_X].state == BUTTON_PRESS)
 		{
 			sp.pilpalpol = (sp.pilpalpol + 1) % 3;
 			if (sp.pilpalpol == 0)
@@ -266,52 +267,52 @@ int	main(void)
 		float		rot_amount_delta = rot_amount * 10.0f * fps.delta_time;
 		t_entity	*selected_entity = get_scene_entity(&scene, display_index);
 
-		if (keys[GLFW_KEY_KP_ENTER].state == GLFW_PRESS)
+		if (keys[GLFW_KEY_KP_ENTER].state == BUTTON_PRESS)
 			rot_amount *= -1;
 
-		if (keys[GLFW_KEY_KP_1].state == GLFW_PRESS)
+		if (keys[GLFW_KEY_KP_1].state == BUTTON_PRESS)
 			selected_entity->rot_x_angle += rot_amount;
-		if (keys[GLFW_KEY_KP_2].state == GLFW_PRESS)
+		if (keys[GLFW_KEY_KP_2].state == BUTTON_PRESS)
 			selected_entity->rot_y_angle += rot_amount;
-		if (keys[GLFW_KEY_KP_3].state == GLFW_PRESS)
+		if (keys[GLFW_KEY_KP_3].state == BUTTON_PRESS)
 			selected_entity->rot_z_angle += rot_amount;
 
-		if (keys[GLFW_KEY_KP_4].state == GLFW_PRESS)
+		if (keys[GLFW_KEY_KP_4].state == BUTTON_PRESS)
 			toggle_rot_x = toggle_rot_x != 1;
 		if (toggle_rot_x)
 			selected_entity->rot_x_angle += rot_amount_delta;
 
-		if (keys[GLFW_KEY_KP_5].state == GLFW_PRESS)
+		if (keys[GLFW_KEY_KP_5].state == BUTTON_PRESS)
 			toggle_rot_y = toggle_rot_y != 1;
 		if (toggle_rot_y)
 			selected_entity->rot_y_angle += rot_amount_delta;
 
-		if (keys[GLFW_KEY_KP_6].state == GLFW_PRESS)
+		if (keys[GLFW_KEY_KP_6].state == BUTTON_PRESS)
 			toggle_rot_z = toggle_rot_z != 1;
 		if (toggle_rot_z)
 			selected_entity->rot_z_angle += rot_amount_delta;
 		
-		if (keys[GLFW_KEY_N].state == GLFW_PRESS)
+		if (keys[GLFW_KEY_N].state == BUTTON_PRESS)
 			selected_entity->show_normal_map = selected_entity->show_normal_map != 1;
 
-		if (keys[GLFW_KEY_P].state == GLFW_PRESS)
+		if (keys[GLFW_KEY_P].state == BUTTON_PRESS)
 		{
 			player_print(&player);
 //			entity_print(selected_entity);
 		}
 
-		if (keys[GLFW_KEY_5].state == GLFW_PRESS)
+		if (keys[GLFW_KEY_5].state == BUTTON_PRESS)
 			vec3_new(player.camera.pos, 0, 200, 0);
-		if (keys[GLFW_KEY_LEFT].state == GLFW_PRESS)
+		if (keys[GLFW_KEY_LEFT].state == BUTTON_PRESS)
 			vec3_add(player.camera.pos, player.camera.pos, (float []){-10, 0, 0});
-		if (keys[GLFW_KEY_RIGHT].state == GLFW_PRESS)
+		if (keys[GLFW_KEY_RIGHT].state == BUTTON_PRESS)
 			vec3_add(player.camera.pos, player.camera.pos, (float []){10, 0, 0});
-		if (keys[GLFW_KEY_UP].state == GLFW_PRESS)
+		if (keys[GLFW_KEY_UP].state == BUTTON_PRESS)
 			vec3_add(player.camera.pos, player.camera.pos, (float []){0, -10, 0});
-		if (keys[GLFW_KEY_DOWN].state == GLFW_PRESS)
+		if (keys[GLFW_KEY_DOWN].state == BUTTON_PRESS)
 			vec3_add(player.camera.pos, player.camera.pos, (float []){0, 10, 0});
 
-		if (keys[GLFW_KEY_C].state == GLFW_PRESS)
+		if (keys[GLFW_KEY_C].state == BUTTON_PRESS)
 		{
 			chunk_info.chunk_collision_enabled = chunk_info.chunk_collision_enabled != 1;
 			if (chunk_info.chunk_collision_enabled)
@@ -321,7 +322,7 @@ int	main(void)
 
 		}
 
-		if (keys[GLFW_KEY_G].state == GLFW_PRESS)
+		if (keys[GLFW_KEY_G].state == BUTTON_PRESS)
 		{
 			regen_chunks = regen_chunks != 1;
 			if (regen_chunks)
@@ -349,11 +350,11 @@ int	main(void)
 		}
 
 // Select equipped block;
-		if (keys[GLFW_KEY_1].state == GLFW_PRESS)
+		if (keys[GLFW_KEY_1].state == BUTTON_PRESS)
 			player_info.equipped_block = BLOCK_DIRT;
-		if (keys[GLFW_KEY_2].state == GLFW_PRESS)
+		if (keys[GLFW_KEY_2].state == BUTTON_PRESS)
 			player_info.equipped_block = BLOCK_STONE;
-		if (keys[GLFW_KEY_3].state == GLFW_PRESS)
+		if (keys[GLFW_KEY_3].state == BUTTON_PRESS)
 			player_info.equipped_block = BLOCK_SAND;
 
 		update_fps(&fps);
@@ -474,7 +475,7 @@ int	main(void)
 					{
 						// Save the closest point, of a maximum 16 points
 						//	gotten from chunk_mesh_collision, in the closest_point var;
-						closest_dist = 999.999f;
+						closest_dist = INFINITY;
 						for (int colli = 0; colli < collision_result; ++colli)
 						{
 							float distancione = vec3_dist(player.camera.pos, intersect_point[colli]);
@@ -487,16 +488,16 @@ int	main(void)
 		
 						t_block *hovered_block = NULL;
 						int		clicked = 0;
-						if (glfwGetMouseButton(sp.win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS ||
-							glfwGetMouseButton(sp.win, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+						if (mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS ||
+							mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS)
 							clicked = 1;
 						hovered_block = get_block_from_chunk_mesh(&chunks[nth_chunk], closest_point, block_pos, &face);
 						render_block_outline(block_pos, (float []){0, 0, 0}, player.camera.view, player.camera.projection);
 						if (hovered_block && clicked)
 						{
-							if (glfwGetMouseButton(sp.win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+							if (mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS)
 								hovered_block->type = BLOCK_AIR;
-							else if (glfwGetMouseButton(sp.win, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+							else if (mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS)
 							{
 								float	block_world[3];
 								vec3_assign(block_world, block_pos);
@@ -512,9 +513,19 @@ int	main(void)
 									block_world[1] += 1.0f;
 								else if (face == FACE_BOT)
 									block_world[1] -= 1.0f;
-								t_block *next_to = get_block(&chunk_info, block_world);
-								if (next_to)
-									next_to->type = player_info.equipped_block;
+
+								float	chunk_pos[3];
+								int		local_pos[3];
+								int		index;
+								get_chunk_pos_from_world_pos(chunk_pos, block_world, &chunk_info);
+								t_chunk *next_chunk = get_chunk(&chunk_info, (int []){chunk_pos[0], chunk_pos[1], chunk_pos[2]});
+								if (next_chunk)
+								{
+									block_world_to_local_pos(local_pos, block_world);
+									index = get_block_index(&chunk_info, local_pos[0], local_pos[1], local_pos[2]);
+									next_chunk->blocks[index].type = player_info.equipped_block;
+									next_chunk->needs_to_update = 1;
+								}
 							}
 							chunks[nth_chunk].needs_to_update = 1;
 						}

@@ -360,6 +360,7 @@ t_chunk		*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, int *dir);
 int			*block_world_to_local_pos(int *res, float *world);
 int			*get_block_local_pos_from_index(int *res, int *max, int index);
 t_block		*get_block(t_chunk_info *info, float *coords);
+int			get_block_index(t_chunk_info *info, int x, int y, int z);
 
 int			get_chunk_hash_key(int *coords);
 
@@ -433,12 +434,20 @@ void		update_fps(t_fps *fps);
 //	KEYS
 ///////////////////
 
+enum e_mouse_button_state
+{
+	BUTTON_PRESS, // the framei t was pressed;
+	BUTTON_HOLD, // if held for more than a frame;
+	BUTTON_RELEASE, // the frame it was released;
+	BUTTON_NONE // if not one of the above (aka not pressed?);
+};
+
 struct	s_key
 {
 	int		state;
 };
 
-void		update_all_keys(t_key *keys, GLFWwindow *win);
+void		update_all_keys(t_key *keys, t_key *mouse, GLFWwindow *win);
 
 ///////////////////
 //	SCENE

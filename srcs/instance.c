@@ -251,7 +251,7 @@ t_block	*get_block(t_chunk_info *info, float *coords)
 /*
  * For each block in chunk;
  *	Go through each block in chunk;
- *		check if not touching air blocks;
+ *		check if not touching solid block;
  *	if touching;
  *		add to render array;
  *
@@ -271,6 +271,7 @@ int	get_blocks_visible(t_chunk *chunk)
 	t_chunk	*adj_chunk = NULL;
 	t_block	*tmp_block = NULL;
 
+	// Get all neighbors of current chunk;
 	t_chunk *neighbors[6];
 	for (int i = 0; i < 6; i++)
 		neighbors[i] = get_adjacent_chunk(chunk, chunk->info->chunks, (int *)g_neighbors[i]);
@@ -288,8 +289,6 @@ int	get_blocks_visible(t_chunk *chunk)
 		int y = pos[1];
 		int z = pos[2];
 
-	if (1)
-	{
 		// left
 		tmp_block = NULL;
 		if (x - 1 >= 0)
@@ -397,7 +396,6 @@ int	get_blocks_visible(t_chunk *chunk)
 			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_back_face, g_block_data[blocks[i].type + 1].back_texture);
 			a++;
 		}
-	}
 		if (a)
 			++blocks_visible;
 	}
@@ -780,7 +778,6 @@ void	update_chunk_visible_blocks(t_chunk *chunk)
 
 	chunk->blocks_visible_amount_prev = chunk->blocks_visible_amount;
 
-	// TODO: only update if it has all its neighbors;
 	chunk->blocks_visible_amount = get_blocks_visible(chunk);
 }
 

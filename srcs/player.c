@@ -15,7 +15,7 @@ void	new_player(t_player *player)
 
 void	player_events(t_player *player, t_key *keys, GLFWwindow *win)
 {
-	if (keys[GLFW_KEY_E].state == 1)
+	if (keys[GLFW_KEY_E].state == BUTTON_PRESS)
 	{
 		player->enabled_mouse = player->enabled_mouse == 0;
 		glfwSetInputMode(win, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
