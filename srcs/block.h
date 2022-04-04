@@ -5,10 +5,12 @@ enum e_block_type
 {
 	BLOCK_AIR = -1,
 	BLOCK_DIRT = 0,
-	BLOCK_STONE = 1,
-	BLOCK_BEDROCK = 2,
-	BLOCK_WATER = 3,
-	BLOCK_SAND = 4,
+	BLOCK_STONE,
+	BLOCK_BEDROCK,
+	BLOCK_WATER,
+	BLOCK_SAND,
+	BLOCK_OAK_LOG,
+	BLOCK_OAK_PLANK,
 	BLOCK_TYPE_AMOUNT
 };
 
@@ -49,6 +51,14 @@ static const t_block_data g_block_data[] = {
 	{
 		BLOCK_SAND, 1,
 		211, 211, 211, 211, 211, 211 
+	},
+	{
+		BLOCK_OAK_LOG, 1,
+		27, 27, 27, 27, 28, 28 
+	},
+	{
+		BLOCK_OAK_PLANK, 1,
+		280, 280, 280, 280, 280, 280 
 	}
 };
 

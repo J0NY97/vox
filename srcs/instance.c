@@ -524,7 +524,7 @@ void	regenerate_chunks_v32(t_chunk *chunks, t_chunk_info *info, float *player_ch
 	}
 }
 
-void	regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3)
+void	regenerate_chunks(t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3)
 {
 	int	reload_these_chunks[info->chunks_loaded];
 	int	start_coord[3];
@@ -541,7 +541,7 @@ void	regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *pla
 	//  check if any of the loaded chunks have those coordinates, if not
 	//	we take one of the chunks that are not going to be loaded next time
 	// 	and update the new chunk into that memory;
-	int				max_threads = 64; // minimum amount of chunks on height;
+	int				max_threads = 16; // minimum amount of chunks on height;
 	pthread_t		threads[max_threads];
 	int				nth_thread = 0;
 	int				nth_chunk = 0;
@@ -602,11 +602,6 @@ void	regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *pla
 			LG_ERROR("Couldnt join thread. -2-");
 		j++;
 	}
-
-	res[0] = reload_amount;
-	res[1] = nth_chunk;
-
-//	ft_printf("One chunk timer : %f\n", ft_timer_end());
 }
 
 void	regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3, t_thread_manager *tm)

@@ -301,7 +301,7 @@ int	main(void)
 //			entity_print(selected_entity);
 		}
 
-		if (keys[GLFW_KEY_5].state == BUTTON_PRESS)
+		if (keys[GLFW_KEY_R].state == BUTTON_PRESS)
 			vec3_new(player.camera.pos, 0, 200, 0);
 		if (keys[GLFW_KEY_LEFT].state == BUTTON_PRESS)
 			vec3_add(player.camera.pos, player.camera.pos, (float []){-10, 0, 0});
@@ -356,6 +356,10 @@ int	main(void)
 			player_info.equipped_block = BLOCK_STONE;
 		if (keys[GLFW_KEY_3].state == BUTTON_PRESS)
 			player_info.equipped_block = BLOCK_SAND;
+		if (keys[GLFW_KEY_4].state == BUTTON_PRESS)
+			player_info.equipped_block = BLOCK_OAK_LOG;
+		if (keys[GLFW_KEY_5].state == BUTTON_PRESS)
+			player_info.equipped_block = BLOCK_OAK_PLANK;
 
 		update_fps(&fps);
 		player_events(&player, keys, sp.win);
@@ -413,7 +417,7 @@ int	main(void)
 
 		if (regen_chunks)
 		{
-		//	regenerate_chunks(chunk_reloading, chunks, &chunk_info, player_chunk);	
+		//	regenerate_chunks(chunks, &chunk_info, player_chunk);	
 			regenerate_chunks_v32(chunks, &chunk_info, player_chunk);	
 		}
 

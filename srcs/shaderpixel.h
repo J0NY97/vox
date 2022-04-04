@@ -364,7 +364,7 @@ int			get_block_index(t_chunk_info *info, int x, int y, int z);
 
 int			get_chunk_hash_key(int *coords);
 
-void		regenerate_chunks(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2);
+void		regenerate_chunks(t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2);
 void		regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3, t_thread_manager *tm);
 
 void		init_chunk_mesh(t_chunk_mesh *mesh);
