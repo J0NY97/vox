@@ -469,20 +469,38 @@ int	main(void)
 
 					// Place Blocking and Removing;
 					collision_result = chunk_mesh_collision(player.camera.pos, player.camera.front, &chunks[nth_chunk], player_info.reach, intersect_point);
+				/**/
+					for (int i = 0; i < collision_result; i++)
+					{
+						t_block *tmp_block = get_block_from_chunk_mesh(&chunks[nth_chunk], intersect_point[i], block_pos, &face);
+						render_block_outline(block_pos, (float []){1, 0, 1}, player.camera.view, player.camera.projection);
+					}
+					if (collision_result != 0)
+					{
+						ft_printf("Collisions : %d\n", collision_result);
+						vec3_string("intersection point :", intersect_point[0]);
+						vec3_string("block pos :", block_pos);
+					}
+				/**/
+
 					if (collision_result > 0)
 					{
 						// Save the closest point, of a maximum 16 points
 						//	gotten from chunk_mesh_collision, in the closest_point var;
+						float	distancione = -1;
 						closest_dist = INFINITY;
 						for (int colli = 0; colli < collision_result; ++colli)
 						{
-							float distancione = vec3_dist(player.camera.pos, intersect_point[colli]);
+							distancione = vec3_dist(player.camera.pos, intersect_point[colli]);
 							if (distancione < closest_dist)
 							{
 								closest_dist = distancione;
 								vec3_assign(closest_point, intersect_point[colli]);
+								ft_printf("We have found closer point!\n");
 							}
 						}
+						vec3_string("closest_point :", closest_point);
+						ft_printf("Distancione : %f\n", distancione);
 		
 						t_block *hovered_block = NULL;
 						int		clicked = 0;
@@ -491,8 +509,11 @@ int	main(void)
 							clicked = 1;
 						hovered_block = get_block_from_chunk_mesh(&chunks[nth_chunk], closest_point, block_pos, &face);
 						if (hovered_block)
+							ft_printf("We have found block from mesh.\n");
+						if (hovered_block)
 						{
 							render_block_outline(block_pos, (float []){0, 0, 0}, player.camera.view, player.camera.projection);
+							vec3_string("hovered_block :", hovered_block);
 						/**/
 							float p1[3];
 							float p2[3];

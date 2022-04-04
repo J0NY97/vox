@@ -71,7 +71,7 @@ int	ray_triangle_intersect(float *orig, float *dir, float *v0, float *v1, float 
 	vec3_sub(vp0, P, v0);
 
 	vec3_cross(C, edge0, vp0);
-	if (vec3_dot(N, C) < 0)
+	if (vec3_dot(N, C) < 0.001f)
 		return (0); // P is on the right side
 
 	// edge 1
@@ -81,7 +81,7 @@ int	ray_triangle_intersect(float *orig, float *dir, float *v0, float *v1, float 
 	float	vp1[3];
 	vec3_sub(vp1, P, v1);
 	vec3_cross(C, edge1, vp1);
-	if (vec3_dot(N, C) < 0)
+	if (vec3_dot(N, C) < 0.001f)
 		return (0); // P is on the right side
 
 	// edge 2
@@ -90,7 +90,7 @@ int	ray_triangle_intersect(float *orig, float *dir, float *v0, float *v1, float 
 	float	vp2[3];
 	vec3_sub(vp2, P, v2);
 	vec3_cross(C, edge2, vp2);
-	if (vec3_dot(N, C) < 0)
+	if (vec3_dot(N, C) < 0.001f)
 		return (0); // P is on the right side;
 
 	memcpy(intersect_point, P, sizeof(float) * 3);
@@ -115,9 +115,9 @@ int	point_in_triangle(float *p, float *v1, float *v2, float *v3)
 	vec3_cross(v, t3, t1);
 	vec3_cross(w, t1, t2);
 
-	if (vec3_dot(u, v) < 0.01f)
+	if (vec3_dot(u, v) < 0.001f)
 		return (0);
-	if (vec3_dot(u, w) < 0.01f)
+	if (vec3_dot(u, w) < 0.001f)
 		return (0);
 	return (1);
 }
