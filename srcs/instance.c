@@ -90,6 +90,8 @@ int	chunk_gen(t_chunk *chunk)
 					{
 						if (block_world_y <= 67 && block_world_y >= 65)
 							chunk->blocks[i].type = BLOCK_SAND;
+						else if (block_world_y < 4)
+							chunk->blocks[i].type = BLOCK_BEDROCK;
 						else
 							chunk->blocks[i].type = BLOCK_DIRT;
 					}
@@ -292,16 +294,13 @@ int	get_blocks_visible(t_chunk *chunk)
 		// left
 		tmp_block = NULL;
 		if (x - 1 >= 0)
-		{
-			j = get_block_index(chunk->info, x - 1, y, z);
-			tmp_block = &blocks[j];
-		}
+			tmp_block = &blocks[get_block_index(chunk->info, x - 1, y, z)];
 		else
 		{
 			if (neighbors[0])
 				tmp_block = &neighbors[0]->blocks[get_block_index(chunk->info, 15, y, z)];
 		}
-		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
+		if (tmp_block && (!g_block_data[tmp_block->type + 1].solid))
 		{
 			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_faces[FACE_LEFT], g_block_data[blocks[i].type + 1].left_texture);
 			a++;
@@ -310,16 +309,13 @@ int	get_blocks_visible(t_chunk *chunk)
 		// right
 		tmp_block = NULL;
 		if (x + 1 < 16)
-		{
-			j = get_block_index(chunk->info, x + 1, y, z);
-			tmp_block = &blocks[j];
-		}
+			tmp_block = &blocks[get_block_index(chunk->info, x + 1, y, z)];
 		else
 		{
 			if (neighbors[1])
 				tmp_block = &neighbors[1]->blocks[get_block_index(chunk->info, 0, y, z)];
 		}
-		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
+		if (tmp_block && (!g_block_data[tmp_block->type + 1].solid))
 		{
 			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_faces[FACE_RIGHT], g_block_data[blocks[i].type + 1].right_texture);
 			a++;
@@ -328,16 +324,13 @@ int	get_blocks_visible(t_chunk *chunk)
 		// top
 		tmp_block = NULL;
 		if (y + 1 < 16)
-		{
-			j = get_block_index(chunk->info, x, y + 1, z);
-			tmp_block = &blocks[j];
-		}
+			tmp_block = &blocks[get_block_index(chunk->info, x, y + 1, z)];
 		else
 		{
 			if (neighbors[2])
 				tmp_block = &neighbors[2]->blocks[get_block_index(chunk->info, x, 0, z)];
 		}
-		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
+		if (tmp_block && !g_block_data[tmp_block->type + 1].solid)
 		{
 			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_faces[FACE_TOP], g_block_data[blocks[i].type + 1].top_texture);
 			a++;
@@ -346,16 +339,13 @@ int	get_blocks_visible(t_chunk *chunk)
 		// bot
 		tmp_block = NULL;
 		if (y - 1 >= 0)
-		{
-			j = get_block_index(chunk->info, x, y - 1, z);
-			tmp_block = &blocks[j];
-		}
+			tmp_block = &blocks[get_block_index(chunk->info, x, y - 1, z)];
 		else
 		{
 			if (neighbors[3])
 				tmp_block = &neighbors[3]->blocks[get_block_index(chunk->info, x, 15, z)];
 		}
-		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
+		if (tmp_block && (!g_block_data[tmp_block->type + 1].solid))
 		{
 			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_faces[FACE_BOT], g_block_data[blocks[i].type + 1].bot_texture);
 			a++;
@@ -364,16 +354,13 @@ int	get_blocks_visible(t_chunk *chunk)
 		// forward
 		tmp_block = NULL;
 		if (z + 1 < 16)
-		{
-			j = get_block_index(chunk->info, x, y, z + 1);
-			tmp_block = &blocks[j];
-		}
+			tmp_block = &blocks[get_block_index(chunk->info, x, y, z + 1)];
 		else
 		{
 			if (neighbors[4])
 				tmp_block = &neighbors[4]->blocks[get_block_index(chunk->info, x, y, 0)];
 		}
-		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
+		if (tmp_block && !g_block_data[tmp_block->type + 1].solid)
 		{
 			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_faces[FACE_FRONT], g_block_data[blocks[i].type + 1].front_texture);
 			a++;
@@ -382,16 +369,13 @@ int	get_blocks_visible(t_chunk *chunk)
 		// backward
 		tmp_block = NULL;
 		if (z - 1 >= 0)
-		{
-			j = get_block_index(chunk->info, x, y, z - 1);
-			tmp_block = &blocks[j];
-		}
+			tmp_block = &blocks[get_block_index(chunk->info, x, y, z - 1)];
 		else
 		{
 			if (neighbors[5])
 				tmp_block = &neighbors[5]->blocks[get_block_index(chunk->info, x, y, 15)];
 		}
-		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
+		if (tmp_block && !g_block_data[tmp_block->type + 1].solid)
 		{
 			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_faces[FACE_BACK], g_block_data[blocks[i].type + 1].back_texture);
 			a++;
@@ -972,31 +956,6 @@ void	add_to_chunk_mesh(t_chunk *chunk, int *coord, float *face_vertices, int tex
 	mesh->index_amount += 4;
 }
 
-int	point_in_triangle(float *p, float *v1, float *v2, float *v3)
-{
-	float	t1[VEC3_SIZE];
-	float	t2[VEC3_SIZE];
-	float	t3[VEC3_SIZE];
-
-	vec3_sub(t1, v1, p);
-	vec3_sub(t2, v2, p);
-	vec3_sub(t3, v3, p);
-
-	float	u[VEC3_SIZE];
-	float	v[VEC3_SIZE];
-	float	w[VEC3_SIZE];
-
-	vec3_cross(u, t2, t3);
-	vec3_cross(v, t3, t1);
-	vec3_cross(w, t1, t2);
-
-	if (vec3_dot(u, v) < 0.01f)
-		return (0);
-	if (vec3_dot(u, w) < 0.01f)
-		return (0);
-	return (1);
-}
-
 /*
  * If block found : we save the position of the block in 'block_pos'
  *	(which is the world position of the block) and
@@ -1108,8 +1067,11 @@ int	chunk_mesh_collision(float *orig, float *dir, t_chunk *chunk, float reach, f
 		vec3_add(p1, p1, chunk->world_coordinate);
 		vec3_add(p2, p2, chunk->world_coordinate);
 		vec3_add(p3, p3, chunk->world_coordinate);
-		if (ray_triangle_intersect(orig, dir, p1, p2, p3, intersect_point[collisions]))
-			if (vec3_dist(orig, intersect_point[collisions]) <= reach)
+		if (ray_triangle_intersect(orig, dir, p1, p2, p3, intersect_point[collisions]))/* ||
+			ray_line_intersect(orig, dir, p1, p2, intersect_point[collisions]) ||
+			ray_line_intersect(orig, dir, p1, p3, intersect_point[collisions]) ||
+			ray_line_intersect(orig, dir, p2, p3, intersect_point[collisions]))*/
+			if (vec3_dist(orig, intersect_point[collisions]) <= reach + 0.001f)
 				collisions += 1;
 	}
 	return (collisions);

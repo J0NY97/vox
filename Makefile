@@ -19,6 +19,7 @@ CFILES = \
 	ellipsoid_collision.c \
 	triangle_collision.c \
 	plane_collision.c \
+	line_collision.c \
 	crosshair.c \
 	skybox.c \
 	instance.c \

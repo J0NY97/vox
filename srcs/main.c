@@ -491,6 +491,7 @@ int	main(void)
 							clicked = 1;
 						hovered_block = get_block_from_chunk_mesh(&chunks[nth_chunk], closest_point, block_pos, &face);
 						if (hovered_block)
+						{
 							render_block_outline(block_pos, (float []){0, 0, 0}, player.camera.view, player.camera.projection);
 						/**/
 							float p1[3];
@@ -508,14 +509,19 @@ int	main(void)
 							p3[1] = (g_faces[face][7] * chunk_info.block_scale) + block_pos[1];
 							p3[2] = (g_faces[face][8] * chunk_info.block_scale) + block_pos[2];
 
+							glDisable(GL_DEPTH_TEST);
 							if (point_in_triangle(closest_point, p1, p2, p3))
 							{
-								glDisable(GL_DEPTH_TEST);
 								render_3d_line(p1, p2, (float []){0, 1, 0}, player.camera.view, player.camera.projection);
 								render_3d_line(p1, p3, (float []){0, 1, 0}, player.camera.view, player.camera.projection);
 								render_3d_line(p2, p3, (float []){0, 1, 0}, player.camera.view, player.camera.projection);
-								glEnable(GL_DEPTH_TEST);
 							}
+							if (point_on_line(closest_point, p1, p2))
+								render_3d_line(p1, p2, (float []){0, 1, 1}, player.camera.view, player.camera.projection);
+							if (point_on_line(closest_point, p1, p3))
+								render_3d_line(p1, p3, (float []){0, 1, 1}, player.camera.view, player.camera.projection);
+							if (point_on_line(closest_point, p2, p3))
+								render_3d_line(p2, p3, (float []){0, 1, 1}, player.camera.view, player.camera.projection);
 
 							p2[0] = (g_faces[face][9] * chunk_info.block_scale) + block_pos[0];
 							p2[1] = (g_faces[face][10] * chunk_info.block_scale) + block_pos[1];
@@ -523,13 +529,19 @@ int	main(void)
 
 							if (point_in_triangle(closest_point, p1, p3, p2))
 							{
-								glDisable(GL_DEPTH_TEST);
 								render_3d_line(p1, p2, (float []){0, 1, 0}, player.camera.view, player.camera.projection);
 								render_3d_line(p1, p3, (float []){0, 1, 0}, player.camera.view, player.camera.projection);
 								render_3d_line(p2, p3, (float []){0, 1, 0}, player.camera.view, player.camera.projection);
-								glEnable(GL_DEPTH_TEST);
 							}
+							if (point_on_line(closest_point, p1, p2))
+								render_3d_line(p1, p2, (float []){0, 1, 1}, player.camera.view, player.camera.projection);
+							if (point_on_line(closest_point, p1, p3))
+								render_3d_line(p1, p3, (float []){0, 1, 1}, player.camera.view, player.camera.projection);
+							if (point_on_line(closest_point, p2, p3))
+								render_3d_line(p2, p3, (float []){0, 1, 1}, player.camera.view, player.camera.projection);
+							glEnable(GL_DEPTH_TEST);
 						/**/
+						}
 						if (hovered_block && clicked)
 						{
 							if (mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS)

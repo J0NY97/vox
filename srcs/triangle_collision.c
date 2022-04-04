@@ -43,7 +43,7 @@ int	ray_triangle_intersect(float *orig, float *dir, float *v0, float *v1, float 
 
 	// check if ray and plane are parallel ?
 	float	NdotRayDirection = vec3_dot(N, dir);
-	if (fabs(NdotRayDirection) < 0.001) // almost 0
+	if (fabs(NdotRayDirection) < 0.001f) // almost 0
 		return (0); // they are parallel so they don't intersect !
 
 	// compute d parameter using equation 2
@@ -96,3 +96,29 @@ int	ray_triangle_intersect(float *orig, float *dir, float *v0, float *v1, float 
 	memcpy(intersect_point, P, sizeof(float) * 3);
 	return (1); // this ray hits the triangle
 }
+
+int	point_in_triangle(float *p, float *v1, float *v2, float *v3)
+{
+	float	t1[VEC3_SIZE];
+	float	t2[VEC3_SIZE];
+	float	t3[VEC3_SIZE];
+
+	vec3_sub(t1, v1, p);
+	vec3_sub(t2, v2, p);
+	vec3_sub(t3, v3, p);
+
+	float	u[VEC3_SIZE];
+	float	v[VEC3_SIZE];
+	float	w[VEC3_SIZE];
+
+	vec3_cross(u, t2, t3);
+	vec3_cross(v, t3, t1);
+	vec3_cross(w, t1, t2);
+
+	if (vec3_dot(u, v) < 0.01f)
+		return (0);
+	if (vec3_dot(u, w) < 0.01f)
+		return (0);
+	return (1);
+}
+

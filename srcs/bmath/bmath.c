@@ -85,6 +85,14 @@ float	*vec3_multiply_f(float *result, float *v0, float f)
 	return result;
 }
 
+float	*vec3_divide_f(float *res, float *v0, float f)
+{
+	res[0] = v0[0] / f;
+	res[1] = v0[1] / f;
+	res[2] = v0[2] / f;
+	return (res);
+}
+
 float	vec3_dist(float *v0, float *v1)
 {
 	float	a;
@@ -100,6 +108,11 @@ float	vec3_dist(float *v0, float *v1)
 float	vec3_length(float *v0)
 {
 	return sqrt(v0[0] * v0[0] + v0[1] * v0[1] + v0[2] * v0[2]);
+}
+
+float	vec3_length_squared(float *v0)
+{
+	return (v0[0] * v0[0] + v0[1] * v0[1] + v0[2] * v0[2]);
 }
 
 float	*vec3_multiply_mat3(float *res, float *v, float *m)
