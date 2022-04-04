@@ -69,14 +69,7 @@ static const float g_faces[FACE_AMOUNT][12] = {
 /* LEFT  */	{-1, 1, -1,  -1, -1, -1,  -1, -1, 1,  -1, 1, 1},
 /* RIGHT */	{1, 1, 1,  1, -1, 1,  1, -1, -1,  1, 1, -1},
 /* TOP   */	{-1, 1, -1,  -1, 1, 1,  1, 1, 1,  1, 1, -1},
-/* BOT   */	{-1, -1, -1,  -1, -1, 1,  1, -1, 1,  -1, 1, 1}
+/* BOT   */	{-1, -1, -1,  1, -1, -1,  1, -1, 1,  -1, -1, 1}
 };
-
-static const float g_front_face[] = {-1, 1, 1,  -1, -1, 1,  1, -1, 1,  1, 1, 1};
-static const float g_back_face[] = {1, 1, -1,  1, -1, -1,  -1, -1, -1,  -1, 1, -1};
-static const float g_left_face[] = {-1, 1, -1,  -1, -1, -1,  -1, -1, 1,  -1, 1, 1};
-static const float g_right_face[] = {1, 1, 1,  1, -1, 1,  1, -1, -1,  1, 1, -1};
-static const float g_top_face[] = {-1, 1, -1,  -1, 1, 1,  1, 1, 1,  1, 1, -1};
-static const float g_bot_face[] = {-1, -1, -1,  1, -1, -1,  1, -1, 1,  -1, -1, 1};
 
 #endif

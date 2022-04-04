@@ -466,11 +466,9 @@ int	main(void)
 					int		face = -1; // -1 is no face;
 					int		collision_result = 0; // will be the amount of collisions that has happened;
 					show_chunk_borders(&chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
+
+					// Place Blocking and Removing;
 					collision_result = chunk_mesh_collision(player.camera.pos, player.camera.front, &chunks[nth_chunk], player_info.reach, intersect_point);
-						/*
-					if (player.moving)
-						collision_result = chunk_mesh_collision(player.camera.pos, player.velocity, &chunks[nth_chunk], intersect_point);
-						*/
 					if (collision_result > 0)
 					{
 						// Save the closest point, of a maximum 16 points
@@ -492,7 +490,46 @@ int	main(void)
 							mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS)
 							clicked = 1;
 						hovered_block = get_block_from_chunk_mesh(&chunks[nth_chunk], closest_point, block_pos, &face);
-						render_block_outline(block_pos, (float []){0, 0, 0}, player.camera.view, player.camera.projection);
+						if (hovered_block)
+							render_block_outline(block_pos, (float []){0, 0, 0}, player.camera.view, player.camera.projection);
+						/**/
+							float p1[3];
+							float p2[3];
+							float p3[3];
+							p1[0] = (g_faces[face][0] * chunk_info.block_scale) + block_pos[0];
+							p1[1] = (g_faces[face][1] * chunk_info.block_scale) + block_pos[1];
+							p1[2] = (g_faces[face][2] * chunk_info.block_scale) + block_pos[2];
+
+							p2[0] = (g_faces[face][3] * chunk_info.block_scale) + block_pos[0];
+							p2[1] = (g_faces[face][4] * chunk_info.block_scale) + block_pos[1];
+							p2[2] = (g_faces[face][5] * chunk_info.block_scale) + block_pos[2];
+
+							p3[0] = (g_faces[face][6] * chunk_info.block_scale) + block_pos[0];
+							p3[1] = (g_faces[face][7] * chunk_info.block_scale) + block_pos[1];
+							p3[2] = (g_faces[face][8] * chunk_info.block_scale) + block_pos[2];
+
+							if (point_in_triangle(closest_point, p1, p2, p3))
+							{
+								glDisable(GL_DEPTH_TEST);
+								render_3d_line(p1, p2, (float []){0, 1, 0}, player.camera.view, player.camera.projection);
+								render_3d_line(p1, p3, (float []){0, 1, 0}, player.camera.view, player.camera.projection);
+								render_3d_line(p2, p3, (float []){0, 1, 0}, player.camera.view, player.camera.projection);
+								glEnable(GL_DEPTH_TEST);
+							}
+
+							p2[0] = (g_faces[face][9] * chunk_info.block_scale) + block_pos[0];
+							p2[1] = (g_faces[face][10] * chunk_info.block_scale) + block_pos[1];
+							p2[2] = (g_faces[face][11] * chunk_info.block_scale) + block_pos[2];
+
+							if (point_in_triangle(closest_point, p1, p3, p2))
+							{
+								glDisable(GL_DEPTH_TEST);
+								render_3d_line(p1, p2, (float []){0, 1, 0}, player.camera.view, player.camera.projection);
+								render_3d_line(p1, p3, (float []){0, 1, 0}, player.camera.view, player.camera.projection);
+								render_3d_line(p2, p3, (float []){0, 1, 0}, player.camera.view, player.camera.projection);
+								glEnable(GL_DEPTH_TEST);
+							}
+						/**/
 						if (hovered_block && clicked)
 						{
 							if (mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS)

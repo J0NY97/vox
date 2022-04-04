@@ -303,7 +303,7 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_left_face, g_block_data[blocks[i].type + 1].left_texture);
+			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_faces[FACE_LEFT], g_block_data[blocks[i].type + 1].left_texture);
 			a++;
 		}
 
@@ -321,7 +321,7 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_right_face, g_block_data[blocks[i].type + 1].right_texture);
+			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_faces[FACE_RIGHT], g_block_data[blocks[i].type + 1].right_texture);
 			a++;
 		}
 
@@ -339,7 +339,7 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_top_face, g_block_data[blocks[i].type + 1].top_texture);
+			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_faces[FACE_TOP], g_block_data[blocks[i].type + 1].top_texture);
 			a++;
 		}
 
@@ -357,7 +357,7 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_bot_face, g_block_data[blocks[i].type + 1].bot_texture);
+			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_faces[FACE_BOT], g_block_data[blocks[i].type + 1].bot_texture);
 			a++;
 		}
 
@@ -375,7 +375,7 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_front_face, g_block_data[blocks[i].type + 1].front_texture);
+			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_faces[FACE_FRONT], g_block_data[blocks[i].type + 1].front_texture);
 			a++;
 		}
 
@@ -393,7 +393,7 @@ int	get_blocks_visible(t_chunk *chunk)
 		}
 		if (tmp_block && g_block_data[tmp_block->type + 1].solid == 0)
 		{
-			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_back_face, g_block_data[blocks[i].type + 1].back_texture);
+			add_to_chunk_mesh(chunk, (int []){x, y, z}, (float *)g_faces[FACE_BACK], g_block_data[blocks[i].type + 1].back_texture);
 			a++;
 		}
 		if (a)
@@ -1015,7 +1015,7 @@ t_block	*get_block_from_chunk_mesh(t_chunk *chunk, float *point, float *block_po
 		if (g_block_data[chunk->blocks[i].type + 1].solid == 0)
 			continue ;
 
-		int	l_pos[3];
+		int		l_pos[3];
 		float	pos[3];
 		get_block_local_pos_from_index(l_pos, (int []){16, 16, 16}, i);
 		pos[0] = l_pos[0] + chunk->world_coordinate[0];
