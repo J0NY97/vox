@@ -19,6 +19,7 @@ typedef struct s_block_data
 {
 	char	type; // 'e_block_type', at some point maybe same array index in 'g_block_data';
 	char	solid; // if solid or not;
+	char	liquid; // if liquid or not; to know if we want to add to liquid mesh;
 	unsigned short	front_texture; // texture id from the texture atlas;
 	unsigned short	left_texture;
 	unsigned short	back_texture;
@@ -29,35 +30,35 @@ typedef struct s_block_data
 
 static const t_block_data g_block_data[] = {
 	{
-		BLOCK_AIR, 0,
+		BLOCK_AIR, 0, 0,
 		-1, -1, -1, -1, -1, -1
 	},
 	{
-		BLOCK_DIRT, 1,
+		BLOCK_DIRT, 1, 0,
 		132, 132, 132, 132, 135, 224 
 	},
 	{
-		BLOCK_STONE, 1,
+		BLOCK_STONE, 1, 0,
 		164, 164, 164, 164, 164, 164 
 	},
 	{
-		BLOCK_BEDROCK, 1,
+		BLOCK_BEDROCK, 1, 0,
 		6, 6, 6, 6, 6, 6 
 	},
 	{
-		BLOCK_WATER, 0,
+		BLOCK_WATER, 0, 1,
 		362, 362, 362, 362, 362, 362 
 	},
 	{
-		BLOCK_SAND, 1,
+		BLOCK_SAND, 1, 0,
 		211, 211, 211, 211, 211, 211 
 	},
 	{
-		BLOCK_OAK_LOG, 1,
+		BLOCK_OAK_LOG, 1, 0,
 		27, 27, 27, 27, 28, 28 
 	},
 	{
-		BLOCK_OAK_PLANK, 1,
+		BLOCK_OAK_PLANK, 1, 0,
 		280, 280, 280, 280, 280, 280 
 	}
 };
