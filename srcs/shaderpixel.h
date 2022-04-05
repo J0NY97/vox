@@ -333,10 +333,12 @@ struct	s_chunk
 	t_block			*blocks; //x*y*z real amount should be : 20 736
 
 	int				has_blocks; // 1/0 whether the chunk has other than air blocks;
-	int				blocks_visible_amount; // amount of blocks in the array that we want to render;
-	int				blocks_visible_amount_prev; // previous time block amount
 
 	t_chunk_mesh	mesh;
+	int				blocks_solid_amount; // previous time block amount
+
+	t_chunk_mesh	liquid_mesh;
+	int				blocks_liquid_amount; // previous time block amount
 
 	t_aabb			aabb;
 
@@ -368,9 +370,10 @@ void		regenerate_chunks(t_chunk *chunks, t_chunk_info *info, float *player_chunk
 void		regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3, t_thread_manager *tm);
 
 void		init_chunk_mesh(t_chunk_mesh *mesh);
-void		add_to_chunk_mesh(t_chunk *chunk, int *coord, float *face_vertices, int texture_id);
-void		update_chunk_mesh(t_chunk *chunk);
-void		render_chunk_mesh(t_chunk *chunk, t_camera *camera, t_shader *shader);
+void		reset_chunk_mesh(t_chunk_mesh *mesh);
+void		add_to_chunk_mesh(t_chunk_mesh *mesh, int *coord, float *face_vertices, int texture_id);
+void		update_chunk_mesh(t_chunk_mesh *chunk);
+void		render_chunk_mesh(t_chunk_mesh *mesh, float *coordinate, t_camera *camera, t_shader *shader);
 int			chunk_mesh_collision(float *orig, float *dir, t_chunk *chunk, float reach, float intersect_point[16][3]);
 t_block		*get_block_from_chunk_mesh(t_chunk *chunk, float *point, float *block_pos, int *face);
 void		render_block_outline(float *pos, float *color, float *view, float *projection);

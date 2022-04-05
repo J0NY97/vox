@@ -214,6 +214,7 @@ int	main(void)
 		{
 			new_chunk(&chunks[nth_chunk], &chunk_info, nth_chunk);
 			chunks[nth_chunk].mesh.texture = chunk_info.texture;
+			chunks[nth_chunk].liquid_mesh.texture = chunk_info.texture;
 		}
 		ft_printf("Chunks created : %d\n", nth_chunk);
 //////////////////////////////
@@ -430,7 +431,8 @@ int	main(void)
 			if (chunks[nth_chunk].needs_to_update)
 			{
 				update_chunk_visible_blocks(&chunks[nth_chunk]);
-				update_chunk_mesh(&chunks[nth_chunk]);
+				update_chunk_mesh(&chunks[nth_chunk].mesh);
+				update_chunk_mesh(&chunks[nth_chunk].liquid_mesh);
 				chunk_aabb_update(&chunks[nth_chunk]);
 				chunks[nth_chunk].needs_to_update = 0;
 
@@ -442,12 +444,13 @@ int	main(void)
 					if (neighbor)
 					{
 						update_chunk_visible_blocks(neighbor);
-						update_chunk_mesh(neighbor);
+						update_chunk_mesh(&neighbor->mesh);
+						update_chunk_mesh(&neighbor->liquid_mesh);
 						chunk_aabb_update(neighbor);
 					}
 				}
 			}
-			if (chunks[nth_chunk].blocks_visible_amount > 0)
+			if (chunks[nth_chunk].blocks_solid_amount > 0 || chunks[nth_chunk].blocks_liquid_amount > 0)
 			{
 				// Dont render chunk if the chunk is further away than the farplane of the camear;
 				// Dont render if the chunk is outside the view fustrum;
@@ -455,12 +458,16 @@ int	main(void)
 					player.camera.far_plane + chunks[nth_chunk].info->chunk_size[0] &&
 					aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum))
 				{
-					render_chunk_mesh(&chunks[nth_chunk], &player.camera, &cube_shader_v2);
+					if (chunks[nth_chunk].blocks_solid_amount > 0)
+						render_chunk_mesh(&chunks[nth_chunk].mesh, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
+					if (chunks[nth_chunk].blocks_liquid_amount > 0)
+						render_chunk_mesh(&chunks[nth_chunk].liquid_mesh, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
 					sent_to_gpu++;
 				}
 
 				// Collision Detection
 				if (chunk_info.chunk_collision_enabled &&
+					chunks[nth_chunk].blocks_solid_amount > 0 &&
 					vec3_dist(player_chunk, (float []){chunks[nth_chunk].coordinate[0], chunks[nth_chunk].coordinate[1], chunks[nth_chunk].coordinate[2]}) < 2)
 				{
 					float	intersect_point[16][3];
@@ -498,7 +505,7 @@ int	main(void)
 						if (hovered_block)
 						{
 							render_block_outline(block_pos, (float []){0, 0, 0}, player.camera.view, player.camera.projection);
-						/**/
+						/* Highlight hovered triangle as green */
 							float p1[3];
 							float p2[3];
 							float p3[3];
