@@ -307,8 +307,16 @@ void	get_blocks_visible(t_chunk *chunk)
 			// If block is water and neighbor block is water, we dont add to left;
 			if (!(g_block_data[blocks[i].type + 1].liquid && g_block_data[tmp_block->type + 1].liquid))
 			{
-				add_to_chunk_mesh(&chunk->mesh, (int []){x, y, z}, (float *)g_faces[FACE_LEFT], g_block_data[blocks[i].type + 1].left_texture);
-				++chunk->blocks_solid_amount;
+				if (g_block_data[blocks[i].type + 1].liquid)
+				{
+					add_to_chunk_mesh(&chunk->liquid_mesh, (int []){x, y, z}, (float *)g_faces[FACE_LEFT], g_block_data[blocks[i].type + 1].left_texture);
+					++chunk->blocks_liquid_amount;
+				}
+				else
+				{
+					add_to_chunk_mesh(&chunk->mesh, (int []){x, y, z}, (float *)g_faces[FACE_LEFT], g_block_data[blocks[i].type + 1].left_texture);
+					++chunk->blocks_solid_amount;
+				}
 			}
 		}
 
@@ -325,8 +333,16 @@ void	get_blocks_visible(t_chunk *chunk)
 		{
 			if (!(g_block_data[blocks[i].type + 1].liquid && g_block_data[tmp_block->type + 1].liquid))
 			{
-				add_to_chunk_mesh(&chunk->mesh, (int []){x, y, z}, (float *)g_faces[FACE_RIGHT], g_block_data[blocks[i].type + 1].right_texture);
-				++chunk->blocks_solid_amount;
+				if (g_block_data[blocks[i].type + 1].liquid)
+				{
+					add_to_chunk_mesh(&chunk->liquid_mesh, (int []){x, y, z}, (float *)g_faces[FACE_RIGHT], g_block_data[blocks[i].type + 1].right_texture);
+					++chunk->blocks_liquid_amount;
+				}
+				else
+				{
+					add_to_chunk_mesh(&chunk->mesh, (int []){x, y, z}, (float *)g_faces[FACE_RIGHT], g_block_data[blocks[i].type + 1].right_texture);
+					++chunk->blocks_solid_amount;
+				}
 			}
 		}
 
@@ -345,7 +361,7 @@ void	get_blocks_visible(t_chunk *chunk)
 			{
 				if (g_block_data[blocks[i].type + 1].liquid)
 				{
-					add_to_chunk_mesh(&chunk->liquid_mesh, (int []){x, y, z}, (float *)g_faces[FACE_TOP], g_block_data[blocks[i].type + 1].left_texture);
+					add_to_chunk_mesh(&chunk->liquid_mesh, (int []){x, y, z}, (float *)g_faces[FACE_TOP], g_block_data[blocks[i].type + 1].top_texture);
 					++chunk->blocks_liquid_amount;
 				}
 				else
@@ -369,8 +385,16 @@ void	get_blocks_visible(t_chunk *chunk)
 		{
 			if (!(g_block_data[blocks[i].type + 1].liquid && g_block_data[tmp_block->type + 1].liquid))
 			{
-				add_to_chunk_mesh(&chunk->mesh, (int []){x, y, z}, (float *)g_faces[FACE_BOT], g_block_data[blocks[i].type + 1].bot_texture);
-				++chunk->blocks_solid_amount;
+				if (g_block_data[blocks[i].type + 1].liquid)
+				{
+					add_to_chunk_mesh(&chunk->liquid_mesh, (int []){x, y, z}, (float *)g_faces[FACE_BOT], g_block_data[blocks[i].type + 1].bot_texture);
+					++chunk->blocks_liquid_amount;
+				}
+				else
+				{
+					add_to_chunk_mesh(&chunk->mesh, (int []){x, y, z}, (float *)g_faces[FACE_BOT], g_block_data[blocks[i].type + 1].bot_texture);
+					++chunk->blocks_solid_amount;
+				}
 			}
 		}
 
@@ -387,8 +411,16 @@ void	get_blocks_visible(t_chunk *chunk)
 		{
 			if (!(g_block_data[blocks[i].type + 1].liquid && g_block_data[tmp_block->type + 1].liquid))
 			{
-				add_to_chunk_mesh(&chunk->mesh, (int []){x, y, z}, (float *)g_faces[FACE_FRONT], g_block_data[blocks[i].type + 1].front_texture);
-				++chunk->blocks_solid_amount;
+				if (g_block_data[blocks[i].type + 1].liquid)
+				{
+					add_to_chunk_mesh(&chunk->liquid_mesh, (int []){x, y, z}, (float *)g_faces[FACE_FRONT], g_block_data[blocks[i].type + 1].front_texture);
+					++chunk->blocks_liquid_amount;
+				}
+				else
+				{
+					add_to_chunk_mesh(&chunk->mesh, (int []){x, y, z}, (float *)g_faces[FACE_FRONT], g_block_data[blocks[i].type + 1].front_texture);
+					++chunk->blocks_solid_amount;
+				}
 			}
 		}
 
@@ -405,8 +437,16 @@ void	get_blocks_visible(t_chunk *chunk)
 		{
 			if (!(g_block_data[blocks[i].type + 1].liquid && g_block_data[tmp_block->type + 1].liquid))
 			{
-				add_to_chunk_mesh(&chunk->mesh, (int []){x, y, z}, (float *)g_faces[FACE_BACK], g_block_data[blocks[i].type + 1].back_texture);
-				++chunk->blocks_solid_amount;
+				if (g_block_data[blocks[i].type + 1].liquid)
+				{
+					add_to_chunk_mesh(&chunk->liquid_mesh, (int []){x, y, z}, (float *)g_faces[FACE_BACK], g_block_data[blocks[i].type + 1].back_texture);
+					++chunk->blocks_liquid_amount;
+				}
+				else
+				{
+					add_to_chunk_mesh(&chunk->mesh, (int []){x, y, z}, (float *)g_faces[FACE_BACK], g_block_data[blocks[i].type + 1].back_texture);
+					++chunk->blocks_solid_amount;
+				}
 			}
 		}
 	}
