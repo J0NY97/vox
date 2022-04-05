@@ -251,6 +251,58 @@ t_block	*get_block(t_chunk_info *info, float *coords)
 	return (NULL);
 }
 
+void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_chunk *neighbor)
+{
+	t_block	*tmp_block;
+	t_block	*blocks = chunk->blocks;
+	int		x, y, z;
+
+	x = local_pos[0];
+	y = local_pos[1];
+	z = local_pos[2];
+
+	if (face == FACE_LEFT)
+		x -= 1;
+	else if (face == FACE_RIGHT)
+		x += 1;
+	else if (face == FACE_TOP)
+		y += 1;
+	else if (face == FACE_BOT)
+		y -= 1;
+	else if (face == FACE_FRONT)
+		z += 1;
+	else if (face == FACE_BACK)
+		z -= 1;
+
+	tmp_block = NULL;
+	if (x >= 0 && x <= 15 &&
+		y >= 0 && y <= 15 &&
+		z >= 0 && z <= 15)
+		tmp_block = &blocks[get_block_index(chunk->info, x, y, z)];
+	else
+	{
+		if (neighbor)
+			tmp_block = &neighbor->blocks[get_block_index(chunk->info, mod(x, 16), mod(y, 16), mod(z, 16))];
+	}
+	if (tmp_block && (!g_block_data[tmp_block->type + 1].solid))
+	{
+		// If block is water and neighbor block is water, we dont add to left;
+		if (!(g_block_data[blocks[i].type + 1].liquid && g_block_data[tmp_block->type + 1].liquid))
+		{
+			if (g_block_data[blocks[i].type + 1].liquid)
+			{
+				add_to_chunk_mesh(&chunk->liquid_mesh, local_pos, (float *)g_faces[face], g_block_data[blocks[i].type + 1].face_texture[face]);
+				++chunk->blocks_liquid_amount;
+			}
+			else
+			{
+				add_to_chunk_mesh(&chunk->mesh, local_pos, (float *)g_faces[face], g_block_data[blocks[i].type + 1].face_texture[face]);
+				++chunk->blocks_solid_amount;
+			}
+		}
+	}
+}
+
 /*
  * For each block in chunk;
  *	Go through each block in chunk;
@@ -293,162 +345,12 @@ void	get_blocks_visible(t_chunk *chunk)
 		int y = pos[1];
 		int z = pos[2];
 
-		// left
-		tmp_block = NULL;
-		if (x - 1 >= 0)
-			tmp_block = &blocks[get_block_index(chunk->info, x - 1, y, z)];
-		else
-		{
-			if (neighbors[0])
-				tmp_block = &neighbors[0]->blocks[get_block_index(chunk->info, 15, y, z)];
-		}
-		if (tmp_block && (!g_block_data[tmp_block->type + 1].solid))
-		{
-			// If block is water and neighbor block is water, we dont add to left;
-			if (!(g_block_data[blocks[i].type + 1].liquid && g_block_data[tmp_block->type + 1].liquid))
-			{
-				if (g_block_data[blocks[i].type + 1].liquid)
-				{
-					add_to_chunk_mesh(&chunk->liquid_mesh, (int []){x, y, z}, (float *)g_faces[FACE_LEFT], g_block_data[blocks[i].type + 1].left_texture);
-					++chunk->blocks_liquid_amount;
-				}
-				else
-				{
-					add_to_chunk_mesh(&chunk->mesh, (int []){x, y, z}, (float *)g_faces[FACE_LEFT], g_block_data[blocks[i].type + 1].left_texture);
-					++chunk->blocks_solid_amount;
-				}
-			}
-		}
-
-		// right
-		tmp_block = NULL;
-		if (x + 1 < 16)
-			tmp_block = &blocks[get_block_index(chunk->info, x + 1, y, z)];
-		else
-		{
-			if (neighbors[1])
-				tmp_block = &neighbors[1]->blocks[get_block_index(chunk->info, 0, y, z)];
-		}
-		if (tmp_block && (!g_block_data[tmp_block->type + 1].solid))
-		{
-			if (!(g_block_data[blocks[i].type + 1].liquid && g_block_data[tmp_block->type + 1].liquid))
-			{
-				if (g_block_data[blocks[i].type + 1].liquid)
-				{
-					add_to_chunk_mesh(&chunk->liquid_mesh, (int []){x, y, z}, (float *)g_faces[FACE_RIGHT], g_block_data[blocks[i].type + 1].right_texture);
-					++chunk->blocks_liquid_amount;
-				}
-				else
-				{
-					add_to_chunk_mesh(&chunk->mesh, (int []){x, y, z}, (float *)g_faces[FACE_RIGHT], g_block_data[blocks[i].type + 1].right_texture);
-					++chunk->blocks_solid_amount;
-				}
-			}
-		}
-
-		// top
-		tmp_block = NULL;
-		if (y + 1 < 16)
-			tmp_block = &blocks[get_block_index(chunk->info, x, y + 1, z)];
-		else
-		{
-			if (neighbors[2])
-				tmp_block = &neighbors[2]->blocks[get_block_index(chunk->info, x, 0, z)];
-		}
-		if (tmp_block && !g_block_data[tmp_block->type + 1].solid)
-		{
-			if (!(g_block_data[blocks[i].type + 1].liquid && g_block_data[tmp_block->type + 1].liquid))
-			{
-				if (g_block_data[blocks[i].type + 1].liquid)
-				{
-					add_to_chunk_mesh(&chunk->liquid_mesh, (int []){x, y, z}, (float *)g_faces[FACE_TOP], g_block_data[blocks[i].type + 1].top_texture);
-					++chunk->blocks_liquid_amount;
-				}
-				else
-				{
-					add_to_chunk_mesh(&chunk->mesh, (int []){x, y, z}, (float *)g_faces[FACE_TOP], g_block_data[blocks[i].type + 1].top_texture);
-					++chunk->blocks_solid_amount;
-				}
-			}
-		}
-
-		// bot
-		tmp_block = NULL;
-		if (y - 1 >= 0)
-			tmp_block = &blocks[get_block_index(chunk->info, x, y - 1, z)];
-		else
-		{
-			if (neighbors[3])
-				tmp_block = &neighbors[3]->blocks[get_block_index(chunk->info, x, 15, z)];
-		}
-		if (tmp_block && (!g_block_data[tmp_block->type + 1].solid))
-		{
-			if (!(g_block_data[blocks[i].type + 1].liquid && g_block_data[tmp_block->type + 1].liquid))
-			{
-				if (g_block_data[blocks[i].type + 1].liquid)
-				{
-					add_to_chunk_mesh(&chunk->liquid_mesh, (int []){x, y, z}, (float *)g_faces[FACE_BOT], g_block_data[blocks[i].type + 1].bot_texture);
-					++chunk->blocks_liquid_amount;
-				}
-				else
-				{
-					add_to_chunk_mesh(&chunk->mesh, (int []){x, y, z}, (float *)g_faces[FACE_BOT], g_block_data[blocks[i].type + 1].bot_texture);
-					++chunk->blocks_solid_amount;
-				}
-			}
-		}
-
-		// forward
-		tmp_block = NULL;
-		if (z + 1 < 16)
-			tmp_block = &blocks[get_block_index(chunk->info, x, y, z + 1)];
-		else
-		{
-			if (neighbors[4])
-				tmp_block = &neighbors[4]->blocks[get_block_index(chunk->info, x, y, 0)];
-		}
-		if (tmp_block && !g_block_data[tmp_block->type + 1].solid)
-		{
-			if (!(g_block_data[blocks[i].type + 1].liquid && g_block_data[tmp_block->type + 1].liquid))
-			{
-				if (g_block_data[blocks[i].type + 1].liquid)
-				{
-					add_to_chunk_mesh(&chunk->liquid_mesh, (int []){x, y, z}, (float *)g_faces[FACE_FRONT], g_block_data[blocks[i].type + 1].front_texture);
-					++chunk->blocks_liquid_amount;
-				}
-				else
-				{
-					add_to_chunk_mesh(&chunk->mesh, (int []){x, y, z}, (float *)g_faces[FACE_FRONT], g_block_data[blocks[i].type + 1].front_texture);
-					++chunk->blocks_solid_amount;
-				}
-			}
-		}
-
-		// backward
-		tmp_block = NULL;
-		if (z - 1 >= 0)
-			tmp_block = &blocks[get_block_index(chunk->info, x, y, z - 1)];
-		else
-		{
-			if (neighbors[5])
-				tmp_block = &neighbors[5]->blocks[get_block_index(chunk->info, x, y, 15)];
-		}
-		if (tmp_block && !g_block_data[tmp_block->type + 1].solid)
-		{
-			if (!(g_block_data[blocks[i].type + 1].liquid && g_block_data[tmp_block->type + 1].liquid))
-			{
-				if (g_block_data[blocks[i].type + 1].liquid)
-				{
-					add_to_chunk_mesh(&chunk->liquid_mesh, (int []){x, y, z}, (float *)g_faces[FACE_BACK], g_block_data[blocks[i].type + 1].back_texture);
-					++chunk->blocks_liquid_amount;
-				}
-				else
-				{
-					add_to_chunk_mesh(&chunk->mesh, (int []){x, y, z}, (float *)g_faces[FACE_BACK], g_block_data[blocks[i].type + 1].back_texture);
-					++chunk->blocks_solid_amount;
-				}
-			}
-		}
+		adjacent_block_checker(chunk, i, pos, FACE_LEFT, neighbors[0]);
+		adjacent_block_checker(chunk, i, pos, FACE_RIGHT, neighbors[1]);
+		adjacent_block_checker(chunk, i, pos, FACE_TOP, neighbors[2]);
+		adjacent_block_checker(chunk, i, pos, FACE_BOT, neighbors[3]);
+		adjacent_block_checker(chunk, i, pos, FACE_FRONT, neighbors[4]);
+		adjacent_block_checker(chunk, i, pos, FACE_BACK, neighbors[5]);
 	}
 }
 
@@ -521,8 +423,13 @@ int	get_chunks_to_reload(int *chunks, int *start_coord, t_chunk_info *info, floa
 			for (int z = start_coord[2], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
 			{
 				if (info->chunks[i].coordinate[0] == x && info->chunks[i].coordinate[2] == z)
+				{
 					found = 1;
+					break ;
+				}
 			}
+			if (found)
+				break ;
 		}
 		if (!found)
 		{
@@ -568,7 +475,7 @@ void	regenerate_chunks_v32(t_chunk *chunks, t_chunk_info *info, float *player_ch
 			{
 				for (int y = start_coord[1], y_amount = 0; y_amount < info->y_chunk_amount; y++, y_amount++)
 				{
-					if (nth_chunk >= 15)
+					if (nth_chunk >= 16)
 						break ;
 					int index = reload_these_chunks[nth_chunk];
 					chunks[index].args.chunk = &chunks[index];

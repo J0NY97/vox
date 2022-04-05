@@ -247,15 +247,6 @@ typedef struct s_player_info
 	int		equipped_block; // one from 'e_block_type';
 }	t_player_info;
 
-static const int g_neighbors[6][3] = {
-	{-1, 0, 0},
-	{1, 0, 0},
-	{0, 1, 0},
-	{0, -1, 0},
-	{0, 0, 1},
-	{0, 0, -1}
-};
-
 typedef struct s_chunk		t_chunk;
 
 typedef struct s_block

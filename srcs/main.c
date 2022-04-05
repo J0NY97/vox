@@ -121,7 +121,7 @@ int	main(void)
 	t_entity	*display = malloc(sizeof(t_entity));
 	new_entity(display);
 	new_model(&display->model, &display_obj);
-	size_t display_index;
+	size_t display_index = 0;
 //	display_index = add_entity_to_scene(&scene, display);
 	new_vec3(display->pos, 1.2, 90, -2.0);
 	display->collision_detection_enabled = 0;
@@ -426,7 +426,7 @@ int	main(void)
 
 		nth_chunk = 0;
 		int sent_to_gpu = 0;
-		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
+		for (; nth_chunk < chunk_info.chunks_loaded; ++nth_chunk)
 		{
 			if (chunks[nth_chunk].needs_to_update)
 			{
