@@ -109,7 +109,7 @@ int	main(void)
 	t_entity	*dust2 = malloc(sizeof(t_entity));
 	new_entity(dust2);
 	new_model(&dust2->model, &dust2_obj);
-	size_t	dust2_index = add_entity_to_scene(&scene, dust2);
+//	size_t	dust2_index = add_entity_to_scene(&scene, dust2);
 	dust2->collision_detection_enabled = 0;
 //	dust2->collision_use_precise = 1;
 	dust2->rot_x_angle = -90;

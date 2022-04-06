@@ -52,39 +52,27 @@ void	show_info_header(t_bmp_info_header info_header)
 	printf("\n");   
 }
 
-void	read_bmp_header(const char *image_path)
-{
-	t_bmp_file_header	file_header;
-	t_bmp_info_header	info_header;
-	FILE* fp; 
-	fp = fopen(image_path, "rb");
-	if(fp == NULL)
-	{
-		printf("Failed to open '%s'!\n", image_path);
-		return ;
-	}
-	fread(&file_header, 1, sizeof(t_bmp_file_header) - 2, fp);
-	show_header(file_header);
-	fread(&info_header, 1, sizeof(t_bmp_info_header), fp);
-	show_info_header(info_header);
-	fclose(fp);
-}
-
 void	get_header(t_bmp_file_header *header, FILE *fd)
 {
 	size_t	total_read = 0;
+	uint8_t	tmp;
 
 	total_read += fread(&header->type, 1, sizeof(uint16_t), fd);
 	total_read += fread(&header->size, 1, sizeof(uint32_t), fd);
 	total_read += fread(&header->reserved1, 1, sizeof(uint16_t), fd);
 	total_read += fread(&header->reserved2, 1, sizeof(uint16_t), fd);
 	total_read += fread(&header->off_bits, 1, sizeof(uint32_t), fd);
-	//printf("header : total_read : %d == %d\n", total_read, 14);
+	if (total_read != 14)
+		printf("[%s] Error : header isnt 14 bits\n", __FUNCTION__);
+	while (total_read < 14)
+		total_read += fread(&tmp, 1, sizeof(uint8_t), fd);
 }
 
 void	get_info_header(t_bmp_info_header *info, FILE *fd)
 {
 	size_t	total_read = 0;
+	uint8_t	tmp;
+
 	total_read += fread(&info->size, 1, sizeof(uint32_t), fd);
 	total_read += fread(&info->width, 1, sizeof(int32_t), fd);
 	total_read += fread(&info->height, 1, sizeof(int32_t), fd);
@@ -96,7 +84,8 @@ void	get_info_header(t_bmp_info_header *info, FILE *fd)
 	total_read += fread(&info->y_pels_permeter, 1, sizeof(uint32_t), fd);
 	total_read += fread(&info->clr_used, 1, sizeof(uint32_t), fd);
 	total_read += fread(&info->clr_important, 1, sizeof(uint32_t), fd);
-	//printf("info header : total_read : %d == %d\n", total_read, info->size);
+	while (total_read != info->size)
+		total_read += fread(&tmp, 1, sizeof(uint8_t), fd);
 }
 
 /*
@@ -151,30 +140,25 @@ int	bimgf_load_bmp(t_bimgf *image, const char *file_path)
 	image->flip = 0;
 	image->rgb = 1;
 
+	int	y;
 	if (image->flip == 0)
 	{
-		int	y;
-
-		y = 0;
-		while (y < image->h)
+		y = -1;
+		while (++y < image->h)
 		{
 			fread(&image->pixels[y * image->line_w], image->w, image->bpp, fd);
 			if (skip_bytes > 0)
 				fread(&tmp, 1, skip_bytes, fd);
-			y++;
 		}
 	}
 	else if (image->flip == 1)
 	{
-		int	y;
-
-		y = image->h - 1;
-		while (y >= 0)
+		y = image->h;
+		while (--y >= 0)
 		{
 			fread(&image->pixels[y * image->line_w], image->w, image->bpp, fd);
 			if (skip_bytes > 0)
 				fread(&tmp, 1, skip_bytes, fd);
-			y--;
 		}
 	}
 
