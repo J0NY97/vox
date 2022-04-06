@@ -109,7 +109,7 @@ int	main(void)
 	t_entity	*dust2 = malloc(sizeof(t_entity));
 	new_entity(dust2);
 	new_model(&dust2->model, &dust2_obj);
-//	size_t	dust2_index = add_entity_to_scene(&scene, dust2);
+	size_t	dust2_index = add_entity_to_scene(&scene, dust2);
 	dust2->collision_detection_enabled = 0;
 //	dust2->collision_use_precise = 1;
 	dust2->rot_x_angle = -90;
@@ -174,7 +174,7 @@ int	main(void)
 
 		t_chunk_info	chunk_info;
 
-		chunk_info.render_distance = 20;
+		chunk_info.render_distance = 15;
 //		chunk_info.seed = 896868766;
 		chunk_info.seed = 596547633;
 		chunk_info.width = 16;
@@ -197,7 +197,9 @@ int	main(void)
 		chunk_info.chunk_collision_enabled = 0;
 
 		glGenTextures(1, &chunk_info.texture);
-		new_texture(&chunk_info.texture, MODEL_PATH"cube/version_3_texture.bmp");
+	//	new_texture(&chunk_info.texture, MODEL_PATH"cube/version_3_texture.bmp");
+		new_texture(&chunk_info.texture, MODEL_PATH"cube/version_3_texture_alpha.bmp");
+	//	exit(0);
 
 		t_chunk	*chunks;
 		chunks = malloc(sizeof(t_chunk) * chunk_info.chunks_loaded);

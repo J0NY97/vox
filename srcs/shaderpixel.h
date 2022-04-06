@@ -362,7 +362,7 @@ void		regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float 
 
 void		init_chunk_mesh(t_chunk_mesh *mesh);
 void		reset_chunk_mesh(t_chunk_mesh *mesh);
-void		add_to_chunk_mesh(t_chunk_mesh *mesh, int *coord, float *face_vertices, int texture_id);
+void		add_to_chunk_mesh(t_chunk_mesh *mesh, int *coord, float *face_vertices, int texture_id, int light);
 void		update_chunk_mesh(t_chunk_mesh *chunk);
 void		render_chunk_mesh(t_chunk_mesh *mesh, float *coordinate, t_camera *camera, t_shader *shader);
 int			chunk_mesh_collision(float *orig, float *dir, t_chunk *chunk, float reach, float intersect_point[16][3]);

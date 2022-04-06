@@ -78,6 +78,10 @@ static const float g_faces[FACE_AMOUNT][12] = {
 /* BOT   */	{-1, -1, -1,  1, -1, -1,  1, -1, 1,  -1, -1, 1}
 };
 
+static const int g_face_light[FACE_AMOUNT] = {
+	80, 100, 90, 85, 95, 75
+};
+
 static const int g_neighbors[6][3] = {
 	{-1, 0, 0},
 	{1, 0, 0},

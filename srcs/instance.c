@@ -291,12 +291,12 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 		{
 			if (g_block_data[blocks[i].type + 1].liquid)
 			{
-				add_to_chunk_mesh(&chunk->liquid_mesh, local_pos, (float *)g_faces[face], g_block_data[blocks[i].type + 1].face_texture[face]);
+				add_to_chunk_mesh(&chunk->liquid_mesh, local_pos, (float *)g_faces[face], g_block_data[blocks[i].type + 1].face_texture[face], (int)g_face_light[face]);
 				++chunk->blocks_liquid_amount;
 			}
 			else
 			{
-				add_to_chunk_mesh(&chunk->mesh, local_pos, (float *)g_faces[face], g_block_data[blocks[i].type + 1].face_texture[face]);
+				add_to_chunk_mesh(&chunk->mesh, local_pos, (float *)g_faces[face], g_block_data[blocks[i].type + 1].face_texture[face], (int)g_face_light[face]);
 				++chunk->blocks_solid_amount;
 			}
 		}
@@ -889,9 +889,9 @@ error = glGetError();
  * 
  * You give either solid mesh or liquid mesh to this;
 */
-void	add_to_chunk_mesh(t_chunk_mesh *mesh, int *coord, float *face_vertices, int texture_id)
+void	add_to_chunk_mesh(t_chunk_mesh *mesh, int *coord, float *face_vertices, int texture_id, int light)
 {
-	// @Modulate
+	// @Modulate (aka make modular)
 	float	block_scale = 0.5f;
 
 // Vertices and Texture
@@ -917,9 +917,18 @@ void	add_to_chunk_mesh(t_chunk_mesh *mesh, int *coord, float *face_vertices, int
 		mesh->vertices[mesh->vertices_amount + ind + 1] = (face_vertices[ind + 1] * block_scale) + coord[1];
 		mesh->vertices[mesh->vertices_amount + ind + 2] = (face_vertices[ind + 2] * block_scale) + coord[2];
 
-		tex = texture_id | i << 16;
+		tex = texture_id | (i << 16) | (light << 20);
 		mesh->texture_ids[mesh->texture_id_amount + i] = tex;
 	}
+
+/*
+	int	uv_index = (tex >> 16) & 0x0000000f;
+	int	texture_index = tex & 0x0000FFFF;
+	int	light_index = (tex >> 20) & 0x000000FF;
+	ft_printf("uv_index %d == 3, texture_index %d == %d, ligth_index %d == 100\n", uv_index, texture_index, texture_id, light_index);
+	exit(0);
+	*/
+
 	mesh->vertices_amount += 4 * 3;
 	mesh->texture_id_amount += 4;
 

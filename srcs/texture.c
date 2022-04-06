@@ -22,6 +22,14 @@ int	new_texture(GLuint *texture, const char *image_file)
 		orig_img_format = GL_RGBA;
 	else
 		orig_img_format = GL_RGB;
+
+	LG_INFO("w : %d, h : %d", image.w, image.h);
+	LG_INFO("bpp : %d", image.bpp);
+	LG_INFO("line_w : %d", image.line_w);
+	LG_INFO("size : %d", image.size);
+	LG_INFO("image.format : %d, %d", image.format, orig_img_format);
+	LG_INFO("orig_img_format == GL_RGBA? %d", orig_img_format == GL_RGBA);
+
 	glBindTexture(GL_TEXTURE_2D, *texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
