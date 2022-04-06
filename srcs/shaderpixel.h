@@ -335,6 +335,8 @@ struct	s_chunk
 
 	int				needs_to_update;
 
+	int				render; // if we want to render the chunk this frame;
+
 	t_chunk_args	args;
 };
 

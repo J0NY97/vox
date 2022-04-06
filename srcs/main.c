@@ -199,7 +199,6 @@ int	main(void)
 		glGenTextures(1, &chunk_info.texture);
 	//	new_texture(&chunk_info.texture, MODEL_PATH"cube/version_3_texture.bmp");
 		new_texture(&chunk_info.texture, MODEL_PATH"cube/version_3_texture_alpha.bmp");
-	//	exit(0);
 
 		t_chunk	*chunks;
 		chunks = malloc(sizeof(t_chunk) * chunk_info.chunks_loaded);
@@ -233,6 +232,7 @@ int	main(void)
 	int			toggle_rot_z = 0;
 
 	glfwSwapInterval(0);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_LINE_SMOOTH);
 
@@ -428,6 +428,7 @@ int	main(void)
 
 		nth_chunk = 0;
 		int sent_to_gpu = 0;
+		glDisable(GL_BLEND);
 		for (; nth_chunk < chunk_info.chunks_loaded; ++nth_chunk)
 		{
 			if (chunks[nth_chunk].needs_to_update)
@@ -452,21 +453,24 @@ int	main(void)
 					}
 				}
 			}
-			if (chunks[nth_chunk].blocks_solid_amount > 0 || chunks[nth_chunk].blocks_liquid_amount > 0)
-			{
-				// Dont render chunk if the chunk is further away than the farplane of the camear;
-				// Dont render if the chunk is outside the view fustrum;
-				if (vec3_dist(player.camera.pos, chunks[nth_chunk].world_coordinate) <
-					player.camera.far_plane + chunks[nth_chunk].info->chunk_size[0] &&
-					aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum))
-				{
-					if (chunks[nth_chunk].blocks_solid_amount > 0)
-						render_chunk_mesh(&chunks[nth_chunk].mesh, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
-					if (chunks[nth_chunk].blocks_liquid_amount > 0)
-						render_chunk_mesh(&chunks[nth_chunk].liquid_mesh, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
-					sent_to_gpu++;
-				}
 
+			// Decide if we want to render the chunk or not;
+			// Dont render chunk if the chunk is further away than the farplane of the camear;
+			// Dont render if the chunk is outside the view fustrum;
+			if (vec3_dist(player.camera.pos, chunks[nth_chunk].world_coordinate) <
+				player.camera.far_plane + chunks[nth_chunk].info->chunk_size[0] &&
+				aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum))
+			{
+				if (chunks[nth_chunk].blocks_solid_amount > 0)
+					render_chunk_mesh(&chunks[nth_chunk].mesh, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
+				chunks[nth_chunk].render = 1;
+			}
+			else
+				chunks[nth_chunk].render = 0;
+
+			if (chunks[nth_chunk].blocks_solid_amount > 0 ||
+				chunks[nth_chunk].blocks_liquid_amount > 0)
+			{
 				// Collision Detection
 				if (chunk_info.chunk_collision_enabled &&
 					chunks[nth_chunk].blocks_solid_amount > 0 &&
@@ -619,6 +623,13 @@ int	main(void)
 				*/
 			}
 		}
+				glEnable(GL_BLEND);
+		nth_chunk = 0;
+		for (; nth_chunk < chunk_info.chunks_loaded; ++nth_chunk)
+			if (chunks[nth_chunk].render && chunks[nth_chunk].blocks_liquid_amount > 0)
+				render_chunk_mesh(&chunks[nth_chunk].liquid_mesh, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
+		glDisable(GL_BLEND);
+
 //		ft_printf("CPU : %d, GPU : %d\n", chunk_info.chunks_loaded, sent_to_gpu);
 
 /////////////////
