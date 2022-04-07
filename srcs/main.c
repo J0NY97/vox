@@ -206,7 +206,7 @@ int	main(void)
 		chunk_info.chunks = chunks;
 
 		int		nth_chunk = 0;
-		float	player_chunk[VEC3_SIZE];
+		int		player_chunk[VEC3_SIZE];
 		
 		get_chunk_pos_from_world_pos(player_chunk, player.camera.pos, &chunk_info);
 
@@ -352,6 +352,14 @@ int	main(void)
 			// TESTING ///
 		}
 
+		// Force update all chunks
+		if (keys[GLFW_KEY_T].state == BUTTON_PRESS)
+		{
+			LG_INFO("Force updating all chunks. (Chunks Loaded : %d)", chunk_info.chunks_loaded);
+			for (int i = 0; i < chunk_info.chunks_loaded; i++)
+				chunks[i].needs_to_update = 1;
+		}
+
 // Select equipped block;
 		if (keys[GLFW_KEY_1].state == BUTTON_PRESS)
 			player_info.equipped_block = BLOCK_DIRT;
@@ -420,11 +428,21 @@ int	main(void)
 
 		if (regen_chunks)
 		{
-		//	regenerate_chunks(chunks, &chunk_info, player_chunk);	
-			regenerate_chunks_v32(chunks, &chunk_info, player_chunk);	
+		//	regenerate_chunks_v3(chunks, &chunk_info, player_chunk, &tm);
+			regenerate_chunks(chunks, &chunk_info, player_chunk);	
 		}
 
 		thread_manager_check_threadiness(&tm);
+
+	// Used for collision
+		float	intersect_point[5][3];
+		int		intersect_chunk_index[5]; // correspond with the index in 'intersect_point';
+		float	closest_point[3];
+		float	closest_dist;
+		int		closest_index = -1; // the index of the chunk that has the closest collision;
+		float	block_pos[3];
+		int		face = -1; // -1 is no face;
+		int		collision_result = 0; // will be the amount of collisions that has happened;
 
 		nth_chunk = 0;
 		int sent_to_gpu = 0;
@@ -474,156 +492,91 @@ int	main(void)
 				// Collision Detection
 				if (chunk_info.chunk_collision_enabled &&
 					chunks[nth_chunk].blocks_solid_amount > 0 &&
-					vec3_dist(player_chunk, (float []){chunks[nth_chunk].coordinate[0], chunks[nth_chunk].coordinate[1], chunks[nth_chunk].coordinate[2]}) < 2)
+					vec3i_dist(player_chunk, chunks[nth_chunk].coordinate) < 2)
 				{
-					float	intersect_point[16][3];
-					float	closest_point[3];
-					float	closest_dist;
-					float	block_pos[3];
-					int		face = -1; // -1 is no face;
-					int		collision_result = 0; // will be the amount of collisions that has happened;
 					show_chunk_borders(&chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
 
 					// Place Blocking and Removing;
-					collision_result = chunk_mesh_collision(player.camera.pos, player.camera.front, &chunks[nth_chunk], player_info.reach, intersect_point);
-					if (collision_result > 0)
-					{
-						// Save the closest point, of a maximum 16 points
-						//	gotten from chunk_mesh_collision, in the closest_point var;
-						float	distancione = -1;
-						closest_dist = INFINITY;
-						for (int colli = 0; colli < collision_result; ++colli)
-						{
-							distancione = vec3_dist(player.camera.pos, intersect_point[colli]);
-							if (distancione < closest_dist)
-							{
-								closest_dist = distancione;
-								vec3_assign(closest_point, intersect_point[colli]);
-							}
-						}
+					// Go through all chunks and check for collision on blocks,
+					// store intersections and indices of the chunk the intersection
+					// is in;
+					int collisions_on_chunk = chunk_mesh_collision(player.camera.pos, player.camera.front, &chunks[nth_chunk], player_info.reach, intersect_point + collision_result);
+					for (int i = 0; i < collisions_on_chunk; i++)
+						intersect_chunk_index[collision_result + i] = nth_chunk;
+					collision_result += collisions_on_chunk;
+				}
+			}
+		}
 
-						t_block *hovered_block = NULL;
-						int		clicked = 0;
-						if (mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS ||
-							mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS)
-							clicked = 1;
-						hovered_block = get_block_from_chunk_mesh(&chunks[nth_chunk], closest_point, block_pos, &face);
-						if (hovered_block)
-						{
-							render_block_outline(block_pos, (float []){0, 0, 0}, player.camera.view, player.camera.projection);
-						/* Highlight hovered triangle as green */
-							float p1[3];
-							float p2[3];
-							float p3[3];
-							p1[0] = (g_faces[face][0] * chunk_info.block_scale) + block_pos[0];
-							p1[1] = (g_faces[face][1] * chunk_info.block_scale) + block_pos[1];
-							p1[2] = (g_faces[face][2] * chunk_info.block_scale) + block_pos[2];
-
-							p2[0] = (g_faces[face][3] * chunk_info.block_scale) + block_pos[0];
-							p2[1] = (g_faces[face][4] * chunk_info.block_scale) + block_pos[1];
-							p2[2] = (g_faces[face][5] * chunk_info.block_scale) + block_pos[2];
-
-							p3[0] = (g_faces[face][6] * chunk_info.block_scale) + block_pos[0];
-							p3[1] = (g_faces[face][7] * chunk_info.block_scale) + block_pos[1];
-							p3[2] = (g_faces[face][8] * chunk_info.block_scale) + block_pos[2];
-
-							glDisable(GL_DEPTH_TEST);
-							if (point_in_triangle(closest_point, p1, p2, p3))
-							{
-								render_3d_line(p1, p2, (float []){0, 1, 0}, player.camera.view, player.camera.projection);
-								render_3d_line(p1, p3, (float []){0, 1, 0}, player.camera.view, player.camera.projection);
-								render_3d_line(p2, p3, (float []){0, 1, 0}, player.camera.view, player.camera.projection);
-							}
-							if (point_on_line(closest_point, p1, p2))
-								render_3d_line(p1, p2, (float []){0, 1, 1}, player.camera.view, player.camera.projection);
-							if (point_on_line(closest_point, p1, p3))
-								render_3d_line(p1, p3, (float []){0, 1, 1}, player.camera.view, player.camera.projection);
-							if (point_on_line(closest_point, p2, p3))
-								render_3d_line(p2, p3, (float []){0, 1, 1}, player.camera.view, player.camera.projection);
-
-							p2[0] = (g_faces[face][9] * chunk_info.block_scale) + block_pos[0];
-							p2[1] = (g_faces[face][10] * chunk_info.block_scale) + block_pos[1];
-							p2[2] = (g_faces[face][11] * chunk_info.block_scale) + block_pos[2];
-
-							if (point_in_triangle(closest_point, p1, p3, p2))
-							{
-								render_3d_line(p1, p2, (float []){0, 1, 0}, player.camera.view, player.camera.projection);
-								render_3d_line(p1, p3, (float []){0, 1, 0}, player.camera.view, player.camera.projection);
-								render_3d_line(p2, p3, (float []){0, 1, 0}, player.camera.view, player.camera.projection);
-							}
-							if (point_on_line(closest_point, p1, p2))
-								render_3d_line(p1, p2, (float []){0, 1, 1}, player.camera.view, player.camera.projection);
-							if (point_on_line(closest_point, p1, p3))
-								render_3d_line(p1, p3, (float []){0, 1, 1}, player.camera.view, player.camera.projection);
-							if (point_on_line(closest_point, p2, p3))
-								render_3d_line(p2, p3, (float []){0, 1, 1}, player.camera.view, player.camera.projection);
-							glEnable(GL_DEPTH_TEST);
-						/**/
-						}
-						if (hovered_block && clicked)
-						{
-							if (mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS)
-								hovered_block->type = BLOCK_AIR;
-							else if (mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS)
-							{
-								float	block_world[3];
-								vec3_assign(block_world, block_pos);
-								if (face == FACE_FRONT)
-									block_world[2] += 1.0f;
-								else if (face == FACE_BACK)
-									block_world[2] -= 1.0f;
-								else if (face == FACE_LEFT)
-									block_world[0] -= 1.0f;
-								else if (face == FACE_RIGHT)
-									block_world[0] += 1.0f;
-								else if (face == FACE_TOP)
-									block_world[1] += 1.0f;
-								else if (face == FACE_BOT)
-									block_world[1] -= 1.0f;
-
-								float	chunk_pos[3];
-								int		local_pos[3];
-								int		index;
-								get_chunk_pos_from_world_pos(chunk_pos, block_world, &chunk_info);
-								t_chunk *next_chunk = get_chunk(&chunk_info, (int []){chunk_pos[0], chunk_pos[1], chunk_pos[2]});
-								if (next_chunk)
-								{
-									block_world_to_local_pos(local_pos, block_world);
-									index = get_block_index(&chunk_info, local_pos[0], local_pos[1], local_pos[2]);
-									next_chunk->blocks[index].type = player_info.equipped_block;
-									next_chunk->needs_to_update = 1;
-								}
-							}
-							chunks[nth_chunk].needs_to_update = 1;
-						}
-					}
+		/* START OF COLLISION */
+		// Save the closest point, of a maximum 16 points
+		//	gotten from chunk_mesh_collision, in the closest_point var;
+		// Also the index of which chunk the collision is in;
+		if (collision_result > 0)
+		{
+			float	distancione = -1;
+			closest_dist = INFINITY;
+			for (int colli = 0; colli < collision_result; ++colli)
+			{
+				distancione = vec3_dist(player.camera.pos, intersect_point[colli]);
+				if (distancione < closest_dist)
+				{
+					closest_dist = distancione;
+					vec3_assign(closest_point, intersect_point[colli]);
+					closest_index = intersect_chunk_index[colli];
 				}
 			}
 
-			// Go in here if player in chunk;
-			if ((int)player_chunk[0] == chunks[nth_chunk].coordinate[0] &&
-				(int)player_chunk[1] == chunks[nth_chunk].coordinate[1] &&
-				(int)player_chunk[2] == chunks[nth_chunk].coordinate[2])
+			t_block *hovered_block = NULL;
+			int		clicked = 0;
+			if (mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS ||
+				mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS)
+				clicked = 1;
+			hovered_block = get_block_from_chunk_mesh(&chunks[closest_index], closest_point, block_pos, &face);
+			if (hovered_block)
 			{
-				/*
-				show_chunk_borders(&chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
+				render_block_outline(block_pos, (float []){0, 0, 0}, player.camera.view, player.camera.projection);
+			}
+			if (hovered_block && clicked)
+			{
+				if (mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS)
+					hovered_block->type = BLOCK_AIR;
+				else if (mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS)
+				{
+					float	block_world[3];
+					vec3_assign(block_world, block_pos);
+					if (face == FACE_FRONT)
+						block_world[2] += 1.0f;
+					else if (face == FACE_BACK)
+						block_world[2] -= 1.0f;
+					else if (face == FACE_LEFT)
+						block_world[0] -= 1.0f;
+					else if (face == FACE_RIGHT)
+						block_world[0] += 1.0f;
+					else if (face == FACE_TOP)
+						block_world[1] += 1.0f;
+					else if (face == FACE_BOT)
+						block_world[1] -= 1.0f;
 
-				t_chunk	*north_chunk = get_adjacent_chunk(&chunks[nth_chunk], chunks, (int []){0, 0, -1});
-				if (north_chunk)
-					show_chunk_borders(north_chunk, &player.camera, (float []){0, 0, 1});
-				t_chunk	*south_chunk = get_adjacent_chunk(&chunks[nth_chunk], chunks, (int []){0, 0, 1});
-				if (south_chunk)
-					show_chunk_borders(south_chunk, &player.camera, (float []){0, 1, 0});
-				t_chunk	*east_chunk = get_adjacent_chunk(&chunks[nth_chunk], chunks, (int []){1, 0, 0});
-				if (east_chunk)
-					show_chunk_borders(east_chunk, &player.camera, (float []){0, 1, 1});
-				t_chunk	*west_chunk = get_adjacent_chunk(&chunks[nth_chunk], chunks, (int []){-1, 0, 0});
-				if (west_chunk)
-					show_chunk_borders(west_chunk, &player.camera, (float []){1, 1, 0});
-				*/
+					int		chunk_pos[3];
+					int		local_pos[3];
+					int		index;
+					get_chunk_pos_from_world_pos(chunk_pos, block_world, &chunk_info);
+					t_chunk *next_chunk = get_chunk(&chunk_info, chunk_pos);
+					if (next_chunk)
+					{
+						block_world_to_local_pos(local_pos, block_world);
+						index = get_block_index(&chunk_info, local_pos[0], local_pos[1], local_pos[2]);
+						next_chunk->blocks[index].type = player_info.equipped_block;
+						next_chunk->needs_to_update = 1;
+					}
+				}
+				chunks[closest_index].needs_to_update = 1;
 			}
 		}
-				glEnable(GL_BLEND);
+		/* END OF COLLISION */
+
+		glEnable(GL_BLEND);
 		nth_chunk = 0;
 		for (; nth_chunk < chunk_info.chunks_loaded; ++nth_chunk)
 			if (chunks[nth_chunk].render && chunks[nth_chunk].blocks_liquid_amount > 0)

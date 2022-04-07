@@ -16,6 +16,7 @@ typedef struct s_thread_manager
 	t_thread_info	*info;
 	unsigned int	thread_amount;
 	unsigned int	max_thread_amount;
+	pthread_mutex_t	mutex;
 }	t_thread_manager;
 
 void	thread_manager_new(t_thread_manager *manager, unsigned int max_threads);

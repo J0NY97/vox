@@ -33,7 +33,8 @@ CFILES = \
 	bimgf/bimgf_jpg.c \
 	bimgf/bimgf.c \
 	bimgf/huffman.c \
-	bmath/bmath.c \
+	bmath/bmathf.c \
+	bmath/bmathi.c \
 	bobj/bobj_loader.c \
 	bobj/bobj_print.c \
 	glad/glad.c \

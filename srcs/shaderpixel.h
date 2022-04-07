@@ -133,6 +133,9 @@ typedef struct s_frustum
 }		t_frustum;
 
 void		frustum_new(t_frustum *frustum, t_camera *camera);
+void		frustum_print(t_frustum *frustum);
+void		plane_new(t_plane *plane, float *p, float *norm);
+void		plane_print(t_plane *plane, char *str);
 int			aabb_in_frustum(t_aabb *a, t_frustum *f);
 int			aabb_on_plane(t_aabb *a, t_plane *p);
 
@@ -348,7 +351,7 @@ void		chunk_aabb_update(t_chunk *chunk);
 void		show_chunk_borders(t_chunk *chunk, t_camera *camera, float *col);
 void		render_aabb(t_aabb *a, t_camera *camera, float *col);
 
-float		*get_chunk_pos_from_world_pos(float *res, float *world_coords, t_chunk_info *info);
+int			*get_chunk_pos_from_world_pos(int *res, float *world_coords, t_chunk_info *info);
 float		*block_world_pos(float *res, float *chunk_world_pos, int *block_local_pos);
 t_chunk		*get_chunk(t_chunk_info *info, int *pos);
 t_chunk		*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, int *dir);
@@ -359,8 +362,8 @@ int			get_block_index(t_chunk_info *info, int x, int y, int z);
 
 int			get_chunk_hash_key(int *coords);
 
-void		regenerate_chunks(t_chunk *chunks, t_chunk_info *info, float *player_chunk_v2);
-void		regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3, t_thread_manager *tm);
+void		regenerate_chunks(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v2);
+void		regenerate_chunks_v3(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3, t_thread_manager *tm);
 
 void		init_chunk_mesh(t_chunk_mesh *mesh);
 void		reset_chunk_mesh(t_chunk_mesh *mesh);

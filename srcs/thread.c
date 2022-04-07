@@ -6,6 +6,7 @@ void	thread_manager_new(t_thread_manager *manager, unsigned int max_threads)
 	manager->thread_amount = 0;
 	manager->threads = malloc(sizeof(pthread_t) * manager->max_thread_amount);
 	manager->info = malloc(sizeof(t_thread_info) * manager->max_thread_amount);
+	pthread_mutex_init(&manager->mutex, NULL);
 	for (int i = 0; i < manager->max_thread_amount; i++)
 	{
 		manager->info[i].id = i;
@@ -23,7 +24,7 @@ void	*thread_func(void *info_pointer)
 	info->started = 1;
 	info->func(info->args);
 	info->finished = 1;
-	LG_INFO("Thread finished. (ID : %d)", info->id);
+//	LG_INFO("Thread finished. (ID : %d)", info->id);
 	return (NULL);
 }
 
@@ -40,13 +41,13 @@ int	thread_manager_new_thread(t_thread_manager *manager, void *func, void *args)
 		{
 			manager->info[i].func = func;
 			manager->info[i].args = args;
+			manager->info[i].finished = 0;
+			manager->info[i].started = 1;
 			if (pthread_create(&manager->threads[i],
 				NULL, thread_func, &manager->info[i]))
 				LG_ERROR("Couldnt create thread. (ID : %d)", manager->info[i].id);
-			LG_INFO("New Thread Created (ID : %d)", manager->info[i].id);
-			manager->info[i].started = 1;
-			manager->info[i].finished = 0;
-			manager->thread_amount++;
+			//LG_INFO("New Thread Created (ID : %d)", manager->info[i].id);
+			++manager->thread_amount;
 			return (1);
 		}
 	}
@@ -69,10 +70,10 @@ void	thread_manager_check_threadiness(t_thread_manager *manager)
 				LG_ERROR("Couldnt join thread. (ID : %d)", manager->info[i].id);
 			manager->info[i].started = 0;
 			manager->info[i].finished = 0;
-			manager->thread_amount--;
-			LG_INFO("Thread Joined. (ID : %d)", manager->info[i].id);
-			LG_INFO("Threads Left : %d", manager->thread_amount);
-			return ; // maximum one per frame
+			--manager->thread_amount;
+		//	LG_INFO("Thread Joined. (ID : %d)", manager->info[i].id);
+		//	LG_INFO("Threads Left : %d", manager->thread_amount);
+		//	return ; // maximum one per frame
 		}
 	}
 }

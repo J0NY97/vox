@@ -119,7 +119,7 @@ int	chunk_gen(t_chunk *chunk)
  * Give any world position to 'world_coords' and this calculates the 
  *	chunk coordinate that you're in;
 */
-float	*get_chunk_pos_from_world_pos(float *res, float *world_coords, t_chunk_info *info)
+int	*get_chunk_pos_from_world_pos(int *res, float *world_coords, t_chunk_info *info)
 {
 	res[0] = floor(world_coords[0] / info->chunk_size[0]);
 	res[1] = floor(world_coords[1] / info->chunk_size[1]);
@@ -236,11 +236,11 @@ int	*get_block_local_pos_from_index(int *res, int *max, int index)
 */
 t_block	*get_block(t_chunk_info *info, float *coords)
 {
-	float	chunk_pos[3];
+	int		chunk_pos[3];
 	t_chunk	*chunk;
 
 	get_chunk_pos_from_world_pos(chunk_pos, coords, info);
-	chunk = get_chunk(info, (int []){chunk_pos[0], chunk_pos[1], chunk_pos[2]});
+	chunk = get_chunk(info, chunk_pos);
 	if (chunk)
 	{
 		int	local_pos[3];
@@ -279,14 +279,13 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 		y >= 0 && y <= 15 &&
 		z >= 0 && z <= 15)
 		tmp_block = &blocks[get_block_index(chunk->info, x, y, z)];
+	else if (neighbor)
+		tmp_block = &neighbor->blocks[get_block_index(chunk->info, mod(x, 16), mod(y, 16), mod(z, 16))];
 	else
-	{
-		if (neighbor)
-			tmp_block = &neighbor->blocks[get_block_index(chunk->info, mod(x, 16), mod(y, 16), mod(z, 16))];
-	}
+		return ;
 	if (tmp_block && (!g_block_data[tmp_block->type + 1].solid))
 	{
-		// If block is water and neighbor block is water, we dont add to left;
+		// If both blocks are liquid, we dont add face to mesh;
 		if (!(g_block_data[blocks[i].type + 1].liquid && g_block_data[tmp_block->type + 1].liquid))
 		{
 			if (g_block_data[blocks[i].type + 1].liquid)
@@ -324,26 +323,18 @@ void	get_blocks_visible(t_chunk *chunk)
 		return ;
 	blocks = chunk->blocks;
 
-	/* MAKE ONLY TOUCHING AIR VISIBLE */
-	t_chunk	*adj_chunk = NULL;
-	t_block	*tmp_block = NULL;
-
 	// Get all neighbors of current chunk;
 	t_chunk *neighbors[6];
 	for (int i = 0; i < 6; i++)
 		neighbors[i] = get_adjacent_chunk(chunk, chunk->info->chunks, (int *)g_neighbors[i]);
 
 	int		pos[3];
-	int		j;// = get_block_index(chunk->info, x, y, z);
 	for (int i = 0; i < chunk->block_amount; i++)
 	{
 		if (blocks[i].type == BLOCK_AIR) // <-- very important, im not sure what happens if we are trying to render an air block;
 			continue ;
 
 		get_block_local_pos_from_index(pos, (int []){16, 16, 16}, i);
-		int x = pos[0];
-		int y = pos[1];
-		int z = pos[2];
 
 		adjacent_block_checker(chunk, i, pos, FACE_LEFT, neighbors[0]);
 		adjacent_block_checker(chunk, i, pos, FACE_RIGHT, neighbors[1]);
@@ -407,7 +398,7 @@ void	*update_chunk_threaded(void *arg)
  *	new chunk info into those 'chunks' indices;
  * Takes 0.000000 seconds;
 */
-int	get_chunks_to_reload(int *chunks, int *start_coord, t_chunk_info *info, float *player_chunk_v3)
+int	get_chunks_to_reload(int *chunks, int *start_coord, t_chunk_info *info, int *player_chunk_v3)
 {
 	int	reload_amount = 0;
 	int	found = 0;
@@ -437,11 +428,10 @@ int	get_chunks_to_reload(int *chunks, int *start_coord, t_chunk_info *info, floa
 			reload_amount++;
 		}
 	}
-//	LG_INFO("Chunk amount to reload : %d", reload_amount);
 	return (reload_amount);
 }
 
-void	regenerate_chunks_v32(t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3)
+void	regenerate_chunks(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3)
 {
 	int	reload_these_chunks[info->chunks_loaded];
 	int	start_coord[3];
@@ -456,7 +446,7 @@ void	regenerate_chunks_v32(t_chunk *chunks, t_chunk_info *info, float *player_ch
 	//  check if any of the loaded chunks have those coordinates, if not
 	//	we take one of the chunks that are not going to be loaded next time
 	// 	and update the new chunk into that memory;
-	int				nth_chunk = 0;
+	int	nth_chunk = 0;
 
 	for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
 	{
@@ -496,7 +486,7 @@ void	regenerate_chunks_v32(t_chunk *chunks, t_chunk_info *info, float *player_ch
 	}
 }
 
-void	regenerate_chunks(t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3)
+void	regenerate_chunks_v3(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3, t_thread_manager *tm)
 {
 	int	reload_these_chunks[info->chunks_loaded];
 	int	start_coord[3];
@@ -506,17 +496,17 @@ void	regenerate_chunks(t_chunk *chunks, t_chunk_info *info, float *player_chunk_
 	reload_amount = get_chunks_to_reload(reload_these_chunks, start_coord, info, player_chunk_v3);
 	if (reload_amount <= 0)
 		return ;
+	if (tm->thread_amount + 63 >= tm->max_thread_amount)
+	{
+	//	LG_WARN("Max threads reached");
+		return ;
+	}
 	
-//	ft_timer_start();
-
 	// Go through all the coordinates that will be loaded next time, and
 	//  check if any of the loaded chunks have those coordinates, if not
 	//	we take one of the chunks that are not going to be loaded next time
 	// 	and update the new chunk into that memory;
-	int				max_threads = 16; // minimum amount of chunks on height;
-	pthread_t		threads[max_threads];
-	int				nth_thread = 0;
-	int				nth_chunk = 0;
+	int	nth_chunk = 0;
 
 	for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
 	{
@@ -535,27 +525,16 @@ void	regenerate_chunks(t_chunk *chunks, t_chunk_info *info, float *player_chunk_
 			{
 				for (int y = start_coord[1], y_amount = 0; y_amount < info->y_chunk_amount; y++, y_amount++)
 				{
-					if (nth_thread >= max_threads)
-					{
+					if (nth_chunk >= 64)
 						break ;
-						int i = 0;
-						while (i < nth_thread)
-						{
-							if (pthread_join(threads[i], NULL))
-								LG_ERROR("Couldnt join thread. -1-");
-							i++;
-						}
-						nth_thread = 0;
-					}
 					int index = reload_these_chunks[nth_chunk];
 					chunks[index].args.chunk = &chunks[index];
 					chunks[index].args.coords[0] = x;
 					chunks[index].args.coords[1] = y;
 					chunks[index].args.coords[2] = z;
-					if (pthread_create(&threads[nth_thread], NULL, update_chunk_threaded, &chunks[index].args))
-						LG_ERROR("Couldnt create thread.");
+					if (!thread_manager_new_thread(tm, update_chunk_threaded, &chunks[index].args))
+						LG_WARN("Couldnt create new thread (nth : %d)", nth_chunk);
 					nth_chunk++;
-					nth_thread++;
 					if (nth_chunk >= info->chunks_loaded) 
 						break ;
 				}
@@ -566,80 +545,6 @@ void	regenerate_chunks(t_chunk *chunks, t_chunk_info *info, float *player_chunk_
 		if (nth_chunk >= info->chunks_loaded) 
 			break ;
 	}
-
-	int j = 0;
-	while (j < nth_thread)
-	{
-		if (pthread_join(threads[j], NULL))
-			LG_ERROR("Couldnt join thread. -2-");
-		j++;
-	}
-}
-
-void	regenerate_chunks_v3(int *res, t_chunk *chunks, t_chunk_info *info, float *player_chunk_v3, t_thread_manager *tm)
-{
-	int	reload_these_chunks[info->chunks_loaded];
-	int	start_coord[3];
-	int found = 0;
-	int reload_amount;
-	
-	reload_amount = get_chunks_to_reload(reload_these_chunks, start_coord, info, player_chunk_v3);
-	if (reload_amount <= 0)
-		return ;
-	if (tm->thread_amount >= tm->max_thread_amount)
-		return ;
-
-	// Go through all the coordinates that will be loaded next time, and
-	//  check if any of the loaded chunks have those coordinates, if not
-	//	we take one of the chunks that are not going to be loaded next time
-	// 	and update the new chunk into that memory;
-	int				nth_chunk = 0;
-
-	for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
-	{
-		for (int z = start_coord[2], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
-		{
-			found = 0;
-			for (int i = 0; i < info->chunks_loaded; i++)
-			{
-				if (chunks[i].coordinate[0] == x && chunks[i].coordinate[2] == z)
-				{
-					found = 1;
-					break ;
-				}
-			}
-			if (!found)
-			{
-				for (int y = start_coord[1], y_amount = 0; y_amount < info->y_chunk_amount; y++, y_amount++)
-				{
-					while (chunks[reload_these_chunks[nth_chunk]].args.being_threaded == 1 &&
-						nth_chunk < info->chunks_loaded && nth_chunk < reload_amount)
-						nth_chunk++;
-					if (nth_chunk >= info->chunks_loaded || nth_chunk >= reload_amount) 
-						break ;
-					int index = reload_these_chunks[nth_chunk];
-					chunks[index].args.chunk = &chunks[index];
-					chunks[index].args.coords[0] = x;
-					chunks[index].args.coords[1] = y;
-					chunks[index].args.coords[2] = z;
-					chunks[index].args.being_threaded = 1;
-					LG_INFO("Threading Chunk at %d %d %d", chunks[index].coordinate[0], chunks[index].coordinate[1], chunks[index].coordinate[2]);
-					if (!thread_manager_new_thread(tm, update_chunk_threaded, &chunks[index].args))
-						LG_WARN("Couldnt created new thread, better luck next time.");
-					nth_chunk++;
-					if (nth_chunk >= info->chunks_loaded || nth_chunk >= reload_amount || tm->thread_amount >= tm->max_thread_amount) 
-						break ;
-				}
-			}
-			if (nth_chunk >= info->chunks_loaded || nth_chunk >= reload_amount || tm->thread_amount >= tm->max_thread_amount) 
-				break ;
-		}
-		if (nth_chunk >= info->chunks_loaded || nth_chunk >= reload_amount || tm->thread_amount >= tm->max_thread_amount) 
-			break ;
-	}
-
-	res[0] = reload_amount;
-	res[1] = nth_chunk;
 }
 
 void	show_chunk_borders(t_chunk *chunk, t_camera *camera, float *col)
