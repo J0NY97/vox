@@ -274,7 +274,8 @@ typedef struct s_chunk_info
 	int			chunks_loaded; // amount of chunks currently loaded;
 	int			render_distance;
 
-	int			chunk_collision_enabled;
+	int			block_collision_enabled;
+	int			player_collision_enabled;
 
 	t_chunk		*chunks; // you should not store the chunks here mainly; its just here so you can acces from places you need, without having to pass them in the function as argumnet;
 	GLuint		texture; // the texture is stored here so we dont load a texture per chunk_mesh;

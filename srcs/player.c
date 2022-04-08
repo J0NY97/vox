@@ -84,6 +84,64 @@ void	player_movement(t_player *player, GLFWwindow *win, t_fps fps)
 	player->moving = (player->velocity[0] || player->velocity[1] || player->velocity[2]);
 }
 
+void	player_movement_mc(t_player *player, GLFWwindow *win, t_fps fps)
+{
+	float	temp0[VEC3_SIZE];
+	float	temp1[VEC3_SIZE];
+	float	temp2[VEC3_SIZE];
+	float	crossed[VEC3_SIZE];
+	float	speed_multiplier = 1.0f;
+	float	speed;
+
+	if (glfwGetKey(win, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+		speed_multiplier = 10.0f;
+	if (glfwGetKey(win, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
+		speed_multiplier = 0.25f;
+	speed = (speed_multiplier * 10.0f) * fps.delta_time;
+
+	new_vec3(temp0, 0, 0, 0);
+	if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS)
+	{
+		vec3_cross(temp0, player->camera.right, player->camera.up);
+		vec3_multiply_f(temp0, temp0, speed);
+	}
+	else if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS)
+	{
+		vec3_cross(temp0, player->camera.up, player->camera.right);
+		vec3_multiply_f(temp0, temp0, speed);
+	}
+
+	new_vec3(temp1, 0, 0, 0);
+	if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS)
+	{
+		vec3_cross(temp1, player->camera.front, player->camera.up);
+		vec3_normalize(temp1, temp1);
+		vec3_multiply_f(temp1, temp1, -speed);
+	}
+	else if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS)
+	{
+		vec3_cross(temp1, player->camera.front, player->camera.up);
+		vec3_normalize(temp1, temp1);
+		vec3_multiply_f(temp1, temp1, speed);
+	}
+
+	new_vec3(temp2, 0, 0, 0);
+	if (glfwGetKey(win, GLFW_KEY_SPACE) == GLFW_PRESS)
+	{
+		vec3_multiply_f(temp2, player->camera.up, speed);
+	}
+	else if (glfwGetKey(win, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+	{
+		vec3_multiply_f(temp2, player->camera.up, -speed);
+	}
+
+	vec3_add(player->velocity, player->velocity, temp0);
+	vec3_add(player->velocity, player->velocity, temp1);
+	vec3_add(player->velocity, player->velocity, temp2);
+
+	player->moving = (player->velocity[0] || player->velocity[1] || player->velocity[2]);
+}
+
 void	player_apply_velocity(t_player *player)
 {
 	vec3_add(player->camera.pos, player->camera.pos, player->velocity);

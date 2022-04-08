@@ -26,7 +26,7 @@ void	frustum_print(t_frustum *frustum)
 	plane_print(&frustum->right_plane, "right");
 }
 
-void	frustum_new_2(t_frustum *frustum, t_camera *camera)
+void	frustum_new(t_frustum *frustum, t_camera *camera)
 {
 	float	half_h_side = camera->far_plane * tanf(camera->fov * 0.5f);
 	float	half_v_side = half_h_side * camera->aspect;
@@ -69,7 +69,7 @@ int	mat_ind(int col, int row)
 	return (4 * row + col);
 }
 
-void	frustum_new(t_frustum *frustum, t_camera *camera)
+void	frustum_new_2(t_frustum *frustum, t_camera *camera)
 {
 	float	combo[MAT4_SIZE];
 

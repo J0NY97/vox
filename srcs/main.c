@@ -194,7 +194,8 @@ int	main(void)
 		hash_table_clear(chunk_info.hash_table, chunk_info.hash_table_size);
 		*/
 
-		chunk_info.chunk_collision_enabled = 0;
+		chunk_info.block_collision_enabled = 0;
+		chunk_info.player_collision_enabled = 0;
 
 		glGenTextures(1, &chunk_info.texture);
 	//	new_texture(&chunk_info.texture, MODEL_PATH"cube/version_3_texture.bmp");
@@ -317,12 +318,20 @@ int	main(void)
 
 		if (keys[GLFW_KEY_C].state == BUTTON_PRESS)
 		{
-			chunk_info.chunk_collision_enabled = chunk_info.chunk_collision_enabled != 1;
-			if (chunk_info.chunk_collision_enabled)
-				LG_INFO("Collision detection of chunks turned ON.");
+			chunk_info.block_collision_enabled = chunk_info.block_collision_enabled != 1;
+			if (chunk_info.block_collision_enabled)
+				LG_INFO("Block collision => ON");
 			else
-				LG_INFO("Collision detection of chunks turned OFF.");
+				LG_INFO("Block collision => OFF");
+		}
 
+		if (keys[GLFW_KEY_V].state == BUTTON_PRESS)
+		{
+			chunk_info.player_collision_enabled = chunk_info.player_collision_enabled != 1;
+			if (chunk_info.player_collision_enabled)
+				LG_INFO("Player collision detection => ON");
+			else
+				LG_INFO("Player collision detection => OFF");
 		}
 
 		if (keys[GLFW_KEY_G].state == BUTTON_PRESS)
@@ -374,7 +383,8 @@ int	main(void)
 
 		update_fps(&fps);
 		player_events(&player, keys, sp.win);
-		player_movement(&player, sp.win, fps);
+//		player_movement(&player, sp.win, fps);
+		player_movement_mc(&player, sp.win, fps);
 		if (player.enabled_mouse)
 			player_looking(&player, sp.win, fps);
 
@@ -407,8 +417,10 @@ int	main(void)
 		}
 		}
 
+/*
 		player_apply_velocity(&player);
 		update_camera(&player.camera);
+		*/
 
 		glEnable(GL_DEPTH_TEST);
 		size_t	entities_rendered = 0;
@@ -434,7 +446,7 @@ int	main(void)
 
 		thread_manager_check_threadiness(&tm);
 
-	// Used for collision
+	// Used for block collision
 		float	intersect_point[5][3];
 		int		intersect_chunk_index[5]; // correspond with the index in 'intersect_point';
 		float	closest_point[3];
@@ -443,6 +455,9 @@ int	main(void)
 		float	block_pos[3];
 		int		face = -1; // -1 is no face;
 		int		collision_result = 0; // will be the amount of collisions that has happened;
+	// Used for player collision;
+		float	player_intersect[10][3];
+		int		player_collision_amount = 0;
 
 		nth_chunk = 0;
 		int sent_to_gpu = 0;
@@ -490,20 +505,35 @@ int	main(void)
 				chunks[nth_chunk].blocks_liquid_amount > 0)
 			{
 				// Collision Detection
-				if (chunk_info.chunk_collision_enabled &&
+				if ((chunk_info.block_collision_enabled ||
+					chunk_info.player_collision_enabled) &&
 					chunks[nth_chunk].blocks_solid_amount > 0 &&
 					vec3i_dist(player_chunk, chunks[nth_chunk].coordinate) < 2)
 				{
 					show_chunk_borders(&chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
 
+					// Player Collision detection on chunk meshes;
+					// Both gravity and velocity;
+					if (chunk_info.player_collision_enabled && player.moving)
+					{
+						float	normed_velocity[3];
+						float	velocity_reach = vec3_dist((float []){0, 0, 0}, player.velocity);
+						vec3_normalize(normed_velocity, player.velocity);
+						int colls = chunk_mesh_collision(player.camera.pos, normed_velocity, &chunks[nth_chunk], velocity_reach, player_intersect + player_collision_amount);
+						// TODO!
+					}
+
 					// Place Blocking and Removing;
 					// Go through all chunks and check for collision on blocks,
 					// store intersections and indices of the chunk the intersection
 					// is in;
-					int collisions_on_chunk = chunk_mesh_collision(player.camera.pos, player.camera.front, &chunks[nth_chunk], player_info.reach, intersect_point + collision_result);
-					for (int i = 0; i < collisions_on_chunk; i++)
-						intersect_chunk_index[collision_result + i] = nth_chunk;
-					collision_result += collisions_on_chunk;
+					if (chunk_info.block_collision_enabled)
+					{
+						int collisions_on_chunk = chunk_mesh_collision(player.camera.pos, player.camera.front, &chunks[nth_chunk], player_info.reach, intersect_point + collision_result);
+						for (int i = 0; i < collisions_on_chunk; i++)
+							intersect_chunk_index[collision_result + i] = nth_chunk;
+						collision_result += collisions_on_chunk;
+					}
 				}
 			}
 		}
@@ -588,6 +618,8 @@ int	main(void)
 /////////////////
 		// END Chunk things
 /////////////////
+		player_apply_velocity(&player);
+		update_camera(&player.camera);
 
 		render_skybox(&skybox, &player.camera);
 
