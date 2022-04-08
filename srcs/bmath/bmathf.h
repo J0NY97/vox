@@ -13,6 +13,7 @@ float	*vec3_assign(float *dest, float *src);
 void	vec3_string(char *str, float *v);
 float	*vec3_add(float *result, float *v0, float *v1);
 float	*vec3_sub(float *result, float *v0, float *v1);
+float	*vec3_multiply(float *res, float *v0, float *v1);
 float	*vec3_multiply_f(float *result, float *v0, float f);
 float	*vec3_divide_f(float *res, float *v0, float f);
 float	*vec3_normalize(float *result, float *v0);

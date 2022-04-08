@@ -455,10 +455,7 @@ int	main(void)
 		float	block_pos[3];
 		int		face = -1; // -1 is no face;
 		int		collision_result = 0; // will be the amount of collisions that has happened;
-	// Used for player collision;
-		float	player_intersect[10][3];
-		int		player_collision_amount = 0;
-
+	
 		nth_chunk = 0;
 		int sent_to_gpu = 0;
 		glDisable(GL_BLEND);
@@ -511,19 +508,7 @@ int	main(void)
 					vec3i_dist(player_chunk, chunks[nth_chunk].coordinate) < 2)
 				{
 					show_chunk_borders(&chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
-
-					// Player Collision detection on chunk meshes;
-					// Both gravity and velocity;
-					if (chunk_info.player_collision_enabled && player.moving)
-					{
-						float	normed_velocity[3];
-						float	velocity_reach = vec3_dist((float []){0, 0, 0}, player.velocity);
-						vec3_normalize(normed_velocity, player.velocity);
-						int colls = chunk_mesh_collision(player.camera.pos, normed_velocity, &chunks[nth_chunk], velocity_reach, player_intersect + player_collision_amount);
-						// TODO!
-					}
-
-					// Place Blocking and Removing;
+										// Place Blocking and Removing;
 					// Go through all chunks and check for collision on blocks,
 					// store intersections and indices of the chunk the intersection
 					// is in;
@@ -605,6 +590,45 @@ int	main(void)
 			}
 		}
 		/* END OF COLLISION */
+
+		/* START OF PLAYER COLLISION */
+		// Used for player collision;
+		float	normed_velocity[3];
+		float	player_intersect[10][3];
+		int		player_collision_amount;
+		float	velocity_dist = vec3_dist((float []){0, 0, 0}, player.velocity);
+
+		while (velocity_dist > EPSILON &&
+			chunk_info.player_collision_enabled && player.moving)
+		{
+			player_collision_amount = 0;
+			vec3_normalize(normed_velocity, player.velocity);
+			for (int i = 0; i < chunk_info.chunks_loaded; i++)
+			{
+				int colls = chunk_mesh_collision_normals(player.camera.pos, normed_velocity, &chunks[i], velocity_dist, player_intersect + player_collision_amount);
+				player_collision_amount += colls;
+			}
+			if (!player_collision_amount)
+				break ;
+			ft_printf("player_collision_amount : %d\n", player_collision_amount);
+			vec3_string("START velocity :", player.velocity);
+			for (int i = 0; i < player_collision_amount; i++)
+			{
+				float t[3];
+				float d;
+				vec3_normalize(normed_velocity, player.velocity);
+				vec3_cross(t, normed_velocity, player_intersect[i]);
+				d = vec3_dot(normed_velocity, player_intersect[i]);
+			//	d = vec3_dot(t, player.velocity);
+				vec3_string("player_intersect : ", player_intersect[i]);
+				ft_printf("d : %f\n", d);
+				vec3_string("t : ", t);
+				vec3_multiply_f(player.velocity, player.velocity, d);
+			}
+			vec3_string("END velocity :", player.velocity);
+			velocity_dist = vec3_dist((float []){0, 0, 0}, player.velocity);
+		}
+		/* END OF PLAYER COLLISION */
 
 		glEnable(GL_BLEND);
 		nth_chunk = 0;

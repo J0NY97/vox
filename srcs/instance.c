@@ -978,6 +978,56 @@ int	chunk_mesh_collision(float *orig, float *dir, t_chunk *chunk, float reach, f
 	return (collisions);
 }
 
+/*
+ * Same as the chunk_mesh_collision, but instead of saving the intersect_points,
+ *	it saves the normals of the faces it collides with;
+*/
+int	chunk_mesh_collision_normals(float *orig, float *dir, t_chunk *chunk, float reach, float intersect_normals[16][3])
+{
+	float			*vertices;
+	unsigned int	*indices;
+	float			p1[3];
+	float			p2[3];
+	float			p3[3];
+	float			norm_dir[3];
+	int				collisions = 0;
+
+	vec3_normalize(norm_dir, dir);
+	vertices = chunk->mesh.vertices;
+	indices = chunk->mesh.indices;
+	for (int i = 0; i < chunk->mesh.indices_amount / 3; i++)
+	{
+		int k = i * 3;
+		vec3_new(p1,
+			vertices[indices[k + 0] * 3 + 0],
+			vertices[indices[k + 0] * 3 + 1],
+			vertices[indices[k + 0] * 3 + 2]);
+		vec3_new(p2,
+			vertices[indices[k + 1] * 3 + 0],
+			vertices[indices[k + 1] * 3 + 1],
+			vertices[indices[k + 1] * 3 + 2]);
+		vec3_new(p3,
+			vertices[indices[k + 2] * 3 + 0],
+			vertices[indices[k + 2] * 3 + 1],
+			vertices[indices[k + 2] * 3 + 2]);
+		
+		// We have to add the chunk position to the chunk mesh, since that is 
+		//		what we are doing in the shader;
+		vec3_add(p1, p1, chunk->world_coordinate);
+		vec3_add(p2, p2, chunk->world_coordinate);
+		vec3_add(p3, p3, chunk->world_coordinate);
+		if (ray_triangle_intersect(orig, dir, p1, p2, p3, intersect_normals[collisions]))
+		{
+			if (vec3_dist(orig, intersect_normals[collisions]) <= reach + EPSILON)
+			{
+				triangle_face_normal(intersect_normals[collisions], p1, p2, p3);
+				collisions += 1;
+			}
+		}
+	}
+	return (collisions);
+}
+
 void	render_block_outline(float *pos, float *color, float *view, float *projection)
 {
 	// Front
