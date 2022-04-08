@@ -1103,9 +1103,9 @@ void	something(float *res, float *pos, float *velocity, t_chunk *chunks)
 	float	velocity_dist = vec3_dist((float []){0, 0, 0}, velocity);
 	int		player_chunk[3];
 
-	get_chunk_pos_from_world_pos(player_chunk, pos, chunks[0].info);
 	while (velocity_dist > EPSILON)
 	{
+		get_chunk_pos_from_world_pos(player_chunk, pos, chunks[0].info);
 		player_collision_amount = 0;
 		vec3_normalize(normed_velocity, velocity);
 		for (int i = 0; i < chunks[0].info->chunks_loaded; i++)
@@ -1122,11 +1122,26 @@ void	something(float *res, float *pos, float *velocity, t_chunk *chunks)
 		{
 			float	destination[3];
 			vec3_add(destination, pos, velocity);
-			float distance = vec3_dist(player_intersect_point[i], destination);	
+
+			float	distance;
+			distance = vec3_dist(player_intersect_point[i], destination);	
+			if (distance < EPSILON)
+			{
+				vec3_new(res, 0, 0, 0);
+				break ;
+			}
+
 			float	new_destination[3];
 			vec3_multiply_f(new_destination, player_intersect_normal[i], distance);
 			vec3_sub(new_destination, destination, new_destination);
-			vec3_sub(res, destination, new_destination);
+
+			float	tmp[3];
+			vec3_sub(tmp, destination, new_destination);
+			vec3_add(res, res, tmp);
+
+			vec3_string("destination :", destination);
+			ft_printf("distance : %f\n", distance);
+			vec3_string("new_destination : ", new_destination);
 		}
 		velocity_dist = vec3_dist((float []){0, 0, 0}, res);
 	}

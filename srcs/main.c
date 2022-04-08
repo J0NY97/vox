@@ -489,9 +489,9 @@ int	main(void)
 			}
 		}
 
-		vec3_string("player.velocity :", player.velocity);
+		vec3_string("\n1 player.velocity :", player.velocity);
 		something(player.velocity, player.camera.pos, player.velocity, chunks);
-		vec3_string("player.velocity :", player.velocity);
+		vec3_string("2 player.velocity :", player.velocity);
 
 		player_apply_velocity(&player);
 		update_camera(&player.camera);
