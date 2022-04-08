@@ -1125,11 +1125,8 @@ void	something(float *res, float *pos, float *velocity, t_chunk *chunks)
 
 			float	distance;
 			distance = vec3_dist(player_intersect_point[i], destination);	
-			if (distance < EPSILON)
-			{
-				vec3_new(res, 0, 0, 0);
-				break ;
-			}
+
+			distance = ft_fmax(EPSILON, distance);
 
 			float	new_destination[3];
 			vec3_multiply_f(new_destination, player_intersect_normal[i], distance);

@@ -34,7 +34,7 @@ int	ray_triangle_intersect(float *orig, float *dir, float *v0, float *v1, float 
 	// back face culler
 	/* Enable for only one sided collision detection;
 		*/
-	if (vec3_dot(dir, N) > 0)
+	if (vec3_dot(dir, N) > EPSILON)
 		return (0);
 
 	float	area2 = vec3_length(N);
@@ -53,7 +53,7 @@ int	ray_triangle_intersect(float *orig, float *dir, float *v0, float *v1, float 
 	float	t = -(vec3_dot(N, orig) + d) / NdotRayDirection;
 
 	// check if the triangle is in behind the ray
-	if (t < 0)
+	if (t < EPSILON)
 		return (0); // the triangle is behind
 
 	// compute the intersection point using equation 1

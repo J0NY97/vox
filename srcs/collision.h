@@ -18,7 +18,7 @@
 # include "bmath.h"
 # include "stdio.h"
 
-# define EPSILON 0.0001f
+# define EPSILON 0.00001f
 
 typedef struct	s_entity	t_entity;
 
