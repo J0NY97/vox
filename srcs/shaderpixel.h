@@ -376,6 +376,8 @@ int			chunk_mesh_collision_v2(float *orig, float *dir, t_chunk *chunk, float rea
 t_block		*get_block_from_chunk_mesh(t_chunk *chunk, float *point, float *block_pos, int *face);
 void		render_block_outline(float *pos, float *color, float *view, float *projection);
 
+void		something(float *res, float *pos, float *velocity, t_chunk *chunks);
+
 ///////////////////
 //	NOISE
 ///////////////////
@@ -394,7 +396,7 @@ struct s_player
 	t_camera	camera;
 
 	float		velocity[VEC3_SIZE];
-	float		gravity[VEC3_SIZE];
+	float		gravity;
 
 	int			moving;
 	int			colliding;
@@ -410,6 +412,7 @@ void		new_player(t_player *player);
 void		player_events(t_player *player, t_key *keys, GLFWwindow *win);
 void		player_movement(t_player *player, GLFWwindow *win, t_fps fps);
 void		player_apply_velocity(t_player *player);
+void		player_apply_gravity(t_player *player);
 void		player_looking(t_player *player, GLFWwindow *win, t_fps fps);
 void		player_entity_collision(t_player *player, t_entity *entity);
 int			player_entity_mesh_collision(t_player *player, t_entity *entity);

@@ -1093,3 +1093,41 @@ void	render_block_outline(float *pos, float *color, float *view, float *projecti
 	render_3d_line(p2, b3, color, view, projection);
 	render_3d_line(p3, b2, color, view, projection);
 }
+
+void	something(float *res, float *pos, float *velocity, t_chunk *chunks)
+{
+	float	normed_velocity[3];
+	float	player_intersect_normal[10][3];
+	float	player_intersect_point[10][3];
+	int		player_collision_amount = 0;
+	float	velocity_dist = vec3_dist((float []){0, 0, 0}, velocity);
+	int		player_chunk[3];
+
+	get_chunk_pos_from_world_pos(player_chunk, pos, chunks[0].info);
+	while (velocity_dist > EPSILON)
+	{
+		player_collision_amount = 0;
+		vec3_normalize(normed_velocity, velocity);
+		for (int i = 0; i < chunks[0].info->chunks_loaded; i++)
+		{
+			if (!(chunks[i].blocks_solid_amount > 0 &&
+				vec3i_dist(player_chunk, chunks[i].coordinate) < 2))
+				continue ;	
+			int colls = chunk_mesh_collision_v2(pos, normed_velocity, &chunks[i], velocity_dist, player_intersect_point + player_collision_amount, player_intersect_normal + player_collision_amount);
+			player_collision_amount += colls;
+		}
+		if (player_collision_amount <= 0)
+			break ;
+		for (int i = 0; i < player_collision_amount; i++)
+		{
+			float	destination[3];
+			vec3_add(destination, pos, velocity);
+			float distance = vec3_dist(player_intersect_point[i], destination);	
+			float	new_destination[3];
+			vec3_multiply_f(new_destination, player_intersect_normal[i], distance);
+			vec3_sub(new_destination, destination, new_destination);
+			vec3_sub(res, destination, new_destination);
+		}
+		velocity_dist = vec3_dist((float []){0, 0, 0}, res);
+	}
+}

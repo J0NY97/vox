@@ -334,6 +334,20 @@ int	main(void)
 				LG_INFO("Player collision detection => OFF");
 		}
 
+		if (keys[GLFW_KEY_B].state == BUTTON_PRESS)
+		{
+			if (player.gravity == 0)
+			{
+				player.gravity = 0.98;
+				LG_INFO("Gravity => ON");
+			}
+			else
+			{
+				player.gravity = 0;
+				LG_INFO("Gravity => OFF");
+			}
+		}
+
 		if (keys[GLFW_KEY_G].state == BUTTON_PRESS)
 		{
 			regen_chunks = regen_chunks != 1;
@@ -384,7 +398,10 @@ int	main(void)
 		update_fps(&fps);
 		player_events(&player, keys, sp.win);
 //		player_movement(&player, sp.win, fps);
-		player_movement_mc(&player, sp.win, fps);
+		if (player.gravity == 0)
+			player_movement_creative(&player, sp.win, fps);
+		if (player.gravity != 0)
+			player_movement_survival(&player, sp.win, fps);
 		if (player.enabled_mouse)
 			player_looking(&player, sp.win, fps);
 
@@ -446,6 +463,39 @@ int	main(void)
 
 		thread_manager_check_threadiness(&tm);
 
+		for (int ent= 0; ent < chunk_info.chunks_loaded; ++ent)
+		{
+			if (chunks[ent].needs_to_update)
+			{
+				update_chunk_visible_blocks(&chunks[ent]);
+				update_chunk_mesh(&chunks[ent].mesh);
+				update_chunk_mesh(&chunks[ent].liquid_mesh);
+				chunk_aabb_update(&chunks[ent]);
+				chunks[ent].needs_to_update = 0;
+
+				// Update all 6 neighbors of the chunk;
+				t_chunk *neighbor;
+				for (int i = 0; i < 6; i++)
+				{
+					neighbor = get_adjacent_chunk(&chunks[ent], chunk_info.chunks, (int *)g_neighbors[i]);
+					if (neighbor)
+					{
+						update_chunk_visible_blocks(neighbor);
+						update_chunk_mesh(&neighbor->mesh);
+						update_chunk_mesh(&neighbor->liquid_mesh);
+						chunk_aabb_update(neighbor);
+					}
+				}
+			}
+		}
+
+		vec3_string("player.velocity :", player.velocity);
+		something(player.velocity, player.camera.pos, player.velocity, chunks);
+		vec3_string("player.velocity :", player.velocity);
+
+		player_apply_velocity(&player);
+		update_camera(&player.camera);
+
 	// Used for block collision
 		float	intersect_point[5][3];
 		int		intersect_chunk_index[5]; // correspond with the index in 'intersect_point';
@@ -461,6 +511,7 @@ int	main(void)
 		glDisable(GL_BLEND);
 		for (; nth_chunk < chunk_info.chunks_loaded; ++nth_chunk)
 		{
+			/*
 			if (chunks[nth_chunk].needs_to_update)
 			{
 				update_chunk_visible_blocks(&chunks[nth_chunk]);
@@ -483,6 +534,7 @@ int	main(void)
 					}
 				}
 			}
+			*/
 
 			// Decide if we want to render the chunk or not;
 			// Dont render chunk if the chunk is further away than the farplane of the camear;
@@ -591,46 +643,6 @@ int	main(void)
 		}
 		/* END OF COLLISION */
 
-		/* START OF PLAYER COLLISION */
-		// Used for player collision;
-		float	normed_velocity[3];
-		float	player_intersect_normal[10][3];
-		float	player_intersect_point[10][3];
-		int		player_collision_amount;
-		float	velocity_dist = vec3_dist((float []){0, 0, 0}, player.velocity);
-
-		while (velocity_dist > EPSILON &&
-			chunk_info.player_collision_enabled && player.moving)
-		{
-			player_collision_amount = 0;
-			vec3_normalize(normed_velocity, player.velocity);
-			for (int i = 0; i < chunk_info.chunks_loaded; i++)
-			{
-				int colls = chunk_mesh_collision_v2(player.camera.pos, normed_velocity, &chunks[i], velocity_dist, player_intersect_point + player_collision_amount, player_intersect_normal + player_collision_amount);
-				player_collision_amount += colls;
-			}
-			if (!player_collision_amount)
-				break ;
-			ft_printf("player_collision_amount : %d\n", player_collision_amount);
-			vec3_string("START velocity :", player.velocity);
-			for (int i = 0; i < player_collision_amount; i++)
-			{
-				float	destination[3];
-				vec3_add(destination, player.camera.pos, player.velocity);
-				float distance = vec3_dist(player_intersect_point[i], destination);	
-				float	new_destination[3];
-				vec3_multiply_f(new_destination, player_intersect_normal[i], distance);
-				vec3_sub(new_destination, destination, new_destination);
-				vec3_string("destination :", destination);
-				vec3_string("new_destination :", new_destination);
-
-				vec3_sub(player.velocity, destination, new_destination);
-			}
-			vec3_string("END velocity :", player.velocity);
-			velocity_dist = vec3_dist((float []){0, 0, 0}, player.velocity);
-		}
-		/* END OF PLAYER COLLISION */
-
 		glEnable(GL_BLEND);
 		nth_chunk = 0;
 		for (; nth_chunk < chunk_info.chunks_loaded; ++nth_chunk)
@@ -643,8 +655,6 @@ int	main(void)
 /////////////////
 		// END Chunk things
 /////////////////
-		player_apply_velocity(&player);
-		update_camera(&player.camera);
 
 		render_skybox(&skybox, &player.camera);
 
