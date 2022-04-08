@@ -594,7 +594,8 @@ int	main(void)
 		/* START OF PLAYER COLLISION */
 		// Used for player collision;
 		float	normed_velocity[3];
-		float	player_intersect[10][3];
+		float	player_intersect_normal[10][3];
+		float	player_intersect_point[10][3];
 		int		player_collision_amount;
 		float	velocity_dist = vec3_dist((float []){0, 0, 0}, player.velocity);
 
@@ -605,7 +606,7 @@ int	main(void)
 			vec3_normalize(normed_velocity, player.velocity);
 			for (int i = 0; i < chunk_info.chunks_loaded; i++)
 			{
-				int colls = chunk_mesh_collision_normals(player.camera.pos, normed_velocity, &chunks[i], velocity_dist, player_intersect + player_collision_amount);
+				int colls = chunk_mesh_collision_v2(player.camera.pos, normed_velocity, &chunks[i], velocity_dist, player_intersect_point + player_collision_amount, player_intersect_normal + player_collision_amount);
 				player_collision_amount += colls;
 			}
 			if (!player_collision_amount)
@@ -614,16 +615,16 @@ int	main(void)
 			vec3_string("START velocity :", player.velocity);
 			for (int i = 0; i < player_collision_amount; i++)
 			{
-				float t[3];
-				float d;
-				vec3_normalize(normed_velocity, player.velocity);
-				vec3_cross(t, normed_velocity, player_intersect[i]);
-				d = vec3_dot(normed_velocity, player_intersect[i]);
-			//	d = vec3_dot(t, player.velocity);
-				vec3_string("player_intersect : ", player_intersect[i]);
-				ft_printf("d : %f\n", d);
-				vec3_string("t : ", t);
-				vec3_multiply_f(player.velocity, player.velocity, d);
+				float	destination[3];
+				vec3_add(destination, player.camera.pos, player.velocity);
+				float distance = vec3_dist(player_intersect_point[i], destination);	
+				float	new_destination[3];
+				vec3_multiply_f(new_destination, player_intersect_normal[i], distance);
+				vec3_sub(new_destination, destination, new_destination);
+				vec3_string("destination :", destination);
+				vec3_string("new_destination :", new_destination);
+
+				vec3_sub(player.velocity, destination, new_destination);
 			}
 			vec3_string("END velocity :", player.velocity);
 			velocity_dist = vec3_dist((float []){0, 0, 0}, player.velocity);

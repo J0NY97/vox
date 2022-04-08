@@ -982,7 +982,7 @@ int	chunk_mesh_collision(float *orig, float *dir, t_chunk *chunk, float reach, f
  * Same as the chunk_mesh_collision, but instead of saving the intersect_points,
  *	it saves the normals of the faces it collides with;
 */
-int	chunk_mesh_collision_normals(float *orig, float *dir, t_chunk *chunk, float reach, float intersect_normals[16][3])
+int	chunk_mesh_collision_v2(float *orig, float *dir, t_chunk *chunk, float reach, float intersect_points[16][3], float intersect_normals[16][3])
 {
 	float			*vertices;
 	unsigned int	*indices;
@@ -1016,9 +1016,9 @@ int	chunk_mesh_collision_normals(float *orig, float *dir, t_chunk *chunk, float 
 		vec3_add(p1, p1, chunk->world_coordinate);
 		vec3_add(p2, p2, chunk->world_coordinate);
 		vec3_add(p3, p3, chunk->world_coordinate);
-		if (ray_triangle_intersect(orig, dir, p1, p2, p3, intersect_normals[collisions]))
+		if (ray_triangle_intersect(orig, dir, p1, p2, p3, intersect_points[collisions]))
 		{
-			if (vec3_dist(orig, intersect_normals[collisions]) <= reach + EPSILON)
+			if (vec3_dist(orig, intersect_points[collisions]) <= reach + EPSILON)
 			{
 				triangle_face_normal(intersect_normals[collisions], p1, p2, p3);
 				collisions += 1;
