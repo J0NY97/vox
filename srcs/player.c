@@ -203,7 +203,7 @@ void	player_apply_velocity(t_player *player)
 	vec3_add(player->camera.pos, player->camera.pos, player->velocity);
 	player->velocity[0] *= 0.5;
 	if (player->gravity)
-		player->velocity[1] -= player->gravity;
+		player->velocity[1] *= player->gravity;
 	else
 		player->velocity[1] *= 0.5;
 	player->velocity[2] *= 0.5;

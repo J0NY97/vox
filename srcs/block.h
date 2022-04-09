@@ -11,6 +11,7 @@ enum e_block_type
 	BLOCK_SAND,
 	BLOCK_OAK_LOG,
 	BLOCK_OAK_PLANK,
+	BLOCK_OAK_LEAF,
 	BLOCK_TYPE_AMOUNT
 };
 
@@ -66,6 +67,10 @@ static const t_block_data g_block_data[] = {
 	{
 		BLOCK_OAK_PLANK, 1, 0,
 		{280, 280, 280, 280, 280, 280}
+	},
+	{
+		BLOCK_OAK_LEAF, 1, 0,
+		{52, 52, 52, 52, 52, 52}
 	}
 };
 

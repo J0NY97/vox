@@ -61,6 +61,8 @@ int	chunk_gen(t_chunk *chunk)
 			int		whatchumacallit = wanted_y - (chunk->world_coordinate[1]);
 			int		amount = ft_clamp(whatchumacallit, 0, chunk->info->height - 1);
 
+			int		place_tree = (int)block_world_x % 10 == 0 && (int)block_world_z % 10 == 0;
+
 			for (int y = 0; y < chunk->info->height; y++)
 			{
 				float	block_world_y = (chunk->world_coordinate[1] + y);
@@ -103,6 +105,14 @@ int	chunk_gen(t_chunk *chunk)
 					if (block_world_y == 65)
 					{
 						chunk->blocks[i].type = BLOCK_WATER;
+						chunk->has_blocks = 1;
+					}
+					else if (place_tree && y <= whatchumacallit + 7)
+					{
+						if (y == whatchumacallit + 7)
+							chunk->blocks[i].type = BLOCK_OAK_LEAF;
+						else
+							chunk->blocks[i].type = BLOCK_OAK_LOG;
 						chunk->has_blocks = 1;
 					}
 					else
