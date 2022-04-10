@@ -477,7 +477,7 @@ int	main(void)
 			tobegen = regenerate_chunks(chunks, &chunk_info, player_chunk);	
 		}
 		// If we dont have to generate more chunks, we will generate the trees for them;
-		if (!tobegen)
+		if (!tobegen && 0)
 			for (int c = 0; c < chunk_info.chunks_loaded; c++)
 				if (!chunks[c].has_tree)
 					tree_gen(&chunks[c]);
@@ -510,7 +510,10 @@ int	main(void)
 			}
 		}
 
-		player_terrain_collision(player.velocity, player.camera.pos, player.velocity, chunks);
+		// head
+		player_terrain_collision(player.velocity, (float []){player.camera.pos[0], player.camera.pos[1] + 0.25f, player.camera.pos[2]}, player.velocity, chunks);
+		// feet
+		player_terrain_collision(player.velocity, (float []){player.camera.pos[0], player.camera.pos[1] - 1.0f, player.camera.pos[2]}, player.velocity, chunks);
 
 		player_apply_velocity(&player);
 		update_camera(&player.camera);

@@ -1102,17 +1102,19 @@ void	render_block_outline(float *pos, float *color, float *view, float *projecti
 void	player_terrain_collision(float *res, float *pos, float *velocity, t_chunk *chunks)
 {
 	float	normed_velocity[3];
-	float	player_intersect_normal[10][3];
-	float	player_intersect_point[10][3];
+	float	player_intersect_normal[16][3];
+	float	player_intersect_point[16][3];
 	int		player_collision_amount = 0;
 	float	velocity_dist = vec3_dist((float []){0, 0, 0}, velocity);
 	int		player_chunk[3];
+	float	final[3];
 
+	vec3_assign(final, velocity);
 	while (velocity_dist > EPSILON)
 	{
 		get_chunk_pos_from_world_pos(player_chunk, pos, chunks[0].info);
 		player_collision_amount = 0;
-		vec3_normalize(normed_velocity, velocity);
+		vec3_normalize(normed_velocity, final);
 		for (int i = 0; i < chunks[0].info->chunks_loaded; i++)
 		{
 			if (!(chunks[i].blocks_solid_amount > 0 &&
@@ -1123,14 +1125,14 @@ void	player_terrain_collision(float *res, float *pos, float *velocity, t_chunk *
 		}
 		if (player_collision_amount <= 0)
 			break ;
+
 		for (int i = 0; i < player_collision_amount; i++)
 		{
 			float	destination[3];
-			vec3_add(destination, pos, velocity);
+			vec3_add(destination, pos, final);
 
-			float	distance;
+			float	distance = EPSILON;
 			distance = vec3_dist(player_intersect_point[i], destination);	
-
 			distance = ft_fmax(EPSILON, distance);
 
 			float	new_destination[3];
@@ -1139,16 +1141,17 @@ void	player_terrain_collision(float *res, float *pos, float *velocity, t_chunk *
 
 			float	tmp[3];
 			vec3_sub(tmp, destination, new_destination);
-			vec3_add(res, res, tmp);
-
-			vec3_string("destination :", destination);
-			ft_printf("distance : %f\n", distance);
-			vec3_string("new_destination : ", new_destination);
+			vec3_add(final, final, tmp);
 		}
-		velocity_dist = vec3_dist((float []){0, 0, 0}, res);
+		velocity_dist = vec3_dist((float []){0, 0, 0}, final);
 	}
+	vec3_assign(res, final);
 }
 
+/*
+ * Places block of type 'block_type' in the world position of 'world_pos' no
+ *	matter what.
+*/
 void	set_block_at_world_pos(t_chunk *chunks, float *world_pos, int block_type)
 {
 	int		block_local[3];
