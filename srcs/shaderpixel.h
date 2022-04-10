@@ -27,6 +27,7 @@
 # include "thread.h"
 # include "hashtable.h"
 # include "block.h"
+# include "item.h"
 
 # define DEBUG 0
 
@@ -276,6 +277,7 @@ typedef struct s_chunk_info
 
 	int			block_collision_enabled;
 	int			player_collision_enabled;
+	int			fancy_graphics;
 
 	t_chunk		*chunks; // you should not store the chunks here mainly; its just here so you can acces from places you need, without having to pass them in the function as argumnet;
 	GLuint		texture; // the texture is stored here so we dont load a texture per chunk_mesh;
@@ -328,6 +330,7 @@ struct	s_chunk
 	t_block			*blocks; //x*y*z real amount should be : 20 736
 
 	int				has_blocks; // 1/0 whether the chunk has other than air blocks;
+	int				has_tree; // if we already have generated the trees for this chunk;
 
 	t_chunk_mesh	mesh;
 	int				blocks_solid_amount; // previous time block amount
@@ -356,14 +359,14 @@ int			*get_chunk_pos_from_world_pos(int *res, float *world_coords, t_chunk_info 
 float		*block_world_pos(float *res, float *chunk_world_pos, int *block_local_pos);
 t_chunk		*get_chunk(t_chunk_info *info, int *pos);
 t_chunk		*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, int *dir);
-int			*block_world_to_local_pos(int *res, float *world);
+int			*get_block_local_pos_from_world_pos(int *res, float *world);
 int			*get_block_local_pos_from_index(int *res, int *max, int index);
 t_block		*get_block(t_chunk_info *info, float *coords);
 int			get_block_index(t_chunk_info *info, int x, int y, int z);
 
 int			get_chunk_hash_key(int *coords);
 
-void		regenerate_chunks(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v2);
+int			regenerate_chunks(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v2);
 void		regenerate_chunks_v3(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3, t_thread_manager *tm);
 
 void		init_chunk_mesh(t_chunk_mesh *mesh);
@@ -376,7 +379,7 @@ int			chunk_mesh_collision_v2(float *orig, float *dir, t_chunk *chunk, float rea
 t_block		*get_block_from_chunk_mesh(t_chunk *chunk, float *point, float *block_pos, int *face);
 void		render_block_outline(float *pos, float *color, float *view, float *projection);
 
-void		something(float *res, float *pos, float *velocity, t_chunk *chunks);
+void		player_terrain_collision(float *res, float *pos, float *velocity, t_chunk *chunks);
 
 ///////////////////
 //	NOISE

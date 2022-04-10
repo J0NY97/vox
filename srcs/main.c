@@ -196,6 +196,7 @@ int	main(void)
 
 		chunk_info.block_collision_enabled = 0;
 		chunk_info.player_collision_enabled = 0;
+		chunk_info.fancy_graphics = 0;
 
 		glGenTextures(1, &chunk_info.texture);
 	//	new_texture(&chunk_info.texture, MODEL_PATH"cube/version_3_texture.bmp");
@@ -383,6 +384,16 @@ int	main(void)
 				chunks[i].needs_to_update = 1;
 		}
 
+		// Toggle fancy graphics
+		if (keys[GLFW_KEY_F].state == BUTTON_PRESS)
+		{
+			chunk_info.fancy_graphics = chunk_info.fancy_graphics != 1;
+			if (chunk_info.fancy_graphics)
+				LG_INFO("Fancy graphics => ON.");
+			else
+				LG_INFO("Fancy graphics => OFF.");
+		}
+
 // Select equipped block;
 		if (keys[GLFW_KEY_1].state == BUTTON_PRESS)
 			player_info.equipped_block = BLOCK_DIRT;
@@ -394,6 +405,10 @@ int	main(void)
 			player_info.equipped_block = BLOCK_OAK_LOG;
 		if (keys[GLFW_KEY_5].state == BUTTON_PRESS)
 			player_info.equipped_block = BLOCK_OAK_PLANK;
+		if (keys[GLFW_KEY_6].state == BUTTON_PRESS)
+			player_info.equipped_block = BLOCK_OAK_LEAF;
+		if (keys[GLFW_KEY_0].state == BUTTON_PRESS)
+			player_info.equipped_block = ITEM_TREE_PLACER;
 
 		update_fps(&fps);
 		player_events(&player, keys, sp.win);
@@ -455,11 +470,17 @@ int	main(void)
 /////////////////
 		get_chunk_pos_from_world_pos(player_chunk, player.camera.pos, &chunk_info);
 
+		int	tobegen = 0;
 		if (regen_chunks)
 		{
 		//	regenerate_chunks_v3(chunks, &chunk_info, player_chunk, &tm);
-			regenerate_chunks(chunks, &chunk_info, player_chunk);	
+			tobegen = regenerate_chunks(chunks, &chunk_info, player_chunk);	
 		}
+		// If we dont have to generate more chunks, we will generate the trees for them;
+		if (!tobegen)
+			for (int c = 0; c < chunk_info.chunks_loaded; c++)
+				if (!chunks[c].has_tree)
+					tree_gen(&chunks[c]);
 
 		thread_manager_check_threadiness(&tm);
 
@@ -489,9 +510,7 @@ int	main(void)
 			}
 		}
 
-		vec3_string("\n1 player.velocity :", player.velocity);
-		something(player.velocity, player.camera.pos, player.velocity, chunks);
-		vec3_string("2 player.velocity :", player.velocity);
+		player_terrain_collision(player.velocity, player.camera.pos, player.velocity, chunks);
 
 		player_apply_velocity(&player);
 		update_camera(&player.camera);
@@ -511,31 +530,6 @@ int	main(void)
 		glDisable(GL_BLEND);
 		for (; nth_chunk < chunk_info.chunks_loaded; ++nth_chunk)
 		{
-			/*
-			if (chunks[nth_chunk].needs_to_update)
-			{
-				update_chunk_visible_blocks(&chunks[nth_chunk]);
-				update_chunk_mesh(&chunks[nth_chunk].mesh);
-				update_chunk_mesh(&chunks[nth_chunk].liquid_mesh);
-				chunk_aabb_update(&chunks[nth_chunk]);
-				chunks[nth_chunk].needs_to_update = 0;
-
-				// Update all 6 neighbors of the chunk;
-				t_chunk *neighbor;
-				for (int i = 0; i < 6; i++)
-				{
-					neighbor = get_adjacent_chunk(&chunks[nth_chunk], chunk_info.chunks, (int *)g_neighbors[i]);
-					if (neighbor)
-					{
-						update_chunk_visible_blocks(neighbor);
-						update_chunk_mesh(&neighbor->mesh);
-						update_chunk_mesh(&neighbor->liquid_mesh);
-						chunk_aabb_update(neighbor);
-					}
-				}
-			}
-			*/
-
 			// Decide if we want to render the chunk or not;
 			// Dont render chunk if the chunk is further away than the farplane of the camear;
 			// Dont render if the chunk is outside the view fustrum;
@@ -560,7 +554,7 @@ int	main(void)
 					vec3i_dist(player_chunk, chunks[nth_chunk].coordinate) < 2)
 				{
 					show_chunk_borders(&chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
-										// Place Blocking and Removing;
+					// Place Blocking and Removing;
 					// Go through all chunks and check for collision on blocks,
 					// store intersections and indices of the chunk the intersection
 					// is in;
@@ -632,9 +626,25 @@ int	main(void)
 					t_chunk *next_chunk = get_chunk(&chunk_info, chunk_pos);
 					if (next_chunk)
 					{
-						block_world_to_local_pos(local_pos, block_world);
+						get_block_local_pos_from_world_pos(local_pos, block_world);
 						index = get_block_index(&chunk_info, local_pos[0], local_pos[1], local_pos[2]);
-						next_chunk->blocks[index].type = player_info.equipped_block;
+						// Check if block or item equipped;
+						if (player_info.equipped_block < BLOCK_TYPE_AMOUNT)
+						{
+							next_chunk->blocks[index].type = player_info.equipped_block;
+							next_chunk->has_blocks = 1;
+						}
+						else if (player_info.equipped_block > ITEM_FIRST &&
+							player_info.equipped_block < ITEM_LAST)
+						{
+							if (player_info.equipped_block == ITEM_TREE_PLACER)
+								tree_placer(chunks, block_world);
+						}
+						LG_INFO("Block placed in chunk <%d %d %d> at (world : %f %f %f) (local : %d %d %d) (index : %d)",
+							next_chunk->coordinate[0], next_chunk->coordinate[1], next_chunk->coordinate[2],
+							block_world[0], block_world[1], block_world[2],
+							local_pos[0], local_pos[1], local_pos[2],
+							index);
 						next_chunk->needs_to_update = 1;
 					}
 				}

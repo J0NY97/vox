@@ -61,11 +61,9 @@ int	chunk_gen(t_chunk *chunk)
 			int		whatchumacallit = wanted_y - (chunk->world_coordinate[1]);
 			int		amount = ft_clamp(whatchumacallit, 0, chunk->info->height - 1);
 
-			int		place_tree = (int)block_world_x % 10 == 0 && (int)block_world_z % 10 == 0;
-
 			for (int y = 0; y < chunk->info->height; y++)
 			{
-				float	block_world_y = (chunk->world_coordinate[1] + y);
+				float	block_world_y = fabs(chunk->world_coordinate[1] + y);
 				/* ////// CAVE GEN ///////// */
 				/*
 				float	cave_freq = 0.005f;
@@ -105,14 +103,6 @@ int	chunk_gen(t_chunk *chunk)
 					if (block_world_y == 65)
 					{
 						chunk->blocks[i].type = BLOCK_WATER;
-						chunk->has_blocks = 1;
-					}
-					else if (place_tree && y <= whatchumacallit + 7)
-					{
-						if (y == whatchumacallit + 7)
-							chunk->blocks[i].type = BLOCK_OAK_LEAF;
-						else
-							chunk->blocks[i].type = BLOCK_OAK_LOG;
 						chunk->has_blocks = 1;
 					}
 					else
@@ -205,7 +195,7 @@ int	get_block_index(t_chunk_info *info, int x, int y, int z)
 	return ((x * info->width * info->breadth) + (z * info->height) + y);
 }
 
-int	*block_world_to_local_pos(int *res, float *world)
+int	*get_block_local_pos_from_world_pos(int *res, float *world)
 {
 	res[0] = mod(world[0], 16);
 	res[1] = mod(world[1], 16);
@@ -254,7 +244,7 @@ t_block	*get_block(t_chunk_info *info, float *coords)
 	if (chunk)
 	{
 		int	local_pos[3];
-		block_world_to_local_pos(local_pos, coords);
+		get_block_local_pos_from_world_pos(local_pos, coords);
 		int index = get_block_index(info, local_pos[0], local_pos[1], local_pos[2]);
 		return (&chunk->blocks[index]);
 	}
@@ -389,6 +379,7 @@ void	update_chunk(t_chunk *chunk, int *coord)
 	// Generate Chunks	
 	chunk->block_amount = chunk_gen(chunk); // should always return max amount of blocks in a chunk;
 
+	chunk->has_tree = 0;
 	chunk->needs_to_update = 1;
 }
 
@@ -441,7 +432,10 @@ int	get_chunks_to_reload(int *chunks, int *start_coord, t_chunk_info *info, int 
 	return (reload_amount);
 }
 
-void	regenerate_chunks(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3)
+/*
+ * Returns amount of chunks that still need to get generated;
+*/
+int	regenerate_chunks(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3)
 {
 	int	reload_these_chunks[info->chunks_loaded];
 	int	start_coord[3];
@@ -450,7 +444,7 @@ void	regenerate_chunks(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3
 	
 	reload_amount = get_chunks_to_reload(reload_these_chunks, start_coord, info, player_chunk_v3);
 	if (reload_amount <= 0)
-		return ;
+		return (reload_amount);
 	
 	// Go through all the coordinates that will be loaded next time, and
 	//  check if any of the loaded chunks have those coordinates, if not
@@ -494,6 +488,7 @@ void	regenerate_chunks(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3
 		if (nth_chunk >= info->chunks_loaded) 
 			break ;
 	}
+	return (reload_amount);
 }
 
 void	regenerate_chunks_v3(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3, t_thread_manager *tm)
@@ -1104,7 +1099,7 @@ void	render_block_outline(float *pos, float *color, float *view, float *projecti
 	render_3d_line(p3, b2, color, view, projection);
 }
 
-void	something(float *res, float *pos, float *velocity, t_chunk *chunks)
+void	player_terrain_collision(float *res, float *pos, float *velocity, t_chunk *chunks)
 {
 	float	normed_velocity[3];
 	float	player_intersect_normal[10][3];
@@ -1151,5 +1146,200 @@ void	something(float *res, float *pos, float *velocity, t_chunk *chunks)
 			vec3_string("new_destination : ", new_destination);
 		}
 		velocity_dist = vec3_dist((float []){0, 0, 0}, res);
+	}
+}
+
+void	set_block_at_world_pos(t_chunk *chunks, float *world_pos, int block_type)
+{
+	int		block_local[3];
+	int		chunk_pos[3];
+	int		index;
+	t_chunk	*chunk;
+
+	get_chunk_pos_from_world_pos(chunk_pos, world_pos, chunks[0].info);
+	chunk = get_chunk(chunks[0].info, chunk_pos);
+	if (!chunk)
+		return ;
+	get_block_local_pos_from_world_pos(block_local, world_pos);
+	index = get_block_index(chunks[0].info, block_local[0], block_local[1], block_local[2]);
+	chunk->blocks[index].type = block_type;
+	LG_DEBUG("Block placed in chunk <%d %d %d> at (world : %f %f %f) (local : %d %d %d) (index : %d)",
+		chunk->coordinate[0], chunk->coordinate[1], chunk->coordinate[2],
+		world_pos[0], world_pos[1], world_pos[2],
+		block_local[0], block_local[1], block_local[2],
+		index);
+	chunk->needs_to_update = 1;
+	chunk->has_blocks = 1;
+}
+
+void	set_block_at_world_pos_if_not_solid(t_chunk *chunks, float *world_pos, int block_type)
+{
+	int		block_local[3];
+	int		chunk_pos[3];
+	int		index;
+	t_chunk	*chunk;
+
+	get_chunk_pos_from_world_pos(chunk_pos, world_pos, chunks[0].info);
+	chunk = get_chunk(chunks[0].info, chunk_pos);
+	if (!chunk)
+		return ;
+	get_block_local_pos_from_world_pos(block_local, world_pos);
+	index = get_block_index(chunks[0].info, block_local[0], block_local[1], block_local[2]);
+	if (g_block_data[chunk->blocks[index].type + 1].solid == 1)
+		return ;
+	chunk->blocks[index].type = block_type;
+	LG_DEBUG("Block placed in chunk <%d %d %d> at (world : %f %f %f) (local : %d %d %d) (index : %d)",
+		chunk->coordinate[0], chunk->coordinate[1], chunk->coordinate[2],
+		world_pos[0], world_pos[1], world_pos[2],
+		block_local[0], block_local[1], block_local[2],
+		index);
+	chunk->needs_to_update = 1;
+	chunk->has_blocks = 1;
+}
+
+/*
+ * 'world_pos' position of where tree should be placed in the world coordinate;
+*/
+void	tree_placer(t_chunk *chunks, float *world_pos)
+{
+	LG_INFO("Place tree at %f %f %f", world_pos[0], world_pos[1], world_pos[2]);
+
+	// Trunk;
+	for (int i = 0; i < 6; i++)
+		set_block_at_world_pos_if_not_solid(chunks,
+			(float []){world_pos[0], world_pos[1] + i, world_pos[2]}, BLOCK_OAK_LOG);
+	// top leaves
+	for (int i = 0; i < 3; i++)
+	{
+		set_block_at_world_pos_if_not_solid(chunks,
+			(float []){world_pos[0] - 1 + i, world_pos[1] + 6, world_pos[2]}, BLOCK_OAK_LEAF);
+		set_block_at_world_pos_if_not_solid(chunks,
+			(float []){world_pos[0], world_pos[1] + 6, world_pos[2] - 1 + i}, BLOCK_OAK_LEAF);
+	}
+	// 2nd top leaves
+	for (int i = 0; i < 3; i++)
+	{
+		for (int j = 0; j < 3; j++)
+		{
+			if (i == 1 && j == 1)
+				continue ;
+			set_block_at_world_pos_if_not_solid(chunks,
+				(float []){world_pos[0] - 1 + i, world_pos[1] + 5, world_pos[2] - 1 + j},
+				BLOCK_OAK_LEAF);
+		}
+	}
+	// 3nd top leaves
+	for (int i = 0; i < 5; i++)
+	{
+		for (int j = 0; j < 5; j++)
+		{
+			if ((i == 2 && j == 2) || // trunk in the middle
+				((i == 0 || i == 4) && (j == 0 || j == 4))) // the corners of the row
+				continue ;
+			set_block_at_world_pos_if_not_solid(chunks,
+				(float []){world_pos[0] - 2 + i, world_pos[1] + 4, world_pos[2] - 2 + j},
+				BLOCK_OAK_LEAF);
+		}
+	}
+	// 4nd top leaves
+	for (int i = 0; i < 5; i++)
+	{
+		for (int j = 0; j < 5; j++)
+		{
+			if ((i == 2 && j == 2)) // trunk in the middle
+				continue ;
+			set_block_at_world_pos_if_not_solid(chunks,
+				(float []){world_pos[0] - 2 + i, world_pos[1] + 3, world_pos[2] - 2 + j},
+				BLOCK_OAK_LEAF);
+		}
+	}
+	// 5nd top leaves
+	// same as 3rd but lower
+	for (int i = 0; i < 5; i++)
+	{
+		for (int j = 0; j < 5; j++)
+		{
+			if ((i == 2 && j == 2) || // trunk in the middle
+				((i == 0 || i == 4) && (j == 0 || j == 4))) // the corners of the row
+				continue ;
+			set_block_at_world_pos_if_not_solid(chunks,
+				(float []){world_pos[0] - 2 + i, world_pos[1] + 2, world_pos[2] - 2 + j},
+				BLOCK_OAK_LEAF);
+		}
+	}
+}
+
+/*
+ * Returns highest point in world at x, z (world_position);
+*/
+float	get_highest_point(t_chunk *all_chunks, float x, float z)
+{
+	int		chunk_pos[3];
+	float	curr_highest = -1;
+	int		curr_highest_chunk = -1;
+	int		curr_highest_chunk_index = -1;
+
+	get_chunk_pos_from_world_pos(chunk_pos, (float []){x, 0, z}, all_chunks[0].info);
+	for (int i = 0; i < all_chunks[0].info->chunks_loaded; i++)
+	{
+		if (all_chunks[i].coordinate[0] == chunk_pos[0] &&
+			all_chunks[i].coordinate[2] == chunk_pos[2] &&
+			all_chunks[i].has_blocks &&
+			all_chunks[i].coordinate[1] > curr_highest_chunk)
+		{
+			curr_highest_chunk = all_chunks[i].coordinate[1];
+			curr_highest_chunk_index = i;
+		}
+	}
+	if (curr_highest_chunk_index == -1)
+		return (-1); // error;
+	for (int i = 0; i < 4096; i++)
+	{
+	//	if (all_chunks[curr_highest_chunk_index].blocks[i].type != BLOCK_AIR)
+		{
+			int		local[3];
+			float	world[3];
+
+			get_block_local_pos_from_index(local, (int []){16, 16, 16}, i);
+			block_world_pos(world, all_chunks[curr_highest_chunk_index].world_coordinate, local);
+			if (world[1] > curr_highest)
+				curr_highest = world[1];
+		}
+	}
+	return (curr_highest);
+}
+
+void	tree_gen(t_chunk *chunk)
+{
+	float	freq = 0.99f;
+	float	pers = 0.5;
+
+	if (!chunk->has_blocks)
+		return ;
+	chunk->has_tree = 1;
+	for (int x = 0; x < chunk->info->width; x++)
+	{
+		float	block_world_x = fabs(chunk->world_coordinate[0] + x);
+		float	to_use_x = block_world_x * freq;
+		for (int z = 0; z < chunk->info->breadth; z++)
+		{
+			float	block_world_z = fabs(chunk->world_coordinate[2] + z);
+			float	to_use_z = block_world_z * freq;
+			float	perper =
+				octave_perlin(to_use_x, to_use_x / to_use_z, to_use_z, 1, pers) +
+				octave_perlin(to_use_x, to_use_x / to_use_z, to_use_z, 2, pers) +
+				octave_perlin(to_use_x, to_use_x / to_use_z, to_use_z, 4, pers) +
+				octave_perlin(to_use_x, to_use_x / to_use_z, to_use_z, 8, pers);
+			if (perper < 1.0f)
+			{
+				float world_x_pos = chunk->world_coordinate[0] + (float)x;
+				float world_z_pos = chunk->world_coordinate[2] + (float)z;
+				float highest = get_highest_point(chunk->info->chunks, world_x_pos, world_z_pos);
+				if (highest == -1)
+					continue ;
+				tree_placer(chunk->info->chunks,
+					(float []){world_x_pos, highest, world_z_pos});
+			}
+		}
 	}
 }
