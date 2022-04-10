@@ -83,6 +83,8 @@ int	main(void)
 	player.camera.viewport_w = sp.win_w;
 	player.camera.viewport_h = sp.win_h;
 
+	player.gravity = 0;
+
 	t_shader	crosshair_shader;
 	new_crosshair_shader(&crosshair_shader);
 

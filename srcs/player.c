@@ -9,7 +9,7 @@ void	new_player(t_player *player)
 	player->last_mouse_pos[1] = 0;
 
 	new_vec3(player->velocity, 0, 0, 0);
-	player->gravity = 0; //0.98;
+	player->gravity = 0.98;
 
 	player->moving = 0;
 }
@@ -184,15 +184,13 @@ void	player_movement_survival(t_player *player, GLFWwindow *win, t_fps fps)
 		vec3_multiply_f(temp1, temp1, speed);
 	}
 
-	new_vec3(temp2, 0, 0, 0);
 	if (glfwGetKey(win, GLFW_KEY_SPACE) == GLFW_PRESS)
-	{
-		vec3_multiply_f(temp2, player->camera.up, 1);
-	}
+		player->velocity[1] = 1;
+	else
+		player->velocity[1] = -1;
 
 	vec3_add(player->velocity, player->velocity, temp0);
 	vec3_add(player->velocity, player->velocity, temp1);
-	vec3_add(player->velocity, player->velocity, temp2);
 
 	player->moving = (player->velocity[0] || player->velocity[1] || player->velocity[2]);
 }
@@ -202,10 +200,7 @@ void	player_apply_velocity(t_player *player)
 {
 	vec3_add(player->camera.pos, player->camera.pos, player->velocity);
 	player->velocity[0] *= 0.5;
-	if (player->gravity)
-		player->velocity[1] *= player->gravity;
-	else
-		player->velocity[1] *= 0.5;
+	player->velocity[1] *= player->gravity;
 	player->velocity[2] *= 0.5;
 }
 
