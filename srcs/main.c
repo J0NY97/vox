@@ -478,11 +478,32 @@ int	main(void)
 		//	regenerate_chunks_v3(chunks, &chunk_info, player_chunk, &tm);
 			tobegen = regenerate_chunks(chunks, &chunk_info, player_chunk);	
 		}
+
 		// If we dont have to generate more chunks, we will generate the trees for them;
-		if (!tobegen && 0)
+		//	I think we have to do it like this, since structures are multi chunk things,
+		// 	so its going to get convoluted if we are trying to partially generate structures
+		//	in only the chunks that are loaded, and then what happens when the chunks,
+		//	that the rest of the structure should be in, gets loaded?!;
+		if (!tobegen)
+		{
+			ft_printf("We like to party.");
+			int	togen[chunk_info.chunks_loaded][2];
+			ft_printf("We like  we like to party.");
+			int gen_amount = get_surrounding_coords(togen, player_chunk[0], player_chunk[2], chunk_info.render_distance);
+			ft_printf("nannanananannananananananannana.");
+			for (int c = 0; c < gen_amount; c++)
+				ft_printf("%d ", togen[c]);
+			ft_printf("gen_amount : %d\n", gen_amount);
+			exit(0);
 			for (int c = 0; c < chunk_info.chunks_loaded; c++)
-				if (!chunks[c].has_tree)
+			{
+				if (chunks[c].update_structures)
+				{
 					tree_gen(&chunks[c]);
+					chunks[c].update_structures = 0;
+				}
+			}
+		}
 
 		thread_manager_check_threadiness(&tm);
 

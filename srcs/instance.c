@@ -211,9 +211,9 @@ float *block_world_pos(float *res, float *chunk_world_pos, int *block_local_pos)
 {
 	float	scale = 0.5; // t_chunk_info->block_scale;
 
-	res[0] = chunk_world_pos[0] + (block_local_pos[0] * scale);
-	res[1] = chunk_world_pos[0] + (block_local_pos[1] * scale);
-	res[2] = chunk_world_pos[0] + (block_local_pos[2] * scale);
+	res[0] = chunk_world_pos[0] + (block_local_pos[0] /* scale*/);
+	res[1] = chunk_world_pos[1] + (block_local_pos[1] /* scale*/);
+	res[2] = chunk_world_pos[2] + (block_local_pos[2] /* scale*/);
 	return (res);
 }
 
@@ -379,7 +379,7 @@ void	update_chunk(t_chunk *chunk, int *coord)
 	// Generate Chunks	
 	chunk->block_amount = chunk_gen(chunk); // should always return max amount of blocks in a chunk;
 
-	chunk->has_tree = 0;
+	chunk->update_structures = 1;
 	chunk->needs_to_update = 1;
 }
 
@@ -390,6 +390,30 @@ void	*update_chunk_threaded(void *arg)
 	update_chunk(info->chunk, info->coords);
 	info->chunk->args.being_threaded = 0;
 	return (NULL);
+}
+
+/*
+ * Get all coordinates in a radius around start coords;
+ * On a 2d plane;
+ * 
+ * Returns res amount;
+*/
+int	get_surrounding_coords(int **res, int x, int z, int r)
+{
+	int	sx = x - r;
+	int	sz = z - r;
+	int	amount = 0;
+
+	for (int i = 0; i < r + r; i++)
+	{
+		for (int j = 0; j < r + r; j++)
+		{
+			res[amount][0] = sx + i;
+			res[amount][1] = sz + j;
+			++amount;
+		}
+	}
+	return (amount);
 }
 
 /*
@@ -1273,40 +1297,54 @@ void	tree_placer(t_chunk *chunks, float *world_pos)
 }
 
 /*
+ * Returns highest chunk at chunk->coordinate x and z;
+*/
+t_chunk *get_highest_chunk(t_chunk_info *info, int x, int z)
+{
+	int	highest = -1;
+	int	highest_index = -1;
+
+	for (int i = 0; i < info->chunks_loaded; i++)
+	{
+		if (info->chunks[i].coordinate[0] == x &&
+			info->chunks[i].coordinate[2] == z &&
+			info->chunks[i].has_blocks &&
+			info->chunks[i].coordinate[1] > highest)
+		{
+			highest = info->chunks[i].coordinate[1];
+			highest_index = i;
+		}
+	}
+	if (highest_index >= 0 && highest_index < info->chunks_loaded)
+		return (&info->chunks[highest_index]);
+	return (NULL);
+}
+
+/*
  * Returns highest point in world at x, z (world_position);
 */
-float	get_highest_point(t_chunk *all_chunks, float x, float z)
+float	get_highest_point(t_chunk_info *info, float x, float z)
 {
 	int		chunk_pos[3];
 	float	curr_highest = -1;
-	int		curr_highest_chunk = -1;
-	int		curr_highest_chunk_index = -1;
+	t_chunk	*highest_chunk;
 
-	get_chunk_pos_from_world_pos(chunk_pos, (float []){x, 0, z}, all_chunks[0].info);
-	for (int i = 0; i < all_chunks[0].info->chunks_loaded; i++)
-	{
-		if (all_chunks[i].coordinate[0] == chunk_pos[0] &&
-			all_chunks[i].coordinate[2] == chunk_pos[2] &&
-			all_chunks[i].has_blocks &&
-			all_chunks[i].coordinate[1] > curr_highest_chunk)
-		{
-			curr_highest_chunk = all_chunks[i].coordinate[1];
-			curr_highest_chunk_index = i;
-		}
-	}
-	if (curr_highest_chunk_index == -1)
+	get_chunk_pos_from_world_pos(chunk_pos, (float []){x, 0, z}, info);
+	highest_chunk = get_highest_chunk(info, chunk_pos[0], chunk_pos[2]);
+	if (highest_chunk == NULL)
 		return (-1); // error;
 	for (int i = 0; i < 4096; i++)
 	{
-	//	if (all_chunks[curr_highest_chunk_index].blocks[i].type != BLOCK_AIR)
+		if (highest_chunk->blocks[i].type != BLOCK_AIR)
 		{
 			int		local[3];
 			float	world[3];
 
 			get_block_local_pos_from_index(local, (int []){16, 16, 16}, i);
-			block_world_pos(world, all_chunks[curr_highest_chunk_index].world_coordinate, local);
-			if (world[1] > curr_highest)
-				curr_highest = world[1];
+			block_world_pos(world, highest_chunk->world_coordinate, local);
+			if (world[0] == x && world[2] == z)
+				if (world[1] > curr_highest)
+					curr_highest = world[1];
 		}
 	}
 	return (curr_highest);
@@ -1319,7 +1357,6 @@ void	tree_gen(t_chunk *chunk)
 
 	if (!chunk->has_blocks)
 		return ;
-	chunk->has_tree = 1;
 	for (int x = 0; x < chunk->info->width; x++)
 	{
 		float	block_world_x = fabs(chunk->world_coordinate[0] + x);
@@ -1337,7 +1374,7 @@ void	tree_gen(t_chunk *chunk)
 			{
 				float world_x_pos = chunk->world_coordinate[0] + (float)x;
 				float world_z_pos = chunk->world_coordinate[2] + (float)z;
-				float highest = get_highest_point(chunk->info->chunks, world_x_pos, world_z_pos);
+				float highest = get_highest_point(chunk->info, world_x_pos, world_z_pos);
 				if (highest == -1)
 					continue ;
 				tree_placer(chunk->info->chunks,

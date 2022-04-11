@@ -330,7 +330,7 @@ struct	s_chunk
 	t_block			*blocks; //x*y*z real amount should be : 20 736
 
 	int				has_blocks; // 1/0 whether the chunk has other than air blocks;
-	int				has_tree; // if we already have generated the trees for this chunk;
+	int				update_structures; // the terrain needs to be generated before the structures, thats why we have this; 
 
 	t_chunk_mesh	mesh;
 	int				blocks_solid_amount; // previous time block amount
@@ -363,6 +363,9 @@ int			*get_block_local_pos_from_world_pos(int *res, float *world);
 int			*get_block_local_pos_from_index(int *res, int *max, int index);
 t_block		*get_block(t_chunk_info *info, float *coords);
 int			get_block_index(t_chunk_info *info, int x, int y, int z);
+float		get_highest_point(t_chunk_info *info, float x, float z);
+int			get_chunks_to_reload(int *chunks, int *start_coord, t_chunk_info *info, int *player_chunk_v3);
+int			get_surrounding_coords(int *res[2], int x, int z, int r);
 
 int			get_chunk_hash_key(int *coords);
 
