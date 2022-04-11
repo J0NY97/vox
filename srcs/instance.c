@@ -398,18 +398,18 @@ void	*update_chunk_threaded(void *arg)
  * 
  * Returns res amount;
 */
-int	get_surrounding_coords(int **res, int x, int z, int r)
+int	get_surrounding_coords(int *res, int x, int z, int r)
 {
 	int	sx = x - r;
 	int	sz = z - r;
 	int	amount = 0;
 
-	for (int i = 0; i < r + r; i++)
+	for (int i = 0; i <= r + r; i++)
 	{
-		for (int j = 0; j < r + r; j++)
+		for (int j = 0; j <= r + r; j++)
 		{
-			res[amount][0] = sx + i;
-			res[amount][1] = sz + j;
+			res[amount * 2 + 0] = sx + i;
+			res[amount * 2 + 1] = sz + j;
 			++amount;
 		}
 	}
@@ -1231,6 +1231,20 @@ void	tree_placer(t_chunk *chunks, float *world_pos)
 {
 	LG_INFO("Place tree at %f %f %f", world_pos[0], world_pos[1], world_pos[2]);
 
+// We have to check that the block we are placing the tree on is dirt block;
+	int		block_local[3];
+	int		chunk_pos[3];
+	t_chunk	*chunk;
+	int		index;
+	get_chunk_pos_from_world_pos(chunk_pos, world_pos, chunks[0].info);
+	chunk = get_chunk(chunks[0].info, chunk_pos);
+	if (!chunk)
+		return ;
+	get_block_local_pos_from_world_pos(block_local, world_pos);
+	index = get_block_index(chunks[0].info, block_local[0], block_local[1], block_local[2]);
+	if (chunk->blocks[index].type != BLOCK_DIRT)
+		return ;
+
 	// Trunk;
 	for (int i = 0; i < 6; i++)
 		set_block_at_world_pos_if_not_solid(chunks,
@@ -1355,8 +1369,6 @@ void	tree_gen(t_chunk *chunk)
 	float	freq = 0.99f;
 	float	pers = 0.5;
 
-	if (!chunk->has_blocks)
-		return ;
 	for (int x = 0; x < chunk->info->width; x++)
 	{
 		float	block_world_x = fabs(chunk->world_coordinate[0] + x);

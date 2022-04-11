@@ -365,7 +365,7 @@ t_block		*get_block(t_chunk_info *info, float *coords);
 int			get_block_index(t_chunk_info *info, int x, int y, int z);
 float		get_highest_point(t_chunk_info *info, float x, float z);
 int			get_chunks_to_reload(int *chunks, int *start_coord, t_chunk_info *info, int *player_chunk_v3);
-int			get_surrounding_coords(int *res[2], int x, int z, int r);
+int			get_surrounding_coords(int *res, int x, int z, int r);
 
 int			get_chunk_hash_key(int *coords);
 

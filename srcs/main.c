@@ -484,23 +484,28 @@ int	main(void)
 		// 	so its going to get convoluted if we are trying to partially generate structures
 		//	in only the chunks that are loaded, and then what happens when the chunks,
 		//	that the rest of the structure should be in, gets loaded?!;
+		// ...
+		// This only generates tree for the top most chunks of the x/z chunk coordinate;
+		// Pretty convoluted but cant figure out a better way yet;
 		if (!tobegen)
 		{
-			ft_printf("We like to party.");
-			int	togen[chunk_info.chunks_loaded][2];
-			ft_printf("We like  we like to party.");
-			int gen_amount = get_surrounding_coords(togen, player_chunk[0], player_chunk[2], chunk_info.render_distance);
-			ft_printf("nannanananannananananananannana.");
-			for (int c = 0; c < gen_amount; c++)
-				ft_printf("%d ", togen[c]);
-			ft_printf("gen_amount : %d\n", gen_amount);
-			exit(0);
+			int	togen[chunk_info.chunks_loaded * 2];
+			int gen_amount = get_surrounding_coords(togen, player_chunk[0], player_chunk[2], chunk_info.render_distance / 2);
 			for (int c = 0; c < chunk_info.chunks_loaded; c++)
 			{
 				if (chunks[c].update_structures)
 				{
-					tree_gen(&chunks[c]);
-					chunks[c].update_structures = 0;
+					for (int x = 0; x < gen_amount; x++)
+					{
+						if (togen[x * 2 + 0] == chunks[c].coordinate[0] &&
+							togen[x * 2 + 1] == chunks[c].coordinate[2] &&
+							chunks[c].coordinate[1] == 0)
+						{
+							tree_gen(&chunks[c]);
+							chunks[c].update_structures = 0;
+							break ;
+						}
+					}
 				}
 			}
 		}
