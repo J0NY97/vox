@@ -502,11 +502,11 @@ int	main(void)
 							chunks[c].coordinate[1] == 0)
 						{
 							tree_gen(&chunks[c]);
-							chunks[c].update_structures = 0;
 							break ;
 						}
 					}
 				}
+				chunks[c].update_structures = 0;
 			}
 		}
 
