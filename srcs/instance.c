@@ -1232,15 +1232,17 @@ void	tree_placer(t_chunk *chunks, float *world_pos)
 	LG_INFO("Place tree at %f %f %f", world_pos[0], world_pos[1], world_pos[2]);
 
 // We have to check that the block we are placing the tree on is dirt block;
+	float	under_block[3];
 	int		block_local[3];
 	int		chunk_pos[3];
 	t_chunk	*chunk;
 	int		index;
-	get_chunk_pos_from_world_pos(chunk_pos, world_pos, chunks[0].info);
+	vec3_new(under_block, world_pos[0], world_pos[1] - 1.0, world_pos[2]);
+	get_chunk_pos_from_world_pos(chunk_pos, under_block, chunks[0].info);
 	chunk = get_chunk(chunks[0].info, chunk_pos);
 	if (!chunk)
 		return ;
-	get_block_local_pos_from_world_pos(block_local, world_pos);
+	get_block_local_pos_from_world_pos(block_local, under_block);
 	index = get_block_index(chunks[0].info, block_local[0], block_local[1], block_local[2]);
 	if (chunk->blocks[index].type != BLOCK_DIRT)
 		return ;
@@ -1390,7 +1392,7 @@ void	tree_gen(t_chunk *chunk)
 				if (highest == -1)
 					continue ;
 				tree_placer(chunk->info->chunks,
-					(float []){world_x_pos, highest, world_z_pos});
+					(float []){world_x_pos, highest + 1, world_z_pos});
 			}
 		}
 	}
