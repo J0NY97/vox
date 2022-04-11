@@ -84,7 +84,7 @@ static const float g_faces[FACE_AMOUNT][12] = {
 };
 
 static const int g_face_light[FACE_AMOUNT] = {
-	80, 100, 90, 85, 95, 75
+	65, 90, 85, 65, 85, 65
 };
 
 static const int g_neighbors[6][3] = {

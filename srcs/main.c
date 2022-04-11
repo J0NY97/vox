@@ -489,7 +489,7 @@ int	main(void)
 		// Pretty convoluted but cant figure out a better way yet;
 		if (!tobegen)
 		{
-			int	togen[chunk_info.chunks_loaded * 2];
+			int	togen[(chunk_info.chunks_loaded / chunk_info.y_chunk_amount) * 2];
 			int gen_amount = get_surrounding_coords(togen, player_chunk[0], player_chunk[2], chunk_info.render_distance / 2);
 			for (int c = 0; c < chunk_info.chunks_loaded; c++)
 			{

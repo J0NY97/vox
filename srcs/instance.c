@@ -1229,7 +1229,7 @@ void	set_block_at_world_pos_if_not_solid(t_chunk *chunks, float *world_pos, int 
 */
 void	tree_placer(t_chunk *chunks, float *world_pos)
 {
-	LG_INFO("Place tree at %f %f %f", world_pos[0], world_pos[1], world_pos[2]);
+	LG_DEBUG("Place tree at %f %f %f", world_pos[0], world_pos[1], world_pos[2]);
 
 // We have to check that the block we are placing the tree on is dirt block;
 	float	under_block[3];
