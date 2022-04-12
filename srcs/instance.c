@@ -1405,9 +1405,9 @@ float	get_highest_point(t_chunk_info *info, float x, float z)
 
 void	flora_decider(t_chunk_info *info, float chance, float *world_pos)
 {
-	if (chance < 1.15f)
+	if (chance < 1.4f)
 	{
-		if (chance < 1.075f)
+		if (chance < 1.3f)
 			flora_placer(info, FLORA_FLOWER_YELLOW, world_pos);
 		else
 			flora_placer(info, FLORA_FLOWER_RED, world_pos);
@@ -1434,17 +1434,17 @@ void	tree_gen(t_chunk *chunk)
 				octave_perlin(to_use_x, to_use_x / to_use_z, to_use_z, 2, pers) +
 				octave_perlin(to_use_x, to_use_x / to_use_z, to_use_z, 4, pers) +
 				octave_perlin(to_use_x, to_use_x / to_use_z, to_use_z, 8, pers);
-			if (perper < 1.2f)
+			if (perper < 1.5f)
 			{
 				float world_x_pos = chunk->world_coordinate[0] + (float)x;
 				float world_z_pos = chunk->world_coordinate[2] + (float)z;
 				float highest = get_highest_point(chunk->info, world_x_pos, world_z_pos);
 				if (highest == -1)
 					continue ;
-				if (perper < 1.0f)
+				if (perper < 1.25f)
 					tree_placer(chunk->info,
 						(float []){world_x_pos, highest + 1, world_z_pos});
-				else if (perper < 1.3f)
+				else if (perper < 1.5f)
 					flora_decider(chunk->info, perper,
 						(float []){world_x_pos, highest + 1, world_z_pos});
 				
