@@ -12,10 +12,16 @@ enum e_block_type
 	BLOCK_OAK_LOG,
 	BLOCK_OAK_PLANK,
 	BLOCK_OAK_LEAF,
+	FLORA_GRASS,
+	FLORA_FLOWER_RED,
+	FLORA_FLOWER_YELLOW,
 	BLOCK_TYPE_AMOUNT
 };
 
-enum e_face
+/*
+ * Block faces;
+*/
+enum e_block_face
 {
 	FACE_FRONT,
 	FACE_BACK,
@@ -26,51 +32,74 @@ enum e_face
 	FACE_AMOUNT
 };
 
+/*
+ * Vegetation faces;
+*/
+enum e_flora_face
+{
+	FACE_FLORA_A,
+	FACE_FLORA_B,
+	FACE_FLORA_AMOUNT
+};
+
 // Every block has a block_data corresponding with its type;
 typedef struct s_block_data
 {
 	char			type; // 'e_block_type', at some point maybe same array index in 'g_block_data';
 	char			solid; // if solid or not;
 	char			liquid; // if liquid or not; to know if we want to add to liquid mesh;
+	char			flora; // flora or not;
 	unsigned short	face_texture[FACE_AMOUNT]; // same order as 'e_face'
 }	t_block_data;
 
 static const t_block_data g_block_data[] = {
 	{
-		BLOCK_AIR, 0, 0,
+		BLOCK_AIR, 0, 0, 0,
 		{-1, -1, -1, -1, -1, -1}
 	},
 	{
-		BLOCK_DIRT, 1, 0,
+		BLOCK_DIRT, 1, 0, 0,
 		{132, 132, 132, 132, 135, 224}
 	},
 	{
-		BLOCK_STONE, 1, 0,
+		BLOCK_STONE, 1, 0, 0,
 		{164, 164, 164, 164, 164, 164}
 	},
 	{
-		BLOCK_BEDROCK, 1, 0,
+		BLOCK_BEDROCK, 1, 0, 0,
 		{6, 6, 6, 6, 6, 6}
 	},
 	{
-		BLOCK_WATER, 0, 1,
+		BLOCK_WATER, 0, 1, 0,
 		{362, 362, 362, 362, 362, 362}
 	},
 	{
-		BLOCK_SAND, 1, 0,
+		BLOCK_SAND, 1, 0, 0,
 		{211, 211, 211, 211, 211, 211}
 	},
 	{
-		BLOCK_OAK_LOG, 1, 0,
+		BLOCK_OAK_LOG, 1, 0, 0,
 		{27, 27, 27, 27, 28, 28}
 	},
 	{
-		BLOCK_OAK_PLANK, 1, 0,
+		BLOCK_OAK_PLANK, 1, 0, 0,
 		{280, 280, 280, 280, 280, 280}
 	},
 	{
-		BLOCK_OAK_LEAF, 1, 0,
+		BLOCK_OAK_LEAF, 1, 0, 0,
 		{52, 52, 52, 52, 52, 52}
+	},
+	{
+		FLORA_GRASS, 0, 0, 1,
+		{275, 275, 0, 0, 0, 0}
+	},
+	{
+		FLORA_FLOWER_RED, 0, 0, 1,
+		{231, 231, 0, 0, 0, 0}
+	},
+	{
+		FLORA_FLOWER_YELLOW, 0, 0, 1,
+		{327, 327, 0, 0, 0, 0}
 	}
 };
 
@@ -81,6 +110,11 @@ static const float g_faces[FACE_AMOUNT][12] = {
 /* RIGHT */	{1, 1, 1,  1, -1, 1,  1, -1, -1,  1, 1, -1},
 /* TOP   */	{-1, 1, -1,  -1, 1, 1,  1, 1, 1,  1, 1, -1},
 /* BOT   */	{-1, -1, -1,  1, -1, -1,  1, -1, 1,  -1, -1, 1}
+};
+
+static const float g_flora_faces[FACE_FLORA_AMOUNT][12] = {
+	/* A */ {-1, 1, 1,  -1, -1, 1,  1, -1, -1,  1, 1, -1},
+	/* B */ {-1, 1, -1,  -1, -1, -1,  1, -1, 1,  1, 1, 1}
 };
 
 static const int g_face_light[FACE_AMOUNT] = {

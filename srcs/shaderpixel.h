@@ -333,10 +333,13 @@ struct	s_chunk
 	int				update_structures; // the terrain needs to be generated before the structures, thats why we have this; 
 
 	t_chunk_mesh	mesh;
-	int				blocks_solid_amount; // previous time block amount
+	int				blocks_solid_amount; // amount of blocks in this mesh;
 
 	t_chunk_mesh	liquid_mesh;
-	int				blocks_liquid_amount; // previous time block amount
+	int				blocks_liquid_amount; // amount of blocks in this mesh;
+
+	t_chunk_mesh	flora_mesh;
+	int				blocks_flora_amount; // amount of blocks in this mesh;
 
 	t_aabb			aabb;
 

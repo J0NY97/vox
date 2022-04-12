@@ -220,6 +220,7 @@ int	main(void)
 			new_chunk(&chunks[nth_chunk], &chunk_info, nth_chunk);
 			chunks[nth_chunk].mesh.texture = chunk_info.texture;
 			chunks[nth_chunk].liquid_mesh.texture = chunk_info.texture;
+			chunks[nth_chunk].flora_mesh.texture = chunk_info.texture;
 		}
 		ft_printf("Chunks created : %d\n", nth_chunk);
 //////////////////////////////
@@ -519,6 +520,7 @@ int	main(void)
 				update_chunk_visible_blocks(&chunks[ent]);
 				update_chunk_mesh(&chunks[ent].mesh);
 				update_chunk_mesh(&chunks[ent].liquid_mesh);
+				update_chunk_mesh(&chunks[ent].flora_mesh);
 				chunk_aabb_update(&chunks[ent]);
 				chunks[ent].needs_to_update = 0;
 
@@ -532,6 +534,7 @@ int	main(void)
 						update_chunk_visible_blocks(neighbor);
 						update_chunk_mesh(&neighbor->mesh);
 						update_chunk_mesh(&neighbor->liquid_mesh);
+						update_chunk_mesh(&neighbor->flora_mesh);
 						chunk_aabb_update(neighbor);
 					}
 				}
@@ -684,12 +687,35 @@ int	main(void)
 		}
 		/* END OF COLLISION */
 
+// Sky box breaks if you dont render it before the alpha stuff;
+		render_skybox(&skybox, &player.camera);
+
 		glEnable(GL_BLEND);
+		glEnable(GL_CULL_FACE);
 		nth_chunk = 0;
 		for (; nth_chunk < chunk_info.chunks_loaded; ++nth_chunk)
-			if (chunks[nth_chunk].render && chunks[nth_chunk].blocks_liquid_amount > 0)
-				render_chunk_mesh(&chunks[nth_chunk].liquid_mesh, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
+		{
+			if (chunks[nth_chunk].render)
+			{
+				if (chunks[nth_chunk].blocks_liquid_amount > 0)
+					render_chunk_mesh(&chunks[nth_chunk].liquid_mesh, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
+			}
+		}
+
+		glEnable(GL_BLEND);
+		glDisable(GL_CULL_FACE);
+		nth_chunk = 0;
+		for (; nth_chunk < chunk_info.chunks_loaded; ++nth_chunk)
+		{
+			if (chunks[nth_chunk].render)
+			{
+				if (chunks[nth_chunk].blocks_flora_amount > 0)
+					render_chunk_mesh(&chunks[nth_chunk].flora_mesh, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
+			}
+		}
+
 		glDisable(GL_BLEND);
+		glEnable(GL_CULL_FACE);
 
 //		ft_printf("CPU : %d, GPU : %d\n", chunk_info.chunks_loaded, sent_to_gpu);
 
@@ -697,7 +723,6 @@ int	main(void)
 		// END Chunk things
 /////////////////
 
-		render_skybox(&skybox, &player.camera);
 
 		glDisable(GL_DEPTH_TEST);
 		render_crosshair();
