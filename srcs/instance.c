@@ -318,6 +318,7 @@ void	get_blocks_visible(t_chunk *chunk)
 	t_block	*blocks;
 
 	chunk->blocks_solid_amount = 0;
+	chunk->blocks_flora_amount = 0;
 	chunk->blocks_liquid_amount = 0;
 
 	if (!chunk->has_blocks)
@@ -1262,7 +1263,7 @@ void	tree_placer(t_chunk_info *info, float *world_pos)
 
 // We have to check that the block we are placing the tree on is dirt block;
 	t_block_data *data = get_block_data_at_world_pos(info,
-		(float []){world_pos[0], world_pos[1] - 1, world_pos[2]});
+		(float []){world_pos[0], world_pos[1] - 1.0f, world_pos[2]});
 	if (!data || data->type != BLOCK_DIRT)
 		return ;
 

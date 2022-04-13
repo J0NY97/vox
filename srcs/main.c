@@ -670,11 +670,11 @@ int	main(void)
 					t_chunk *next_chunk = get_chunk(&chunk_info, chunk_pos);
 					if (next_chunk)
 					{
-						get_block_local_pos_from_world_pos(local_pos, block_world);
-						index = get_block_index(&chunk_info, local_pos[0], local_pos[1], local_pos[2]);
 						// Check if block or item equipped;
 						if (player_info.equipped_block < BLOCK_TYPE_AMOUNT)
 						{
+							get_block_local_pos_from_world_pos(local_pos, block_world);
+							index = get_block_index(&chunk_info, local_pos[0], local_pos[1], local_pos[2]);
 							next_chunk->blocks[index].type = player_info.equipped_block;
 							next_chunk->has_blocks = 1;
 						}
@@ -682,13 +682,11 @@ int	main(void)
 							player_info.equipped_block < ITEM_LAST)
 						{
 							if (player_info.equipped_block == ITEM_TREE_PLACER)
+							{
+								LG_INFO("Place tree at %f %f %f", block_world[0], block_world[1], block_world[2]);
 								tree_placer(chunks, block_world);
+							}
 						}
-						LG_INFO("Block placed in chunk <%d %d %d> at (world : %f %f %f) (local : %d %d %d) (index : %d)",
-							next_chunk->coordinate[0], next_chunk->coordinate[1], next_chunk->coordinate[2],
-							block_world[0], block_world[1], block_world[2],
-							local_pos[0], local_pos[1], local_pos[2],
-							index);
 						next_chunk->needs_to_update = 1;
 					}
 				}
