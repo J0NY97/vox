@@ -90,7 +90,8 @@ int	chunk_gen(t_chunk *chunk)
 					}
 					else
 					{
-						if (block_world_y <= 67 && block_world_y >= 65)
+						if ((block_world_y <= 67 && block_world_y >= 65) ||
+							block_world_y + 1 <= 65)
 							chunk->blocks[i].type = BLOCK_SAND;
 						else if (block_world_y < 4)
 							chunk->blocks[i].type = BLOCK_BEDROCK;
@@ -101,7 +102,7 @@ int	chunk_gen(t_chunk *chunk)
 				}
 				else
 				{
-					if (block_world_y == 65)
+					if (block_world_y <= 65)
 					{
 						chunk->blocks[i].type = BLOCK_WATER;
 						chunk->has_blocks = 1;
@@ -1264,7 +1265,7 @@ void	tree_placer(t_chunk_info *info, float *world_pos)
 // We have to check that the block we are placing the tree on is dirt block;
 	t_block_data *data = get_block_data_at_world_pos(info,
 		(float []){world_pos[0], world_pos[1] - 1.0f, world_pos[2]});
-	if (!data || data->type != BLOCK_DIRT)
+	if (!data)// || data->type != BLOCK_DIRT)
 		return ;
 
 	// Trunk;
@@ -1405,6 +1406,36 @@ float	get_highest_point(t_chunk_info *info, float x, float z)
 	return (curr_highest);
 }
 
+/*
+ * Get highets point in the world at x/z coordinate of block type 'type';
+*/
+float	get_highest_point_of_type(t_chunk_info *info, float x, float z, int type)
+{
+	int		chunk_pos[3];
+	float	curr_highest = -1;
+	t_chunk	*highest_chunk;
+
+	get_chunk_pos_from_world_pos(chunk_pos, (float []){x, 0, z}, info);
+	highest_chunk = get_highest_chunk(info, chunk_pos[0], chunk_pos[2]);
+	if (highest_chunk == NULL)
+		return (-1); // error;
+	for (int i = 0; i < 4096; i++)
+	{
+		if (highest_chunk->blocks[i].type == type)
+		{
+			int		local[3];
+			float	world[3];
+
+			get_block_local_pos_from_index(local, (int []){16, 16, 16}, i);
+			block_world_pos(world, highest_chunk->world_coordinate, local);
+			if (world[0] == x && world[2] == z)
+				if (world[1] > curr_highest)
+					curr_highest = world[1];
+		}
+	}
+	return (curr_highest);
+}
+
 void	flora_decider(t_chunk_info *info, float chance, float *world_pos)
 {
 	if (chance < 1.4f)
@@ -1440,7 +1471,7 @@ void	tree_gen(t_chunk *chunk)
 			{
 				float world_x_pos = chunk->world_coordinate[0] + (float)x;
 				float world_z_pos = chunk->world_coordinate[2] + (float)z;
-				float highest = get_highest_point(chunk->info, world_x_pos, world_z_pos);
+				float highest = get_highest_point_of_type(chunk->info, world_x_pos, world_z_pos, BLOCK_DIRT);
 				if (highest == -1)
 					continue ;
 				if (perper < 1.25f)
