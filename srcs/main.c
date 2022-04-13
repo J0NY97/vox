@@ -542,9 +542,9 @@ int	main(void)
 		}
 
 		// head
-		player_terrain_collision(player.velocity, (float []){player.camera.pos[0], player.camera.pos[1] + 0.25f, player.camera.pos[2]}, player.velocity, chunks);
+		player_terrain_collision(player.velocity, (float []){player.camera.pos[0], player.camera.pos[1] + 0.25f, player.camera.pos[2]}, player.velocity, &chunk_info);
 		// feet
-		player_terrain_collision(player.velocity, (float []){player.camera.pos[0], player.camera.pos[1] - 1.0f, player.camera.pos[2]}, player.velocity, chunks);
+		player_terrain_collision(player.velocity, (float []){player.camera.pos[0], player.camera.pos[1] - 1.0f, player.camera.pos[2]}, player.velocity, &chunk_info);
 
 		player_apply_velocity(&player);
 		update_camera(&player.camera);
@@ -570,21 +570,20 @@ int	main(void)
 			if (vec3_dist(player.camera.pos, chunks[nth_chunk].world_coordinate) <
 				player.camera.far_plane + chunks[nth_chunk].info->chunk_size[0] &&
 				aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum))
-			{
-				if (chunks[nth_chunk].blocks_solid_amount > 0)
-					render_chunk_mesh(&chunks[nth_chunk].mesh, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
 				chunks[nth_chunk].render = 1;
-			}
 			else
 				chunks[nth_chunk].render = 0;
+			
+			// Render solid mesh;
+			if (chunks[nth_chunk].render)
+				if (chunks[nth_chunk].blocks_solid_amount > 0)
+					render_chunk_mesh(&chunks[nth_chunk].mesh, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
 
 			if (chunks[nth_chunk].blocks_solid_amount > 0 ||
-				chunks[nth_chunk].blocks_liquid_amount > 0)
+				chunks[nth_chunk].blocks_flora_amount > 0)
 			{
 				// Collision Detection
-				if ((chunk_info.block_collision_enabled ||
-					chunk_info.player_collision_enabled) &&
-					chunks[nth_chunk].blocks_solid_amount > 0 &&
+				if (chunk_info.block_collision_enabled &&
 					vec3i_dist(player_chunk, chunks[nth_chunk].coordinate) < 2)
 				{
 					show_chunk_borders(&chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
@@ -592,9 +591,19 @@ int	main(void)
 					// Go through all chunks and check for collision on blocks,
 					// store intersections and indices of the chunk the intersection
 					// is in;
-					if (chunk_info.block_collision_enabled)
+
+					// Collision on solid mesh;
+					if (chunks[nth_chunk].blocks_solid_amount > 0)
 					{
-						int collisions_on_chunk = chunk_mesh_collision(player.camera.pos, player.camera.front, &chunks[nth_chunk], player_info.reach, intersect_point + collision_result);
+						int collisions_on_chunk = chunk_mesh_collision(player.camera.pos, player.camera.front, &chunks[nth_chunk].mesh, chunks[nth_chunk].world_coordinate, player_info.reach, intersect_point + collision_result);
+						for (int i = 0; i < collisions_on_chunk; i++)
+							intersect_chunk_index[collision_result + i] = nth_chunk;
+						collision_result += collisions_on_chunk;
+					}
+					// Collision on flora mesh;
+					if (chunks[nth_chunk].blocks_flora_amount > 0)
+					{
+						int collisions_on_chunk = chunk_mesh_collision(player.camera.pos, player.camera.front, &chunks[nth_chunk].flora_mesh, chunks[nth_chunk].world_coordinate, player_info.reach, intersect_point + collision_result);
 						for (int i = 0; i < collisions_on_chunk; i++)
 							intersect_chunk_index[collision_result + i] = nth_chunk;
 						collision_result += collisions_on_chunk;
@@ -627,11 +636,12 @@ int	main(void)
 			if (mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS ||
 				mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS)
 				clicked = 1;
-			hovered_block = get_block_from_chunk_mesh(&chunks[closest_index], closest_point, block_pos, &face);
+			hovered_block = get_block_from_mesh(&chunks[closest_index], &chunks[closest_index].mesh, closest_point, block_pos, &face);
+			// If not found in solid block mesh, it must be in the flora mesh;
+			if (!hovered_block)
+				hovered_block = get_block_from_mesh(&chunks[closest_index], &chunks[closest_index].flora_mesh, closest_point, block_pos, &face);
 			if (hovered_block)
-			{
 				render_block_outline(block_pos, (float []){0, 0, 0}, player.camera.view, player.camera.projection);
-			}
 			if (hovered_block && clicked)
 			{
 				if (mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS)

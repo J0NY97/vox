@@ -902,7 +902,7 @@ void	add_to_chunk_mesh(t_chunk_mesh *mesh, int *coord, float *face_vertices, int
  *	the face, of the block the point belongs to, in 'face' and
  *	return the pointer of the block;
 */
-t_block	*get_block_from_chunk_mesh(t_chunk *chunk, float *point, float *block_pos, int *face)
+t_block	*get_block_from_mesh(t_chunk *chunk, t_chunk_mesh *mesh, float *point, float *block_pos, int *face)
 {
 	float	p1[VEC3_SIZE];
 	float	p2[VEC3_SIZE];
@@ -911,7 +911,8 @@ t_block	*get_block_from_chunk_mesh(t_chunk *chunk, float *point, float *block_po
 
 	for (; i < chunk->block_amount; i++)
 	{
-		if (g_block_data[chunk->blocks[i].type + 1].solid == 0)
+		if (g_block_data[chunk->blocks[i].type + 1].solid == 0 &&
+			g_block_data[chunk->blocks[i].type + 1].flora == 0)
 			continue ;
 
 		int		l_pos[3];
@@ -973,7 +974,7 @@ t_block	*get_block_from_chunk_mesh(t_chunk *chunk, float *point, float *block_po
  * TODO: This should probably returns either an array of points being hit,
  * 	or just the closest one....?
 */
-int	chunk_mesh_collision(float *orig, float *dir, t_chunk *chunk, float reach, float intersect_point[16][3])
+int	chunk_mesh_collision(float *orig, float *dir, t_chunk_mesh *mesh, float *world_coords, float reach, float intersect_point[16][3])
 {
 	float			*vertices;
 	unsigned int	*indices;
@@ -984,9 +985,9 @@ int	chunk_mesh_collision(float *orig, float *dir, t_chunk *chunk, float reach, f
 	int				collisions = 0;
 
 	vec3_normalize(norm_dir, dir);
-	vertices = chunk->mesh.vertices;
-	indices = chunk->mesh.indices;
-	for (int i = 0; i < chunk->mesh.indices_amount / 3; i++)
+	vertices = mesh->vertices;
+	indices = mesh->indices;
+	for (int i = 0; i < mesh->indices_amount / 3; i++)
 	{
 		int k = i * 3;
 		vec3_new(p1,
@@ -1004,9 +1005,9 @@ int	chunk_mesh_collision(float *orig, float *dir, t_chunk *chunk, float reach, f
 		
 		// We have to add the chunk position to the chunk mesh, since that is 
 		//		what we are doing in the shader;
-		vec3_add(p1, p1, chunk->world_coordinate);
-		vec3_add(p2, p2, chunk->world_coordinate);
-		vec3_add(p3, p3, chunk->world_coordinate);
+		vec3_add(p1, p1, world_coords);
+		vec3_add(p2, p2, world_coords);
+		vec3_add(p3, p3, world_coords);
 		if (ray_triangle_intersect(orig, dir, p1, p2, p3, intersect_point[collisions]))/* ||
 			ray_line_intersect(orig, dir, p1, p2, intersect_point[collisions]) ||
 			ray_line_intersect(orig, dir, p1, p3, intersect_point[collisions]) ||
@@ -1133,7 +1134,7 @@ void	render_block_outline(float *pos, float *color, float *view, float *projecti
 	render_3d_line(p3, b2, color, view, projection);
 }
 
-void	player_terrain_collision(float *res, float *pos, float *velocity, t_chunk *chunks)
+void	player_terrain_collision(float *res, float *pos, float *velocity, t_chunk_info *info)
 {
 	float	normed_velocity[3];
 	float	player_intersect_normal[16][3];
@@ -1146,15 +1147,15 @@ void	player_terrain_collision(float *res, float *pos, float *velocity, t_chunk *
 	vec3_assign(final, velocity);
 	while (velocity_dist > EPSILON)
 	{
-		get_chunk_pos_from_world_pos(player_chunk, pos, chunks[0].info);
+		get_chunk_pos_from_world_pos(player_chunk, pos, info);
 		player_collision_amount = 0;
 		vec3_normalize(normed_velocity, final);
-		for (int i = 0; i < chunks[0].info->chunks_loaded; i++)
+		for (int i = 0; i < info->chunks_loaded; i++)
 		{
-			if (!(chunks[i].blocks_solid_amount > 0 &&
-				vec3i_dist(player_chunk, chunks[i].coordinate) < 2))
+			if (!(info->chunks[i].blocks_solid_amount > 0 &&
+				vec3i_dist(player_chunk, info->chunks[i].coordinate) < 2))
 				continue ;	
-			int colls = chunk_mesh_collision_v2(pos, normed_velocity, &chunks[i], velocity_dist, player_intersect_point + player_collision_amount, player_intersect_normal + player_collision_amount);
+			int colls = chunk_mesh_collision_v2(pos, normed_velocity, &info->chunks[i], velocity_dist, player_intersect_point + player_collision_amount, player_intersect_normal + player_collision_amount);
 			player_collision_amount += colls;
 		}
 		if (player_collision_amount <= 0)
