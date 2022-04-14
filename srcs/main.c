@@ -513,7 +513,7 @@ int	main(void)
 
 		thread_manager_check_threadiness(&tm);
 
-		for (int ent= 0; ent < chunk_info.chunks_loaded; ++ent)
+		for (int ent = 0; ent < chunk_info.chunks_loaded; ++ent)
 		{
 			if (chunks[ent].needs_to_update)
 			{
