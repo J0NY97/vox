@@ -48,7 +48,7 @@ void	player_entity_collision(t_player *player, t_entity *entity)
 
 			if (ray_triangle_intersect(player->camera.pos,
 					vec3_normalize(normed, player->velocity),
-					p1, p2, p3, intersect_point))
+					p1, p2, p3, 1, intersect_point))
 			{
 				triangle_collision = 1;
 				break ;
@@ -119,7 +119,7 @@ int	player_entity_mesh_collision(t_player *player, t_entity *entity)
 					vertices[indices[ind + 2] * 3 + 1],
 					vertices[indices[ind + 2] * 3 + 2]);
 				if (ray_triangle_intersect(local_player_pos, player->camera.front,
-					p3, p2, p1, intersection_p))
+					p3, p2, p1, 1, intersection_p))
 				{
 					entity->collision = 1;
 

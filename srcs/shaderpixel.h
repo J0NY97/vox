@@ -363,7 +363,7 @@ float		*block_world_pos(float *res, float *chunk_world_pos, int *block_local_pos
 t_chunk		*get_chunk(t_chunk_info *info, int *pos);
 t_chunk		*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, int *dir);
 int			*get_block_local_pos_from_world_pos(int *res, float *world);
-int			*get_block_local_pos_from_index(int *res, int *max, int index);
+int			*get_block_local_pos_from_index(int *res, int index);
 t_block		*get_block(t_chunk_info *info, float *coords);
 int			get_block_index(t_chunk_info *info, int x, int y, int z);
 float		get_highest_point(t_chunk_info *info, float x, float z);
@@ -385,6 +385,8 @@ int			chunk_mesh_collision(float *orig, float *dir, t_chunk_mesh *mesh, float *w
 int			chunk_mesh_collision_v2(float *orig, float *dir, t_chunk *chunk, float reach, float intersect_points[16][3], float intersect_normals[16][3]);
 t_block		*get_block_from_mesh(t_chunk *chunk, t_chunk_mesh *mesh, float *point, float *block_pos, int *face);
 void		render_block_outline(float *pos, float *color, float *view, float *projection);
+
+void		set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_type);
 
 void		player_terrain_collision(float *res, float *pos, float *velocity, t_chunk_info *info);
 

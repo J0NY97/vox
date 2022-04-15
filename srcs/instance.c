@@ -223,7 +223,7 @@ float *block_world_pos(float *res, float *chunk_world_pos, int *block_local_pos)
  * From 'index' in 'chunk->blocks' get the x,y,z pos in the chunk coordinates;
  * 	'max' is the max width, breadth and height of the chunk;
 */
-int	*get_block_local_pos_from_index(int *res, int *max, int index)
+int	*get_block_local_pos_from_index(int *res, int index)
 {
 	// TODO use chunk->w, h, b;
 	res[0] = index / (16 * 16);
@@ -337,7 +337,7 @@ void	get_blocks_visible(t_chunk *chunk)
 		if (blocks[i].type == BLOCK_AIR) // <-- very important, im not sure what happens if we are trying to render an air block;
 			continue ;
 
-		get_block_local_pos_from_index(pos, (int []){16, 16, 16}, i);
+		get_block_local_pos_from_index(pos, i);
 		if (g_block_data[blocks[i].type + 1].flora)
 		{
 			add_to_chunk_mesh(&chunk->flora_mesh, pos, (float *)g_flora_faces[0], g_block_data[blocks[i].type + 1].face_texture[0], 100);
@@ -899,6 +899,100 @@ void	add_to_chunk_mesh(t_chunk_mesh *mesh, int *coord, float *face_vertices, int
 }
 
 /*
+ * Returns true if hovering over;
+ * Saves which face was hovered, in 'face';
+*/
+int	is_hovering_solid_block(float *block_pos, float *point, int *face)
+{
+	float	p1[3];
+	float	p2[3];
+	float	p3[3];
+
+	for (int f = 0; f < FACE_AMOUNT; f++)
+	{
+		p1[0] = (g_faces[f][0] * 0.5f) + block_pos[0];
+		p1[1] = (g_faces[f][1] * 0.5f) + block_pos[1];
+		p1[2] = (g_faces[f][2] * 0.5f) + block_pos[2];
+
+		p2[0] = (g_faces[f][3] * 0.5f) + block_pos[0];
+		p2[1] = (g_faces[f][4] * 0.5f) + block_pos[1];
+		p2[2] = (g_faces[f][5] * 0.5f) + block_pos[2];
+
+		p3[0] = (g_faces[f][6] * 0.5f) + block_pos[0];
+		p3[1] = (g_faces[f][7] * 0.5f) + block_pos[1];
+		p3[2] = (g_faces[f][8] * 0.5f) + block_pos[2];
+		if (point_in_triangle(point, p1, p2, p3))
+		{
+			*face = f;
+			return (1);
+		}
+
+		p1[0] = (g_faces[f][0] * 0.5f) + block_pos[0];
+		p1[1] = (g_faces[f][1] * 0.5f) + block_pos[1];
+		p1[2] = (g_faces[f][2] * 0.5f) + block_pos[2];
+
+		p2[0] = (g_faces[f][6] * 0.5f) + block_pos[0];
+		p2[1] = (g_faces[f][7] * 0.5f) + block_pos[1];
+		p2[2] = (g_faces[f][8] * 0.5f) + block_pos[2];
+
+		p3[0] = (g_faces[f][9] * 0.5f) + block_pos[0];
+		p3[1] = (g_faces[f][10] * 0.5f) + block_pos[1];
+		p3[2] = (g_faces[f][11] * 0.5f) + block_pos[2];
+		if (point_in_triangle(point, p1, p2, p3))
+		{
+			*face = f;
+			return (1);
+		}
+	}
+	return (0);
+}
+
+int	is_hovering_flora_block(float *block_pos, float *point, int *face)
+{
+	float	p1[3];
+	float	p2[3];
+	float	p3[3];
+
+	for (int f = 0; f < FACE_FLORA_AMOUNT; f++)
+	{
+		p1[0] = (g_flora_faces[f][0] * 0.5f) + block_pos[0];
+		p1[1] = (g_flora_faces[f][1] * 0.5f) + block_pos[1];
+		p1[2] = (g_flora_faces[f][2] * 0.5f) + block_pos[2];
+
+		p2[0] = (g_flora_faces[f][3] * 0.5f) + block_pos[0];
+		p2[1] = (g_flora_faces[f][4] * 0.5f) + block_pos[1];
+		p2[2] = (g_flora_faces[f][5] * 0.5f) + block_pos[2];
+
+		p3[0] = (g_flora_faces[f][6] * 0.5f) + block_pos[0];
+		p3[1] = (g_flora_faces[f][7] * 0.5f) + block_pos[1];
+		p3[2] = (g_flora_faces[f][8] * 0.5f) + block_pos[2];
+		if (point_in_triangle(point, p1, p2, p3))
+		{
+			*face = f;
+			return (1);
+		}
+
+		p1[0] = (g_flora_faces[f][0] * 0.5f) + block_pos[0];
+		p1[1] = (g_flora_faces[f][1] * 0.5f) + block_pos[1];
+		p1[2] = (g_flora_faces[f][2] * 0.5f) + block_pos[2];
+
+		p2[0] = (g_flora_faces[f][6] * 0.5f) + block_pos[0];
+		p2[1] = (g_flora_faces[f][7] * 0.5f) + block_pos[1];
+		p2[2] = (g_flora_faces[f][8] * 0.5f) + block_pos[2];
+
+		p3[0] = (g_flora_faces[f][9] * 0.5f) + block_pos[0];
+		p3[1] = (g_flora_faces[f][10] * 0.5f) + block_pos[1];
+		p3[2] = (g_flora_faces[f][11] * 0.5f) + block_pos[2];
+		if (point_in_triangle(point, p1, p2, p3))
+		{
+			*face = f;
+			return (1);
+		}
+	}
+	return (0);
+}
+
+/*
  * If block found : we save the position of the block in 'block_pos'
  *	(which is the world position of the block) and
  *	the face, of the block the point belongs to, in 'face' and
@@ -906,62 +1000,36 @@ void	add_to_chunk_mesh(t_chunk_mesh *mesh, int *coord, float *face_vertices, int
 */
 t_block	*get_block_from_mesh(t_chunk *chunk, t_chunk_mesh *mesh, float *point, float *block_pos, int *face)
 {
-	float	p1[VEC3_SIZE];
-	float	p2[VEC3_SIZE];
-	float	p3[VEC3_SIZE];
-	int		i = 0;
+	float	block_world[3];
+	float	blocal[3];
+	int		i;
 
+	i = 0;
 	for (; i < chunk->block_amount; i++)
 	{
-		if (g_block_data[chunk->blocks[i].type + 1].solid == 0 &&
-			g_block_data[chunk->blocks[i].type + 1].flora == 0)
-			continue ;
-
-		int		l_pos[3];
-		float	pos[3];
-		get_block_local_pos_from_index(l_pos, (int []){16, 16, 16}, i);
-		pos[0] = l_pos[0] + chunk->world_coordinate[0];
-		pos[1] = l_pos[1] + chunk->world_coordinate[1];
-		pos[2] = l_pos[2] + chunk->world_coordinate[2];
-
-		for (int f = 0; f < FACE_AMOUNT; f++)
+		/*
+		if (g_block_data[chunk->blocks[i].type + 1].flora == 1)
+			block = get_block_from_flora_mesh(chunk, mesh, point, block_pos, face, i);
+		else if (g_block_data[chunk->blocks[i].type + 1].solid == 1)
+			block = get_block_from_solid_mesh(chunk, mesh, point, block_pos, face, i);
+		if (block)
+			return (block);
+			*/
+		get_block_local_pos_from_index(blocal, i);
+		block_world_pos(block_world, chunk->world_coordinate, blocal);
+		if (g_block_data[chunk->blocks[i].type + 1].solid == 1)
 		{
-			p1[0] = (g_faces[f][0] * chunk->info->block_scale) + pos[0];
-			p1[1] = (g_faces[f][1] * chunk->info->block_scale) + pos[1];
-			p1[2] = (g_faces[f][2] * chunk->info->block_scale) + pos[2];
-
-			p2[0] = (g_faces[f][3] * chunk->info->block_scale) + pos[0];
-			p2[1] = (g_faces[f][4] * chunk->info->block_scale) + pos[1];
-			p2[2] = (g_faces[f][5] * chunk->info->block_scale) + pos[2];
-
-			p3[0] = (g_faces[f][6] * chunk->info->block_scale) + pos[0];
-			p3[1] = (g_faces[f][7] * chunk->info->block_scale) + pos[1];
-			p3[2] = (g_faces[f][8] * chunk->info->block_scale) + pos[2];
-
-			if (point_in_triangle(point, p1, p2, p3))
+			if (is_hovering_solid_block(block_world, point, face))
 			{
-				for (int c = 0; c < 3; c++)
-					block_pos[c] = pos[c];
-				*face = f;
+				vec3_assign(block_pos, block_world);
 				return (&chunk->blocks[i]);
 			}
-
-			p1[0] = (g_faces[f][0] * chunk->info->block_scale) + pos[0];
-			p1[1] = (g_faces[f][1] * chunk->info->block_scale) + pos[1];
-			p1[2] = (g_faces[f][2] * chunk->info->block_scale) + pos[2];
-
-			p2[0] = (g_faces[f][6] * chunk->info->block_scale) + pos[0];
-			p2[1] = (g_faces[f][7] * chunk->info->block_scale) + pos[1];
-			p2[2] = (g_faces[f][8] * chunk->info->block_scale) + pos[2];
-
-			p3[0] = (g_faces[f][9] * chunk->info->block_scale) + pos[0];
-			p3[1] = (g_faces[f][10] * chunk->info->block_scale) + pos[1];
-			p3[2] = (g_faces[f][11] * chunk->info->block_scale) + pos[2];
-			if (point_in_triangle(point, p1, p2, p3))
+		}
+		else if (g_block_data[chunk->blocks[i].type + 1].flora == 1)
+		{
+			if (is_hovering_flora_block(block_world, point, face))
 			{
-				for (int c = 0; c < 3; c++)
-					block_pos[c] = pos[c];
-				*face = f;
+				vec3_assign(block_pos, block_world);
 				return (&chunk->blocks[i]);
 			}
 		}
@@ -1010,10 +1078,7 @@ int	chunk_mesh_collision(float *orig, float *dir, t_chunk_mesh *mesh, float *wor
 		vec3_add(p1, p1, world_coords);
 		vec3_add(p2, p2, world_coords);
 		vec3_add(p3, p3, world_coords);
-		if (ray_triangle_intersect(orig, dir, p1, p2, p3, intersect_point[collisions]))/* ||
-			ray_line_intersect(orig, dir, p1, p2, intersect_point[collisions]) ||
-			ray_line_intersect(orig, dir, p1, p3, intersect_point[collisions]) ||
-			ray_line_intersect(orig, dir, p2, p3, intersect_point[collisions]))*/
+		if (ray_triangle_intersect(orig, dir, p1, p2, p3, 0, intersect_point[collisions]))
 			if (vec3_dist(orig, intersect_point[collisions]) <= reach + 0.001f)
 				collisions += 1;
 	}
@@ -1058,7 +1123,7 @@ int	chunk_mesh_collision_v2(float *orig, float *dir, t_chunk *chunk, float reach
 		vec3_add(p1, p1, chunk->world_coordinate);
 		vec3_add(p2, p2, chunk->world_coordinate);
 		vec3_add(p3, p3, chunk->world_coordinate);
-		if (ray_triangle_intersect(orig, dir, p1, p2, p3, intersect_points[collisions]))
+		if (ray_triangle_intersect(orig, dir, p1, p2, p3, 1, intersect_points[collisions]))
 		{
 			if (vec3_dist(orig, intersect_points[collisions]) <= reach + EPSILON)
 			{
@@ -1396,7 +1461,7 @@ float	get_highest_point(t_chunk_info *info, float x, float z)
 			int		local[3];
 			float	world[3];
 
-			get_block_local_pos_from_index(local, (int []){16, 16, 16}, i);
+			get_block_local_pos_from_index(local, i);
 			block_world_pos(world, highest_chunk->world_coordinate, local);
 			if (world[0] == x && world[2] == z)
 				if (world[1] > curr_highest)
@@ -1426,7 +1491,7 @@ float	get_highest_point_of_type(t_chunk_info *info, float x, float z, int type)
 			int		local[3];
 			float	world[3];
 
-			get_block_local_pos_from_index(local, (int []){16, 16, 16}, i);
+			get_block_local_pos_from_index(local, i);
 			block_world_pos(world, highest_chunk->world_coordinate, local);
 			if (world[0] == x && world[2] == z)
 				if (world[1] > curr_highest)

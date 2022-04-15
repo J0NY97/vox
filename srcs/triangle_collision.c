@@ -25,7 +25,7 @@ float	*triangle_face_normal(float *res, float *p1, float *p2, float *p3)
  * Checks if ray, starting at 'orig' and going in 'dir', intersects triangle,
  *	made of 'v0', 'v1', 'v2'.
 */
-int	ray_triangle_intersect(float *orig, float *dir, float *v0, float *v1, float *v2, float *intersect_point)
+int	ray_triangle_intersect(float *orig, float *dir, float *v0, float *v1, float *v2, int cull_backface, float *intersect_point)
 {
 	// compute plane's normal
 	float	N[3];
@@ -34,7 +34,7 @@ int	ray_triangle_intersect(float *orig, float *dir, float *v0, float *v1, float 
 	// back face culler
 	/* Enable for only one sided collision detection;
 		*/
-	if (vec3_dot(dir, N) > EPSILON)
+	if (cull_backface && vec3_dot(dir, N) > EPSILON)
 		return (0);
 
 	float	area2 = vec3_length(N);

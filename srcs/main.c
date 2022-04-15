@@ -553,7 +553,6 @@ int	main(void)
 		float	intersect_point[5][3];
 		int		intersect_chunk_index[5]; // correspond with the index in 'intersect_point';
 		float	closest_point[3];
-		float	closest_dist;
 		int		closest_index = -1; // the index of the chunk that has the closest collision;
 		float	block_pos[3];
 		int		face = -1; // -1 is no face;
@@ -619,7 +618,7 @@ int	main(void)
 		if (collision_result > 0)
 		{
 			float	distancione = -1;
-			closest_dist = INFINITY;
+			float	closest_dist = INFINITY;
 			for (int colli = 0; colli < collision_result; ++colli)
 			{
 				distancione = vec3_dist(player.camera.pos, intersect_point[colli]);
@@ -632,20 +631,21 @@ int	main(void)
 			}
 
 			t_block *hovered_block = NULL;
-			int		clicked = 0;
-			if (mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS ||
-				mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS)
-				clicked = 1;
 			hovered_block = get_block_from_mesh(&chunks[closest_index], &chunks[closest_index].mesh, closest_point, block_pos, &face);
 			// If not found in solid block mesh, it must be in the flora mesh;
 			if (!hovered_block)
 				hovered_block = get_block_from_mesh(&chunks[closest_index], &chunks[closest_index].flora_mesh, closest_point, block_pos, &face);
 			if (hovered_block)
 				render_block_outline(block_pos, (float []){0, 0, 0}, player.camera.view, player.camera.projection);
-			if (hovered_block && clicked)
+			if (hovered_block &&
+				(mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS ||
+				mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS))
 			{
 				if (mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS)
+				{
 					hovered_block->type = BLOCK_AIR;
+					chunks[closest_index].needs_to_update = 1;
+				}
 				else if (mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS)
 				{
 					float	block_world[3];
@@ -663,34 +663,19 @@ int	main(void)
 					else if (face == FACE_BOT)
 						block_world[1] -= 1.0f;
 
-					int		chunk_pos[3];
-					int		local_pos[3];
-					int		index;
-					get_chunk_pos_from_world_pos(chunk_pos, block_world, &chunk_info);
-					t_chunk *next_chunk = get_chunk(&chunk_info, chunk_pos);
-					if (next_chunk)
+					// Check if block or item equipped;
+					if (player_info.equipped_block < BLOCK_TYPE_AMOUNT)
+						set_block_at_world_pos(&chunk_info, block_world, player_info.equipped_block);
+					else if (player_info.equipped_block > ITEM_FIRST &&
+						player_info.equipped_block < ITEM_LAST)
 					{
-						// Check if block or item equipped;
-						if (player_info.equipped_block < BLOCK_TYPE_AMOUNT)
+						if (player_info.equipped_block == ITEM_TREE_PLACER)
 						{
-							get_block_local_pos_from_world_pos(local_pos, block_world);
-							index = get_block_index(&chunk_info, local_pos[0], local_pos[1], local_pos[2]);
-							next_chunk->blocks[index].type = player_info.equipped_block;
-							next_chunk->has_blocks = 1;
+							LG_INFO("Place tree at %f %f %f", block_world[0], block_world[1], block_world[2]);
+							tree_placer(chunks, block_world);
 						}
-						else if (player_info.equipped_block > ITEM_FIRST &&
-							player_info.equipped_block < ITEM_LAST)
-						{
-							if (player_info.equipped_block == ITEM_TREE_PLACER)
-							{
-								LG_INFO("Place tree at %f %f %f", block_world[0], block_world[1], block_world[2]);
-								tree_placer(chunks, block_world);
-							}
-						}
-						next_chunk->needs_to_update = 1;
 					}
 				}
-				chunks[closest_index].needs_to_update = 1;
 			}
 		}
 		/* END OF COLLISION */
