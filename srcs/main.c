@@ -631,10 +631,7 @@ int	main(void)
 			}
 
 			t_block *hovered_block = NULL;
-			hovered_block = get_block_from_mesh(&chunks[closest_index], &chunks[closest_index].mesh, closest_point, block_pos, &face);
-			// If not found in solid block mesh, it must be in the flora mesh;
-			if (!hovered_block)
-				hovered_block = get_block_from_mesh(&chunks[closest_index], &chunks[closest_index].flora_mesh, closest_point, block_pos, &face);
+			hovered_block = get_block_from_chunk(&chunks[closest_index], closest_point, block_pos, &face);
 			if (hovered_block)
 				render_block_outline(block_pos, (float []){0, 0, 0}, player.camera.view, player.camera.projection);
 			if (hovered_block &&

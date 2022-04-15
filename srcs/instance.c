@@ -947,6 +947,7 @@ int	is_hovering_solid_block(float *block_pos, float *point, int *face)
 	return (0);
 }
 
+/* BUG : Whatever is being saved in 'face' is incorrect */
 int	is_hovering_flora_block(float *block_pos, float *point, int *face)
 {
 	float	p1[3];
@@ -998,7 +999,7 @@ int	is_hovering_flora_block(float *block_pos, float *point, int *face)
  *	the face, of the block the point belongs to, in 'face' and
  *	return the pointer of the block;
 */
-t_block	*get_block_from_mesh(t_chunk *chunk, t_chunk_mesh *mesh, float *point, float *block_pos, int *face)
+t_block	*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, int *face)
 {
 	float	block_world[3];
 	float	blocal[3];
@@ -1007,14 +1008,10 @@ t_block	*get_block_from_mesh(t_chunk *chunk, t_chunk_mesh *mesh, float *point, f
 	i = 0;
 	for (; i < chunk->block_amount; i++)
 	{
-		/*
-		if (g_block_data[chunk->blocks[i].type + 1].flora == 1)
-			block = get_block_from_flora_mesh(chunk, mesh, point, block_pos, face, i);
-		else if (g_block_data[chunk->blocks[i].type + 1].solid == 1)
-			block = get_block_from_solid_mesh(chunk, mesh, point, block_pos, face, i);
-		if (block)
-			return (block);
-			*/
+		// not solid and not flora, we can just skip it;
+		if (g_block_data[chunk->blocks[i].type + 1].solid == 0 &&
+			g_block_data[chunk->blocks[i].type + 1].flora == 0)
+			continue;
 		get_block_local_pos_from_index(blocal, i);
 		block_world_pos(block_world, chunk->world_coordinate, blocal);
 		if (g_block_data[chunk->blocks[i].type + 1].solid == 1)

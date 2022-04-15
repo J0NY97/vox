@@ -383,7 +383,7 @@ void		update_chunk_mesh(t_chunk_mesh *chunk);
 void		render_chunk_mesh(t_chunk_mesh *mesh, float *coordinate, t_camera *camera, t_shader *shader);
 int			chunk_mesh_collision(float *orig, float *dir, t_chunk_mesh *mesh, float *world_coords, float reach, float intersect_point[16][3]);
 int			chunk_mesh_collision_v2(float *orig, float *dir, t_chunk *chunk, float reach, float intersect_points[16][3], float intersect_normals[16][3]);
-t_block		*get_block_from_mesh(t_chunk *chunk, t_chunk_mesh *mesh, float *point, float *block_pos, int *face);
+t_block		*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, int *face);
 void		render_block_outline(float *pos, float *color, float *view, float *projection);
 
 void		set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_type);
