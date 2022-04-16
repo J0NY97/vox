@@ -257,6 +257,7 @@ typedef struct s_chunk		t_chunk;
 typedef struct s_block
 {
 	int		type; // e_block_type;
+	void	*data;
 }	t_block;
 
 typedef struct s_chunk_info
