@@ -660,7 +660,7 @@ int	main(void)
 			{
 				if (mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS)
 				{
-					hovered_block->type = BLOCK_AIR;
+					hovered_block->type = GAS_AIR;
 					chunks[closest_index].needs_to_update = 1;
 				}
 				else if (mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS)
@@ -681,20 +681,16 @@ int	main(void)
 						block_world[1] -= 1.0f;
 
 					// Check if block or item equipped;
-					if (player_info.equipped_block < BLOCK_TYPE_AMOUNT)
+					LG_INFO("Place Item at %f %f %f", block_world[0], block_world[1], block_world[2]);
+					if (player_info.equipped_block < BLOCK_LAST)
 						set_block_at_world_pos(&chunk_info, block_world, player_info.equipped_block);
 					else if (player_info.equipped_block > ITEM_FIRST &&
 						player_info.equipped_block < ITEM_LAST)
 					{
 						if (player_info.equipped_block == ITEM_TREE_PLACER)
-						{
-							LG_INFO("Place tree at %f %f %f", block_world[0], block_world[1], block_world[2]);
-							tree_placer(chunks, block_world);
-						}
+							tree_placer(&chunk_info, block_world);
 						else if (player_info.equipped_block == ITEM_WATER_PLACER)
-						{
-							water_placer(chunks, block_world);
-						}
+							water_placer(&chunk_info, block_world, 0);
 					}
 				}
 			}

@@ -1,6 +1,8 @@
 #ifndef ITEM_H
 # define ITEM_H
 
+#include "shaderpixel.h"
+
 typedef struct s_item_data
 {
 	char	*name;
@@ -8,10 +10,10 @@ typedef struct s_item_data
 
 enum e_item_type
 {
-	ITEM_FIRST = BLOCK_TYPE_AMOUNT,
+	ITEM_FIRST = FLUID_LAST,
 	ITEM_WATER_PLACER,
 	ITEM_TREE_PLACER,
-	ITEM_LAST // the true amount of items is == (ITEM_LAST - ITEM_FIRST);
+	ITEM_LAST
 };
 
 static const t_item_data g_item_data[] = {

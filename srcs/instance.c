@@ -104,11 +104,11 @@ int	chunk_gen(t_chunk *chunk)
 				{
 					if (block_world_y <= 65)
 					{
-						chunk->blocks[i].type = BLOCK_WATER;
+						chunk->blocks[i].type = FLUID_WATER;
 						chunk->has_blocks = 1;
 					}
 					else
-						chunk->blocks[i].type = BLOCK_AIR;
+						chunk->blocks[i].type = GAS_AIR;
 				}
 				i++;
 			}
@@ -157,13 +157,6 @@ t_chunk	*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, int *dir)
 	from_coord[0] = from->coordinate[0] + dir[0];
 	from_coord[1] = from->coordinate[1] + dir[1];
 	from_coord[2] = from->coordinate[2] + dir[2];
-/*
-	int key = get_chunk_hash_key(from_coord);
-	t_hash_item *item = hash_item_search(from->info->hash_table, from->info->hash_table_size, key);
-	if (!item)
-		return (NULL);
-	return (&from->info->chunks[item->data]);
-	*/
 
 	for (int i = 0; i < from->info->chunks_loaded; i++)
 	{
@@ -173,8 +166,6 @@ t_chunk	*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, int *dir)
 			return (&chunks[i]);
 	}
 	return (NULL);
-	/*
-	*/
 }
 
 t_chunk	*get_chunk(t_chunk_info	*info, int *pos)
@@ -285,19 +276,19 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 		tmp_block = &neighbor->blocks[get_block_index(chunk->info, mod(x, 16), mod(y, 16), mod(z, 16))];
 	else
 		return ;
-	if (tmp_block && (!g_block_data[tmp_block->type + 1].solid))
+	if (tmp_block && !is_solid(tmp_block))
 	{
 		// If both blocks are liquid, we dont add face to mesh;
-		if (!(g_block_data[blocks[i].type + 1].liquid && g_block_data[tmp_block->type + 1].liquid))
+		if (!(is_fluid(&blocks[i]) && is_fluid(tmp_block)))
 		{
-			if (g_block_data[blocks[i].type + 1].liquid)
+			if (is_fluid(&blocks[i]))
 			{
-				add_to_chunk_mesh(&chunk->liquid_mesh, local_pos, (float *)g_faces[face], g_block_data[blocks[i].type + 1].face_texture[face], (int)g_face_light[face]);
+				add_to_chunk_mesh(&chunk->liquid_mesh, local_pos, (float *)g_faces[face], g_fluid_data[blocks[i].type - FLUID_FIRST - 1].texture, (int)g_face_light[face]);
 				++chunk->blocks_liquid_amount;
 			}
 			else
 			{
-				add_to_chunk_mesh(&chunk->mesh, local_pos, (float *)g_faces[face], g_block_data[blocks[i].type + 1].face_texture[face], (int)g_face_light[face]);
+				add_to_chunk_mesh(&chunk->mesh, local_pos, (float *)g_faces[face], g_block_data[blocks[i].type - BLOCK_FIRST - 1].face_texture[face], (int)g_face_light[face]);
 				++chunk->blocks_solid_amount;
 			}
 		}
@@ -334,14 +325,14 @@ void	get_blocks_visible(t_chunk *chunk)
 	int		pos[3];
 	for (int i = 0; i < chunk->block_amount; i++)
 	{
-		if (blocks[i].type == BLOCK_AIR) // <-- very important, im not sure what happens if we are trying to render an air block;
+		if (blocks[i].type == GAS_AIR) // <-- very important, im not sure what happens if we are trying to render an air block;
 			continue ;
 
 		get_block_local_pos_from_index(pos, i);
-		if (g_block_data[blocks[i].type + 1].flora)
+		if (is_flora(&blocks[i]))
 		{
-			add_to_chunk_mesh(&chunk->flora_mesh, pos, (float *)g_flora_faces[0], g_block_data[blocks[i].type + 1].face_texture[0], 100);
-			add_to_chunk_mesh(&chunk->flora_mesh, pos, (float *)g_flora_faces[1], g_block_data[blocks[i].type + 1].face_texture[1], 100);
+			add_to_chunk_mesh(&chunk->flora_mesh, pos, (float *)g_flora_faces[0], g_flora_data[blocks[i].type - FLORA_FIRST - 1].face_texture[0], 100);
+			add_to_chunk_mesh(&chunk->flora_mesh, pos, (float *)g_flora_faces[1], g_flora_data[blocks[i].type - FLORA_FIRST - 1].face_texture[1], 100);
 			++chunk->blocks_flora_amount;
 		}
 		else // these are the solid blocks;
@@ -1009,12 +1000,12 @@ t_block	*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, in
 	for (; i < chunk->block_amount; i++)
 	{
 		// not solid and not flora, we can just skip it;
-		if (g_block_data[chunk->blocks[i].type + 1].solid == 0 &&
-			g_block_data[chunk->blocks[i].type + 1].flora == 0)
+		if (!is_solid(&chunk->blocks[i]) &&
+			!is_flora(&chunk->blocks[i]))
 			continue;
 		get_block_local_pos_from_index(blocal, i);
 		block_world_pos(block_world, chunk->world_coordinate, blocal);
-		if (g_block_data[chunk->blocks[i].type + 1].solid == 1)
+		if (is_solid(&chunk->blocks[i]))
 		{
 			if (is_hovering_solid_block(block_world, point, face))
 			{
@@ -1022,7 +1013,7 @@ t_block	*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, in
 				return (&chunk->blocks[i]);
 			}
 		}
-		else if (g_block_data[chunk->blocks[i].type + 1].flora == 1)
+		else if (is_flora(&chunk->blocks[i]))
 		{
 			if (is_hovering_flora_block(block_world, point, face))
 			{
@@ -1287,7 +1278,7 @@ void	set_block_at_world_pos_if_not_solid(t_chunk_info *info, float *world_pos, i
 		return ;
 	get_block_local_pos_from_world_pos(block_local, world_pos);
 	index = get_block_index(info, block_local[0], block_local[1], block_local[2]);
-	if (g_block_data[chunk->blocks[index].type + 1].solid == 1)
+	if (is_solid(&chunk->blocks[index]))
 		return ;
 	chunk->blocks[index].type = block_type;
 	LG_DEBUG("Block placed in chunk <%d %d %d> at (world : %f %f %f) (local : %d %d %d) (index : %d)",
@@ -1299,7 +1290,7 @@ void	set_block_at_world_pos_if_not_solid(t_chunk_info *info, float *world_pos, i
 	chunk->has_blocks = 1;
 }
 
-t_block_data	*get_block_data_at_world_pos(t_chunk_info *info, float *world_pos)
+int	get_block_type_at_world_pos(t_chunk_info *info, float *world_pos)
 {
 	float	under_block[3];
 	int		block_local[3];
@@ -1311,10 +1302,10 @@ t_block_data	*get_block_data_at_world_pos(t_chunk_info *info, float *world_pos)
 	get_chunk_pos_from_world_pos(chunk_pos, under_block, info);
 	chunk = get_chunk(info, chunk_pos);
 	if (!chunk)
-		return (NULL);
+		return (-1);
 	get_block_local_pos_from_world_pos(block_local, under_block);
 	index = get_block_index(info, block_local[0], block_local[1], block_local[2]);
-	return (&g_block_data[chunk->blocks[index].type + 1]);
+	return (chunk->blocks[index].type);
 }
 
 /*
@@ -1325,9 +1316,9 @@ void	tree_placer(t_chunk_info *info, float *world_pos)
 	LG_DEBUG("Place tree at %f %f %f", world_pos[0], world_pos[1], world_pos[2]);
 
 // We have to check that the block we are placing the tree on is dirt block;
-	t_block_data *data = get_block_data_at_world_pos(info,
+	int	type = get_block_type_at_world_pos(info,
 		(float []){world_pos[0], world_pos[1] - 1.0f, world_pos[2]});
-	if (!data)// || data->type != BLOCK_DIRT)
+	if (type == -1)// || data->type != BLOCK_DIRT)
 		return ;
 
 	// Trunk;
@@ -1397,17 +1388,17 @@ void	tree_placer(t_chunk_info *info, float *world_pos)
 
 void	flora_placer(t_chunk_info *info, int type, float *world_pos)
 {
-	t_block_data	*data;
+	int	block_type;
 	
 // We have to check that the block we are placing on is dirt block;
-	data = get_block_data_at_world_pos(info,
+	block_type = get_block_type_at_world_pos(info,
 		(float []){world_pos[0], world_pos[1] - 1, world_pos[2]});
-	if (!data || data->type != BLOCK_DIRT)
+	if (block_type == -1 || block_type != BLOCK_DIRT)
 		return ;
 // And check that the block isnt already occupied by another block;
-	data = get_block_data_at_world_pos(info,
+	block_type = get_block_type_at_world_pos(info,
 		(float []){world_pos[0], world_pos[1], world_pos[2]});
-	if (!data || data->type != BLOCK_AIR)
+	if (block_type == -1 || block_type != GAS_AIR)
 		return ;
 
 	set_block_at_world_pos(info,
@@ -1453,7 +1444,7 @@ float	get_highest_point(t_chunk_info *info, float x, float z)
 		return (-1); // error;
 	for (int i = 0; i < 4096; i++)
 	{
-		if (highest_chunk->blocks[i].type != BLOCK_AIR)
+		if (highest_chunk->blocks[i].type != GAS_AIR)
 		{
 			int		local[3];
 			float	world[3];

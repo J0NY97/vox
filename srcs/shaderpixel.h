@@ -27,6 +27,7 @@
 # include "thread.h"
 # include "hashtable.h"
 # include "block.h"
+# include "fluid.h"
 # include "item.h"
 
 # define DEBUG 0
@@ -370,6 +371,7 @@ float		get_highest_point(t_chunk_info *info, float x, float z);
 float		get_highest_point_of_type(t_chunk_info *info, float x, float z, int type);
 int			get_chunks_to_reload(int *chunks, int *start_coord, t_chunk_info *info, int *player_chunk_v3);
 int			get_surrounding_coords(int *res, int x, int z, int r);
+int			get_block_type_at_world_pos(t_chunk_info *info, float *world_pos);
 
 int			get_chunk_hash_key(int *coords);
 
@@ -391,7 +393,12 @@ void		set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_typ
 void		player_terrain_collision(float *res, float *pos, float *velocity, t_chunk_info *info);
 
 void		tree_placer(t_chunk_info *info, float *world_pos);
-void		water_placer(t_chunk_info *info, float *world_pos);
+void		water_placer(t_chunk_info *info, float *world_pos, int nth_from_source);
+
+int			is_gas(t_block *block);
+int			is_fluid(t_block *block);
+int			is_solid(t_block *block);
+int			is_flora(t_block *block);
 
 ///////////////////
 //	NOISE
