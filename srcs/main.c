@@ -310,7 +310,7 @@ int	main(void)
 		}
 
 		if (keys[GLFW_KEY_R].state == BUTTON_PRESS)
-			vec3_new(player.camera.pos, 0, 200, 0);
+			vec3_new(player.camera.pos, 0, 100, 0);
 		if (keys[GLFW_KEY_LEFT].state == BUTTON_PRESS)
 			vec3_add(player.camera.pos, player.camera.pos, (float []){-10, 0, 0});
 		if (keys[GLFW_KEY_RIGHT].state == BUTTON_PRESS)
@@ -401,7 +401,10 @@ int	main(void)
 		if (keys[GLFW_KEY_1].state == BUTTON_PRESS)
 			player_info.equipped_block = BLOCK_DIRT;
 		if (keys[GLFW_KEY_2].state == BUTTON_PRESS)
+		{
 			player_info.equipped_block = BLOCK_STONE;
+			ft_printf("Stone equipped ? %d == %d\n", BLOCK_STONE, player_info.equipped_block);
+		}
 		if (keys[GLFW_KEY_3].state == BUTTON_PRESS)
 			player_info.equipped_block = BLOCK_SAND;
 		if (keys[GLFW_KEY_4].state == BUTTON_PRESS)
@@ -412,6 +415,21 @@ int	main(void)
 			player_info.equipped_block = BLOCK_OAK_LEAF;
 		if (keys[GLFW_KEY_0].state == BUTTON_PRESS)
 			player_info.equipped_block = ITEM_TREE_PLACER;
+		if (keys[GLFW_KEY_9].state == BUTTON_PRESS)
+			player_info.equipped_block = ITEM_WATER_PLACER;
+		for (int i = GLFW_KEY_0; i <= GLFW_KEY_9; i++)
+		{
+			if (keys[i].state == BUTTON_PRESS)
+			{
+				if (player_info.equipped_block >= 0
+					&& player_info.equipped_block < ITEM_FIRST)
+					ft_printf("Block[%d] : '%s' equipped.\n", player_info.equipped_block, g_block_data[player_info.equipped_block + 1].name);
+				else if (player_info.equipped_block > ITEM_FIRST &&
+					player_info.equipped_block < ITEM_LAST)
+					ft_printf("Item : '%s' equipped.\n", g_item_data[player_info.equipped_block - ITEM_FIRST - 1].name);
+			}
+		}
+
 
 		update_fps(&fps);
 		player_events(&player, keys, sp.win);
@@ -506,6 +524,8 @@ int	main(void)
 							break ;
 						}
 					}
+					chunks[c].update_structures = 0;
+					break ; // breaking after one structure generated;
 				}
 				chunks[c].update_structures = 0;
 			}
@@ -670,6 +690,10 @@ int	main(void)
 						{
 							LG_INFO("Place tree at %f %f %f", block_world[0], block_world[1], block_world[2]);
 							tree_placer(chunks, block_world);
+						}
+						else if (player_info.equipped_block == ITEM_WATER_PLACER)
+						{
+							water_placer(chunks, block_world);
 						}
 					}
 				}

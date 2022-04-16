@@ -390,6 +390,9 @@ void		set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_typ
 
 void		player_terrain_collision(float *res, float *pos, float *velocity, t_chunk_info *info);
 
+void		tree_placer(t_chunk_info *info, float *world_pos);
+void		water_placer(t_chunk_info *info, float *world_pos);
+
 ///////////////////
 //	NOISE
 ///////////////////

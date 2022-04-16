@@ -28,6 +28,7 @@ CFILES = \
 	thread.c \
 	help.c \
 	hashtable.c \
+	item.c \
 	bimgf/bimgf_bmp.c \
 	bimgf/bimgf_help.c \
 	bimgf/bimgf_jpg.c \

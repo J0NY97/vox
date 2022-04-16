@@ -698,15 +698,15 @@ void	init_chunk_mesh(t_chunk_mesh *mesh)
 	if (error)
 		LG_ERROR("BEFORE (%d)", error);
 
-	mesh->vertices_allocated = 6972;
+	mesh->vertices_allocated = 14700;
 	mesh->vertices = malloc(sizeof(float) * mesh->vertices_allocated);
 	mesh->vertices_amount = 0;
 
-	mesh->texture_ids_allocated = 2324; 
+	mesh->texture_ids_allocated = 4900; 
 	mesh->texture_ids = malloc(sizeof(int) * mesh->texture_ids_allocated);
 	mesh->texture_id_amount = 0;
 
-	mesh->indices_allocated = 3486;
+	mesh->indices_allocated = 7350;
 	mesh->indices = malloc(sizeof(unsigned int) * mesh->indices_allocated);
 	mesh->indices_amount = 0;
 
@@ -1002,7 +1002,7 @@ int	is_hovering_flora_block(float *block_pos, float *point, int *face)
 t_block	*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, int *face)
 {
 	float	block_world[3];
-	float	blocal[3];
+	int		blocal[3];
 	int		i;
 
 	i = 0;
