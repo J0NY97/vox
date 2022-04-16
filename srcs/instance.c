@@ -150,7 +150,7 @@ void	chunk_aabb_update(t_chunk *chunk)
  * 'chunks' is all the loaded chunks,
  * 'dir' is the direction you want to look for the chunk in; (v3)
 */
-t_chunk	*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, int *dir)
+t_chunk	*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, float *dir)
 {
 	int	from_coord[3];
 
@@ -248,32 +248,19 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 {
 	t_block	*tmp_block;
 	t_block	*blocks = chunk->blocks;
-	int		x, y, z;
+	float	coords[3];
 
-	x = local_pos[0];
-	y = local_pos[1];
-	z = local_pos[2];
-
-	if (face == FACE_LEFT)
-		x -= 1;
-	else if (face == FACE_RIGHT)
-		x += 1;
-	else if (face == FACE_TOP)
-		y += 1;
-	else if (face == FACE_BOT)
-		y -= 1;
-	else if (face == FACE_FRONT)
-		z += 1;
-	else if (face == FACE_BACK)
-		z -= 1;
+	vec3_new(coords, local_pos[0], local_pos[1], local_pos[2]);
+	vec3_add(coords, coords, (float *)g_card_dir[face]);
 
 	tmp_block = NULL;
-	if (x >= 0 && x <= 15 &&
-		y >= 0 && y <= 15 &&
-		z >= 0 && z <= 15)
-		tmp_block = &blocks[get_block_index(chunk->info, x, y, z)];
+	if (coords[0] >= 0 && coords[0] <= 15 &&
+		coords[1] >= 0 && coords[1] <= 15 &&
+		coords[2] >= 0 && coords[2] <= 15)
+		tmp_block = &blocks[get_block_index(chunk->info, coords[0], coords[1], coords[2])];
 	else if (neighbor)
-		tmp_block = &neighbor->blocks[get_block_index(chunk->info, mod(x, 16), mod(y, 16), mod(z, 16))];
+		tmp_block = &neighbor->blocks[get_block_index(chunk->info,
+			mod(coords[0], 16), mod(coords[1], 16), mod(coords[2], 16))];
 	else
 		return ;
 	if (tmp_block && !is_solid(tmp_block))
@@ -318,9 +305,9 @@ void	get_blocks_visible(t_chunk *chunk)
 	blocks = chunk->blocks;
 
 	// Get all neighbors of current chunk;
-	t_chunk *neighbors[6];
-	for (int i = 0; i < 6; i++)
-		neighbors[i] = get_adjacent_chunk(chunk, chunk->info->chunks, (int *)g_neighbors[i]);
+	t_chunk *neighbors[DIR_AMOUNT];
+	for (int i = DIR_NORTH; i < DIR_AMOUNT; i++)
+		neighbors[i] = get_adjacent_chunk(chunk, chunk->info->chunks, (float *)g_card_dir[i]);
 
 	int		pos[3];
 	for (int i = 0; i < chunk->block_amount; i++)
@@ -337,12 +324,12 @@ void	get_blocks_visible(t_chunk *chunk)
 		}
 		else // these are the solid blocks;
 		{
-			adjacent_block_checker(chunk, i, pos, FACE_LEFT, neighbors[0]);
-			adjacent_block_checker(chunk, i, pos, FACE_RIGHT, neighbors[1]);
-			adjacent_block_checker(chunk, i, pos, FACE_TOP, neighbors[2]);
-			adjacent_block_checker(chunk, i, pos, FACE_BOT, neighbors[3]);
-			adjacent_block_checker(chunk, i, pos, FACE_FRONT, neighbors[4]);
-			adjacent_block_checker(chunk, i, pos, FACE_BACK, neighbors[5]);
+			adjacent_block_checker(chunk, i, pos, DIR_NORTH, neighbors[DIR_NORTH]);
+			adjacent_block_checker(chunk, i, pos, DIR_EAST, neighbors[DIR_EAST]);
+			adjacent_block_checker(chunk, i, pos, DIR_SOUTH, neighbors[DIR_SOUTH]);
+			adjacent_block_checker(chunk, i, pos, DIR_WEST, neighbors[DIR_WEST]);
+			adjacent_block_checker(chunk, i, pos, DIR_UP, neighbors[DIR_UP]);
+			adjacent_block_checker(chunk, i, pos, DIR_DOWN, neighbors[DIR_DOWN]);
 		}
 	}
 }
@@ -899,7 +886,7 @@ int	is_hovering_solid_block(float *block_pos, float *point, int *face)
 	float	p2[3];
 	float	p3[3];
 
-	for (int f = 0; f < FACE_AMOUNT; f++)
+	for (int f = DIR_NORTH; f < DIR_AMOUNT; f++)
 	{
 		p1[0] = (g_faces[f][0] * 0.5f) + block_pos[0];
 		p1[1] = (g_faces[f][1] * 0.5f) + block_pos[1];
@@ -1131,21 +1118,21 @@ void	render_block_outline(float *pos, float *color, float *view, float *projecti
 	float	p3[3]; // bot right
 	float	p4[3]; // top right
 
-	p1[0] = (g_faces[0][0] * 0.5) + pos[0];
-	p1[1] = (g_faces[0][1] * 0.5) + pos[1];
-	p1[2] = (g_faces[0][2] * 0.5) + pos[2];
+	p1[0] = (g_faces[DIR_UP][0] * 0.5) + pos[0];
+	p1[1] = (g_faces[DIR_UP][1] * 0.5) + pos[1];
+	p1[2] = (g_faces[DIR_UP][2] * 0.5) + pos[2];
 
-	p2[0] = (g_faces[0][3] * 0.5) + pos[0];
-	p2[1] = (g_faces[0][4] * 0.5) + pos[1];
-	p2[2] = (g_faces[0][5] * 0.5) + pos[2];
+	p2[0] = (g_faces[DIR_UP][3] * 0.5) + pos[0];
+	p2[1] = (g_faces[DIR_UP][4] * 0.5) + pos[1];
+	p2[2] = (g_faces[DIR_UP][5] * 0.5) + pos[2];
 
-	p3[0] = (g_faces[0][6] * 0.5) + pos[0];
-	p3[1] = (g_faces[0][7] * 0.5) + pos[1];
-	p3[2] = (g_faces[0][8] * 0.5) + pos[2];
+	p3[0] = (g_faces[DIR_UP][6] * 0.5) + pos[0];
+	p3[1] = (g_faces[DIR_UP][7] * 0.5) + pos[1];
+	p3[2] = (g_faces[DIR_UP][8] * 0.5) + pos[2];
 
-	p4[0] = (g_faces[0][9] * 0.5) + pos[0];
-	p4[1] = (g_faces[0][10] * 0.5) + pos[1];
-	p4[2] = (g_faces[0][11] * 0.5) + pos[2];
+	p4[0] = (g_faces[DIR_UP][9] * 0.5) + pos[0];
+	p4[1] = (g_faces[DIR_UP][10] * 0.5) + pos[1];
+	p4[2] = (g_faces[DIR_UP][11] * 0.5) + pos[2];
 
 	// Back
 	float	b1[3]; // top left

@@ -30,18 +30,26 @@ enum e_flora_type
 	FLORA_LAST
 };
 
-/*
- * Block faces;
-*/
-enum e_block_face
+enum e_card_dir // cardinal direction aka väderstreck?
 {
-	FACE_FRONT,
-	FACE_BACK,
-	FACE_LEFT,
-	FACE_RIGHT,
-	FACE_TOP,
-	FACE_BOT,
-	FACE_AMOUNT
+	DIR_NORTH = 0,
+	DIR_EAST,
+	DIR_SOUTH,
+	DIR_WEST,
+	DIR_UP,
+	DIR_DOWN,
+	DIR_SOURCE, // not flowing, just static;
+	DIR_AMOUNT = DIR_SOURCE
+};
+
+static const float g_card_dir[DIR_AMOUNT + 1][3] = {
+	{0, 0, 1},
+	{1, 0, 0},
+	{0, 0, -1},
+	{-1, 0, 0},
+	{0, 1, 0},
+	{0, -1, 0},
+	{0, 0, 0}
 };
 
 /*
@@ -59,7 +67,7 @@ typedef struct s_block_data
 {
 	char			type; // 'e_block_type', at some point maybe same array index in 'g_block_data';
 	char			*name;
-	unsigned short	face_texture[FACE_AMOUNT]; // same order as 'e_face'
+	unsigned short	face_texture[DIR_AMOUNT]; // same order as 'e_face'
 }	t_block_data;
 
 static const t_block_data g_block_data[] = {
@@ -118,11 +126,11 @@ static const t_block_data	g_flora_data[] = {
 	}
 };
 
-static const float g_faces[FACE_AMOUNT][12] = {
+static const float g_faces[6][12] = {
 /* FRONT */	{-1, 1, 1,  -1, -1, 1,  1, -1, 1,  1, 1, 1},
+/* RIGHT */	{1, 1, 1,  1, -1, 1,  1, -1, -1,  1, 1, -1},
 /* BACK  */	{1, 1, -1,  1, -1, -1,  -1, -1, -1,  -1, 1, -1},
 /* LEFT  */	{-1, 1, -1,  -1, -1, -1,  -1, -1, 1,  -1, 1, 1},
-/* RIGHT */	{1, 1, 1,  1, -1, 1,  1, -1, -1,  1, 1, -1},
 /* TOP   */	{-1, 1, -1,  -1, 1, 1,  1, 1, 1,  1, 1, -1},
 /* BOT   */	{-1, -1, -1,  1, -1, -1,  1, -1, 1,  -1, -1, 1}
 };
@@ -132,17 +140,8 @@ static const float g_flora_faces[FACE_FLORA_AMOUNT][12] = {
 	/* B */ {-1, 1, -1,  -1, -1, -1,  1, -1, 1,  1, 1, 1}
 };
 
-static const int g_face_light[FACE_AMOUNT] = {
+static const int g_face_light[DIR_AMOUNT] = {
 	65, 90, 85, 65, 85, 65
-};
-
-static const int g_neighbors[6][3] = {
-	{-1, 0, 0},
-	{1, 0, 0},
-	{0, 1, 0},
-	{0, -1, 0},
-	{0, 0, 1},
-	{0, 0, -1}
 };
 
 #endif

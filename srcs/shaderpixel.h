@@ -362,7 +362,7 @@ void		render_aabb(t_aabb *a, t_camera *camera, float *col);
 int			*get_chunk_pos_from_world_pos(int *res, float *world_coords, t_chunk_info *info);
 float		*block_world_pos(float *res, float *chunk_world_pos, int *block_local_pos);
 t_chunk		*get_chunk(t_chunk_info *info, int *pos);
-t_chunk		*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, int *dir);
+t_chunk		*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, float *dir);
 int			*get_block_local_pos_from_world_pos(int *res, float *world);
 int			*get_block_local_pos_from_index(int *res, int index);
 t_block		*get_block(t_chunk_info *info, float *coords);

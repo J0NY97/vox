@@ -78,8 +78,8 @@ int	main(void)
 	new_player(&player);
 	new_vec3(player.camera.pos, 5, 85, 5);
 //	new_vec3(player.camera.pos, 16384, 80, 16384);
-	player.camera.pitch = -20;
-	player.camera.yaw = 50;
+	player.camera.pitch = 0;
+	player.camera.yaw = -90;
 	player.camera.viewport_w = sp.win_w;
 	player.camera.viewport_h = sp.win_h;
 
@@ -546,9 +546,9 @@ int	main(void)
 
 				// Update all 6 neighbors of the chunk;
 				t_chunk *neighbor;
-				for (int i = 0; i < 6; i++)
+				for (int i = DIR_NORTH; i < DIR_AMOUNT; i++)
 				{
-					neighbor = get_adjacent_chunk(&chunks[ent], chunk_info.chunks, (int *)g_neighbors[i]);
+					neighbor = get_adjacent_chunk(&chunks[ent], chunk_info.chunks, (float *)g_card_dir[i]);
 					if (neighbor)
 					{
 						update_chunk_visible_blocks(neighbor);
@@ -666,19 +666,7 @@ int	main(void)
 				else if (mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS)
 				{
 					float	block_world[3];
-					vec3_assign(block_world, block_pos);
-					if (face == FACE_FRONT)
-						block_world[2] += 1.0f;
-					else if (face == FACE_BACK)
-						block_world[2] -= 1.0f;
-					else if (face == FACE_LEFT)
-						block_world[0] -= 1.0f;
-					else if (face == FACE_RIGHT)
-						block_world[0] += 1.0f;
-					else if (face == FACE_TOP)
-						block_world[1] += 1.0f;
-					else if (face == FACE_BOT)
-						block_world[1] -= 1.0f;
+					vec3_add(block_world, block_pos, (float *)g_card_dir[face]);
 
 					// Check if block or item equipped;
 					LG_INFO("Place Item at %f %f %f", block_world[0], block_world[1], block_world[2]);
