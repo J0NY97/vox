@@ -272,7 +272,7 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 			{
 				float	verts[12];
 				float	eight = 1.0f / 8.0f;
-				float	higher = eight * g_fluid_data[blocks[i].type - FLUID_FIRST - 1].dist_from_source;
+				float	higher = 1 - (eight * g_fluid_data[blocks[i].type - FLUID_FIRST - 1].dist_from_source);
 				vec3_new(verts + 0, g_faces[face][0], g_faces[face][1] * higher, g_faces[face][2]);
 				vec3_new(verts + 3, g_faces[face][3], g_faces[face][4] * higher, g_faces[face][5]);
 				vec3_new(verts + 6, g_faces[face][6], g_faces[face][7] * higher, g_faces[face][8]);
