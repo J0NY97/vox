@@ -249,9 +249,12 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 	t_block	*tmp_block;
 	t_block	*blocks = chunk->blocks;
 	float	coords[3];
+	float	block_world[3];
 
 	vec3_new(coords, local_pos[0], local_pos[1], local_pos[2]);
 	vec3_add(coords, coords, (float *)g_card_dir[face]);
+
+	block_world_pos(block_world, chunk->world_coordinate, local_pos);
 
 	tmp_block = NULL;
 	if (coords[0] >= 0 && coords[0] <= 15 &&
@@ -270,13 +273,75 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 		{
 			if (is_fluid(&blocks[i]))
 			{
+				float	tmp[3];
 				float	verts[12];
-				float	eight = 1.0f / 8.0f;
-				float	higher = 1.0f - (eight * g_fluid_data[blocks[i].type - FLUID_FIRST - 1].dist_from_source);
-				vec3_new(verts + 0, g_faces[face][0], g_faces[face][1] * higher, g_faces[face][2]);
-				vec3_new(verts + 3, g_faces[face][3], g_faces[face][4] * higher, g_faces[face][5]);
-				vec3_new(verts + 6, g_faces[face][6], g_faces[face][7] * higher, g_faces[face][8]);
-				vec3_new(verts + 9, g_faces[face][9], g_faces[face][10] * higher, g_faces[face][11]);
+				float	eight = 2.0f / 8.0f;
+				float	higher = 1.0f;
+				int		type = -1;
+
+				vec3_new(verts + 0, g_faces[face][0], g_faces[face][1], g_faces[face][2]);
+				vec3_new(verts + 3, g_faces[face][3], g_faces[face][4], g_faces[face][5]);
+				vec3_new(verts + 6, g_faces[face][6], g_faces[face][7], g_faces[face][8]);
+				vec3_new(verts + 9, g_faces[face][9], g_faces[face][10], g_faces[face][11]);
+
+				// A source block will always be a full block;
+				if (blocks[i].type != FLUID_WATER)
+				{
+					if (face != DIR_DOWN)	
+						higher -= (eight * g_fluid_data[blocks[i].type - FLUID_FIRST - 1].dist_from_source);
+
+					if (face == DIR_UP)
+					{
+						// looking from top -> down;
+						int	most = 999;
+						type = get_block_type_at_world_pos(chunk->info, vec3_add(tmp, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_SOUTH]), (float *)g_card_dir[DIR_WEST]));
+						if (type > FLUID_FIRST && type < FLUID_LAST && type < most)
+							if (type < most)
+								most = type;
+						type = get_block_type_at_world_pos(chunk->info, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_SOUTH]));
+						if (type > FLUID_FIRST && type < FLUID_LAST && type < most)
+							if (type < most)
+								most = type;
+						type = get_block_type_at_world_pos(chunk->info, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_WEST]));
+						if (type > FLUID_FIRST && type < FLUID_LAST && type < most)
+							if (type < most)
+								most = type;
+
+						if (most < blocks[i].type)
+							verts[1] *= 1.0f - (eight * g_fluid_data[most - FLUID_FIRST - 1].dist_from_source);
+						else if (most > GAS_FIRST && most < GAS_LAST)
+							verts[1] = -1.0f + eight;
+						else
+							verts[1] *= higher;
+
+						type = get_block_type_at_world_pos(chunk->info, vec3_add(tmp, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_NORTH]), (float *)g_card_dir[DIR_WEST]));
+						if (type > FLUID_FIRST && type < FLUID_LAST && type < blocks[i].type)
+							verts[4] *= (eight * g_fluid_data[type - FLUID_FIRST - 1].dist_from_source);
+						else if (type > GAS_FIRST && type < GAS_LAST)
+							verts[4] = -1 + eight;
+						else
+							verts[4] *= higher;
+
+						type = get_block_type_at_world_pos(chunk->info, vec3_add(tmp, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_NORTH]), (float *)g_card_dir[DIR_EAST]));
+						if (type > FLUID_FIRST && type < FLUID_LAST && type < blocks[i].type)
+							verts[7] *= (eight * g_fluid_data[type - FLUID_FIRST - 1].dist_from_source);
+						else if (type > GAS_FIRST && type < GAS_LAST)
+							verts[7] = -1 + eight;
+						else
+							verts[7] *= higher;
+
+						type = get_block_type_at_world_pos(chunk->info, vec3_add(tmp, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_SOUTH]), (float *)g_card_dir[DIR_EAST]));
+						if (type > FLUID_FIRST && type < FLUID_LAST && type < blocks[i].type)
+							verts[10] *= (eight * g_fluid_data[type - FLUID_FIRST - 1].dist_from_source);
+						else if (type > GAS_FIRST && type < GAS_LAST)
+							verts[10] = -1 + eight;
+						else
+							verts[10] *= higher;
+					}
+					else
+						return ;
+				}
+
 				add_to_chunk_mesh(&chunk->liquid_mesh, local_pos, verts, g_fluid_data[blocks[i].type - FLUID_FIRST - 1].texture, (int)g_face_light[face]);
 				++chunk->blocks_liquid_amount;
 			}

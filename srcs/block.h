@@ -43,9 +43,9 @@ enum e_card_dir // cardinal direction aka väderstreck?
 };
 
 static const float g_card_dir[DIR_AMOUNT + 1][3] = {
-	{0, 0, 1},
-	{1, 0, 0},
 	{0, 0, -1},
+	{1, 0, 0},
+	{0, 0, 1},
 	{-1, 0, 0},
 	{0, 1, 0},
 	{0, -1, 0},
@@ -74,7 +74,8 @@ static const t_block_data g_block_data[] = {
 	{
 		BLOCK_DIRT, 
 		"BLOCK_DIRT",
-		{132, 132, 132, 132, 135, 224}
+//		{132, 132, 132, 132, 135, 224}
+		{293, 132, 132, 132, 135, 224}
 	},
 	{
 		BLOCK_STONE, 
@@ -84,7 +85,7 @@ static const t_block_data g_block_data[] = {
 	{
 		BLOCK_BEDROCK, 
 		"BLOCK_BEDROCK",
-		{6, 6, 6, 6, 6, 6}
+		{292, 292, 292, 292, 292, 292}
 	},
 	{
 		BLOCK_SAND, 
@@ -127,9 +128,9 @@ static const t_block_data	g_flora_data[] = {
 };
 
 static const float g_faces[6][12] = {
-/* FRONT */	{-1, 1, 1,  -1, -1, 1,  1, -1, 1,  1, 1, 1},
+/* NORTH */ {1, 1, -1,  1, -1, -1,  -1, -1, -1,  -1, 1, -1},
 /* RIGHT */	{1, 1, 1,  1, -1, 1,  1, -1, -1,  1, 1, -1},
-/* BACK  */	{1, 1, -1,  1, -1, -1,  -1, -1, -1,  -1, 1, -1},
+/* SOUTH */	{-1, 1, 1,  -1, -1, 1,  1, -1, 1,  1, 1, 1},
 /* LEFT  */	{-1, 1, -1,  -1, -1, -1,  -1, -1, 1,  -1, 1, 1},
 /* TOP   */	{-1, 1, -1,  -1, 1, 1,  1, 1, 1,  1, 1, -1},
 /* BOT   */	{-1, -1, -1,  1, -1, -1,  1, -1, 1,  -1, -1, 1}
