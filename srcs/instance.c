@@ -290,7 +290,7 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 					type = get_block_type_at_world_pos(chunk->info, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_UP]));
 					if (type < FLUID_FIRST || type > FLUID_LAST)
 					{
-						float	minu = 1.0f - ((g_fluid_data[blocks[i].type - FLUID_FIRST - 1].dist_from_source + 1) * 0.25f);
+						float	minu = 1.0f - ((g_fluid_data[blocks[i].type - FLUID_FIRST - 1].dist_from_source) * 0.25f);
 						verts[1] *= minu;
 						verts[4] *= minu;
 						verts[7] *= minu;
@@ -302,6 +302,8 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 				if (blocks[i].type != FLUID_WATER)
 				{
 					int	most;
+					float final;
+
 					if (face == DIR_UP || face == DIR_NORTH || face == DIR_WEST)
 					{
 						// North west
@@ -322,12 +324,13 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 						if (most > GAS_FIRST && most < GAS_LAST)
 							most = FLUID_WATER_7;
 
+						final = 1.0f - ((g_fluid_data[most - FLUID_FIRST - 1].dist_from_source) * 0.25f);
 						if (face == DIR_UP)
-							verts[1] *= 1.0f - ((g_fluid_data[most - FLUID_FIRST - 1].dist_from_source + 1) * 0.25f);
+							verts[1] *= final;
 						if (face == DIR_WEST)
-							verts[1] *= 1.0f - ((g_fluid_data[most - FLUID_FIRST - 1].dist_from_source + 1) * 0.25f);
+							verts[1] *= final;
 						if (face == DIR_NORTH)
-							verts[10] *= 1.0f - ((g_fluid_data[most - FLUID_FIRST - 1].dist_from_source + 1) * 0.25f);
+							verts[10] *= final;
 					}
 
 					if (face == DIR_UP || face == DIR_SOUTH || face == DIR_WEST)
@@ -350,12 +353,13 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 						if (most > GAS_FIRST && most < GAS_LAST)
 							most = FLUID_WATER_7;
 
+						final = 1.0f - ((g_fluid_data[most - FLUID_FIRST - 1].dist_from_source) * 0.25f);
 						if (face == DIR_UP)
-							verts[4] *= 1.0f - ((g_fluid_data[most - FLUID_FIRST - 1].dist_from_source + 1) * 0.25f);
+							verts[4] *= final;
 						if (face == DIR_SOUTH)
-							verts[1] *= 1.0f - ((g_fluid_data[most - FLUID_FIRST - 1].dist_from_source + 1) * 0.25f);
+							verts[1] *= final;
 						if (face == DIR_WEST)
-							verts[10] *= 1.0f - ((g_fluid_data[most - FLUID_FIRST - 1].dist_from_source + 1) * 0.25f);
+							verts[10] *= final;
 					}
 
 					if (face == DIR_UP || face == DIR_SOUTH || face == DIR_EAST)
@@ -378,12 +382,13 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 						if (most > GAS_FIRST && most < GAS_LAST)
 							most = FLUID_WATER_7;
 						
+						final = 1.0f - ((g_fluid_data[most - FLUID_FIRST - 1].dist_from_source) * 0.25f);
 						if (face == DIR_UP)
-							verts[7] *= 1.0f - ((g_fluid_data[most - FLUID_FIRST - 1].dist_from_source + 1) * 0.25f);
+							verts[7] *= final;
 						if (face == DIR_EAST)
-							verts[1] *= 1.0f - ((g_fluid_data[most - FLUID_FIRST - 1].dist_from_source + 1) * 0.25f);
+							verts[1] *= final;
 						if (face == DIR_SOUTH)
-							verts[10] *= 1.0f - ((g_fluid_data[most - FLUID_FIRST - 1].dist_from_source + 1) * 0.25f);
+							verts[10] *= final;
 					}
 
 					if (face == DIR_UP || face == DIR_NORTH || face == DIR_EAST)
@@ -406,15 +411,14 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 						if (most > GAS_FIRST && most < GAS_LAST)
 							most = FLUID_WATER_7;
 						
+						final = 1.0f - ((g_fluid_data[most - FLUID_FIRST - 1].dist_from_source) * 0.25f);
 						if (face == DIR_UP)
-							verts[10] *= 1.0f - ((g_fluid_data[most - FLUID_FIRST - 1].dist_from_source + 1) * 0.25f);
+							verts[10] *= final;
 						if (face == DIR_NORTH)
-							verts[1] *= 1.0f - ((g_fluid_data[most - FLUID_FIRST - 1].dist_from_source + 1) * 0.25f);
+							verts[1] *= final;
 						if (face == DIR_EAST)
-							verts[10] *= 1.0f - ((g_fluid_data[most - FLUID_FIRST - 1].dist_from_source + 1) * 0.25f);
+							verts[10] *= final;
 					}
-					else
-						return ;
 				}
 
 				add_to_chunk_mesh(&chunk->liquid_mesh, local_pos, verts, g_fluid_data[blocks[i].type - FLUID_FIRST - 1].texture, (int)g_face_light[face]);
