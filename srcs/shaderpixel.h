@@ -398,6 +398,11 @@ int			water_placer(t_chunk_info *info, float *world_pos, int nth_from_source);
 
 void		flowing_water_verts(float *verts, int face, t_block *block, float *block_world, t_chunk_info *info);
 
+int			is_type_gas(int type);
+int			is_type_solid(int type);
+int			is_type_flora(int type);
+int			is_type_fluid(int type);
+
 int			is_gas(t_block *block);
 int			is_fluid(t_block *block);
 int			is_solid(t_block *block);

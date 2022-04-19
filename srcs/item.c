@@ -1,31 +1,47 @@
 #include "shaderpixel.h"
 
+// Is BLOCK
+
 int	is_gas(t_block *block)
 {
-	if (block->type > GAS_FIRST && block->type < GAS_LAST)
-		return (1);
-	return (0);
+	return (block && is_type_gas(block->type));
 }
 
 int	is_solid(t_block *block)
 {
-	if (block->type > BLOCK_FIRST && block->type < BLOCK_LAST)
-		return (1);
-	return (0);
+	return (block && is_type_solid(block->type));
 }
 
 int	is_flora(t_block *block)
 {
-	if (block->type > FLORA_FIRST && block->type < FLORA_LAST)
-		return (1);
-	return (0);
+	return (block && is_type_flora(block->type));
 }
 
 int	is_fluid(t_block *block)
 {
-	if (block->type > FLUID_FIRST && block->type < FLUID_LAST)
-		return (1);
-	return (0);
+	return (block && is_type_fluid(block->type));
+}
+
+// Is Type
+
+int	is_type_gas(int type)
+{
+	return (type > GAS_FIRST && type < GAS_LAST);
+}
+
+int	is_type_solid(int type)
+{
+	return (type > BLOCK_FIRST && type < BLOCK_LAST);
+}
+
+int	is_type_flora(int type)
+{
+	return (type > FLORA_FIRST && type < FLORA_LAST);
+}
+
+int	is_type_fluid(int type)
+{
+	return (type > FLUID_FIRST && type < FLUID_LAST);
 }
 
 /*
@@ -100,7 +116,11 @@ void	flowing_water_verts(float *verts, int face, t_block *block, float *block_wo
 		if (face == DIR_UP || face == DIR_NORTH || face == DIR_WEST)
 		{
 			// North west
+
+			// Default the height of the block type;
 			most = block->type;
+
+			// Check the highest vertex in the direction of whichever card dir the vertex is in;
 			type = get_block_type_at_world_pos(info, vec3_add(tmp, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_NORTH]), (float *)g_card_dir[DIR_WEST]));
 			if (type > FLUID_FIRST && type < FLUID_LAST && type < most)
 				if (type < most)
@@ -113,7 +133,8 @@ void	flowing_water_verts(float *verts, int face, t_block *block, float *block_wo
 			if (type > FLUID_FIRST && type < FLUID_LAST && type < most)
 				if (type < most)
 					most = type;
-
+			
+			// If theres a gas block, we want the lowest position for that vertex;
 			if (most > GAS_FIRST && most < GAS_LAST)
 				most = FLUID_WATER_7;
 

@@ -678,11 +678,7 @@ int	main(void)
 						if (player_info.equipped_block == ITEM_TREE_PLACER)
 							tree_placer(&chunk_info, block_world);
 						else if (player_info.equipped_block == ITEM_WATER_PLACER)
-						{
-							float tmp[3];
-							set_block_at_world_pos(&chunk_info, vec3_add(tmp, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_NORTH]), (float *)g_card_dir[DIR_EAST]), BLOCK_BEDROCK);
 							water_placer(&chunk_info, block_world, 0);
-						}
 					}
 				}
 			}
