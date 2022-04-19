@@ -396,6 +396,8 @@ void		player_terrain_collision(float *res, float *pos, float *velocity, t_chunk_
 void		tree_placer(t_chunk_info *info, float *world_pos);
 int			water_placer(t_chunk_info *info, float *world_pos, int nth_from_source);
 
+void		flowing_water_verts(float *verts, int face, t_block *block, float *block_world, t_chunk_info *info);
+
 int			is_gas(t_block *block);
 int			is_fluid(t_block *block);
 int			is_solid(t_block *block);
