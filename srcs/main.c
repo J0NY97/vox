@@ -199,6 +199,7 @@ int	main(void)
 		chunk_info.block_collision_enabled = 0;
 		chunk_info.player_collision_enabled = 0;
 		chunk_info.fancy_graphics = 0;
+		chunk_info.generate_structures = 0;
 
 		glGenTextures(1, &chunk_info.texture);
 	//	new_texture(&chunk_info.texture, MODEL_PATH"cube/version_3_texture.bmp");
@@ -397,6 +398,16 @@ int	main(void)
 				LG_INFO("Fancy graphics => OFF.");
 		}
 
+		// Toggle generation of structures
+		if (keys[GLFW_KEY_F].state == BUTTON_PRESS)
+		{
+			chunk_info.generate_structures = chunk_info.generate_structures != 1;
+			if (chunk_info.generate_structures)
+				LG_INFO("Generate Structures => ON.");
+			else
+				LG_INFO("Generate Structures => OFF.");
+		}
+
 // Select equipped block;
 		if (keys[GLFW_KEY_1].state == BUTTON_PRESS)
 			player_info.equipped_block = BLOCK_DIRT;
@@ -506,7 +517,7 @@ int	main(void)
 		// ...
 		// This only generates tree for the top most chunks of the x/z chunk coordinate;
 		// Pretty convoluted but cant figure out a better way yet;
-		if (!tobegen)
+		if (!tobegen && chunk_info.generate_structures)
 		{
 			int	togen[(chunk_info.chunks_loaded / chunk_info.y_chunk_amount) * 2];
 			int gen_amount = get_surrounding_coords(togen, player_chunk[0], player_chunk[2], chunk_info.render_distance / 2);

@@ -74,8 +74,7 @@ static const t_block_data g_block_data[] = {
 	{
 		BLOCK_DIRT, 
 		"BLOCK_DIRT",
-//		{132, 132, 132, 132, 135, 224}
-		{293, 132, 132, 132, 135, 224}
+		{132, 132, 132, 132, 135, 224}
 	},
 	{
 		BLOCK_STONE, 

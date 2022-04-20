@@ -280,6 +280,7 @@ typedef struct s_chunk_info
 	int			block_collision_enabled;
 	int			player_collision_enabled;
 	int			fancy_graphics;
+	int			generate_structures;
 
 	t_chunk		*chunks; // you should not store the chunks here mainly; its just here so you can acces from places you need, without having to pass them in the function as argumnet;
 	GLuint		texture; // the texture is stored here so we dont load a texture per chunk_mesh;
