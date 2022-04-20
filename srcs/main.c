@@ -212,13 +212,14 @@ int	main(void)
 		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
 		{
 			new_chunk(&chunks[nth_chunk], &chunk_info, nth_chunk);
+			/*
 			chunks[nth_chunk].mesh.texture = chunk_info.texture;
 			chunks[nth_chunk].liquid_mesh.texture = chunk_info.texture;
 			chunks[nth_chunk].flora_mesh.texture = chunk_info.texture;
-
+			*/
 			chunks[nth_chunk].meshes.texture = chunk_info.texture;
 		}
-		ft_printf("Chunks created : %d\n", nth_chunk);
+		ft_printf("Total Chunks created : %d\n", nth_chunk);
 //////////////////////////////
 	// END Instance testing
 //////////////////////////////

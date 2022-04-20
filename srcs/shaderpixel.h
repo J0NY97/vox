@@ -325,7 +325,7 @@ typedef struct s_chunk_mesh
 
 enum e_mesh_types
 {
-	BLOCK_MESH,
+	BLOCK_MESH = 0,
 	LIQUID_MESH,
 	FLORA_MESH,
 	ALPHA_BLOCK_MESH,
@@ -355,14 +355,10 @@ typedef struct s_chunk_mesh_v2
 	size_t			texture_id_amount;
 	size_t			texture_ids_allocated;
 
-	int				*nth_indices_start;
-	int				*nth_indices_end;
-	int				*nth_indices_amount;
-
-	unsigned int	*indices;
-	size_t			indices_amount; // how many values in the array;
-	size_t			indices_allocated;
-	size_t			index_amount; // how many indices we have;
+	unsigned int	**indices; // 'amount' amount of pointers;
+	size_t			*indices_allocated; // how many indices allocated;
+	size_t			*indices_amount; // how many values in the array; (one face has 6 indices);
+	size_t			*index_amount; // how many indices we have; (one face has 4 indices);
 }	t_chunk_mesh_v2;
 
 struct	s_chunk
