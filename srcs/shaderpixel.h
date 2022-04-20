@@ -305,7 +305,7 @@ typedef struct s_chunk_mesh
 	GLuint			vbo_pos;
 	GLuint			vbo_texture_ids;
 	GLuint			ebo;
-	GLuint			texture; // TODO: make this a pointer so we dont have extra textures uploaded to gpu;
+	GLuint			texture;
 
 	// These are the values gotten from the mesh creator in code, from
 	//	all visible blocks in the chunk;
@@ -322,6 +322,48 @@ typedef struct s_chunk_mesh
 	size_t			indices_allocated;
 	size_t			index_amount; // how many indices we have;
 }			t_chunk_mesh;
+
+enum e_mesh_types
+{
+	BLOCK_MESH,
+	LIQUID_MESH,
+	FLORA_MESH,
+	ALPHA_BLOCK_MESH,
+	MESH_TYPE_AMOUNT
+};
+
+/*
+ * All different type of meshes are combined into this one
+ *
+ * 'nth_*_start / -end' are the nth mesh starting index and stopping index in the array;
+*/
+typedef struct s_chunk_mesh_v2
+{
+	GLuint			vao;
+	GLuint			vbo_pos;
+	GLuint			vbo_texture_ids;
+	GLuint			ebo;
+	GLuint			texture;
+
+	int				amount; // amount of meshes in this mesh;
+
+	float			*vertices;
+	size_t			vertices_amount;
+	size_t			vertices_allocated;
+
+	int				*texture_ids;
+	size_t			texture_id_amount;
+	size_t			texture_ids_allocated;
+
+	int				*nth_indices_start;
+	int				*nth_indices_end;
+	int				*nth_indices_amount;
+
+	unsigned int	*indices;
+	size_t			indices_amount; // how many values in the array;
+	size_t			indices_allocated;
+	size_t			index_amount; // how many indices we have;
+}	t_chunk_mesh_v2;
 
 struct	s_chunk
 {
@@ -343,6 +385,15 @@ struct	s_chunk
 
 	t_chunk_mesh	flora_mesh;
 	int				blocks_flora_amount; // amount of blocks in this mesh;
+
+	/* Mesh Types:
+	 * 0 : no alpha, collision, hitbox;
+	 * 1 : alpha, no collision, no hitbox;
+	 * 2 : alpha, no collision, hitbox;
+	 * 3 : alpha, collision, hitbox;
+	*/
+	t_chunk_mesh_v2	meshes; // TODO : rename to mesh;
+	int				mesh_amount; // same amount as the mesh types described above;
 
 	t_aabb			aabb;
 
@@ -381,10 +432,15 @@ int			regenerate_chunks(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v
 void		regenerate_chunks_v3(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3, t_thread_manager *tm);
 
 void		init_chunk_mesh(t_chunk_mesh *mesh);
+void		init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount);
 void		reset_chunk_mesh(t_chunk_mesh *mesh);
+void		reset_chunk_mesh_v2(t_chunk_mesh_v2 *mesh);
 void		add_to_chunk_mesh(t_chunk_mesh *mesh, int *coord, float *face_vertices, int texture_id, int light);
+void		add_to_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, int *coord, float *face_vertices, int texture_id, int light);
 void		update_chunk_mesh(t_chunk_mesh *chunk);
+void		update_chunk_mesh_v2(t_chunk_mesh_v2 *mesh);
 void		render_chunk_mesh(t_chunk_mesh *mesh, float *coordinate, t_camera *camera, t_shader *shader);
+void		render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinate, t_camera *camera, t_shader *shader);
 int			chunk_mesh_collision(float *orig, float *dir, t_chunk_mesh *mesh, float *world_coords, float reach, float intersect_point[16][3]);
 int			chunk_mesh_collision_v2(float *orig, float *dir, t_chunk *chunk, float reach, float intersect_points[16][3], float intersect_normals[16][3]);
 t_block		*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, int *face);

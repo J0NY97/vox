@@ -18,6 +18,7 @@ enum e_solid_type
 	BLOCK_OAK_LOG,
 	BLOCK_OAK_PLANK,
 	BLOCK_OAK_LEAF,
+	BLOCK_CACTUS,
 	BLOCK_LAST
 };
 
@@ -105,6 +106,11 @@ static const t_block_data g_block_data[] = {
 		BLOCK_OAK_LEAF, 
 		"BLOCK_OAK_LEAF",
 		{52, 52, 52, 52, 52, 52}
+	},
+	{
+		BLOCK_CACTUS, 
+		"BLOCK_CACTUS",
+		{342, 342, 342, 342, 318, 366}
 	}
 };
 

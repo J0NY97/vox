@@ -30,6 +30,8 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, int nth)
 	init_chunk_mesh(&chunk->liquid_mesh);
 	init_chunk_mesh(&chunk->flora_mesh);
 
+	init_chunk_mesh_v2(&chunk->meshes, MESH_TYPE_AMOUNT);
+
 	error = glGetError();
 	if (error)
 		LG_ERROR("(%d)", error);
@@ -39,8 +41,9 @@ int	chunk_gen(t_chunk *chunk)
 {
 	int		start_y = 64;
 	float	freq = 0.005f;
-	float	pers = 0.5;
+	float	pers = 0.5f;
 	int		i = 0;
+	float	seed = (chunk->info->seed % 512) * freq;
 
 	chunk->has_blocks = 0;
 
@@ -53,10 +56,10 @@ int	chunk_gen(t_chunk *chunk)
 			float	block_world_z = fabs(chunk->world_coordinate[2] + z);
 			float	to_use_z = block_world_z * freq;
 			float	perper =
-				octave_perlin(to_use_x, start_y * freq, to_use_z, 1, pers) +
-				octave_perlin(to_use_x, start_y * freq, to_use_z, 2, pers) +
-				octave_perlin(to_use_x, start_y * freq, to_use_z, 4, pers) +
-				octave_perlin(to_use_x, start_y * freq, to_use_z, 8, pers);
+				octave_perlin(to_use_x, seed, to_use_z, 1, pers) +
+				octave_perlin(to_use_x, seed, to_use_z, 2, pers) +
+				octave_perlin(to_use_x, seed, to_use_z, 4, pers) +
+				octave_perlin(to_use_x, seed, to_use_z, 8, pers);
 			float	e = pers * 3;
 			int		wanted_y = (start_y * (perper / e));
 			int		whatchumacallit = wanted_y - (chunk->world_coordinate[1]);
@@ -64,25 +67,8 @@ int	chunk_gen(t_chunk *chunk)
 
 			for (int y = 0; y < chunk->info->height; y++)
 			{
-				float	block_world_y = fabs(chunk->world_coordinate[1] + y);
-				/* ////// CAVE GEN ///////// */
-				/*
-				float	cave_freq = 0.005f;
-				float	cave_height = cave_freq * 200;
-				float	cave_x = block_world_x * cave_freq;
-				float	cave_z = block_world_z * cave_freq;
-				float	cave_y = (chunk->world_coordinate[1] + y) * cave_freq;
-				float	rep = 1.0f;
-
-				rep =
-					octave_perlin(cave_x, cave_y, cave_z, 2, 0.5) +
-					octave_perlin(cave_x, cave_y, cave_z, 4, 0.5) +
-					octave_perlin(cave_x, cave_y, cave_z, 8, 0.5) +
-					octave_perlin(cave_x, cave_y, cave_z, 16, 0.5);
-					*/
-
-//				vec3_new(chunk->blocks[i].pos, x, y, z);
-				if (/*rep > 1.0f &&*/ y <= whatchumacallit)
+				float	block_world_y = chunk->world_coordinate[1] + y;
+				if (y <= whatchumacallit)
 				{
 					if (y <= whatchumacallit - 1) // if we have 3 dirt block on top we make the rest stone blocks;
 					{
@@ -284,6 +270,7 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 			else
 			{
 				add_to_chunk_mesh(&chunk->mesh, local_pos, (float *)g_faces[face], g_block_data[blocks[i].type - BLOCK_FIRST - 1].face_texture[face], (int)g_face_light[face]);
+				add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_MESH, local_pos, (float *)g_faces[face], g_block_data[blocks[i].type - BLOCK_FIRST - 1].face_texture[face], (int)g_face_light[face]);
 				++chunk->blocks_solid_amount;
 			}
 		}
@@ -354,24 +341,12 @@ int	get_chunk_hash_key(int *coords)
 
 void	update_chunk(t_chunk *chunk, int *coord)
 {
-	/*
-	int	old_key = get_chunk_hash_key(chunk->coordinate);
-	t_hash_item	*old_item = hash_item_search(chunk->info->hash_table, chunk->info->hash_table_size, old_key);
-	int				old_data = old_item->data;
-	hash_item_delete(chunk->info->hash_table, chunk->info->hash_table_size, old_key);
-	*/
-
 	for (int i = 0; i < 3; i++)
 		chunk->coordinate[i] = coord[i];
 	vec3_new(chunk->world_coordinate,
 		chunk->coordinate[0] * chunk->info->chunk_size[0],
 		chunk->coordinate[1] * chunk->info->chunk_size[1],
 		chunk->coordinate[2] * chunk->info->chunk_size[2]);
-
-/*
-	int	new_key = get_chunk_hash_key(chunk->coordinate);	
-	hash_item_insert(chunk->info->hash_table, chunk->info->hash_table_size, new_key, old_data);
-	*/
 
 	// Generate Chunks	
 	chunk->block_amount = chunk_gen(chunk); // should always return max amount of blocks in a chunk;
@@ -659,6 +634,8 @@ void	update_chunk_visible_blocks(t_chunk *chunk)
 	reset_chunk_mesh(&chunk->liquid_mesh);
 	reset_chunk_mesh(&chunk->flora_mesh);
 
+	reset_chunk_mesh_v2(&chunk->meshes);
+
 	get_blocks_visible(chunk);
 }
 
@@ -673,6 +650,18 @@ void	reset_chunk_mesh(t_chunk_mesh *mesh)
 	mesh->index_amount = 0;
 }
 
+void	reset_chunk_mesh_v2(t_chunk_mesh_v2 *mesh)
+{
+	mesh->vertices_amount = 0;
+	mesh->texture_id_amount = 0;
+	mesh->indices_amount = 0;
+	mesh->index_amount = 0;
+
+	memset(mesh->nth_indices_start, 0, sizeof(int) * mesh->amount);
+	memset(mesh->nth_indices_end, 0, sizeof(int) * mesh->amount);
+	memset(mesh->nth_indices_amount, 0, sizeof(int) * mesh->amount);
+}
+
 /*
  * Creates all the opengl stuff that needs to be created only once;
 */
@@ -683,6 +672,60 @@ void	init_chunk_mesh(t_chunk_mesh *mesh)
 	error = glGetError();
 	if (error)
 		LG_ERROR("BEFORE (%d)", error);
+
+	mesh->vertices_allocated = 14700;
+	mesh->vertices = malloc(sizeof(float) * mesh->vertices_allocated);
+	mesh->vertices_amount = 0;
+
+	mesh->texture_ids_allocated = 4900; 
+	mesh->texture_ids = malloc(sizeof(int) * mesh->texture_ids_allocated);
+	mesh->texture_id_amount = 0;
+
+	mesh->indices_allocated = 7350;
+	mesh->indices = malloc(sizeof(unsigned int) * mesh->indices_allocated);
+	mesh->indices_amount = 0;
+
+	glGenVertexArrays(1, &mesh->vao);
+	glBindVertexArray(mesh->vao);
+
+	glEnableVertexAttribArray(0); // pos
+	glEnableVertexAttribArray(1); // tex
+
+	glGenBuffers(2, vbo);
+	mesh->vbo_pos = vbo[0];
+	mesh->vbo_texture_ids = vbo[1];
+
+	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_pos);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
+
+	// Texture ID
+	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_texture_ids);
+	glVertexAttribIPointer(1, 1, GL_INT, sizeof(int), NULL);
+
+	glGenBuffers(1, &mesh->ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("(%d)", error);
+}
+
+void	init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount)
+{
+	GLuint	vbo[2];
+	int		error;
+	error = glGetError();
+	if (error)
+		LG_ERROR("BEFORE (%d)", error);
+
+	mesh->amount = amount;
+	mesh->nth_indices_start = ft_memalloc(sizeof(int) * mesh->amount);
+	mesh->nth_indices_end = ft_memalloc(sizeof(int) * mesh->amount);
+	mesh->nth_indices_amount = ft_memalloc(sizeof(int) * mesh->amount);
 
 	mesh->vertices_allocated = 14700;
 	mesh->vertices = malloc(sizeof(float) * mesh->vertices_allocated);
@@ -766,6 +809,44 @@ void	render_chunk_mesh(t_chunk_mesh *mesh, float *coordinate, t_camera *camera, 
 		LG_ERROR("(%d)", error);
 }
 
+void	render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinate, t_camera *camera, t_shader *shader)
+{
+	int	error;
+	error = glGetError();
+	if (error)
+		LG_ERROR("BEFORE (%d)", error);
+	
+	glUseProgram(shader->program);
+	glUniformMatrix4fv(glGetUniformLocation(shader->program, "view"), 1, GL_FALSE, &camera->view[0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader->program, "projection"), 1, GL_FALSE, &camera->projection[0]);
+
+	glUniform3fv(glGetUniformLocation(shader->program, "chunkPos"), 1, &coordinate[0]);
+
+	glBindVertexArray(mesh->vao);
+
+	glActiveTexture(GL_TEXTURE0 + 0);
+	glBindTexture(GL_TEXTURE_2D, mesh->texture);
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("(%d)", error);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo + mesh->nth_indices_start[mesh_type]);
+	glDrawElements(GL_TRIANGLES, mesh->nth_indices_amount[mesh_type], GL_UNSIGNED_INT, NULL);
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("(%d)", error);
+
+	glUseProgram(0);
+	glBindVertexArray(0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("(%d)", error);
+}
+
 void	update_chunk_mesh(t_chunk_mesh *mesh)
 {
 	int error;
@@ -813,6 +894,47 @@ error = glGetError();
 		LG_ERROR("(%d)", error);
 }
 
+void	update_chunk_mesh_v2(t_chunk_mesh_v2 *mesh)
+{
+	int error;
+	error = glGetError();
+	if (error)
+		LG_ERROR("BEFORE (%d)", error);
+
+	glBindVertexArray(mesh->vao);
+
+	// Pos
+	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_pos);
+	glBufferData(GL_ARRAY_BUFFER, mesh->vertices_amount * sizeof(float),
+		&mesh->vertices[0], GL_STATIC_DRAW);
+
+	error = glGetError();
+	if (error)
+	{
+		LG_INFO("Vertices Amount : %d", mesh->vertices_amount);
+		LG_ERROR("(%d)", error);
+	}
+
+	// Texture ID
+	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_texture_ids);
+	glBufferData(GL_ARRAY_BUFFER, mesh->texture_id_amount * sizeof(int),
+		&mesh->texture_ids[0], GL_STATIC_DRAW);
+
+	// EBO
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->indices_amount * sizeof(unsigned int),
+		&mesh->indices[0], GL_STATIC_DRAW);
+	
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("(%d)", error);
+}
+
+
 /*
  * 'coord' position of block in the chunk->blocks array;
  *
@@ -831,7 +953,7 @@ void	add_to_chunk_mesh(t_chunk_mesh *mesh, int *coord, float *face_vertices, int
 	{
 		mesh->vertices_allocated += 256;
 		mesh->vertices = realloc(mesh->vertices, sizeof(float) * mesh->vertices_allocated);
-		LG_WARN("Reallocating Vertices from %d to %d", mesh->indices_allocated - 256, mesh->indices_allocated);
+		LG_WARN("Reallocating Vertices from %d to %d", mesh->vertices_allocated - 256, mesh->vertices_allocated);
 	}
 	if (mesh->texture_ids_allocated < mesh->texture_id_amount + 4)
 	{
@@ -868,7 +990,7 @@ void	add_to_chunk_mesh(t_chunk_mesh *mesh, int *coord, float *face_vertices, int
 	if (mesh->indices_allocated < mesh->indices_amount + 6)
 	{
 		mesh->indices_allocated += 256;
-		mesh->indices = realloc(mesh->indices, sizeof(float) * mesh->indices_allocated);
+		mesh->indices = realloc(mesh->indices, sizeof(unsigned int) * mesh->indices_allocated);
 		LG_WARN("Reallocating Indices from %d to %d", mesh->indices_allocated - 256, mesh->indices_allocated);
 	}
 
@@ -879,6 +1001,80 @@ void	add_to_chunk_mesh(t_chunk_mesh *mesh, int *coord, float *face_vertices, int
 	mesh->indices[mesh->indices_amount + 3] = mesh->index_amount;
 	mesh->indices[mesh->indices_amount + 4] = mesh->index_amount + 2;
 	mesh->indices[mesh->indices_amount + 5] = mesh->index_amount + 3;
+
+	mesh->indices_amount += 6;
+	mesh->index_amount += 4;
+}
+
+void	add_to_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, int *coord, float *face_vertices, int texture_id, int light)
+{
+	// @Modulate (aka make modular)
+	float	block_scale = 0.5f;
+
+	// Vertices and Texture
+	if (mesh->vertices_allocated < mesh->vertices_amount + 12)
+	{
+		mesh->vertices_allocated += 256;
+		mesh->vertices = realloc(mesh->vertices, sizeof(float) * mesh->vertices_allocated);
+		LG_WARN("Reallocating Vertices from %d to %d", mesh->indices_allocated - 256, mesh->indices_allocated);
+	}
+
+	if (mesh->texture_ids_allocated < mesh->texture_id_amount + 4)
+	{
+		mesh->texture_ids_allocated += 256;
+		mesh->texture_ids = realloc(mesh->texture_ids, sizeof(int) * mesh->texture_ids_allocated);
+		LG_WARN("Reallocating Texture Ids from %d to %d", mesh->texture_ids_allocated - 256, mesh->texture_ids_allocated);
+	}
+
+	int ind = 0;
+	int	tex = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		ind = 3 * i;
+		mesh->vertices[mesh->vertices_amount + ind + 0] = (face_vertices[ind + 0] * block_scale) + coord[0];
+		mesh->vertices[mesh->vertices_amount + ind + 1] = (face_vertices[ind + 1] * block_scale) + coord[1];
+		mesh->vertices[mesh->vertices_amount + ind + 2] = (face_vertices[ind + 2] * block_scale) + coord[2];
+
+		tex = texture_id | (i << 16) | (light << 20);
+		mesh->texture_ids[mesh->texture_id_amount + i] = tex;
+	}
+
+	mesh->vertices_amount += 4 * 3;
+	mesh->texture_id_amount += 4;
+
+	// Indices
+	if (mesh->indices_allocated < mesh->indices_amount + 6)
+	{
+		mesh->indices_allocated += 256;
+		// Move the meshe end forward;
+		mesh->nth_indices_end[mesh_type] += 256;
+		// Move the meshes coming after this one's, start and end forward;
+		for (int i = mesh_type + 1; i < mesh->amount; i++)
+		{
+			mesh->nth_indices_start[i] += 256;
+			mesh->nth_indices_end[i] += 256;
+		}
+
+		float	*new_indices = malloc(sizeof(unsigned int) * mesh->indices_allocated);
+		int		indices_in_arr = 0;
+		for (int i = 0; i < mesh->amount; i++)
+		{
+			memcpy(mesh->indices + indices_in_arr, new_indices, sizeof(unsigned int) * (mesh->nth_indices_start[i] + mesh->nth_indices_amount[i]));
+			indices_in_arr = mesh->nth_indices_end[i] - mesh->nth_indices_start[i];
+		}
+		LG_WARN("Reallocating Indices from %d to %d", mesh->indices_allocated - 256, mesh->indices_allocated);
+	}
+
+	int	index = mesh->nth_indices_start[mesh_type] + mesh->nth_indices_amount[mesh_type];
+	mesh->indices[index + 0] = mesh->index_amount;
+	mesh->indices[index + 1] = mesh->index_amount + 1;
+	mesh->indices[index + 2] = mesh->index_amount + 2;
+
+	mesh->indices[index + 3] = mesh->index_amount;
+	mesh->indices[index + 4] = mesh->index_amount + 2;
+	mesh->indices[index + 5] = mesh->index_amount + 3;
+
+	mesh->nth_indices_amount[mesh_type] += 6;
 
 	mesh->indices_amount += 6;
 	mesh->index_amount += 4;
@@ -1304,18 +1500,21 @@ int	get_block_type_at_world_pos(t_chunk_info *info, float *world_pos)
 }
 
 /*
- * 'world_pos' position of where tree should be placed in the world coordinate;
+ * A no matter what cactus placer;
 */
-void	tree_placer(t_chunk_info *info, float *world_pos)
+void	create_cactus(t_chunk_info *info, float *world_pos)
 {
-	LG_DEBUG("Place tree at %f %f %f", world_pos[0], world_pos[1], world_pos[2]);
+	// Trunk;
+	for (int i = 0; i < 3; i++)
+		set_block_at_world_pos_if_not_solid(info,
+			(float []){world_pos[0], world_pos[1] + i, world_pos[2]}, BLOCK_CACTUS);
+}
 
-// We have to check that the block we are placing the tree on is dirt block;
-	int	type = get_block_type_at_world_pos(info,
-		(float []){world_pos[0], world_pos[1] - 1.0f, world_pos[2]});
-	if (type == -1)// || data->type != BLOCK_DIRT)
-		return ;
-
+/*
+ * A no matter what tree placer;
+*/
+void	create_tree(t_chunk_info *info, float *world_pos)
+{
 	// Trunk;
 	for (int i = 0; i < 6; i++)
 		set_block_at_world_pos_if_not_solid(info,
@@ -1379,6 +1578,24 @@ void	tree_placer(t_chunk_info *info, float *world_pos)
 				BLOCK_OAK_LEAF);
 		}
 	}
+}
+
+/*
+ * 'world_pos' position of where tree should be placed in the world coordinate;
+*/
+void	tree_placer(t_chunk_info *info, float *world_pos)
+{
+	int	type;
+
+// We have to check that the block we are placing the tree on is dirt block;
+	type = get_block_type_at_world_pos(info,
+		(float []){world_pos[0], world_pos[1] - 1.0f, world_pos[2]});
+	if (type == -1)
+		return ;
+	if (type == BLOCK_DIRT)
+		create_tree(info, world_pos);
+	if (type == BLOCK_SAND)
+		create_cactus(info, world_pos);
 }
 
 void	flora_placer(t_chunk_info *info, int type, float *world_pos)

@@ -177,8 +177,8 @@ int	main(void)
 		t_chunk_info	chunk_info;
 
 		chunk_info.render_distance = 15;
-//		chunk_info.seed = 896868766;
-		chunk_info.seed = 596547633;
+		chunk_info.seed = 896868766;
+//		chunk_info.seed = 596547633;
 		chunk_info.width = 16;
 		chunk_info.breadth = 16;
 		chunk_info.height = 16;
@@ -190,19 +190,12 @@ int	main(void)
 		chunk_info.chunk_size[1] = chunk_info.height * chunk_info.block_size;
 		chunk_info.chunk_size[2] = chunk_info.breadth * chunk_info.block_size;
 
-/*
-		chunk_info.hash_table_size = chunk_info.chunks_loaded;
-		chunk_info.hash_table = malloc(sizeof(t_hash_item) * chunk_info.hash_table_size);
-		hash_table_clear(chunk_info.hash_table, chunk_info.hash_table_size);
-		*/
-
 		chunk_info.block_collision_enabled = 0;
 		chunk_info.player_collision_enabled = 0;
 		chunk_info.fancy_graphics = 0;
 		chunk_info.generate_structures = 0;
 
 		glGenTextures(1, &chunk_info.texture);
-	//	new_texture(&chunk_info.texture, MODEL_PATH"cube/version_3_texture.bmp");
 		new_texture(&chunk_info.texture, MODEL_PATH"cube/version_3_texture_alpha.bmp");
 
 		t_chunk	*chunks;
@@ -222,6 +215,8 @@ int	main(void)
 			chunks[nth_chunk].mesh.texture = chunk_info.texture;
 			chunks[nth_chunk].liquid_mesh.texture = chunk_info.texture;
 			chunks[nth_chunk].flora_mesh.texture = chunk_info.texture;
+
+			chunks[nth_chunk].meshes.texture = chunk_info.texture;
 		}
 		ft_printf("Chunks created : %d\n", nth_chunk);
 //////////////////////////////
@@ -373,6 +368,13 @@ int	main(void)
 					most_textures = chunks[j].mesh.texture_id_amount;
 				if (chunks[j].mesh.indices_amount > most_indices)
 					most_indices = chunks[j].mesh.indices_amount;
+
+				if (chunks[j].meshes.vertices_amount > most_vertices)
+					most_vertices = chunks[j].meshes.vertices_amount;
+				if (chunks[j].meshes.texture_id_amount > most_textures)
+					most_textures = chunks[j].meshes.texture_id_amount;
+				if (chunks[j].meshes.indices_amount > most_indices)
+					most_indices = chunks[j].meshes.indices_amount;
 			}
 			LG_INFO("Most vertices : %d", most_vertices);
 			LG_INFO("Most texture ids : %d", most_textures);
@@ -399,7 +401,7 @@ int	main(void)
 		}
 
 		// Toggle generation of structures
-		if (keys[GLFW_KEY_F].state == BUTTON_PRESS)
+		if (keys[GLFW_KEY_Y].state == BUTTON_PRESS)
 		{
 			chunk_info.generate_structures = chunk_info.generate_structures != 1;
 			if (chunk_info.generate_structures)
@@ -424,6 +426,8 @@ int	main(void)
 			player_info.equipped_block = BLOCK_OAK_PLANK;
 		if (keys[GLFW_KEY_6].state == BUTTON_PRESS)
 			player_info.equipped_block = BLOCK_OAK_LEAF;
+		if (keys[GLFW_KEY_7].state == BUTTON_PRESS)
+			player_info.equipped_block = BLOCK_CACTUS;
 		if (keys[GLFW_KEY_0].state == BUTTON_PRESS)
 			player_info.equipped_block = ITEM_TREE_PLACER;
 		if (keys[GLFW_KEY_9].state == BUTTON_PRESS)
@@ -432,9 +436,9 @@ int	main(void)
 		{
 			if (keys[i].state == BUTTON_PRESS)
 			{
-				if (player_info.equipped_block >= 0
-					&& player_info.equipped_block < ITEM_FIRST)
-					ft_printf("Block[%d] : '%s' equipped.\n", player_info.equipped_block, g_block_data[player_info.equipped_block + 1].name);
+				if (player_info.equipped_block > BLOCK_FIRST &&
+					player_info.equipped_block < BLOCK_LAST)
+					ft_printf("Block[%d] : '%s' equipped.\n", player_info.equipped_block, g_block_data[player_info.equipped_block - BLOCK_FIRST - 1].name);
 				else if (player_info.equipped_block > ITEM_FIRST &&
 					player_info.equipped_block < ITEM_LAST)
 					ft_printf("Item : '%s' equipped.\n", g_item_data[player_info.equipped_block - ITEM_FIRST - 1].name);
@@ -552,6 +556,9 @@ int	main(void)
 				update_chunk_mesh(&chunks[ent].mesh);
 				update_chunk_mesh(&chunks[ent].liquid_mesh);
 				update_chunk_mesh(&chunks[ent].flora_mesh);
+
+				update_chunk_mesh_v2(&chunks[ent].meshes);
+
 				chunk_aabb_update(&chunks[ent]);
 				chunks[ent].needs_to_update = 0;
 
@@ -566,6 +573,9 @@ int	main(void)
 						update_chunk_mesh(&neighbor->mesh);
 						update_chunk_mesh(&neighbor->liquid_mesh);
 						update_chunk_mesh(&neighbor->flora_mesh);
+
+						update_chunk_mesh_v2(&neighbor->meshes);
+
 						chunk_aabb_update(neighbor);
 					}
 				}
@@ -606,8 +616,13 @@ int	main(void)
 			
 			// Render solid mesh;
 			if (chunks[nth_chunk].render)
+			{
 				if (chunks[nth_chunk].blocks_solid_amount > 0)
-					render_chunk_mesh(&chunks[nth_chunk].mesh, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
+				{
+			//		render_chunk_mesh(&chunks[nth_chunk].mesh, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
+					render_chunk_mesh_v2(&chunks[nth_chunk].meshes, BLOCK_MESH, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
+				}
+			}
 
 			if (chunks[nth_chunk].blocks_solid_amount > 0 ||
 				chunks[nth_chunk].blocks_flora_amount > 0)
