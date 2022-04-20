@@ -553,9 +553,11 @@ int	main(void)
 			if (chunks[ent].needs_to_update)
 			{
 				update_chunk_visible_blocks(&chunks[ent]);
+				/*
 				update_chunk_mesh(&chunks[ent].mesh);
 				update_chunk_mesh(&chunks[ent].liquid_mesh);
 				update_chunk_mesh(&chunks[ent].flora_mesh);
+				*/
 
 				update_chunk_mesh_v2(&chunks[ent].meshes);
 
@@ -570,9 +572,11 @@ int	main(void)
 					if (neighbor)
 					{
 						update_chunk_visible_blocks(neighbor);
+						/*
 						update_chunk_mesh(&neighbor->mesh);
 						update_chunk_mesh(&neighbor->liquid_mesh);
 						update_chunk_mesh(&neighbor->flora_mesh);
+						*/
 
 						update_chunk_mesh_v2(&neighbor->meshes);
 
@@ -640,7 +644,8 @@ int	main(void)
 					// Collision on solid mesh;
 					if (chunks[nth_chunk].blocks_solid_amount > 0)
 					{
-						int collisions_on_chunk = chunk_mesh_collision(player.camera.pos, player.camera.front, &chunks[nth_chunk].mesh, chunks[nth_chunk].world_coordinate, player_info.reach, intersect_point + collision_result);
+					//	int collisions_on_chunk = chunk_mesh_collision(player.camera.pos, player.camera.front, &chunks[nth_chunk].mesh, chunks[nth_chunk].world_coordinate, player_info.reach, intersect_point + collision_result);
+						int collisions_on_chunk = chunk_mesh_collision_v2(player.camera.pos, player.camera.front, &chunks[nth_chunk].meshes, BLOCK_MESH, chunks[nth_chunk].world_coordinate, player_info.reach, intersect_point + collision_result);
 						for (int i = 0; i < collisions_on_chunk; i++)
 							intersect_chunk_index[collision_result + i] = nth_chunk;
 						collision_result += collisions_on_chunk;
@@ -722,7 +727,10 @@ int	main(void)
 			if (chunks[nth_chunk].render)
 			{
 				if (chunks[nth_chunk].blocks_liquid_amount > 0)
-					render_chunk_mesh(&chunks[nth_chunk].liquid_mesh, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
+				{
+				//	render_chunk_mesh(&chunks[nth_chunk].liquid_mesh, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
+					render_chunk_mesh_v2(&chunks[nth_chunk].meshes, LIQUID_MESH, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
+				}
 			}
 		}
 

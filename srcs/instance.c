@@ -21,14 +21,12 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, int nth)
 		chunk->coordinate[i] = 999 - (i * nth);
 		chunk->world_coordinate[i] = 999 - (i * nth);
 	}
-	/*
-	int key = get_chunk_hash_key(chunk->coordinate);
-	hash_item_insert(info->hash_table, info->hash_table_size, key, nth);
-	*/
 
+/*
 	init_chunk_mesh(&chunk->mesh);
 	init_chunk_mesh(&chunk->liquid_mesh);
 	init_chunk_mesh(&chunk->flora_mesh);
+*/
 
 	init_chunk_mesh_v2(&chunk->meshes, MESH_TYPE_AMOUNT);
 
@@ -264,12 +262,13 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 
 				flowing_water_verts(verts, face, &blocks[i], block_world, chunk->info);
 
-				add_to_chunk_mesh(&chunk->liquid_mesh, local_pos, verts, g_fluid_data[blocks[i].type - FLUID_FIRST - 1].texture, (int)g_face_light[face]);
+				//add_to_chunk_mesh(&chunk->liquid_mesh, local_pos, verts, g_fluid_data[blocks[i].type - FLUID_FIRST - 1].texture, (int)g_face_light[face]);
+				add_to_chunk_mesh_v2(&chunk->meshes, LIQUID_MESH, local_pos, verts, g_fluid_data[blocks[i].type - FLUID_FIRST - 1].texture, (int)g_face_light[face]);
 				++chunk->blocks_liquid_amount;
 			}
 			else
 			{
-				add_to_chunk_mesh(&chunk->mesh, local_pos, (float *)g_faces[face], g_block_data[blocks[i].type - BLOCK_FIRST - 1].face_texture[face], (int)g_face_light[face]);
+				//add_to_chunk_mesh(&chunk->mesh, local_pos, (float *)g_faces[face], g_block_data[blocks[i].type - BLOCK_FIRST - 1].face_texture[face], (int)g_face_light[face]);
 				add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_MESH, local_pos, (float *)g_faces[face], g_block_data[blocks[i].type - BLOCK_FIRST - 1].face_texture[face], (int)g_face_light[face]);
 				++chunk->blocks_solid_amount;
 			}
@@ -630,9 +629,11 @@ void	update_chunk_visible_blocks(t_chunk *chunk)
 {
 	int	blocks_visible[2]; // 0 : solid, 1 : liquid;
 
+/*
 	reset_chunk_mesh(&chunk->mesh);
 	reset_chunk_mesh(&chunk->liquid_mesh);
 	reset_chunk_mesh(&chunk->flora_mesh);
+	*/
 
 	reset_chunk_mesh_v2(&chunk->meshes);
 
@@ -756,8 +757,9 @@ void	init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount)
 	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_texture_ids);
 	glVertexAttribIPointer(1, 1, GL_INT, sizeof(int), NULL);
 
-	glGenBuffers(1, &mesh->ebo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
+	mesh->ebo = malloc(sizeof(unsigned int) * mesh->amount);
+	glGenBuffers(mesh->amount, mesh->ebo);
+//	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -831,8 +833,14 @@ void	render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinat
 	if (error)
 		LG_ERROR("(%d)", error);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo + mesh->nth_indices_start[mesh_type]);
-	glDrawElements(GL_TRIANGLES, mesh->nth_indices_amount[mesh_type], GL_UNSIGNED_INT, NULL);
+	if (mesh->nth_indices_amount[mesh_type] > 0)
+	{
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo[mesh_type]);
+		glDrawElements(GL_TRIANGLES, mesh->nth_indices_amount[mesh_type],
+			GL_UNSIGNED_INT, NULL);
+	}
+	else
+		LG_WARN("We can\'t render mesh with no indices.");
 
 	error = glGetError();
 	if (error)
@@ -921,9 +929,13 @@ void	update_chunk_mesh_v2(t_chunk_mesh_v2 *mesh)
 		&mesh->texture_ids[0], GL_STATIC_DRAW);
 
 	// EBO
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->indices_amount * sizeof(unsigned int),
-		&mesh->indices[0], GL_STATIC_DRAW);
+	for (int i = 0; i < mesh->amount; i++)
+	{
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo[i]);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+			mesh->nth_indices_amount[i] * sizeof(unsigned int),
+			mesh->indices + mesh->nth_indices_start[i], GL_STATIC_DRAW);
+	}
 	
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -1046,22 +1058,24 @@ void	add_to_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, int *coord, floa
 	if (mesh->indices_allocated < mesh->indices_amount + 6)
 	{
 		mesh->indices_allocated += 256;
-		// Move the meshe end forward;
-		mesh->nth_indices_end[mesh_type] += 256;
-		// Move the meshes coming after this one's, start and end forward;
-		for (int i = mesh_type + 1; i < mesh->amount; i++)
-		{
-			mesh->nth_indices_start[i] += 256;
-			mesh->nth_indices_end[i] += 256;
-		}
 
-		float	*new_indices = malloc(sizeof(unsigned int) * mesh->indices_allocated);
-		int		indices_in_arr = 0;
+		unsigned int	*new_indices = malloc(sizeof(unsigned int) * mesh->indices_allocated);
+		int				indices_in_arr = 0;
 		for (int i = 0; i < mesh->amount; i++)
 		{
-			memcpy(mesh->indices + indices_in_arr, new_indices, sizeof(unsigned int) * (mesh->nth_indices_start[i] + mesh->nth_indices_amount[i]));
-			indices_in_arr = mesh->nth_indices_end[i] - mesh->nth_indices_start[i];
+			memcpy(new_indices + indices_in_arr, mesh->indices + mesh->nth_indices_start[i], sizeof(unsigned int) * (mesh->nth_indices_start[i] + mesh->nth_indices_amount[i]));
+			// Move the meshe end forward;
+			if (i >= mesh_type)
+			{
+				mesh->nth_indices_end[i] += 256;
+				// Move the meshes coming after this one's, start and end, forward;
+				if (i > mesh_type)
+					mesh->nth_indices_start[i] += 256;
+			}
+			indices_in_arr += mesh->nth_indices_end[i] - mesh->nth_indices_start[i];
 		}
+		free(mesh->indices);
+		mesh->indices = new_indices;
 		LG_WARN("Reallocating Indices from %d to %d", mesh->indices_allocated - 256, mesh->indices_allocated);
 	}
 
@@ -1264,11 +1278,51 @@ int	chunk_mesh_collision(float *orig, float *dir, t_chunk_mesh *mesh, float *wor
 	return (collisions);
 }
 
+int	chunk_mesh_collision_v2(float *orig, float *dir, t_chunk_mesh_v2 *mesh, int mesh_type, float *world_coords, float reach, float intersect_point[16][3])
+{
+	float			*vertices;
+	unsigned int	*indices;
+	float			p1[3];
+	float			p2[3];
+	float			p3[3];
+	float			norm_dir[3];
+	int				collisions = 0;
+
+	vec3_normalize(norm_dir, dir);
+	vertices = mesh->vertices;
+	indices = mesh->indices + mesh->nth_indices_start[mesh_type];
+	for (int i = 0; i < mesh->nth_indices_amount[mesh_type] / 3; i++)
+	{
+		int k = i * 3;
+		vec3_new(p1,
+			vertices[indices[k + 0] * 3 + 0],
+			vertices[indices[k + 0] * 3 + 1],
+			vertices[indices[k + 0] * 3 + 2]);
+		vec3_new(p2,
+			vertices[indices[k + 1] * 3 + 0],
+			vertices[indices[k + 1] * 3 + 1],
+			vertices[indices[k + 1] * 3 + 2]);
+		vec3_new(p3,
+			vertices[indices[k + 2] * 3 + 0],
+			vertices[indices[k + 2] * 3 + 1],
+			vertices[indices[k + 2] * 3 + 2]);
+		
+		// We have to add the chunk position to the chunk mesh, since that is 
+		//		what we are doing in the shader;
+		vec3_add(p1, p1, world_coords);
+		vec3_add(p2, p2, world_coords);
+		vec3_add(p3, p3, world_coords);
+		if (ray_triangle_intersect(orig, dir, p1, p2, p3, 0, intersect_point[collisions]))
+			if (vec3_dist(orig, intersect_point[collisions]) <= reach + 0.001f)
+				collisions += 1;
+	}
+	return (collisions);
+}
 /*
  * Same as the chunk_mesh_collision, but instead of saving the intersect_points,
  *	it saves the normals of the faces it collides with;
 */
-int	chunk_mesh_collision_v2(float *orig, float *dir, t_chunk *chunk, float reach, float intersect_points[16][3], float intersect_normals[16][3])
+int	chunk_mesh_collision_v56(float *orig, float *dir, t_chunk *chunk, float reach, float intersect_points[16][3], float intersect_normals[16][3])
 {
 	float			*vertices;
 	unsigned int	*indices;
@@ -1401,7 +1455,7 @@ void	player_terrain_collision(float *res, float *pos, float *velocity, t_chunk_i
 			if (!(info->chunks[i].blocks_solid_amount > 0 &&
 				vec3i_dist(player_chunk, info->chunks[i].coordinate) < 2))
 				continue ;	
-			int colls = chunk_mesh_collision_v2(pos, normed_velocity, &info->chunks[i], velocity_dist, player_intersect_point + player_collision_amount, player_intersect_normal + player_collision_amount);
+			int colls = chunk_mesh_collision_v56(pos, normed_velocity, &info->chunks[i], velocity_dist, player_intersect_point + player_collision_amount, player_intersect_normal + player_collision_amount);
 			player_collision_amount += colls;
 		}
 		if (player_collision_amount <= 0)

@@ -342,7 +342,7 @@ typedef struct s_chunk_mesh_v2
 	GLuint			vao;
 	GLuint			vbo_pos;
 	GLuint			vbo_texture_ids;
-	GLuint			ebo;
+	GLuint			*ebo; // same amount of as 'amount';
 	GLuint			texture;
 
 	int				amount; // amount of meshes in this mesh;
@@ -442,7 +442,12 @@ void		update_chunk_mesh_v2(t_chunk_mesh_v2 *mesh);
 void		render_chunk_mesh(t_chunk_mesh *mesh, float *coordinate, t_camera *camera, t_shader *shader);
 void		render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinate, t_camera *camera, t_shader *shader);
 int			chunk_mesh_collision(float *orig, float *dir, t_chunk_mesh *mesh, float *world_coords, float reach, float intersect_point[16][3]);
-int			chunk_mesh_collision_v2(float *orig, float *dir, t_chunk *chunk, float reach, float intersect_points[16][3], float intersect_normals[16][3]);
+int			chunk_mesh_collision_v2(float *orig, float *dir, t_chunk_mesh_v2 *mesh, int mesh_type, float *world_coords, float reach, float intersect_point[16][3]);
+
+// This is used in the terrain collision; rename when you come it better;
+int			chunk_mesh_collision_v56(float *orig, float *dir, t_chunk *chunk, float reach, float intersect_points[16][3], float intersect_normals[16][3]);
+// a
+
 t_block		*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, int *face);
 void		render_block_outline(float *pos, float *color, float *view, float *projection);
 
