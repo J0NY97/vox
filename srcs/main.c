@@ -590,7 +590,9 @@ int	main(void)
 	
 		nth_chunk = 0;
 		int sent_to_gpu = 0;
+
 		glDisable(GL_BLEND);
+		glEnable(GL_CULL_FACE);
 		for (; nth_chunk < chunk_info.chunks_loaded; ++nth_chunk)
 		{
 			// Decide if we want to render the chunk or not;
@@ -691,24 +693,30 @@ int	main(void)
 
 					// Check if block or item equipped;
 					LG_INFO("Place Item at %f %f %f", block_world[0], block_world[1], block_world[2]);
-					if (player_info.equipped_block < BLOCK_LAST)
+					if (is_type_solid(player_info.equipped_block) ||
+						is_type_solid_alpha(player_info.equipped_block) ||
+						is_type_flora(player_info.equipped_block))
 						set_block_at_world_pos(&chunk_info, block_world, player_info.equipped_block);
-					else if (player_info.equipped_block > ITEM_FIRST &&
-						player_info.equipped_block < ITEM_LAST)
+					else if (is_type_item(player_info.equipped_block))
 					{
 						if (player_info.equipped_block == ITEM_TREE_PLACER)
 							tree_placer(&chunk_info, block_world);
 						else if (player_info.equipped_block == ITEM_WATER_PLACER)
 							water_placer(&chunk_info, block_world, 0);
 					}
+					else
+						LG_WARN("We dont allow the placing of that type of block.");
 				}
 			}
 		}
 		/* END OF COLLISION */
 
-// Sky box breaks if you dont render it before the alpha stuff;
+		glEnable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
 		render_skybox(&skybox, &player.camera);
 
+		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
 		glEnable(GL_CULL_FACE);
 		nth_chunk = 0;
@@ -721,6 +729,7 @@ int	main(void)
 			}
 		}
 
+		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
 		nth_chunk = 0;
@@ -735,16 +744,11 @@ int	main(void)
 			}
 		}
 
-		glDisable(GL_BLEND);
-		glEnable(GL_CULL_FACE);
-
 //		ft_printf("CPU : %d, GPU : %d\n", chunk_info.chunks_loaded, sent_to_gpu);
 
 /////////////////
 		// END Chunk things
 /////////////////
-
-
 		glDisable(GL_DEPTH_TEST);
 		render_crosshair();
 
