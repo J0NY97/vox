@@ -363,19 +363,13 @@ int	main(void)
 			int	most_indices = 0;
 			for (int j = 0; j < chunk_info.chunks_loaded; j++)
 			{
-				if (chunks[j].mesh.vertices_amount > most_vertices)
-					most_vertices = chunks[j].mesh.vertices_amount;
-				if (chunks[j].mesh.texture_id_amount > most_textures)
-					most_textures = chunks[j].mesh.texture_id_amount;
-				if (chunks[j].mesh.indices_amount > most_indices)
-					most_indices = chunks[j].mesh.indices_amount;
-
 				if (chunks[j].meshes.vertices_amount > most_vertices)
 					most_vertices = chunks[j].meshes.vertices_amount;
 				if (chunks[j].meshes.texture_id_amount > most_textures)
 					most_textures = chunks[j].meshes.texture_id_amount;
-				if (chunks[j].meshes.indices_amount > most_indices)
-					most_indices = chunks[j].meshes.indices_amount;
+				for (int m = 0; m < chunks[j].meshes.amount; m++)
+					if (chunks[j].meshes.indices_amount[m] > most_indices)
+						most_indices = chunks[j].meshes.indices_amount[m];
 			}
 			LG_INFO("Most vertices : %d", most_vertices);
 			LG_INFO("Most texture ids : %d", most_textures);
@@ -428,7 +422,7 @@ int	main(void)
 		if (keys[GLFW_KEY_6].state == BUTTON_PRESS)
 			player_info.equipped_block = BLOCK_OAK_LEAF;
 		if (keys[GLFW_KEY_7].state == BUTTON_PRESS)
-			player_info.equipped_block = BLOCK_CACTUS;
+			player_info.equipped_block = BLOCK_ALPHA_CACTUS;
 		if (keys[GLFW_KEY_0].state == BUTTON_PRESS)
 			player_info.equipped_block = ITEM_TREE_PLACER;
 		if (keys[GLFW_KEY_9].state == BUTTON_PRESS)
@@ -437,11 +431,13 @@ int	main(void)
 		{
 			if (keys[i].state == BUTTON_PRESS)
 			{
-				if (player_info.equipped_block > BLOCK_FIRST &&
-					player_info.equipped_block < BLOCK_LAST)
+				if (is_type_solid(player_info.equipped_block))
 					ft_printf("Block[%d] : '%s' equipped.\n", player_info.equipped_block, g_block_data[player_info.equipped_block - BLOCK_FIRST - 1].name);
-				else if (player_info.equipped_block > ITEM_FIRST &&
-					player_info.equipped_block < ITEM_LAST)
+				if (is_type_fluid(player_info.equipped_block))
+					ft_printf("Fluid[%d] : '%s' equipped.\n", player_info.equipped_block, g_fluid_data[player_info.equipped_block - FLUID_FIRST - 1].name);
+				if (is_type_solid_alpha(player_info.equipped_block))
+					ft_printf("Alpha Block[%d] : '%s' equipped.\n", player_info.equipped_block, g_block_alpha_data[player_info.equipped_block - BLOCK_ALPHA_FIRST - 1].name);
+				if (is_type_item(player_info.equipped_block))
 					ft_printf("Item : '%s' equipped.\n", g_item_data[player_info.equipped_block - ITEM_FIRST - 1].name);
 			}
 		}
@@ -554,12 +550,6 @@ int	main(void)
 			if (chunks[ent].needs_to_update)
 			{
 				update_chunk_visible_blocks(&chunks[ent]);
-				/*
-				update_chunk_mesh(&chunks[ent].mesh);
-				update_chunk_mesh(&chunks[ent].liquid_mesh);
-				update_chunk_mesh(&chunks[ent].flora_mesh);
-				*/
-
 				update_chunk_mesh_v2(&chunks[ent].meshes);
 
 				chunk_aabb_update(&chunks[ent]);
@@ -573,12 +563,6 @@ int	main(void)
 					if (neighbor)
 					{
 						update_chunk_visible_blocks(neighbor);
-						/*
-						update_chunk_mesh(&neighbor->mesh);
-						update_chunk_mesh(&neighbor->liquid_mesh);
-						update_chunk_mesh(&neighbor->flora_mesh);
-						*/
-
 						update_chunk_mesh_v2(&neighbor->meshes);
 
 						chunk_aabb_update(neighbor);
@@ -623,14 +607,12 @@ int	main(void)
 			if (chunks[nth_chunk].render)
 			{
 				if (chunks[nth_chunk].blocks_solid_amount > 0)
-				{
-			//		render_chunk_mesh(&chunks[nth_chunk].mesh, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
 					render_chunk_mesh_v2(&chunks[nth_chunk].meshes, BLOCK_MESH, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
-				}
 			}
 
 			if (chunks[nth_chunk].blocks_solid_amount > 0 ||
-				chunks[nth_chunk].blocks_flora_amount > 0)
+				chunks[nth_chunk].blocks_flora_amount > 0 ||
+				chunks[nth_chunk].blocks_solid_alpha_amount > 0)
 			{
 				// Collision Detection
 				if (chunk_info.block_collision_enabled &&
@@ -645,7 +627,6 @@ int	main(void)
 					// Collision on solid mesh;
 					if (chunks[nth_chunk].blocks_solid_amount > 0)
 					{
-					//	int collisions_on_chunk = chunk_mesh_collision(player.camera.pos, player.camera.front, &chunks[nth_chunk].mesh, chunks[nth_chunk].world_coordinate, player_info.reach, intersect_point + collision_result);
 						int collisions_on_chunk = chunk_mesh_collision_v2(player.camera.pos, player.camera.front, &chunks[nth_chunk].meshes, BLOCK_MESH, chunks[nth_chunk].world_coordinate, player_info.reach, intersect_point + collision_result);
 						for (int i = 0; i < collisions_on_chunk; i++)
 							intersect_chunk_index[collision_result + i] = nth_chunk;
@@ -654,7 +635,15 @@ int	main(void)
 					// Collision on flora mesh;
 					if (chunks[nth_chunk].blocks_flora_amount > 0)
 					{
-						int collisions_on_chunk = chunk_mesh_collision(player.camera.pos, player.camera.front, &chunks[nth_chunk].flora_mesh, chunks[nth_chunk].world_coordinate, player_info.reach, intersect_point + collision_result);
+						int collisions_on_chunk = chunk_mesh_collision_v2(player.camera.pos, player.camera.front, &chunks[nth_chunk].meshes, FLORA_MESH, chunks[nth_chunk].world_coordinate, player_info.reach, intersect_point + collision_result);
+						for (int i = 0; i < collisions_on_chunk; i++)
+							intersect_chunk_index[collision_result + i] = nth_chunk;
+						collision_result += collisions_on_chunk;
+					}
+					// Collision on solid alpha mesh;
+					if (chunks[nth_chunk].blocks_solid_alpha_amount > 0)
+					{
+						int collisions_on_chunk = chunk_mesh_collision_v2(player.camera.pos, player.camera.front, &chunks[nth_chunk].meshes, BLOCK_ALPHA_MESH, chunks[nth_chunk].world_coordinate, player_info.reach, intersect_point + collision_result);
 						for (int i = 0; i < collisions_on_chunk; i++)
 							intersect_chunk_index[collision_result + i] = nth_chunk;
 						collision_result += collisions_on_chunk;
@@ -728,10 +717,7 @@ int	main(void)
 			if (chunks[nth_chunk].render)
 			{
 				if (chunks[nth_chunk].blocks_liquid_amount > 0)
-				{
-				//	render_chunk_mesh(&chunks[nth_chunk].liquid_mesh, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
 					render_chunk_mesh_v2(&chunks[nth_chunk].meshes, LIQUID_MESH, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
-				}
 			}
 		}
 
@@ -742,8 +728,10 @@ int	main(void)
 		{
 			if (chunks[nth_chunk].render)
 			{
+				if (chunks[nth_chunk].blocks_solid_alpha_amount > 0)
+					render_chunk_mesh_v2(&chunks[nth_chunk].meshes, BLOCK_ALPHA_MESH, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
 				if (chunks[nth_chunk].blocks_flora_amount > 0)
-					render_chunk_mesh(&chunks[nth_chunk].flora_mesh, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
+					render_chunk_mesh_v2(&chunks[nth_chunk].meshes, FLORA_MESH, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
 			}
 		}
 

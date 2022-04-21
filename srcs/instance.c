@@ -22,12 +22,6 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, int nth)
 		chunk->world_coordinate[i] = 999 - (i * nth);
 	}
 
-/*
-	init_chunk_mesh(&chunk->mesh);
-	init_chunk_mesh(&chunk->liquid_mesh);
-	init_chunk_mesh(&chunk->flora_mesh);
-*/
-
 	init_chunk_mesh_v2(&chunk->meshes, MESH_TYPE_AMOUNT);
 
 	error = glGetError();
@@ -262,16 +256,21 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 
 				flowing_water_verts(verts, face, &blocks[i], block_world, chunk->info);
 
-				//add_to_chunk_mesh(&chunk->liquid_mesh, local_pos, verts, g_fluid_data[blocks[i].type - FLUID_FIRST - 1].texture, (int)g_face_light[face]);
 				add_to_chunk_mesh_v2(&chunk->meshes, LIQUID_MESH, local_pos, verts, g_fluid_data[blocks[i].type - FLUID_FIRST - 1].texture, (int)g_face_light[face]);
 				++chunk->blocks_liquid_amount;
 			}
-			else
+			else if (is_solid(&blocks[i]))
 			{
-				//add_to_chunk_mesh(&chunk->mesh, local_pos, (float *)g_faces[face], g_block_data[blocks[i].type - BLOCK_FIRST - 1].face_texture[face], (int)g_face_light[face]);
 				add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_MESH, local_pos, (float *)g_faces[face], g_block_data[blocks[i].type - BLOCK_FIRST - 1].face_texture[face], (int)g_face_light[face]);
 				++chunk->blocks_solid_amount;
 			}
+			else if (is_solid_alpha(&blocks[i]))
+			{
+				add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_ALPHA_MESH, local_pos, (float *)g_faces[face], g_block_data[blocks[i].type - BLOCK_FIRST - 1].face_texture[face], (int)g_face_light[face]);
+				++chunk->blocks_solid_alpha_amount;
+			}
+			else
+				LG_WARN("We have a block that is of no type....");
 		}
 	}
 }
@@ -293,6 +292,7 @@ void	get_blocks_visible(t_chunk *chunk)
 	chunk->blocks_solid_amount = 0;
 	chunk->blocks_flora_amount = 0;
 	chunk->blocks_liquid_amount = 0;
+	chunk->blocks_solid_alpha_amount = 0;
 
 	if (!chunk->has_blocks)
 		return ;
@@ -312,8 +312,8 @@ void	get_blocks_visible(t_chunk *chunk)
 		get_block_local_pos_from_index(pos, i);
 		if (is_flora(&blocks[i]))
 		{
-			add_to_chunk_mesh(&chunk->flora_mesh, pos, (float *)g_flora_faces[0], g_flora_data[blocks[i].type - FLORA_FIRST - 1].face_texture[0], 100);
-			add_to_chunk_mesh(&chunk->flora_mesh, pos, (float *)g_flora_faces[1], g_flora_data[blocks[i].type - FLORA_FIRST - 1].face_texture[1], 100);
+			add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, (float *)g_flora_faces[0], g_flora_data[blocks[i].type - FLORA_FIRST - 1].face_texture[0], 100);
+			add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, (float *)g_flora_faces[1], g_flora_data[blocks[i].type - FLORA_FIRST - 1].face_texture[1], 100);
 			++chunk->blocks_flora_amount;
 		}
 		else // these are the solid blocks;
@@ -627,12 +627,6 @@ void	render_aabb(t_aabb *a, t_camera *camera, float *col)
 */
 void	update_chunk_visible_blocks(t_chunk *chunk)
 {
-/*
-	reset_chunk_mesh(&chunk->mesh);
-	reset_chunk_mesh(&chunk->liquid_mesh);
-	reset_chunk_mesh(&chunk->flora_mesh);
-	*/
-
 	reset_chunk_mesh_v2(&chunk->meshes);
 
 	get_blocks_visible(chunk);
@@ -641,77 +635,18 @@ void	update_chunk_visible_blocks(t_chunk *chunk)
 /*
  * Makes all the values 0, doesnt free anything;
 */
-void	reset_chunk_mesh(t_chunk_mesh *mesh)
-{
-	mesh->vertices_amount = 0;
-	mesh->texture_id_amount = 0;
-	mesh->indices_amount = 0;
-	mesh->index_amount = 0;
-}
-
 void	reset_chunk_mesh_v2(t_chunk_mesh_v2 *mesh)
 {
 	mesh->vertices_amount = 0;
 	mesh->texture_id_amount = 0;
+	mesh->index_amount = 0;
 	for (int i = 0; i < mesh->amount; i++)
-	{
 		mesh->indices_amount[i] = 0;
-		mesh->index_amount[i] = 0;
-	}
 }
 
 /*
  * Creates all the opengl stuff that needs to be created only once;
 */
-void	init_chunk_mesh(t_chunk_mesh *mesh)
-{
-	GLuint	vbo[2];
-	int		error;
-	error = glGetError();
-	if (error)
-		LG_ERROR("BEFORE (%d)", error);
-
-	mesh->vertices_allocated = 14700;
-	mesh->vertices = malloc(sizeof(float) * mesh->vertices_allocated);
-	mesh->vertices_amount = 0;
-
-	mesh->texture_ids_allocated = 4900; 
-	mesh->texture_ids = malloc(sizeof(int) * mesh->texture_ids_allocated);
-	mesh->texture_id_amount = 0;
-
-	mesh->indices_allocated = 7350;
-	mesh->indices = malloc(sizeof(unsigned int) * mesh->indices_allocated);
-	mesh->indices_amount = 0;
-
-	glGenVertexArrays(1, &mesh->vao);
-	glBindVertexArray(mesh->vao);
-
-	glEnableVertexAttribArray(0); // pos
-	glEnableVertexAttribArray(1); // tex
-
-	glGenBuffers(2, vbo);
-	mesh->vbo_pos = vbo[0];
-	mesh->vbo_texture_ids = vbo[1];
-
-	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_pos);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
-
-	// Texture ID
-	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_texture_ids);
-	glVertexAttribIPointer(1, 1, GL_INT, sizeof(int), NULL);
-
-	glGenBuffers(1, &mesh->ebo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
-
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-	error = glGetError();
-	if (error)
-		LG_ERROR("(%d)", error);
-}
-
 void	init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount)
 {
 	GLuint	vbo[2];
@@ -720,11 +655,11 @@ void	init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount)
 	if (error)
 		LG_ERROR("BEFORE (%d)", error);
 
-	mesh->vertices_allocated = 14700;
+	mesh->vertices_allocated = 15312;
 	mesh->vertices = malloc(sizeof(float) * mesh->vertices_allocated);
 	mesh->vertices_amount = 0;
 
-	mesh->texture_ids_allocated = 4900; 
+	mesh->texture_ids_allocated = 5104; 
 	mesh->texture_ids = malloc(sizeof(int) * mesh->texture_ids_allocated);
 	mesh->texture_id_amount = 0;
 
@@ -732,13 +667,12 @@ void	init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount)
 	mesh->indices = malloc(sizeof(unsigned int *) * mesh->amount);
 	mesh->indices_allocated = malloc(sizeof(int) * mesh->amount);
 	mesh->indices_amount = malloc(sizeof(int) * mesh->amount);
-	mesh->index_amount = malloc(sizeof(int) * mesh->amount);
+	mesh->index_amount = 0;
 	for (int i = 0; i < mesh->amount; i++)
 	{
-		mesh->indices_allocated[i] = 2048;
+		mesh->indices_allocated[i] = 7320;
 		mesh->indices[i] = malloc(sizeof(unsigned int) * mesh->indices_allocated[i]);
 		mesh->indices_amount[i] = 0;
-		mesh->index_amount[i] = 0;
 	}
 
 	glGenVertexArrays(1, &mesh->vao);
@@ -778,44 +712,6 @@ void	init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount)
 /*
  * 'coordinate' world coordinate of the chunk;
 */
-void	render_chunk_mesh(t_chunk_mesh *mesh, float *coordinate, t_camera *camera, t_shader *shader)
-{
-	int	error;
-	error = glGetError();
-	if (error)
-		LG_ERROR("BEFORE (%d)", error);
-	
-	glUseProgram(shader->program);
-	glUniformMatrix4fv(glGetUniformLocation(shader->program, "view"), 1, GL_FALSE, &camera->view[0]);
-	glUniformMatrix4fv(glGetUniformLocation(shader->program, "projection"), 1, GL_FALSE, &camera->projection[0]);
-
-	glUniform3fv(glGetUniformLocation(shader->program, "chunkPos"), 1, &coordinate[0]);
-
-	glBindVertexArray(mesh->vao);
-
-	glActiveTexture(GL_TEXTURE0 + 0);
-	glBindTexture(GL_TEXTURE_2D, mesh->texture);
-
-	error = glGetError();
-	if (error)
-		LG_ERROR("(%d)", error);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
-	glDrawElements(GL_TRIANGLES, mesh->indices_amount, GL_UNSIGNED_INT, NULL);
-
-	error = glGetError();
-	if (error)
-		LG_ERROR("(%d)", error);
-
-	glUseProgram(0);
-	glBindVertexArray(0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-	error = glGetError();
-	if (error)
-		LG_ERROR("(%d)", error);
-}
-
 void	render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinate, t_camera *camera, t_shader *shader)
 {
 	int	error;
@@ -860,53 +756,6 @@ void	render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinat
 		LG_ERROR("(%d)", error);
 }
 
-void	update_chunk_mesh(t_chunk_mesh *mesh)
-{
-	int error;
-	error = glGetError();
-	if (error)
-		LG_ERROR("BEFORE (%d)", error);
-
-	glBindVertexArray(mesh->vao);
-
-error = glGetError();
-	if (error)
-		LG_ERROR("(%d)", error);
-	// Pos
-	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_pos);
-	glBufferData(GL_ARRAY_BUFFER, mesh->vertices_amount * sizeof(float),
-		&mesh->vertices[0], GL_STATIC_DRAW);
-
-	error = glGetError();
-	if (error)
-	{
-		LG_INFO("Vertices Amount : %d", mesh->vertices_amount);
-		LG_ERROR("(%d)", error);
-	}
-
-	// Texture ID
-	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_texture_ids);
-	glBufferData(GL_ARRAY_BUFFER, mesh->texture_id_amount * sizeof(int),
-		&mesh->texture_ids[0], GL_STATIC_DRAW);
-
-error = glGetError();
-	if (error)
-		LG_ERROR("(%d)", error);
-
-	// EBO
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->indices_amount * sizeof(unsigned int),
-		&mesh->indices[0], GL_STATIC_DRAW);
-	
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-
-	error = glGetError();
-	if (error)
-		LG_ERROR("(%d)", error);
-}
-
 void	update_chunk_mesh_v2(t_chunk_mesh_v2 *mesh)
 {
 	int error;
@@ -939,7 +788,7 @@ void	update_chunk_mesh_v2(t_chunk_mesh_v2 *mesh)
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo[i]);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER,
 			mesh->indices_amount[i] * sizeof(unsigned int),
-			mesh->indices[i], GL_STATIC_DRAW);
+			&mesh->indices[i][0], GL_STATIC_DRAW);
 	}
 	
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -960,69 +809,6 @@ void	update_chunk_mesh_v2(t_chunk_mesh_v2 *mesh)
  * 
  * You give either solid mesh or liquid mesh to this;
 */
-void	add_to_chunk_mesh(t_chunk_mesh *mesh, int *coord, float *face_vertices, int texture_id, int light)
-{
-	// @Modulate (aka make modular)
-	float	block_scale = 0.5f;
-
-// Vertices and Texture
-	if (mesh->vertices_allocated < mesh->vertices_amount + 12)
-	{
-		mesh->vertices_allocated += 256;
-		mesh->vertices = realloc(mesh->vertices, sizeof(float) * mesh->vertices_allocated);
-		LG_WARN("Reallocating Vertices from %d to %d", mesh->vertices_allocated - 256, mesh->vertices_allocated);
-	}
-	if (mesh->texture_ids_allocated < mesh->texture_id_amount + 4)
-	{
-		mesh->texture_ids_allocated += 256;
-		mesh->texture_ids = realloc(mesh->texture_ids, sizeof(int) * mesh->texture_ids_allocated);
-		LG_WARN("Reallocating Texture Ids from %d to %d", mesh->texture_ids_allocated - 256, mesh->texture_ids_allocated);
-	}
-
-	int ind = 0;
-	int	tex = 0;
-	for (int i = 0; i < 4; i++)
-	{
-		ind = 3 * i;
-		mesh->vertices[mesh->vertices_amount + ind + 0] = (face_vertices[ind + 0] * block_scale) + coord[0];
-		mesh->vertices[mesh->vertices_amount + ind + 1] = (face_vertices[ind + 1] * block_scale) + coord[1];
-		mesh->vertices[mesh->vertices_amount + ind + 2] = (face_vertices[ind + 2] * block_scale) + coord[2];
-
-		tex = texture_id | (i << 16) | (light << 20);
-		mesh->texture_ids[mesh->texture_id_amount + i] = tex;
-	}
-
-/*
-	int	uv_index = (tex >> 16) & 0x0000000f;
-	int	texture_index = tex & 0x0000FFFF;
-	int	light_index = (tex >> 20) & 0x000000FF;
-	ft_printf("uv_index %d == 3, texture_index %d == %d, ligth_index %d == 100\n", uv_index, texture_index, texture_id, light_index);
-	exit(0);
-	*/
-
-	mesh->vertices_amount += 4 * 3;
-	mesh->texture_id_amount += 4;
-
-// Indices
-	if (mesh->indices_allocated < mesh->indices_amount + 6)
-	{
-		mesh->indices_allocated += 256;
-		mesh->indices = realloc(mesh->indices, sizeof(unsigned int) * mesh->indices_allocated);
-		LG_WARN("Reallocating Indices from %d to %d", mesh->indices_allocated - 256, mesh->indices_allocated);
-	}
-
-	mesh->indices[mesh->indices_amount + 0] = mesh->index_amount;
-	mesh->indices[mesh->indices_amount + 1] = mesh->index_amount + 1;
-	mesh->indices[mesh->indices_amount + 2] = mesh->index_amount + 2;
-
-	mesh->indices[mesh->indices_amount + 3] = mesh->index_amount;
-	mesh->indices[mesh->indices_amount + 4] = mesh->index_amount + 2;
-	mesh->indices[mesh->indices_amount + 5] = mesh->index_amount + 3;
-
-	mesh->indices_amount += 6;
-	mesh->index_amount += 4;
-}
-
 void	add_to_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, int *coord, float *face_vertices, int texture_id, int light)
 {
 	// @Modulate (aka make modular)
@@ -1033,7 +819,7 @@ void	add_to_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, int *coord, floa
 	{
 		mesh->vertices_allocated += 256;
 		mesh->vertices = realloc(mesh->vertices, sizeof(float) * mesh->vertices_allocated);
-		LG_WARN("Reallocating Vertices from %d to %d", mesh->indices_allocated - 256, mesh->indices_allocated);
+		LG_WARN("Reallocating Vertices from %d to %d", mesh->vertices_allocated - 256, mesh->vertices_allocated);
 	}
 
 	if (mesh->texture_ids_allocated < mesh->texture_id_amount + 4)
@@ -1067,16 +853,16 @@ void	add_to_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, int *coord, floa
 		LG_WARN("Reallocating Indices from %d to %d", mesh->indices_allocated[mesh_type] - 256, mesh->indices_allocated[mesh_type]);
 	}
 
-	mesh->indices[mesh_type][mesh->indices_amount[mesh_type] + 0] = mesh->index_amount[mesh_type];
-	mesh->indices[mesh_type][mesh->indices_amount[mesh_type] + 1] = mesh->index_amount[mesh_type] + 1;
-	mesh->indices[mesh_type][mesh->indices_amount[mesh_type] + 2] = mesh->index_amount[mesh_type] + 2;
+	mesh->indices[mesh_type][mesh->indices_amount[mesh_type] + 0] = mesh->index_amount;
+	mesh->indices[mesh_type][mesh->indices_amount[mesh_type] + 1] = mesh->index_amount + 1;
+	mesh->indices[mesh_type][mesh->indices_amount[mesh_type] + 2] = mesh->index_amount + 2;
 
-	mesh->indices[mesh_type][mesh->indices_amount[mesh_type] + 3] = mesh->index_amount[mesh_type];
-	mesh->indices[mesh_type][mesh->indices_amount[mesh_type] + 4] = mesh->index_amount[mesh_type] + 2;
-	mesh->indices[mesh_type][mesh->indices_amount[mesh_type] + 5] = mesh->index_amount[mesh_type] + 3;
+	mesh->indices[mesh_type][mesh->indices_amount[mesh_type] + 3] = mesh->index_amount;
+	mesh->indices[mesh_type][mesh->indices_amount[mesh_type] + 4] = mesh->index_amount + 2;
+	mesh->indices[mesh_type][mesh->indices_amount[mesh_type] + 5] = mesh->index_amount + 3;
 
 	mesh->indices_amount[mesh_type] += 6;
-	mesh->index_amount[mesh_type] += 4;
+	mesh->index_amount += 4;
 }
 
 /*
@@ -1222,47 +1008,6 @@ t_block	*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, in
  * TODO: This should probably returns either an array of points being hit,
  * 	or just the closest one....?
 */
-int	chunk_mesh_collision(float *orig, float *dir, t_chunk_mesh *mesh, float *world_coords, float reach, float intersect_point[16][3])
-{
-	float			*vertices;
-	unsigned int	*indices;
-	float			p1[3];
-	float			p2[3];
-	float			p3[3];
-	float			norm_dir[3];
-	int				collisions = 0;
-
-	vec3_normalize(norm_dir, dir);
-	vertices = mesh->vertices;
-	indices = mesh->indices;
-	for (int i = 0; i < mesh->indices_amount / 3; i++)
-	{
-		int k = i * 3;
-		vec3_new(p1,
-			vertices[indices[k + 0] * 3 + 0],
-			vertices[indices[k + 0] * 3 + 1],
-			vertices[indices[k + 0] * 3 + 2]);
-		vec3_new(p2,
-			vertices[indices[k + 1] * 3 + 0],
-			vertices[indices[k + 1] * 3 + 1],
-			vertices[indices[k + 1] * 3 + 2]);
-		vec3_new(p3,
-			vertices[indices[k + 2] * 3 + 0],
-			vertices[indices[k + 2] * 3 + 1],
-			vertices[indices[k + 2] * 3 + 2]);
-		
-		// We have to add the chunk position to the chunk mesh, since that is 
-		//		what we are doing in the shader;
-		vec3_add(p1, p1, world_coords);
-		vec3_add(p2, p2, world_coords);
-		vec3_add(p3, p3, world_coords);
-		if (ray_triangle_intersect(orig, dir, p1, p2, p3, 0, intersect_point[collisions]))
-			if (vec3_dist(orig, intersect_point[collisions]) <= reach + 0.001f)
-				collisions += 1;
-	}
-	return (collisions);
-}
-
 int	chunk_mesh_collision_v2(float *orig, float *dir, t_chunk_mesh_v2 *mesh, int mesh_type, float *world_coords, float reach, float intersect_point[16][3])
 {
 	float			*vertices;
@@ -1303,6 +1048,7 @@ int	chunk_mesh_collision_v2(float *orig, float *dir, t_chunk_mesh_v2 *mesh, int 
 	}
 	return (collisions);
 }
+
 /*
  * Same as the chunk_mesh_collision, but instead of saving the intersect_points,
  *	it saves the normals of the faces it collides with;
@@ -1318,9 +1064,9 @@ int	chunk_mesh_collision_v56(float *orig, float *dir, t_chunk *chunk, float reac
 	int				collisions = 0;
 
 	vec3_normalize(norm_dir, dir);
-	vertices = chunk->mesh.vertices;
-	indices = chunk->mesh.indices;
-	for (int i = 0; i < chunk->mesh.indices_amount / 3; i++)
+	vertices = chunk->meshes.vertices;
+	indices = chunk->meshes.indices[BLOCK_MESH];
+	for (int i = 0; i < chunk->meshes.indices_amount[BLOCK_MESH] / 3; i++)
 	{
 		int k = i * 3;
 		vec3_new(p1,
@@ -1546,7 +1292,7 @@ void	create_cactus(t_chunk_info *info, float *world_pos)
 	// Trunk;
 	for (int i = 0; i < 3; i++)
 		set_block_at_world_pos_if_not_solid(info,
-			(float []){world_pos[0], world_pos[1] + i, world_pos[2]}, BLOCK_CACTUS);
+			(float []){world_pos[0], world_pos[1] + i, world_pos[2]}, BLOCK_ALPHA_CACTUS);
 }
 
 /*

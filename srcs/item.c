@@ -22,6 +22,11 @@ int	is_fluid(t_block *block)
 	return (block && is_type_fluid(block->type));
 }
 
+int	is_solid_alpha(t_block *block)
+{
+	return (block && is_type_solid_alpha(block->type));
+}
+
 // Is Type
 
 int	is_type_gas(int type)
@@ -42,6 +47,17 @@ int	is_type_flora(int type)
 int	is_type_fluid(int type)
 {
 	return (type > FLUID_FIRST && type < FLUID_LAST);
+}
+
+int	is_type_solid_alpha(int type)
+{
+	return (type > BLOCK_ALPHA_FIRST && type < BLOCK_ALPHA_LAST);
+}
+
+// This type of 'whatever' doesnt have a block, its only an item;
+int	is_type_item(int type)
+{
+	return (type > ITEM_FIRST && type < ITEM_LAST);
 }
 
 /*

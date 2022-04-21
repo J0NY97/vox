@@ -299,36 +299,12 @@ typedef struct s_chunk_args
 	int		being_threaded;
 }	t_chunk_args;
 
-typedef struct s_chunk_mesh
-{
-	GLuint			vao;
-	GLuint			vbo_pos;
-	GLuint			vbo_texture_ids;
-	GLuint			ebo;
-	GLuint			texture;
-
-	// These are the values gotten from the mesh creator in code, from
-	//	all visible blocks in the chunk;
-	float			*vertices;
-	size_t			vertices_amount;
-	size_t			vertices_allocated;
-
-	int				*texture_ids;
-	size_t			texture_id_amount;
-	size_t			texture_ids_allocated;
-
-	unsigned int	*indices;
-	size_t			indices_amount; // how many values in the array;
-	size_t			indices_allocated;
-	size_t			index_amount; // how many indices we have;
-}			t_chunk_mesh;
-
 enum e_mesh_types
 {
-	BLOCK_MESH = 0,
-	LIQUID_MESH,
-	FLORA_MESH,
-	ALPHA_BLOCK_MESH,
+	BLOCK_MESH = 0,		// ex. dirt
+	LIQUID_MESH,		// ex. water
+	FLORA_MESH,			// ex. grass
+	BLOCK_ALPHA_MESH,	// ex. cactus
 	MESH_TYPE_AMOUNT
 };
 
@@ -358,7 +334,8 @@ typedef struct s_chunk_mesh_v2
 	unsigned int	**indices; // 'amount' amount of pointers;
 	size_t			*indices_allocated; // how many indices allocated;
 	size_t			*indices_amount; // how many values in the array; (one face has 6 indices);
-	size_t			*index_amount; // how many indices we have; (one face has 4 indices);
+
+	size_t			index_amount; // how many indices we have; (one face has 4 indices);
 }	t_chunk_mesh_v2;
 
 struct	s_chunk
@@ -373,14 +350,10 @@ struct	s_chunk
 	int				has_blocks; // 1/0 whether the chunk has other than air blocks;
 	int				update_structures; // the terrain needs to be generated before the structures, thats why we have this; 
 
-	t_chunk_mesh	mesh;
 	int				blocks_solid_amount; // amount of blocks in this mesh;
-
-	t_chunk_mesh	liquid_mesh;
 	int				blocks_liquid_amount; // amount of blocks in this mesh;
-
-	t_chunk_mesh	flora_mesh;
 	int				blocks_flora_amount; // amount of blocks in this mesh;
+	int				blocks_solid_alpha_amount; // amount of blocks in this mesh;
 
 	/* Mesh Types:
 	 * 0 : no alpha, collision, hitbox;
@@ -427,17 +400,11 @@ int			get_chunk_hash_key(int *coords);
 int			regenerate_chunks(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v2);
 void		regenerate_chunks_v3(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3, t_thread_manager *tm);
 
-void		init_chunk_mesh(t_chunk_mesh *mesh);
 void		init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount);
-void		reset_chunk_mesh(t_chunk_mesh *mesh);
 void		reset_chunk_mesh_v2(t_chunk_mesh_v2 *mesh);
-void		add_to_chunk_mesh(t_chunk_mesh *mesh, int *coord, float *face_vertices, int texture_id, int light);
 void		add_to_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, int *coord, float *face_vertices, int texture_id, int light);
-void		update_chunk_mesh(t_chunk_mesh *chunk);
 void		update_chunk_mesh_v2(t_chunk_mesh_v2 *mesh);
-void		render_chunk_mesh(t_chunk_mesh *mesh, float *coordinate, t_camera *camera, t_shader *shader);
 void		render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinate, t_camera *camera, t_shader *shader);
-int			chunk_mesh_collision(float *orig, float *dir, t_chunk_mesh *mesh, float *world_coords, float reach, float intersect_point[16][3]);
 int			chunk_mesh_collision_v2(float *orig, float *dir, t_chunk_mesh_v2 *mesh, int mesh_type, float *world_coords, float reach, float intersect_point[16][3]);
 
 // This is used in the terrain collision; rename when you come it better;
@@ -460,11 +427,14 @@ int			is_type_gas(int type);
 int			is_type_solid(int type);
 int			is_type_flora(int type);
 int			is_type_fluid(int type);
+int			is_type_solid_alpha(int type);
+int			is_type_item(int type);
 
 int			is_gas(t_block *block);
 int			is_fluid(t_block *block);
 int			is_solid(t_block *block);
 int			is_flora(t_block *block);
+int			is_solid_alpha(t_block *block);
 
 ///////////////////
 //	NOISE
