@@ -570,7 +570,7 @@ int	main(void)
 		// 	the chunks once, we update them here;
 		for (int ent = 0; ent < chunk_info.chunks_loaded; ++ent)
 		{
-			if (chunks[ent].secondary_update)
+			if (chunks[ent].secondary_update || chunks[ent].needs_to_update)
 			{
 				chunks[ent].secondary_update = 0;
 				chunks[ent].needs_to_update = 0;
