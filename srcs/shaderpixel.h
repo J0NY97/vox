@@ -295,6 +295,7 @@ typedef struct s_chunk_args
 {
 	t_chunk	*chunk;
 	int		coords[VEC3_SIZE];
+	int		*noise_map;
 	int		being_threaded;
 }	t_chunk_args;
 
@@ -395,10 +396,11 @@ int			get_chunks_to_reload(int *chunks, int *start_coord, t_chunk_info *info, in
 int			get_surrounding_coords(int *res, int x, int z, int r);
 int			get_block_type_at_world_pos(t_chunk_info *info, float *world_pos);
 
-int			get_chunk_hash_key(int *coords);
+unsigned long int	get_chunk_hash_key(int *coords);
 
 int			regenerate_chunks(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v2);
 void		regenerate_chunks_v3(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3, t_thread_manager *tm);
+int			regenerate_chunks_v576(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3);
 
 void		init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount);
 void		reset_chunk_mesh_v2(t_chunk_mesh_v2 *mesh);

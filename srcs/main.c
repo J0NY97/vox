@@ -510,6 +510,7 @@ int	main(void)
 		{
 		//	regenerate_chunks_v3(chunks, &chunk_info, player_chunk, &tm);
 			tobegen = regenerate_chunks(chunks, &chunk_info, player_chunk);	
+		//	tobegen = regenerate_chunks_v576(chunks, &chunk_info, player_chunk);	
 		}
 
 		thread_manager_check_threadiness(&tm);
@@ -521,7 +522,7 @@ int	main(void)
 			neighbors_found = 0;
 
 			// We only need to update the chunks if a chunk has been regenerated
-			if (chunks[ent].needs_to_update || (chunks[ent].update_structures && tobegen != 0))
+			if (0 && (chunks[ent].needs_to_update || (chunks[ent].update_structures && tobegen != 0)))
 			{
 				// Get all neighbors for this chunk;
 				for (int dir = DIR_NORTH, i = 0; dir < DIR_AMOUNT; ++dir, ++i)
@@ -533,7 +534,7 @@ int	main(void)
 
 			// Only generate trees if we have all the surrdounding neighbors,
 			// 	so that we wont have trees cut in half;
-			if (chunk_info.generate_structures && neighbors_found >= 10 &&
+			if (0 && chunk_info.generate_structures && neighbors_found >= 10 &&
 				chunks[ent].update_structures)
 			{
 				t_chunk *highest = get_highest_chunk(&chunk_info, chunks[ent].coordinate[0], chunks[ent].coordinate[2]);
@@ -552,6 +553,7 @@ int	main(void)
 				chunk_aabb_update(&chunks[ent]);
 				chunks[ent].needs_to_update = 0;
 
+/*
 				// Update all 6 neighbors of the chunk;
 				for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
 				{
@@ -562,11 +564,14 @@ int	main(void)
 						chunk_aabb_update(neighbors[i]);
 					}
 				}
+				*/
 			}
 		}
 
+/*
 		if (tobegen == 0)
 			exit(0);
+*/
 
 		// head
 		player_terrain_collision(player.velocity, (float []){player.camera.pos[0], player.camera.pos[1] + 0.25f, player.camera.pos[2]}, player.velocity, &chunk_info);

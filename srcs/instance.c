@@ -22,7 +22,7 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, int nth)
 		chunk->world_coordinate[i] = INT_MAX - (nth * 10);
 	}
 
-	int key = get_chunk_hash_key(chunk->coordinate);
+	unsigned long int key = get_chunk_hash_key(chunk->coordinate);
 	if (!hash_item_insert(info->hash_table, info->hash_table_size, key, nth))
 		LG_WARN("Chunk data couldnt be inserted.");
 
@@ -49,6 +49,7 @@ int	chunk_gen(t_chunk *chunk)
 		float	to_use_x = block_world_x * freq;
 		for (int z = 0; z < chunk->info->breadth; z++)
 		{
+			/*
 			float	block_world_z = fabs(chunk->world_coordinate[2] + z);
 			float	to_use_z = block_world_z * freq;
 			float	perper =
@@ -60,6 +61,9 @@ int	chunk_gen(t_chunk *chunk)
 			int		wanted_y = (start_y * (perper / e));
 			int		whatchumacallit = wanted_y - (chunk->world_coordinate[1]);
 			int		amount = ft_clamp(whatchumacallit, 0, chunk->info->height - 1);
+			*/
+
+			int		whatchumacallit = 75 - (chunk->world_coordinate[1]);
 
 			for (int y = 0; y < chunk->info->height; y++)
 			{
@@ -94,6 +98,101 @@ int	chunk_gen(t_chunk *chunk)
 				}
 				i++;
 			}
+		}
+	}
+	return (i);
+}
+
+/*
+ * Create chunk from noise map;
+*/
+int	chunk_gen_v2(t_chunk *chunk, int *noise_map)
+{
+	int i = 0;
+
+	chunk->has_blocks = 0;
+	for (int x = 0; x < chunk->info->width; x++)
+	{
+		for (int z = 0; z < chunk->info->breadth; z++)
+		{
+			int		whatchumacallit = noise_map[x * 16 + z] - (chunk->world_coordinate[1]);
+
+			for (int y = 0; y < chunk->info->height; y++)
+			{
+				float	block_world_y = chunk->world_coordinate[1] + y;
+				if (y <= whatchumacallit)
+				{
+					if (y <= whatchumacallit - 1) // if we have 3 dirt block on top we make the rest stone blocks;
+					{
+						chunk->blocks[i].type = BLOCK_STONE;
+					}
+					else
+					{
+						if ((block_world_y <= 67 && block_world_y >= 65) ||
+							block_world_y + 1 <= 65)
+							chunk->blocks[i].type = BLOCK_SAND;
+						else if (block_world_y < 4)
+							chunk->blocks[i].type = BLOCK_BEDROCK;
+						else
+							chunk->blocks[i].type = BLOCK_DIRT;
+					}
+					chunk->has_blocks = 1;
+				}
+				else
+				{
+					if (block_world_y <= 65)
+					{
+						chunk->blocks[i].type = FLUID_WATER;
+						chunk->has_blocks = 1;
+					}
+					else
+						chunk->blocks[i].type = GAS_AIR;
+				}
+				i++;
+			}
+		}
+	}
+	return (i);
+}
+
+/*
+ * @MODULAR : MAKE
+*/
+void	get_chunk_world_pos_from_local_pos(float *res, int *local_pos)
+{
+	vec3_multiply_f(res, (float []){local_pos[0], local_pos[1], local_pos[2]}, 16.0f);
+}
+
+int	create_noise_map(int *map, int size_x, int size_z, int coord_x, int coord_z)
+{
+	int		start_y = 64;
+	float	freq = 0.005f;
+	float	pers = 0.5f;
+	int		i = 0;
+	float	seed = (896868766 % 512) * freq;
+	float	chunk_world[3];
+
+	get_chunk_world_pos_from_local_pos(chunk_world, (int []){coord_x, 0, coord_z});
+	vec3_string("noise_map chunk_world : ", chunk_world);
+	ft_printf("size : %d %d\n", size_x, size_z);
+	exit(0);
+	for (int x = 0; x < size_x; x++)
+	{
+		float	block_world_x = fabs(chunk_world[0] + x);
+		float	to_use_x = block_world_x * freq;
+		for (int z = 0; z < size_z; z++)
+		{
+			float	block_world_z = fabs(chunk_world[2] + z);
+			float	to_use_z = block_world_z * freq;
+			float	perper =
+				octave_perlin(to_use_x, seed, to_use_z, 1, pers) +
+				octave_perlin(to_use_x, seed, to_use_z, 2, pers) +
+				octave_perlin(to_use_x, seed, to_use_z, 4, pers) +
+				octave_perlin(to_use_x, seed, to_use_z, 8, pers);
+			float	e = pers * 3;
+			int		wanted_y = (start_y * (perper / e));
+			map[i] = wanted_y;
+			i++;
 		}
 	}
 	return (i);
@@ -140,7 +239,7 @@ t_chunk	*get_adjacent_chunk(t_chunk_info *info, t_chunk *from, float *dir)
 	from_coord[1] = from->coordinate[1] + (int)dir[1];
 	from_coord[2] = from->coordinate[2] + (int)dir[2];
 
-	int	key = get_chunk_hash_key(from_coord);
+	unsigned long int	key = get_chunk_hash_key(from_coord);
 	t_hash_item	*item = hash_item_search(info->hash_table, info->hash_table_size, key);
 	if (!item)
 		return (NULL);
@@ -335,7 +434,7 @@ void	get_blocks_visible(t_chunk *chunk)
 	}
 }
 
-int	get_chunk_hash_key(int *coords)
+unsigned long int	get_chunk_hash_key(int *coords)
 {
 	/*
 	int	res;
@@ -347,7 +446,7 @@ int	get_chunk_hash_key(int *coords)
 	*/
 
 	char	str[256];
-	int		hash = 5381;
+	unsigned long int	hash = 5381;
 
 	ft_b_itoa(coords[0], str);
 	ft_b_itoa(coords[1], str + ft_strlen(str));
@@ -361,7 +460,7 @@ int	get_chunk_hash_key(int *coords)
 void	update_chunk(t_chunk *chunk, int *coord)
 {
 	// Get old data;
-	int	old_key = get_chunk_hash_key(chunk->coordinate);
+	unsigned long int	old_key = get_chunk_hash_key(chunk->coordinate);
 	t_hash_item *old_item = hash_item_search(chunk->info->hash_table, chunk->info->hash_table_size, old_key);
 	int	old_data = old_item->data;
 	hash_item_delete(chunk->info->hash_table, chunk->info->hash_table_size, old_key);
@@ -376,7 +475,7 @@ void	update_chunk(t_chunk *chunk, int *coord)
 		chunk->coordinate[2] * chunk->info->chunk_size[2]);
 
 	// insert new data;
-	int	new_key = get_chunk_hash_key(chunk->coordinate);	
+	unsigned long int	new_key = get_chunk_hash_key(chunk->coordinate);	
 	if (!hash_item_insert(chunk->info->hash_table, chunk->info->hash_table_size, new_key, old_data))
 		LG_WARN("Chunk data couldnt be inserted.");
 	
@@ -393,11 +492,55 @@ void	update_chunk(t_chunk *chunk, int *coord)
 	chunk->needs_to_update = 1;
 }
 
+void	update_chunk_v2(t_chunk *chunk, int *coord, int *noise_map)
+{
+	// Get old data;
+	unsigned long int	old_key = get_chunk_hash_key(chunk->coordinate);
+	t_hash_item *old_item = hash_item_search(chunk->info->hash_table, chunk->info->hash_table_size, old_key);
+	int	old_data = old_item->data;
+	hash_item_delete(chunk->info->hash_table, chunk->info->hash_table_size, old_key);
+
+//	ft_printf("old coord %d %d %d\n", chunk->coordinate[0], chunk->coordinate[1], chunk->coordinate[2]);
+
+	for (int i = 0; i < 3; i++)
+		chunk->coordinate[i] = coord[i];
+	vec3_new(chunk->world_coordinate,
+		chunk->coordinate[0] * chunk->info->chunk_size[0],
+		chunk->coordinate[1] * chunk->info->chunk_size[1],
+		chunk->coordinate[2] * chunk->info->chunk_size[2]);
+
+	// insert new data;
+	unsigned long int	new_key = get_chunk_hash_key(chunk->coordinate);	
+	if (!hash_item_insert(chunk->info->hash_table, chunk->info->hash_table_size, new_key, old_data))
+		LG_WARN("Chunk data couldnt be inserted.");
+	
+/*
+	ft_printf("new coord %d %d %d\n", chunk->coordinate[0], chunk->coordinate[1], chunk->coordinate[2]);
+	ft_printf("We replaced key %d with %d, with %d data\n", old_key, new_key, old_data);
+	exit(0);
+*/
+
+	// Generate Chunks	
+	chunk->block_amount = chunk_gen_v2(chunk, noise_map); // should always return max amount of blocks in a chunk;
+
+	chunk->update_structures = 1;
+	chunk->needs_to_update = 1;
+}
+
 void	*update_chunk_threaded(void *arg)
 {
 	t_chunk_args	*info = arg;
 
 	update_chunk(info->chunk, info->coords);
+	info->chunk->args.being_threaded = 0;
+	return (NULL);
+}
+
+void	*update_chunk_threaded_v2(void *arg)
+{
+	t_chunk_args	*info = arg;
+
+	update_chunk_v2(info->chunk, info->coords, info->noise_map);
 	info->chunk->args.being_threaded = 0;
 	return (NULL);
 }
@@ -511,6 +654,65 @@ int	regenerate_chunks(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3)
 					chunks[index].args.coords[1] = y;
 					chunks[index].args.coords[2] = z;
 					update_chunk_threaded(&chunks[index].args);
+					nth_chunk++;
+					if (nth_chunk >= info->chunks_loaded) 
+						break ;
+				}
+			}
+			if (nth_chunk >= info->chunks_loaded) 
+				break ;
+		}
+		if (nth_chunk >= info->chunks_loaded) 
+			break ;
+	}
+	return (reload_amount);
+}
+
+int	regenerate_chunks_v576(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3)
+{
+	int	reload_these_chunks[info->chunks_loaded];
+	int	start_coord[3];
+	int found = 0;
+	int reload_amount;
+	
+	reload_amount = get_chunks_to_reload(reload_these_chunks, start_coord, info, player_chunk_v3);
+	if (reload_amount <= 0)
+		return (reload_amount);
+	
+	// Go through all the coordinates that will be loaded next time, and
+	//  check if any of the loaded chunks have those coordinates, if not
+	//	we take one of the chunks that are not going to be loaded next time
+	// 	and update the new chunk into that memory;
+	int	nth_chunk = 0;
+
+	for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
+	{
+		for (int z = start_coord[2], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
+		{
+			found = 0;
+			for (int i = 0; i < info->chunks_loaded; i++)
+			{
+				if (chunks[i].coordinate[0] == x && chunks[i].coordinate[2] == z)
+				{
+					found = 1;
+					break ;
+				}
+			}
+			if (!found)
+			{
+				int	noise_map[256];
+				create_noise_map(noise_map, 16, 16, x, z);
+				for (int y = start_coord[1], y_amount = 0; y_amount < info->y_chunk_amount; y++, y_amount++)
+				{
+					if (nth_chunk >= 16) // MUST BE 16
+						break ;
+					int index = reload_these_chunks[nth_chunk];
+					chunks[index].args.chunk = &chunks[index];
+					chunks[index].args.coords[0] = x;
+					chunks[index].args.coords[1] = y;
+					chunks[index].args.coords[2] = z;
+					chunks[index].args.noise_map = noise_map;
+					update_chunk_threaded_v2(&chunks[index].args);
 					nth_chunk++;
 					if (nth_chunk >= info->chunks_loaded) 
 						break ;
@@ -1470,7 +1672,7 @@ t_chunk *get_highest_chunk(t_chunk_info *info, int x, int z)
 	int	coords[3];
 	int	highest = -1;
 	int	highest_index = -1;
-	int	key;
+	unsigned long int	key;
 	t_hash_item	*item;
 	t_chunk	*chunk;
 

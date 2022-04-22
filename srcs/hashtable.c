@@ -12,7 +12,7 @@ void	hash_item_clear(t_hash_item *item)
 	item->is_empty = 1;
 }
 
-void	hash_item_populate(t_hash_item *item, int data, int key)
+void	hash_item_populate(t_hash_item *item, int data, unsigned long int key)
 {
 	item->data = data;
 	item->key = key;
@@ -42,7 +42,7 @@ void	hash_table_print(t_hash_item *table, int table_size)
 		if (hash_item_is_empty(&table[index]))
 			printf("#%d = EMPTY\n", index);
 		else
-			printf("#%d = %d : %d\n", index, table[index].key, table[index].data);
+			printf("#%d = %ld : %d\n", index, table[index].key, table[index].data);
 		++index;
 	}
 }
@@ -51,7 +51,7 @@ void	hash_table_print(t_hash_item *table, int table_size)
  * We want "key modulo table_size", but since C doesnt have modulo we have to
  * do it ourselves...
 */
-int	hash_index(int key, int table_size)
+int	hash_index(unsigned long int key, int table_size)
 {
 	int	res;
 
@@ -65,7 +65,7 @@ int	hash_index(int key, int table_size)
 	return (res);
 }
 
-t_hash_item	*hash_item_search(t_hash_item *table, int table_size, int key)
+t_hash_item	*hash_item_search(t_hash_item *table, int table_size, unsigned long int key)
 {
 	int	index;
 	int	amount = 0;
@@ -84,7 +84,7 @@ t_hash_item	*hash_item_search(t_hash_item *table, int table_size, int key)
 		//	exit(0);
 			return (NULL);
 		}
-		if (table[index].key == key)
+		if (!hash_item_is_empty(&table[index]) && table[index].key == key)
 		{
 		//	printf("Found on %d:th try.\n", amount);
 			return (&table[index]);
@@ -100,7 +100,7 @@ t_hash_item	*hash_item_search(t_hash_item *table, int table_size, int key)
 /*
  * Returns 1 if success, otherwise 0;
 */
-int	hash_item_insert(t_hash_item *table, int table_size, int key, int data)
+int	hash_item_insert(t_hash_item *table, int table_size, unsigned long int key, int data)
 {
 	int	index;
 	int	amount = 0;
@@ -115,7 +115,7 @@ int	hash_item_insert(t_hash_item *table, int table_size, int key, int data)
 	{
 		if (amount >= table_size)
 		{
-			printf("Insert : We have gone through whole table and cant insert it. (key : %d, data  : %d)\n", key, data);
+			printf("Insert : We have gone through whole table and cant insert it. (key : %ld, data  : %d)\n", key, data);
 			return (0);
 		}
 		++index;
@@ -133,7 +133,7 @@ int	hash_item_insert(t_hash_item *table, int table_size, int key, int data)
 /*
  * Returns 1 if success, otherwise 0;
 */
-int	hash_item_delete(t_hash_item *table, int table_size, int key)
+int	hash_item_delete(t_hash_item *table, int table_size, unsigned long int key)
 {
 	int	index;
 	int amount = 0;
