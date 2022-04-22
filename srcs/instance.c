@@ -167,7 +167,7 @@ int	create_noise_map(int *map, int size_x, int size_z, int coord_x, int coord_z)
 	int		start_y = 64;
 	float	freq = 0.005f;
 	float	pers = 0.5f;
-	int		i = -1;
+	int		i = 0;
 	float	seed = (896868766 % 512) * freq;
 	float	chunk_world[3];
 
