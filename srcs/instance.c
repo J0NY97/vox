@@ -22,9 +22,11 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, int nth)
 		chunk->world_coordinate[i] = INT_MAX - (nth * 10);
 	}
 
+/*
 	unsigned long int key = get_chunk_hash_key(chunk->coordinate);
 	if (!hash_item_insert(info->hash_table, info->hash_table_size, key, nth))
 		LG_WARN("Chunk data couldnt be inserted.");
+		*/
 
 	init_chunk_mesh_v2(&chunk->meshes, MESH_TYPE_AMOUNT);
 
@@ -229,7 +231,9 @@ void	chunk_aabb_update(t_chunk *chunk)
 */
 t_chunk	*get_adjacent_chunk(t_chunk_info *info, t_chunk *from, float *dir)
 {
+	static int times_called = -1;
 	int	from_coord[3];
+//	ft_printf("times_called %d\n", ++times_called);
 
 	from_coord[0] = from->coordinate[0] + (int)dir[0];
 	from_coord[1] = from->coordinate[1] + (int)dir[1];
@@ -456,10 +460,12 @@ unsigned long int	get_chunk_hash_key(int *coords)
 void	update_chunk(t_chunk *chunk, int *coord)
 {
 	// Get old data;
+	/*
 	unsigned long int	old_key = get_chunk_hash_key(chunk->coordinate);
 	t_hash_item *old_item = hash_item_search(chunk->info->hash_table, chunk->info->hash_table_size, old_key);
 	int	old_data = old_item->data;
 	hash_item_delete(chunk->info->hash_table, chunk->info->hash_table_size, old_key);
+	*/
 
 //	ft_printf("old coord %d %d %d\n", chunk->coordinate[0], chunk->coordinate[1], chunk->coordinate[2]);
 
@@ -471,9 +477,11 @@ void	update_chunk(t_chunk *chunk, int *coord)
 		chunk->coordinate[2] * chunk->info->chunk_size[2]);
 
 	// insert new data;
+	/*
 	unsigned long int	new_key = get_chunk_hash_key(chunk->coordinate);	
 	if (!hash_item_insert(chunk->info->hash_table, chunk->info->hash_table_size, new_key, old_data))
 		LG_WARN("Chunk data couldnt be inserted.");
+		*/
 	
 /*
 	ft_printf("new coord %d %d %d\n", chunk->coordinate[0], chunk->coordinate[1], chunk->coordinate[2]);
@@ -491,10 +499,12 @@ void	update_chunk(t_chunk *chunk, int *coord)
 void	update_chunk_v2(t_chunk *chunk, int *coord, int *noise_map)
 {
 	// Get old data;
+	/*
 	unsigned long int	old_key = get_chunk_hash_key(chunk->coordinate);
 	t_hash_item *old_item = hash_item_search(chunk->info->hash_table, chunk->info->hash_table_size, old_key);
 	int	old_data = old_item->data;
 	hash_item_delete(chunk->info->hash_table, chunk->info->hash_table_size, old_key);
+	*/
 
 //	ft_printf("old coord %d %d %d\n", chunk->coordinate[0], chunk->coordinate[1], chunk->coordinate[2]);
 
@@ -506,9 +516,11 @@ void	update_chunk_v2(t_chunk *chunk, int *coord, int *noise_map)
 		chunk->coordinate[2] * chunk->info->chunk_size[2]);
 
 	// insert new data;
+	/*
 	unsigned long int	new_key = get_chunk_hash_key(chunk->coordinate);	
 	if (!hash_item_insert(chunk->info->hash_table, chunk->info->hash_table_size, new_key, old_data))
 		LG_WARN("Chunk data couldnt be inserted.");
+		*/
 	
 /*
 	ft_printf("new coord %d %d %d\n", chunk->coordinate[0], chunk->coordinate[1], chunk->coordinate[2]);
@@ -673,9 +685,6 @@ int	regenerate_chunks_v576(t_chunk *chunks, t_chunk_info *info, int *player_chun
 	if (reload_amount <= 0)
 		return (reload_amount);
 
-	for (int i = 0; i < reload_amount; i++)
-		ft_printf("");
-	
 	// Go through all the coordinates that will be loaded next time, and
 	//  check if any of the loaded chunks have those coordinates, if not
 	//	we take one of the chunks that are not going to be loaded next time
@@ -1646,7 +1655,6 @@ void	flora_placer(t_chunk_info *info, int type, float *world_pos)
 */
 t_chunk *get_highest_chunk(t_chunk_info *info, int x, int z)
 {
-	/*
 	int	highest = -1;
 	int	highest_index = -1;
 
@@ -1664,8 +1672,8 @@ t_chunk *get_highest_chunk(t_chunk_info *info, int x, int z)
 	if (highest_index >= 0 && highest_index < info->chunks_loaded)
 		return (&info->chunks[highest_index]);
 	return (NULL);
-	*/
 
+	/*
 	int	coords[3];
 	int	highest = -1;
 	int	highest_index = -1;
@@ -1693,6 +1701,7 @@ t_chunk *get_highest_chunk(t_chunk_info *info, int x, int z)
 	if (highest_index >= 0 && highest_index < info->chunks_loaded)
 		return (&info->chunks[highest_index]);
 	return (NULL);
+	*/
 }
 
 /*

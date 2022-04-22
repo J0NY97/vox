@@ -367,6 +367,7 @@ struct	s_chunk
 	t_aabb			aabb;
 
 	int				needs_to_update;
+	int				secondary_update;
 
 	int				render; // if we want to render the chunk this frame;
 

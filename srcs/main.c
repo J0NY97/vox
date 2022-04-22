@@ -522,7 +522,8 @@ int	main(void)
 			neighbors_found = 0;
 
 			// We only need to update the chunks if a chunk has been regenerated
-			if (0 && (chunks[ent].needs_to_update || (chunks[ent].update_structures && tobegen != 0)))
+			if ((chunks[ent].needs_to_update ||
+				(chunk_info.generate_structures && chunks[ent].update_structures && tobegen != 0)))
 			{
 				// Get all neighbors for this chunk;
 				for (int dir = DIR_NORTH, i = 0; dir < DIR_AMOUNT; ++dir, ++i)
@@ -541,10 +542,12 @@ int	main(void)
 				if (highest == &chunks[ent])
 				{
 					tree_gen(&chunks[ent]);
-					chunks[ent].update_structures = 0;
 					chunks[ent].needs_to_update = 1;
+					chunks[ent].update_structures = 0;
 				}
 			}
+
+			chunks[ent].update_structures = 0;
 
 			if (chunks[ent].needs_to_update)
 			{
@@ -553,25 +556,33 @@ int	main(void)
 				chunk_aabb_update(&chunks[ent]);
 				chunks[ent].needs_to_update = 0;
 
-/*
-				// Update all 6 neighbors of the chunk;
+				// Set needs to update to all 6 neighbors of the chunk;
 				for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
-				{
 					if (neighbors[i])
-					{
-						update_chunk_visible_blocks(neighbors[i]);
-						update_chunk_mesh_v2(&neighbors[i]->meshes);
-						chunk_aabb_update(neighbors[i]);
-					}
-				}
-				*/
+						neighbors[i]->secondary_update = 1;
 			}
 		}
 
-/*
+		// Secondary updater;
+		// We dont want to immediately update the chunks that other chunks want
+		//	updated, because they might updated themselves;
+		// So if theres still chunks that needs updating after we've gone through
+		// 	the chunks once, we update them here;
+		for (int ent = 0; ent < chunk_info.chunks_loaded; ++ent)
+		{
+			if (chunks[ent].secondary_update)
+			{
+				chunks[ent].secondary_update = 0;
+				chunks[ent].needs_to_update = 0;
+				update_chunk_visible_blocks(&chunks[ent]);
+				update_chunk_mesh_v2(&chunks[ent].meshes);
+				chunk_aabb_update(&chunks[ent]);
+			}
+		}
+		/*
 		if (tobegen == 0)
 			exit(0);
-*/
+		*/
 
 		// head
 		player_terrain_collision(player.velocity, (float []){player.camera.pos[0], player.camera.pos[1] + 0.25f, player.camera.pos[2]}, player.velocity, &chunk_info);
