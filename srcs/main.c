@@ -509,8 +509,8 @@ int	main(void)
 		if (regen_chunks)
 		{
 		//	regenerate_chunks_v3(chunks, &chunk_info, player_chunk, &tm);
-			tobegen = regenerate_chunks(chunks, &chunk_info, player_chunk);	
-		//	tobegen = regenerate_chunks_v576(chunks, &chunk_info, player_chunk);	
+		//	tobegen = regenerate_chunks(chunks, &chunk_info, player_chunk);	
+			tobegen = regenerate_chunks_v576(chunks, &chunk_info, player_chunk);	
 		}
 
 		thread_manager_check_threadiness(&tm);

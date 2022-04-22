@@ -49,7 +49,6 @@ int	chunk_gen(t_chunk *chunk)
 		float	to_use_x = block_world_x * freq;
 		for (int z = 0; z < chunk->info->breadth; z++)
 		{
-			/*
 			float	block_world_z = fabs(chunk->world_coordinate[2] + z);
 			float	to_use_z = block_world_z * freq;
 			float	perper =
@@ -60,10 +59,10 @@ int	chunk_gen(t_chunk *chunk)
 			float	e = pers * 3;
 			int		wanted_y = (start_y * (perper / e));
 			int		whatchumacallit = wanted_y - (chunk->world_coordinate[1]);
-			int		amount = ft_clamp(whatchumacallit, 0, chunk->info->height - 1);
-			*/
 
-			int		whatchumacallit = 75 - (chunk->world_coordinate[1]);
+			/*
+			int		whatchumacallit = 69 - (chunk->world_coordinate[1]);
+			*/
 
 			for (int y = 0; y < chunk->info->height; y++)
 			{
@@ -115,7 +114,7 @@ int	chunk_gen_v2(t_chunk *chunk, int *noise_map)
 	{
 		for (int z = 0; z < chunk->info->breadth; z++)
 		{
-			int		whatchumacallit = noise_map[x * 16 + z] - (chunk->world_coordinate[1]);
+			int		whatchumacallit = noise_map[x * 16 + z] - (int)chunk->world_coordinate[1];
 
 			for (int y = 0; y < chunk->info->height; y++)
 			{
@@ -168,14 +167,11 @@ int	create_noise_map(int *map, int size_x, int size_z, int coord_x, int coord_z)
 	int		start_y = 64;
 	float	freq = 0.005f;
 	float	pers = 0.5f;
-	int		i = 0;
+	int		i = -1;
 	float	seed = (896868766 % 512) * freq;
 	float	chunk_world[3];
 
 	get_chunk_world_pos_from_local_pos(chunk_world, (int []){coord_x, 0, coord_z});
-	vec3_string("noise_map chunk_world : ", chunk_world);
-	ft_printf("size : %d %d\n", size_x, size_z);
-	exit(0);
 	for (int x = 0; x < size_x; x++)
 	{
 		float	block_world_x = fabs(chunk_world[0] + x);
@@ -239,12 +235,13 @@ t_chunk	*get_adjacent_chunk(t_chunk_info *info, t_chunk *from, float *dir)
 	from_coord[1] = from->coordinate[1] + (int)dir[1];
 	from_coord[2] = from->coordinate[2] + (int)dir[2];
 
+	/*
 	unsigned long int	key = get_chunk_hash_key(from_coord);
 	t_hash_item	*item = hash_item_search(info->hash_table, info->hash_table_size, key);
 	if (!item)
 		return (NULL);
 	return (&info->chunks[item->data]);
-	/*
+	*/
 	for (int i = 0; i < info->chunks_loaded; i++)
 	{
 		if (info->chunks[i].coordinate[0] == from_coord[0] &&
@@ -252,7 +249,6 @@ t_chunk	*get_adjacent_chunk(t_chunk_info *info, t_chunk *from, float *dir)
 			info->chunks[i].coordinate[2] == from_coord[2])
 			return (&info->chunks[i]);
 	}
-	*/
 	return (NULL);
 }
 
@@ -646,7 +642,7 @@ int	regenerate_chunks(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3)
 			{
 				for (int y = start_coord[1], y_amount = 0; y_amount < info->y_chunk_amount; y++, y_amount++)
 				{
-					if (nth_chunk >= 16)
+					if (nth_chunk >= info->chunks_loaded || nth_chunk >= 16) 
 						break ;
 					int index = reload_these_chunks[nth_chunk];
 					chunks[index].args.chunk = &chunks[index];
@@ -655,17 +651,15 @@ int	regenerate_chunks(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3)
 					chunks[index].args.coords[2] = z;
 					update_chunk_threaded(&chunks[index].args);
 					nth_chunk++;
-					if (nth_chunk >= info->chunks_loaded) 
-						break ;
 				}
 			}
-			if (nth_chunk >= info->chunks_loaded) 
+			if (nth_chunk >= info->chunks_loaded || nth_chunk >= 16) 
 				break ;
 		}
-		if (nth_chunk >= info->chunks_loaded) 
+		if (nth_chunk >= info->chunks_loaded || nth_chunk >= 16) 
 			break ;
 	}
-	return (reload_amount);
+	return (reload_amount - nth_chunk);
 }
 
 int	regenerate_chunks_v576(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3)
@@ -678,6 +672,9 @@ int	regenerate_chunks_v576(t_chunk *chunks, t_chunk_info *info, int *player_chun
 	reload_amount = get_chunks_to_reload(reload_these_chunks, start_coord, info, player_chunk_v3);
 	if (reload_amount <= 0)
 		return (reload_amount);
+
+	for (int i = 0; i < reload_amount; i++)
+		ft_printf("");
 	
 	// Go through all the coordinates that will be loaded next time, and
 	//  check if any of the loaded chunks have those coordinates, if not
@@ -718,13 +715,13 @@ int	regenerate_chunks_v576(t_chunk *chunks, t_chunk_info *info, int *player_chun
 						break ;
 				}
 			}
-			if (nth_chunk >= info->chunks_loaded) 
+			if (nth_chunk >= info->chunks_loaded || nth_chunk >= 16) 
 				break ;
 		}
-		if (nth_chunk >= info->chunks_loaded) 
+		if (nth_chunk >= info->chunks_loaded || nth_chunk >= 16) 
 			break ;
 	}
-	return (reload_amount);
+	return (reload_amount - nth_chunk);
 }
 
 void	regenerate_chunks_v3(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3, t_thread_manager *tm)
