@@ -1,5 +1,24 @@
 #include "hashtable.h"
 
+int	hash_item_is_empty(t_hash_item *item)
+{
+	return (item->is_empty);
+}
+
+void	hash_item_clear(t_hash_item *item)
+{
+	item->data = 0;
+	item->key = 0;
+	item->is_empty = 1;
+}
+
+void	hash_item_populate(t_hash_item *item, int data, int key)
+{
+	item->data = data;
+	item->key = key;
+	item->is_empty = 0;
+}
+
 void	hash_table_clear(t_hash_item *table, int table_size)
 {
 	int	index;
@@ -7,8 +26,7 @@ void	hash_table_clear(t_hash_item *table, int table_size)
 	index = 0;
 	while (index < table_size)
 	{
-		table[index].data = -1;
-		table[index].key = 0;
+		hash_item_clear(&table[index]);
 		++index;
 	}
 }
@@ -21,7 +39,10 @@ void	hash_table_print(t_hash_item *table, int table_size)
 	printf("Hash Table Print :\n");
 	while (index < table_size)
 	{
-		printf("%u : %d\n", table[index].key, table[index].data);
+		if (hash_item_is_empty(&table[index]))
+			printf("#%d = EMPTY\n", index);
+		else
+			printf("#%d = %d : %d\n", index, table[index].key, table[index].data);
 		++index;
 	}
 }
@@ -44,17 +65,6 @@ int	hash_index(int key, int table_size)
 	return (res);
 }
 
-/*
- * Function that deteremines if the the item is empty or not, if we dont want
- *	to have pointers in the hash table;
-*/
-int	hash_is_empty(t_hash_item *item)
-{
-	if (item->data == -1 && item->key == 0)
-		return (1);
-	return (0);
-}
-
 t_hash_item	*hash_item_search(t_hash_item *table, int table_size, int key)
 {
 	int	index;
@@ -66,18 +76,23 @@ t_hash_item	*hash_item_search(t_hash_item *table, int table_size, int key)
 		printf("search :Too mcuh\n");
 		exit(0);
 	}
-	while (!hash_is_empty(&table[index]))
+	while (1)
 	{
 		if (amount >= table_size)
 		{
-	//		printf("Search : We have gone through whole table and cant find it.\n");
+		//	printf("Search : We have gone through whole table and cant find it. (key : %d, index : %d, amount : %d)\n", key, index, amount);
+		//	exit(0);
 			return (NULL);
 		}
 		if (table[index].key == key)
+		{
+		//	printf("Found on %d:th try.\n", amount);
 			return (&table[index]);
+		}
 		++index;
 		++amount;
-		index %= table_size;
+		if (index >= table_size)
+			index %= table_size;
 	}
 	return (NULL);
 }
@@ -96,7 +111,7 @@ int	hash_item_insert(t_hash_item *table, int table_size, int key, int data)
 		printf("INsert :Too mcuh\n");
 		exit(0);
 	}
-	while (!hash_is_empty(&table[index]))
+	while (!hash_item_is_empty(&table[index]))
 	{
 		if (amount >= table_size)
 		{
@@ -107,9 +122,12 @@ int	hash_item_insert(t_hash_item *table, int table_size, int key, int data)
 		++amount;
 		index %= table_size;
 	}
-	table[index].data = data;
-	table[index].key = key;
-	return (1);
+	if (amount < table_size)
+	{
+		hash_item_populate(&table[index], data, key);
+		return (1);
+	}
+	return (0);
 }
 
 /*
@@ -122,11 +140,8 @@ int	hash_item_delete(t_hash_item *table, int table_size, int key)
 
 	index = hash_index(key, table_size);
 	if (index < 0 || index >= table_size)
-	{
-		printf("delete :Too mcuh\n");
-		exit(0);
-	}
-	while (!hash_is_empty(&table[index]))
+		printf("HASH_ITEM_DELETE : Index too high.\n");
+	while (1)
 	{
 		if (amount >= table_size)
 		{
@@ -135,8 +150,7 @@ int	hash_item_delete(t_hash_item *table, int table_size, int key)
 		}
 		if (table[index].key == key)
 		{
-			table[index].data = -1;
-			table[index].key = 0;
+			hash_item_clear(&table[index]);
 			return (1);
 		}
 		++index;

@@ -195,6 +195,13 @@ int	main(void)
 		chunk_info.fancy_graphics = 0;
 		chunk_info.generate_structures = 1;
 
+		// Creation of hashtable
+//		chunk_info.hash_table_size = (int)(chunk_info.chunks_loaded * 1.3f) + 1;
+		chunk_info.hash_table_size = (int)(chunk_info.chunks_loaded * 3);
+//		chunk_info.hash_table_size = 7919;
+		chunk_info.hash_table = malloc(sizeof(t_hash_item) * chunk_info.hash_table_size);
+		hash_table_clear(chunk_info.hash_table, chunk_info.hash_table_size);
+
 		glGenTextures(1, &chunk_info.texture);
 		new_texture(&chunk_info.texture, MODEL_PATH"cube/version_3_texture_alpha.bmp");
 
@@ -209,14 +216,9 @@ int	main(void)
 		get_chunk_pos_from_world_pos(player_chunk, player.camera.pos, &chunk_info);
 
 		LG_INFO("Inits done, lets create some chunks (%d wanted)\n", chunk_info.chunks_loaded);
-		for (; nth_chunk < chunk_info.chunks_loaded; nth_chunk++)
+		for (; nth_chunk < chunk_info.chunks_loaded; ++nth_chunk)
 		{
 			new_chunk(&chunks[nth_chunk], &chunk_info, nth_chunk);
-			/*
-			chunks[nth_chunk].mesh.texture = chunk_info.texture;
-			chunks[nth_chunk].liquid_mesh.texture = chunk_info.texture;
-			chunks[nth_chunk].flora_mesh.texture = chunk_info.texture;
-			*/
 			chunks[nth_chunk].meshes.texture = chunk_info.texture;
 		}
 		ft_printf("Total Chunks created : %d\n", nth_chunk);
@@ -524,7 +526,7 @@ int	main(void)
 				// Get all neighbors for this chunk;
 				for (int dir = DIR_NORTH, i = 0; dir < DIR_AMOUNT; ++dir, ++i)
 				{
-					neighbors[i] = get_adjacent_chunk(&chunks[ent], chunk_info.chunks, (float *)g_card_dir[dir]);
+					neighbors[i] = get_adjacent_chunk(&chunk_info, &chunks[ent], (float *)g_card_dir[dir]);
 					++neighbors_found;
 				}
 			}
@@ -543,7 +545,7 @@ int	main(void)
 				}
 			}
 
-			if (chunks[ent].needs_to_update && neighbors_found >= 6)
+			if (chunks[ent].needs_to_update)
 			{
 				update_chunk_visible_blocks(&chunks[ent]);
 				update_chunk_mesh_v2(&chunks[ent].meshes);
@@ -562,6 +564,9 @@ int	main(void)
 				}
 			}
 		}
+
+		if (tobegen == 0)
+			exit(0);
 
 		// head
 		player_terrain_collision(player.velocity, (float []){player.camera.pos[0], player.camera.pos[1] + 0.25f, player.camera.pos[2]}, player.velocity, &chunk_info);

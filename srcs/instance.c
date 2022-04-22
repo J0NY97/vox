@@ -18,9 +18,13 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, int nth)
 	// Set INT_MAX to coordinates, so that the chunk regenerator knows to regenerate these chunks;
 	for (int i = 0; i < 3; i++)
 	{
-		chunk->coordinate[i] = 999 - (i * nth);
-		chunk->world_coordinate[i] = 999 - (i * nth);
+		chunk->coordinate[i] = INT_MAX - (nth * 10);
+		chunk->world_coordinate[i] = INT_MAX - (nth * 10);
 	}
+
+	int key = get_chunk_hash_key(chunk->coordinate);
+	if (!hash_item_insert(info->hash_table, info->hash_table_size, key, nth))
+		LG_WARN("Chunk data couldnt be inserted.");
 
 	init_chunk_mesh_v2(&chunk->meshes, MESH_TYPE_AMOUNT);
 
@@ -128,21 +132,28 @@ void	chunk_aabb_update(t_chunk *chunk)
  * 'chunks' is all the loaded chunks,
  * 'dir' is the direction you want to look for the chunk in; (v3)
 */
-t_chunk	*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, float *dir)
+t_chunk	*get_adjacent_chunk(t_chunk_info *info, t_chunk *from, float *dir)
 {
 	int	from_coord[3];
 
-	from_coord[0] = from->coordinate[0] + dir[0];
-	from_coord[1] = from->coordinate[1] + dir[1];
-	from_coord[2] = from->coordinate[2] + dir[2];
+	from_coord[0] = from->coordinate[0] + (int)dir[0];
+	from_coord[1] = from->coordinate[1] + (int)dir[1];
+	from_coord[2] = from->coordinate[2] + (int)dir[2];
 
-	for (int i = 0; i < from->info->chunks_loaded; i++)
+	int	key = get_chunk_hash_key(from_coord);
+	t_hash_item	*item = hash_item_search(info->hash_table, info->hash_table_size, key);
+	if (!item)
+		return (NULL);
+	return (&info->chunks[item->data]);
+	/*
+	for (int i = 0; i < info->chunks_loaded; i++)
 	{
-		if (chunks[i].coordinate[0] == from_coord[0] &&
-			chunks[i].coordinate[1] == from_coord[1] &&
-			chunks[i].coordinate[2] == from_coord[2])
-			return (&chunks[i]);
+		if (info->chunks[i].coordinate[0] == from_coord[0] &&
+			info->chunks[i].coordinate[1] == from_coord[1] &&
+			info->chunks[i].coordinate[2] == from_coord[2])
+			return (&info->chunks[i]);
 	}
+	*/
 	return (NULL);
 }
 
@@ -297,7 +308,7 @@ void	get_blocks_visible(t_chunk *chunk)
 	// Get all neighbors of current chunk;
 	t_chunk *neighbors[6];
 	for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
-		neighbors[i] = get_adjacent_chunk(chunk, chunk->info->chunks, (float *)g_card_dir[dir]);
+		neighbors[i] = get_adjacent_chunk(chunk->info, chunk, (float *)g_card_dir[dir]);
 
 	int		pos[3];
 	for (int i = 0; i < chunk->block_amount; i++)
@@ -314,34 +325,66 @@ void	get_blocks_visible(t_chunk *chunk)
 		}
 		else // these are the solid blocks;
 		{
-			adjacent_block_checker(chunk, i, pos, DIR_NORTH, neighbors[0]);
-			adjacent_block_checker(chunk, i, pos, DIR_EAST, neighbors[1]);
-			adjacent_block_checker(chunk, i, pos, DIR_SOUTH, neighbors[2]);
-			adjacent_block_checker(chunk, i, pos, DIR_WEST, neighbors[3]);
-			adjacent_block_checker(chunk, i, pos, DIR_UP, neighbors[4]);
-			adjacent_block_checker(chunk, i, pos, DIR_DOWN, neighbors[5]);
+			adjacent_block_checker(chunk, i, pos, DIR_NORTH, neighbors[DIR_NORTH]);
+			adjacent_block_checker(chunk, i, pos, DIR_EAST, neighbors[DIR_EAST]);
+			adjacent_block_checker(chunk, i, pos, DIR_SOUTH, neighbors[DIR_SOUTH]);
+			adjacent_block_checker(chunk, i, pos, DIR_WEST, neighbors[DIR_WEST]);
+			adjacent_block_checker(chunk, i, pos, DIR_UP, neighbors[DIR_UP]);
+			adjacent_block_checker(chunk, i, pos, DIR_DOWN, neighbors[DIR_DOWN]);
 		}
 	}
 }
 
 int	get_chunk_hash_key(int *coords)
 {
+	/*
 	int	res;
 
 	res = coords[0] +
 		(8 * coords[1]) +
 		(8 * 8 * coords[2]);
 	return (res);
+	*/
+
+	char	str[256];
+	int		hash = 5381;
+
+	ft_b_itoa(coords[0], str);
+	ft_b_itoa(coords[1], str + ft_strlen(str));
+	ft_b_itoa(coords[2], str + ft_strlen(str));
+	int i = -1;
+	while (str[++i])
+		hash = ((hash << 5) + hash) + str[i];
+	return (hash);
 }
 
 void	update_chunk(t_chunk *chunk, int *coord)
 {
+	// Get old data;
+	int	old_key = get_chunk_hash_key(chunk->coordinate);
+	t_hash_item *old_item = hash_item_search(chunk->info->hash_table, chunk->info->hash_table_size, old_key);
+	int	old_data = old_item->data;
+	hash_item_delete(chunk->info->hash_table, chunk->info->hash_table_size, old_key);
+
+//	ft_printf("old coord %d %d %d\n", chunk->coordinate[0], chunk->coordinate[1], chunk->coordinate[2]);
+
 	for (int i = 0; i < 3; i++)
 		chunk->coordinate[i] = coord[i];
 	vec3_new(chunk->world_coordinate,
 		chunk->coordinate[0] * chunk->info->chunk_size[0],
 		chunk->coordinate[1] * chunk->info->chunk_size[1],
 		chunk->coordinate[2] * chunk->info->chunk_size[2]);
+
+	// insert new data;
+	int	new_key = get_chunk_hash_key(chunk->coordinate);	
+	if (!hash_item_insert(chunk->info->hash_table, chunk->info->hash_table_size, new_key, old_data))
+		LG_WARN("Chunk data couldnt be inserted.");
+	
+/*
+	ft_printf("new coord %d %d %d\n", chunk->coordinate[0], chunk->coordinate[1], chunk->coordinate[2]);
+	ft_printf("We replaced key %d with %d, with %d data\n", old_key, new_key, old_data);
+	exit(0);
+*/
 
 	// Generate Chunks	
 	chunk->block_amount = chunk_gen(chunk); // should always return max amount of blocks in a chunk;
@@ -1404,6 +1447,7 @@ void	flora_placer(t_chunk_info *info, int type, float *world_pos)
 */
 t_chunk *get_highest_chunk(t_chunk_info *info, int x, int z)
 {
+	/*
 	int	highest = -1;
 	int	highest_index = -1;
 
@@ -1416,6 +1460,35 @@ t_chunk *get_highest_chunk(t_chunk_info *info, int x, int z)
 		{
 			highest = info->chunks[i].coordinate[1];
 			highest_index = i;
+		}
+	}
+	if (highest_index >= 0 && highest_index < info->chunks_loaded)
+		return (&info->chunks[highest_index]);
+	return (NULL);
+	*/
+
+	int	coords[3];
+	int	highest = -1;
+	int	highest_index = -1;
+	int	key;
+	t_hash_item	*item;
+	t_chunk	*chunk;
+
+	coords[0] = x;
+	coords[2] = z;
+	for (int y = 0; y < 16; y++)
+	{
+		coords[1] = y;
+		key = get_chunk_hash_key(coords);
+		item = hash_item_search(info->hash_table, info->hash_table_size, key);
+		if (item)
+		{
+			chunk = &info->chunks[item->data];
+			if (chunk->has_blocks && y > highest)
+			{
+				highest = y;
+				highest_index = item->data;
+			}
 		}
 	}
 	if (highest_index >= 0 && highest_index < info->chunks_loaded)

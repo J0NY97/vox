@@ -285,10 +285,9 @@ typedef struct s_chunk_info
 	t_chunk		*chunks; // you should not store the chunks here mainly; its just here so you can acces from places you need, without having to pass them in the function as argumnet;
 	GLuint		texture; // the texture is stored here so we dont load a texture per chunk_mesh;
 
-/*
 	t_hash_item	*hash_table;
 	int			hash_table_size;
-	*/
+
 }	t_chunk_info;
 
 /* Used for threading */
@@ -384,7 +383,7 @@ void		render_aabb(t_aabb *a, t_camera *camera, float *col);
 int			*get_chunk_pos_from_world_pos(int *res, float *world_coords, t_chunk_info *info);
 float		*block_world_pos(float *res, float *chunk_world_pos, int *block_local_pos);
 t_chunk		*get_chunk(t_chunk_info *info, int *pos);
-t_chunk		*get_adjacent_chunk(t_chunk *from, t_chunk *chunks, float *dir);
+t_chunk		*get_adjacent_chunk(t_chunk_info *info, t_chunk *from, float *dir);
 int			*get_block_local_pos_from_world_pos(int *res, float *world);
 int			*get_block_local_pos_from_index(int *res, int index);
 t_block		*get_block(t_chunk_info *info, float *coords);
