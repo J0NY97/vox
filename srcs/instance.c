@@ -295,9 +295,9 @@ void	get_blocks_visible(t_chunk *chunk)
 	blocks = chunk->blocks;
 
 	// Get all neighbors of current chunk;
-	t_chunk *neighbors[DIR_AMOUNT];
-	for (int i = DIR_NORTH; i < DIR_AMOUNT; i++)
-		neighbors[i] = get_adjacent_chunk(chunk, chunk->info->chunks, (float *)g_card_dir[i]);
+	t_chunk *neighbors[6];
+	for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
+		neighbors[i] = get_adjacent_chunk(chunk, chunk->info->chunks, (float *)g_card_dir[dir]);
 
 	int		pos[3];
 	for (int i = 0; i < chunk->block_amount; i++)
@@ -314,12 +314,12 @@ void	get_blocks_visible(t_chunk *chunk)
 		}
 		else // these are the solid blocks;
 		{
-			adjacent_block_checker(chunk, i, pos, DIR_NORTH, neighbors[DIR_NORTH]);
-			adjacent_block_checker(chunk, i, pos, DIR_EAST, neighbors[DIR_EAST]);
-			adjacent_block_checker(chunk, i, pos, DIR_SOUTH, neighbors[DIR_SOUTH]);
-			adjacent_block_checker(chunk, i, pos, DIR_WEST, neighbors[DIR_WEST]);
-			adjacent_block_checker(chunk, i, pos, DIR_UP, neighbors[DIR_UP]);
-			adjacent_block_checker(chunk, i, pos, DIR_DOWN, neighbors[DIR_DOWN]);
+			adjacent_block_checker(chunk, i, pos, DIR_NORTH, neighbors[0]);
+			adjacent_block_checker(chunk, i, pos, DIR_EAST, neighbors[1]);
+			adjacent_block_checker(chunk, i, pos, DIR_SOUTH, neighbors[2]);
+			adjacent_block_checker(chunk, i, pos, DIR_WEST, neighbors[3]);
+			adjacent_block_checker(chunk, i, pos, DIR_UP, neighbors[4]);
+			adjacent_block_checker(chunk, i, pos, DIR_DOWN, neighbors[5]);
 		}
 	}
 }
@@ -871,7 +871,7 @@ int	is_hovering_solid_block(float *block_pos, float *point, int *face)
 	float	p2[3];
 	float	p3[3];
 
-	for (int f = DIR_NORTH; f < DIR_AMOUNT; f++)
+	for (int f = DIR_NORTH; f <= DIR_DOWN; ++f)
 	{
 		p1[0] = (g_faces[f][0] * 0.5f) + block_pos[0];
 		p1[1] = (g_faces[f][1] * 0.5f) + block_pos[1];

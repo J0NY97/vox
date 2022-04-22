@@ -45,18 +45,25 @@ enum e_card_dir // cardinal direction aka väderstreck?
 	DIR_WEST,
 	DIR_UP,
 	DIR_DOWN,
+	DIR_NORTHEAST,
+	DIR_NORTHWEST,
+	DIR_SOUTHEAST,
+	DIR_SOUTHWEST,
 	DIR_SOURCE, // not flowing, just static;
 	DIR_AMOUNT = DIR_SOURCE
 };
 
-static const float g_card_dir[DIR_AMOUNT + 1][3] = {
+static const float g_card_dir[DIR_AMOUNT][3] = {
 	{0, 0, -1},
 	{1, 0, 0},
 	{0, 0, 1},
 	{-1, 0, 0},
 	{0, 1, 0},
 	{0, -1, 0},
-	{0, 0, 0}
+	{1, 0, -1},
+	{-1, 0, -1},
+	{1, 0, 1},
+	{-1, 0, 1}
 };
 
 /*
@@ -74,7 +81,7 @@ typedef struct s_block_data
 {
 	char			type; // 'e_block_type', at some point maybe same array index in 'g_block_data';
 	char			*name;
-	unsigned short	face_texture[DIR_AMOUNT]; // same order as 'e_face'
+	unsigned short	face_texture[6]; // same order as 'e_face'
 }	t_block_data;
 
 static const t_block_data g_block_data[] = {
@@ -164,7 +171,7 @@ static const float g_faces_cactus[6][12] = {
 /* BOT   */	{-1, -1, -1,	1, -1, -1,		1, -1, 1,		-1, -1, 1}
 };
 
-static const int g_face_light[DIR_AMOUNT] = {
+static const int g_face_light[6] = {
 	65, 90, 85, 65, 85, 65
 };
 

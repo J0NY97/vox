@@ -193,7 +193,7 @@ int	main(void)
 		chunk_info.block_collision_enabled = 0;
 		chunk_info.player_collision_enabled = 0;
 		chunk_info.fancy_graphics = 0;
-		chunk_info.generate_structures = 0;
+		chunk_info.generate_structures = 1;
 
 		glGenTextures(1, &chunk_info.texture);
 		new_texture(&chunk_info.texture, MODEL_PATH"cube/version_3_texture_alpha.bmp");
@@ -510,62 +510,54 @@ int	main(void)
 			tobegen = regenerate_chunks(chunks, &chunk_info, player_chunk);	
 		}
 
-		// If we dont have to generate more chunks, we will generate the trees for them;
-		//	I think we have to do it like this, since structures are multi chunk things,
-		// 	so its going to get convoluted if we are trying to partially generate structures
-		//	in only the chunks that are loaded, and then what happens when the chunks,
-		//	that the rest of the structure should be in, gets loaded?!;
-		// ...
-		// This only generates tree for the top most chunks of the x/z chunk coordinate;
-		// Pretty convoluted but cant figure out a better way yet;
-		if (!tobegen && chunk_info.generate_structures)
-		{
-			int	togen[(chunk_info.chunks_loaded / chunk_info.y_chunk_amount) * 2];
-			int gen_amount = get_surrounding_coords(togen, player_chunk[0], player_chunk[2], chunk_info.render_distance / 2);
-			for (int c = 0; c < chunk_info.chunks_loaded; c++)
-			{
-				if (chunks[c].update_structures)
-				{
-					for (int x = 0; x < gen_amount; x++)
-					{
-						if (togen[x * 2 + 0] == chunks[c].coordinate[0] &&
-							togen[x * 2 + 1] == chunks[c].coordinate[2] &&
-							chunks[c].coordinate[1] == 0)
-						{
-							tree_gen(&chunks[c]);
-							break ;
-						}
-					}
-					chunks[c].update_structures = 0;
-					break ; // breaking after one structure generated;
-				}
-				chunks[c].update_structures = 0;
-			}
-		}
-
 		thread_manager_check_threadiness(&tm);
 
+		t_chunk	*neighbors[DIR_AMOUNT];
+		int		neighbors_found;
 		for (int ent = 0; ent < chunk_info.chunks_loaded; ++ent)
 		{
-			if (chunks[ent].needs_to_update)
+			neighbors_found = 0;
+
+			// We only need to update the chunks if a chunk has been regenerated
+			if (chunks[ent].needs_to_update || (chunks[ent].update_structures && tobegen != 0))
+			{
+				// Get all neighbors for this chunk;
+				for (int dir = DIR_NORTH, i = 0; dir < DIR_AMOUNT; ++dir, ++i)
+				{
+					neighbors[i] = get_adjacent_chunk(&chunks[ent], chunk_info.chunks, (float *)g_card_dir[dir]);
+					++neighbors_found;
+				}
+			}
+
+			// Only generate trees if we have all the surrdounding neighbors,
+			// 	so that we wont have trees cut in half;
+			if (chunk_info.generate_structures && neighbors_found >= 10 &&
+				chunks[ent].update_structures)
+			{
+				t_chunk *highest = get_highest_chunk(&chunk_info, chunks[ent].coordinate[0], chunks[ent].coordinate[2]);
+				if (highest == &chunks[ent])
+				{
+					tree_gen(&chunks[ent]);
+					chunks[ent].update_structures = 0;
+					chunks[ent].needs_to_update = 1;
+				}
+			}
+
+			if (chunks[ent].needs_to_update && neighbors_found >= 6)
 			{
 				update_chunk_visible_blocks(&chunks[ent]);
 				update_chunk_mesh_v2(&chunks[ent].meshes);
-
 				chunk_aabb_update(&chunks[ent]);
 				chunks[ent].needs_to_update = 0;
 
 				// Update all 6 neighbors of the chunk;
-				t_chunk *neighbor;
-				for (int i = DIR_NORTH; i < DIR_AMOUNT; i++)
+				for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
 				{
-					neighbor = get_adjacent_chunk(&chunks[ent], chunk_info.chunks, (float *)g_card_dir[i]);
-					if (neighbor)
+					if (neighbors[i])
 					{
-						update_chunk_visible_blocks(neighbor);
-						update_chunk_mesh_v2(&neighbor->meshes);
-
-						chunk_aabb_update(neighbor);
+						update_chunk_visible_blocks(neighbors[i]);
+						update_chunk_mesh_v2(&neighbors[i]->meshes);
+						chunk_aabb_update(neighbors[i]);
 					}
 				}
 			}
@@ -749,6 +741,8 @@ int	main(void)
 /////////////////
 		// END Chunk things
 /////////////////
+		glDisable(GL_BLEND);
+		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
 		render_crosshair();
 
