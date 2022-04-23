@@ -394,7 +394,7 @@ t_chunk		*get_highest_chunk(t_chunk_info *info, int x, int z);
 float		get_highest_point(t_chunk_info *info, float x, float z);
 float		get_highest_point_of_type(t_chunk_info *info, float x, float z, int type);
 int			get_chunks_to_reload(int *chunks, int *start_coord, t_chunk_info *info, int *player_chunk_v3);
-int			get_chunks_to_reload_v2(int *these, int (*into_these)[3], int *start_coord, t_chunk_info *info, int *player_chunk_v3);
+int			get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, t_chunk_info *info, int *player_chunk_v3, int max_get);
 int			get_surrounding_coords(int *res, int x, int z, int r);
 int			get_block_type_at_world_pos(t_chunk_info *info, float *world_pos);
 
@@ -403,13 +403,14 @@ unsigned long int	get_chunk_hash_key(int *coords);
 typedef struct s_regen_args
 {
 	int				*reload_these_chunks;
-	int				(*into_these_coords)[3];
+	int				*into_these_coords; // [2]
 	t_chunk_info	*chunk_info;
 }	t_regen_args;
 
 void		*regen_thread_func(void *args);
 int			regenerate_chunks(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v2);
-int			regenerate_chunks_thread(int *these, int (*coord)[3], t_chunk_info *info);
+int			regenerate_chunks_v2(int *these, int coord[2], t_chunk_info *info);
+int			regenerate_chunks_thread(int *these, int *coord, t_chunk_info *info);
 void		regenerate_chunks_v3(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3, t_thread_manager *tm);
 
 void		init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount);

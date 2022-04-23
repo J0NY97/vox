@@ -55,6 +55,7 @@ int	chunk_gen_v2(t_chunk *chunk, int *noise_map)
 			{
 				float	block_world_y = chunk->world_coordinate[1] + y;
 				float	perper = 100.0f;
+				/* Cave Gen
 				if (whatchumacallit > 0)
 				{
 					float	pers = 0.5f;
@@ -64,6 +65,7 @@ int	chunk_gen_v2(t_chunk *chunk, int *noise_map)
 						octave_perlin(block_world_x * freq, block_world_y * freq, block_world_z * freq, 4, pers) +
 						octave_perlin(block_world_x * freq, block_world_y * freq, block_world_z * freq, 8, pers);
 				}
+				*/
 				if (perper > 0.9f && y <= whatchumacallit)
 				{
 					if (y <= whatchumacallit - 1) // if we have 3 dirt block on top we make the rest stone blocks;
@@ -507,7 +509,7 @@ int	get_chunks_to_reload(int *chunks, int *start_coord, t_chunk_info *info, int 
 /*
  * Figures out which chunks will be loaded into which chunks;
 */
-int	get_chunks_to_reload_v2(int *these, int (*into_these)[3], int *start_coord, t_chunk_info *info, int *player_chunk_v3)
+int	get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, t_chunk_info *info, int *player_chunk_v3, int max_get)
 {
 	int	reload_amount = 0;
 	int	found;
@@ -539,6 +541,8 @@ int	get_chunks_to_reload_v2(int *these, int (*into_these)[3], int *start_coord, 
 			these[reload_amount] = i;
 			++reload_amount;
 		}
+		if (reload_amount >= max_get * 16)
+			break;
 	}
 
 	int	coord_amount = 0;
@@ -546,28 +550,27 @@ int	get_chunks_to_reload_v2(int *these, int (*into_these)[3], int *start_coord, 
 	{
 		for (int z = start_coord[2], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
 		{
-			for (int y = 0; y < 16; y++)
+			found = 0;
+			for (int i = 0; i < info->chunks_loaded; i++)
 			{
-				found = 0;
-				for (int i = 0; i < info->chunks_loaded; i++)
+				if (info->chunks[i].coordinate[0] == x &&
+					info->chunks[i].coordinate[2] == z)
 				{
-					if (info->chunks[i].coordinate[0] == x &&
-						info->chunks[i].coordinate[1] == y &&
-						info->chunks[i].coordinate[2] == z)
-					{
-						found = 1;
-						break;
-					}
-				}
-				if (!found)
-				{
-					into_these[coord_amount][0] = x;
-					into_these[coord_amount][1] = y;
-					into_these[coord_amount][2] = z;
-					coord_amount++;
+					found = 1;
+					break;
 				}
 			}
+			if (!found)
+			{	
+				into_these[coord_amount][0] = x;
+				into_these[coord_amount][1] = z;
+				coord_amount++;
+			}
+			if (coord_amount >= max_get)
+				break;
 		}
+			if (coord_amount >= max_get)
+				break;
 	}
 	return (reload_amount);
 }
@@ -634,99 +637,26 @@ int	regenerate_chunks(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3)
 	return (reload_amount - nth_chunk);
 }
 
-void	*regen_thread_func(void *args)
-{
-	t_regen_args	*arg;
-
-	arg = args;
-	regenerate_chunks_thread(arg->reload_these_chunks, arg->into_these_coords, arg->chunk_info);
-}
-
-/*
- * Generating a column of chunks at a time;
- * All values in 'coord' should have coord[0] and coord[2] as the same;
-*/
-int	regenerate_chunks_thread(int *these, int (*coord)[3], t_chunk_info *info)
+int	regenerate_chunks_v2(int *these, int coord[2], t_chunk_info *info)
 {
 	int			nth_chunk = 0;
 	int			noise_map[256];
 
-	create_noise_map(noise_map, 16, 16, coord[0][0], coord[0][2]);
+	create_noise_map(noise_map, 16, 16, coord[0], coord[1]);
 	for (int y = 0; y < 16; y++)
 	{
 		if (nth_chunk >= 16 || nth_chunk >= info->chunks_loaded) 
 			break ;
 		int index = these[nth_chunk];
 		info->chunks[index].args.chunk = &info->chunks[index];
-		info->chunks[index].args.coords[0] = coord[nth_chunk][0];
+		info->chunks[index].args.coords[0] = coord[0];
 		info->chunks[index].args.coords[1] = y;
-		info->chunks[index].args.coords[2] = coord[nth_chunk][2];
+		info->chunks[index].args.coords[2] = coord[1];
 		info->chunks[index].args.noise_map = noise_map;
 		update_chunk_threaded_v2(&info->chunks[index].args);
 		nth_chunk++;
 	}
 	return (nth_chunk);
-}
-
-void	regenerate_chunks_v3(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3, t_thread_manager *tm)
-{
-	int	reload_these_chunks[info->chunks_loaded];
-	int	start_coord[3];
-	int found = 0;
-	int reload_amount;
-	
-	reload_amount = get_chunks_to_reload(reload_these_chunks, start_coord, info, player_chunk_v3);
-	if (reload_amount <= 0)
-		return ;
-	if (tm->thread_amount + 63 >= tm->max_thread_amount)
-	{
-	//	LG_WARN("Max threads reached");
-		return ;
-	}
-	
-	// Go through all the coordinates that will be loaded next time, and
-	//  check if any of the loaded chunks have those coordinates, if not
-	//	we take one of the chunks that are not going to be loaded next time
-	// 	and update the new chunk into that memory;
-	int	nth_chunk = 0;
-
-	for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
-	{
-		for (int z = start_coord[2], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
-		{
-			found = 0;
-			for (int i = 0; i < info->chunks_loaded; i++)
-			{
-				if (chunks[i].coordinate[0] == x && chunks[i].coordinate[2] == z)
-				{
-					found = 1;
-					break ;
-				}
-			}
-			if (!found)
-			{
-				for (int y = start_coord[1], y_amount = 0; y_amount < info->y_chunk_amount; y++, y_amount++)
-				{
-					if (nth_chunk >= 64)
-						break ;
-					int index = reload_these_chunks[nth_chunk];
-					chunks[index].args.chunk = &chunks[index];
-					chunks[index].args.coords[0] = x;
-					chunks[index].args.coords[1] = y;
-					chunks[index].args.coords[2] = z;
-					if (!thread_manager_new_thread(tm, update_chunk_threaded_v2, &chunks[index].args))
-						LG_WARN("Couldnt create new thread (nth : %d)", nth_chunk);
-					nth_chunk++;
-					if (nth_chunk >= info->chunks_loaded) 
-						break ;
-				}
-			}
-			if (nth_chunk >= info->chunks_loaded) 
-				break ;
-		}
-		if (nth_chunk >= info->chunks_loaded) 
-			break ;
-	}
 }
 
 void	show_chunk_borders(t_chunk *chunk, t_camera *camera, float *col)
