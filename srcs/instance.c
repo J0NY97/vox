@@ -35,75 +35,6 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, int nth)
 		LG_ERROR("(%d)", error);
 }
 
-int	chunk_gen(t_chunk *chunk)
-{
-	int		start_y = 64;
-	float	freq = 0.005f;
-	float	pers = 0.5f;
-	int		i = 0;
-	float	seed = (chunk->info->seed % 512) * freq;
-
-	chunk->has_blocks = 0;
-
-	for (int x = 0; x < chunk->info->width; x++)
-	{
-		float	block_world_x = fabs(chunk->world_coordinate[0] + x);
-		float	to_use_x = block_world_x * freq;
-		for (int z = 0; z < chunk->info->breadth; z++)
-		{
-			float	block_world_z = fabs(chunk->world_coordinate[2] + z);
-			float	to_use_z = block_world_z * freq;
-			float	perper =
-				octave_perlin(to_use_x, seed, to_use_z, 1, pers) +
-				octave_perlin(to_use_x, seed, to_use_z, 2, pers) +
-				octave_perlin(to_use_x, seed, to_use_z, 4, pers) +
-				octave_perlin(to_use_x, seed, to_use_z, 8, pers);
-			float	e = pers * 3;
-			int		wanted_y = (start_y * (perper / e));
-			int		whatchumacallit = wanted_y - (chunk->world_coordinate[1]);
-
-			/*
-			int		whatchumacallit = 69 - (chunk->world_coordinate[1]);
-			*/
-
-			for (int y = 0; y < chunk->info->height; y++)
-			{
-				float	block_world_y = chunk->world_coordinate[1] + y;
-				if (y <= whatchumacallit)
-				{
-					if (y <= whatchumacallit - 1) // if we have 3 dirt block on top we make the rest stone blocks;
-					{
-						chunk->blocks[i].type = BLOCK_STONE;
-					}
-					else
-					{
-						if ((block_world_y <= 67 && block_world_y >= 65) ||
-							block_world_y + 1 <= 65)
-							chunk->blocks[i].type = BLOCK_SAND;
-						else if (block_world_y < 4)
-							chunk->blocks[i].type = BLOCK_BEDROCK;
-						else
-							chunk->blocks[i].type = BLOCK_DIRT;
-					}
-					chunk->has_blocks = 1;
-				}
-				else
-				{
-					if (block_world_y <= 65)
-					{
-						chunk->blocks[i].type = FLUID_WATER;
-						chunk->has_blocks = 1;
-					}
-					else
-						chunk->blocks[i].type = GAS_AIR;
-				}
-				i++;
-			}
-		}
-	}
-	return (i);
-}
-
 /*
  * Create chunk from noise map;
 */
@@ -114,19 +45,29 @@ int	chunk_gen_v2(t_chunk *chunk, int *noise_map)
 	chunk->has_blocks = 0;
 	for (int x = 0; x < chunk->info->width; x++)
 	{
+		float	block_world_x = fabs(chunk->world_coordinate[0] + x);
 		for (int z = 0; z < chunk->info->breadth; z++)
 		{
+			float	block_world_z = fabs(chunk->world_coordinate[2] + z);
 			int		whatchumacallit = noise_map[x * 16 + z] - (int)chunk->world_coordinate[1];
 
 			for (int y = 0; y < chunk->info->height; y++)
 			{
 				float	block_world_y = chunk->world_coordinate[1] + y;
-				if (y <= whatchumacallit)
+				float	perper = 100.0f;
+				if (whatchumacallit > 0)
+				{
+					float	pers = 0.5f;
+					float	freq = 0.040f;
+					perper = octave_perlin(block_world_x * freq, block_world_y * freq, block_world_z * freq, 1, pers) +
+						octave_perlin(block_world_x * freq, block_world_y * freq, block_world_z * freq, 2, pers)* +
+						octave_perlin(block_world_x * freq, block_world_y * freq, block_world_z * freq, 4, pers) +
+						octave_perlin(block_world_x * freq, block_world_y * freq, block_world_z * freq, 8, pers);
+				}
+				if (perper > 0.9f && y <= whatchumacallit)
 				{
 					if (y <= whatchumacallit - 1) // if we have 3 dirt block on top we make the rest stone blocks;
-					{
 						chunk->blocks[i].type = BLOCK_STONE;
-					}
 					else
 					{
 						if ((block_world_y <= 67 && block_world_y >= 65) ||
@@ -457,45 +398,6 @@ unsigned long int	get_chunk_hash_key(int *coords)
 	return (hash);
 }
 
-void	update_chunk(t_chunk *chunk, int *coord)
-{
-	// Get old data;
-	/*
-	unsigned long int	old_key = get_chunk_hash_key(chunk->coordinate);
-	t_hash_item *old_item = hash_item_search(chunk->info->hash_table, chunk->info->hash_table_size, old_key);
-	int	old_data = old_item->data;
-	hash_item_delete(chunk->info->hash_table, chunk->info->hash_table_size, old_key);
-	*/
-
-//	ft_printf("old coord %d %d %d\n", chunk->coordinate[0], chunk->coordinate[1], chunk->coordinate[2]);
-
-	for (int i = 0; i < 3; i++)
-		chunk->coordinate[i] = coord[i];
-	vec3_new(chunk->world_coordinate,
-		chunk->coordinate[0] * chunk->info->chunk_size[0],
-		chunk->coordinate[1] * chunk->info->chunk_size[1],
-		chunk->coordinate[2] * chunk->info->chunk_size[2]);
-
-	// insert new data;
-	/*
-	unsigned long int	new_key = get_chunk_hash_key(chunk->coordinate);	
-	if (!hash_item_insert(chunk->info->hash_table, chunk->info->hash_table_size, new_key, old_data))
-		LG_WARN("Chunk data couldnt be inserted.");
-		*/
-	
-/*
-	ft_printf("new coord %d %d %d\n", chunk->coordinate[0], chunk->coordinate[1], chunk->coordinate[2]);
-	ft_printf("We replaced key %d with %d, with %d data\n", old_key, new_key, old_data);
-	exit(0);
-*/
-
-	// Generate Chunks	
-	chunk->block_amount = chunk_gen(chunk); // should always return max amount of blocks in a chunk;
-
-	chunk->update_structures = 1;
-	chunk->needs_to_update = 1;
-}
-
 void	update_chunk_v2(t_chunk *chunk, int *coord, int *noise_map)
 {
 	// Get old data;
@@ -522,26 +424,11 @@ void	update_chunk_v2(t_chunk *chunk, int *coord, int *noise_map)
 		LG_WARN("Chunk data couldnt be inserted.");
 		*/
 	
-/*
-	ft_printf("new coord %d %d %d\n", chunk->coordinate[0], chunk->coordinate[1], chunk->coordinate[2]);
-	ft_printf("We replaced key %d with %d, with %d data\n", old_key, new_key, old_data);
-	exit(0);
-*/
-
 	// Generate Chunks	
 	chunk->block_amount = chunk_gen_v2(chunk, noise_map); // should always return max amount of blocks in a chunk;
 
 	chunk->update_structures = 1;
 	chunk->needs_to_update = 1;
-}
-
-void	*update_chunk_threaded(void *arg)
-{
-	t_chunk_args	*info = arg;
-
-	update_chunk(info->chunk, info->coords);
-	info->chunk->args.being_threaded = 0;
-	return (NULL);
 }
 
 void	*update_chunk_threaded_v2(void *arg)
@@ -621,60 +508,6 @@ int	get_chunks_to_reload(int *chunks, int *start_coord, t_chunk_info *info, int 
  * Returns amount of chunks that still need to get generated;
 */
 int	regenerate_chunks(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3)
-{
-	int	reload_these_chunks[info->chunks_loaded];
-	int	start_coord[3];
-	int found = 0;
-	int reload_amount;
-	
-	reload_amount = get_chunks_to_reload(reload_these_chunks, start_coord, info, player_chunk_v3);
-	if (reload_amount <= 0)
-		return (reload_amount);
-	
-	// Go through all the coordinates that will be loaded next time, and
-	//  check if any of the loaded chunks have those coordinates, if not
-	//	we take one of the chunks that are not going to be loaded next time
-	// 	and update the new chunk into that memory;
-	int	nth_chunk = 0;
-
-	for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
-	{
-		for (int z = start_coord[2], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
-		{
-			found = 0;
-			for (int i = 0; i < info->chunks_loaded; i++)
-			{
-				if (chunks[i].coordinate[0] == x && chunks[i].coordinate[2] == z)
-				{
-					found = 1;
-					break ;
-				}
-			}
-			if (!found)
-			{
-				for (int y = start_coord[1], y_amount = 0; y_amount < info->y_chunk_amount; y++, y_amount++)
-				{
-					if (nth_chunk >= info->chunks_loaded || nth_chunk >= 16) 
-						break ;
-					int index = reload_these_chunks[nth_chunk];
-					chunks[index].args.chunk = &chunks[index];
-					chunks[index].args.coords[0] = x;
-					chunks[index].args.coords[1] = y;
-					chunks[index].args.coords[2] = z;
-					update_chunk_threaded(&chunks[index].args);
-					nth_chunk++;
-				}
-			}
-			if (nth_chunk >= info->chunks_loaded || nth_chunk >= 16) 
-				break ;
-		}
-		if (nth_chunk >= info->chunks_loaded || nth_chunk >= 16) 
-			break ;
-	}
-	return (reload_amount - nth_chunk);
-}
-
-int	regenerate_chunks_v576(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3)
 {
 	int	reload_these_chunks[info->chunks_loaded];
 	int	start_coord[3];
@@ -779,7 +612,7 @@ void	regenerate_chunks_v3(t_chunk *chunks, t_chunk_info *info, int *player_chunk
 					chunks[index].args.coords[0] = x;
 					chunks[index].args.coords[1] = y;
 					chunks[index].args.coords[2] = z;
-					if (!thread_manager_new_thread(tm, update_chunk_threaded, &chunks[index].args))
+					if (!thread_manager_new_thread(tm, update_chunk_threaded_v2, &chunks[index].args))
 						LG_WARN("Couldnt create new thread (nth : %d)", nth_chunk);
 					nth_chunk++;
 					if (nth_chunk >= info->chunks_loaded) 

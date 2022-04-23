@@ -401,7 +401,6 @@ unsigned long int	get_chunk_hash_key(int *coords);
 
 int			regenerate_chunks(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v2);
 void		regenerate_chunks_v3(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3, t_thread_manager *tm);
-int			regenerate_chunks_v576(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3);
 
 void		init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount);
 void		reset_chunk_mesh_v2(t_chunk_mesh_v2 *mesh);
