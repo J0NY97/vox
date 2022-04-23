@@ -513,20 +513,25 @@ int	main(void)
 			int	start_coord[3];
 	
 			tobegen = get_chunks_to_reload_v2(reload_these_chunks, into_these_coords, start_coord, &chunk_info, player_chunk);
-			ft_printf("reload_these : [%d]\n", tobegen);
-			for (int i = 0; i < tobegen; i++)
-				ft_printf("%d ", reload_these_chunks[i]);
 			if (tobegen > 0)
 			{
-				int			max_threads = 4;
-				pthread_t	threads[max_threads][16];
+				int			max_threads = 16;
+				int			threads_created = 0;
+				pthread_t	threads[max_threads];
+				t_regen_args	args[max_threads];
 				for (int i = 0; i < max_threads; i++)
 				{
 					int n = i * 16;
 					if (n >= tobegen)
 						break;
-					regenerate_chunks_thread(reload_these_chunks + n, into_these_coords + n, chunks, &chunk_info);	
+					args[i].reload_these_chunks = reload_these_chunks + n;
+					args[i].into_these_coords = into_these_coords + n;
+					args[i].chunk_info = &chunk_info;
+					pthread_create(&threads[i], NULL, regen_thread_func, &args[i]);
+					++threads_created;
 				}
+				for (int i = 0; i < threads_created; i++)
+					pthread_join(threads[i], NULL);
 			}
 //			tobegen = regenerate_chunks(chunks, &chunk_info, player_chunk);	
 		}

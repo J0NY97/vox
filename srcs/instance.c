@@ -507,7 +507,7 @@ int	get_chunks_to_reload(int *chunks, int *start_coord, t_chunk_info *info, int 
 /*
  * Figures out which chunks will be loaded into which chunks;
 */
-int	get_chunks_to_reload_v2(int *these, int **into_these, int *start_coord, t_chunk_info *info, int *player_chunk_v3)
+int	get_chunks_to_reload_v2(int *these, int (*into_these)[3], int *start_coord, t_chunk_info *info, int *player_chunk_v3)
 {
 	int	reload_amount = 0;
 	int	found;
@@ -561,11 +561,9 @@ int	get_chunks_to_reload_v2(int *these, int **into_these, int *start_coord, t_ch
 				}
 				if (!found)
 				{
-					ft_printf("Coords %d %d %d, not found in the loaded chunks.", x, y, z);
 					into_these[coord_amount][0] = x;
 					into_these[coord_amount][1] = y;
 					into_these[coord_amount][2] = z;
-					ft_printf("Added to the thingy");
 					coord_amount++;
 				}
 			}
@@ -636,23 +634,35 @@ int	regenerate_chunks(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3)
 	return (reload_amount - nth_chunk);
 }
 
-int	regenerate_chunks_thread(int *these, int *coord, t_chunk *chunks, t_chunk_info *info)
+void	*regen_thread_func(void *args)
+{
+	t_regen_args	*arg;
+
+	arg = args;
+	regenerate_chunks_thread(arg->reload_these_chunks, arg->into_these_coords, arg->chunk_info);
+}
+
+/*
+ * Generating a column of chunks at a time;
+ * All values in 'coord' should have coord[0] and coord[2] as the same;
+*/
+int	regenerate_chunks_thread(int *these, int (*coord)[3], t_chunk_info *info)
 {
 	int			nth_chunk = 0;
 	int			noise_map[256];
 
-	create_noise_map(noise_map, 16, 16, coord[0], coord[2]);
-	for (int y = coord[1]; y < 16; y++)
+	create_noise_map(noise_map, 16, 16, coord[0][0], coord[0][2]);
+	for (int y = 0; y < 16; y++)
 	{
 		if (nth_chunk >= 16 || nth_chunk >= info->chunks_loaded) 
 			break ;
 		int index = these[nth_chunk];
-		chunks[index].args.chunk = &chunks[index];
-		chunks[index].args.coords[0] = coord[0];
-		chunks[index].args.coords[1] = coord[1];
-		chunks[index].args.coords[2] = coord[2];
-		chunks[index].args.noise_map = noise_map;
-		update_chunk_threaded_v2(&chunks[index].args);
+		info->chunks[index].args.chunk = &info->chunks[index];
+		info->chunks[index].args.coords[0] = coord[nth_chunk][0];
+		info->chunks[index].args.coords[1] = y;
+		info->chunks[index].args.coords[2] = coord[nth_chunk][2];
+		info->chunks[index].args.noise_map = noise_map;
+		update_chunk_threaded_v2(&info->chunks[index].args);
 		nth_chunk++;
 	}
 	return (nth_chunk);
