@@ -73,7 +73,7 @@ int	chunk_gen_v2(t_chunk *chunk, int *noise_map)
 						if ((block_world_y <= 67 && block_world_y >= 65) ||
 							block_world_y + 1 <= 65)
 							chunk->blocks[i].type = BLOCK_SAND;
-						else if (block_world_y < 4)
+						else if (block_world_y < 2)
 							chunk->blocks[i].type = BLOCK_BEDROCK;
 						else
 							chunk->blocks[i].type = BLOCK_DIRT;
@@ -735,11 +735,11 @@ void	init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount)
 	if (error)
 		LG_ERROR("BEFORE (%d)", error);
 
-	mesh->vertices_allocated = 15312;
+	mesh->vertices_allocated = 17964;
 	mesh->vertices = malloc(sizeof(float) * mesh->vertices_allocated);
 	mesh->vertices_amount = 0;
 
-	mesh->texture_ids_allocated = 5104; 
+	mesh->texture_ids_allocated = 5988; 
 	mesh->texture_ids = malloc(sizeof(int) * mesh->texture_ids_allocated);
 	mesh->texture_id_amount = 0;
 
@@ -750,7 +750,7 @@ void	init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount)
 	mesh->index_amount = 0;
 	for (int i = 0; i < mesh->amount; i++)
 	{
-		mesh->indices_allocated[i] = 7320;
+		mesh->indices_allocated[i] = 8466;
 		mesh->indices[i] = malloc(sizeof(unsigned int) * mesh->indices_allocated[i]);
 		mesh->indices_amount[i] = 0;
 	}
