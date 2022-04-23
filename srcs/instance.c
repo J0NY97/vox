@@ -365,8 +365,8 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 
 			flowing_water_verts(verts, face, &blocks[i], block_world, chunk->info);
 
-			add_to_chunk_mesh_v2(&chunk->meshes, LIQUID_MESH, local_pos, verts, g_fluid_data[blocks[i].type - FLUID_FIRST - 1].texture, (int)g_face_light[face]);
-			++chunk->blocks_liquid_amount;
+			add_to_chunk_mesh_v2(&chunk->meshes, FLUID_MESH, local_pos, verts, g_fluid_data[blocks[i].type - FLUID_FIRST - 1].texture, (int)g_face_light[face]);
+			++chunk->blocks_fluid_amount;
 		}
 		else if (is_solid(&blocks[i]))
 		{
@@ -397,7 +397,7 @@ void	get_blocks_visible(t_chunk *chunk)
 
 	chunk->blocks_solid_amount = 0;
 	chunk->blocks_flora_amount = 0;
-	chunk->blocks_liquid_amount = 0;
+	chunk->blocks_fluid_amount = 0;
 	chunk->blocks_solid_alpha_amount = 0;
 
 	if (!chunk->has_blocks)
@@ -1003,6 +1003,9 @@ void	render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinat
 		LG_ERROR("(%d)", error);
 }
 
+/*
+ * Sends the mesh info to the GPU;
+*/
 void	update_chunk_mesh_v2(t_chunk_mesh_v2 *mesh)
 {
 	int error;

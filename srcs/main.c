@@ -193,7 +193,7 @@ int	main(void)
 		chunk_info.block_collision_enabled = 0;
 		chunk_info.player_collision_enabled = 0;
 		chunk_info.fancy_graphics = 0;
-		chunk_info.generate_structures = 1;
+		chunk_info.generate_structures = 0;
 
 		// Creation of hashtable
 //		chunk_info.hash_table_size = (int)(chunk_info.chunks_loaded * 1.3f) + 1;
@@ -523,7 +523,7 @@ int	main(void)
 
 			// We only need to update the chunks if a chunk has been regenerated
 			if ((chunks[ent].needs_to_update ||
-				(chunk_info.generate_structures && chunks[ent].update_structures && tobegen != 0)))
+				(chunk_info.generate_structures && chunks[ent].update_structures)))
 			{
 				// Get all neighbors for this chunk;
 				for (int dir = DIR_NORTH, i = 0; dir < DIR_AMOUNT; ++dir, ++i)
@@ -535,7 +535,7 @@ int	main(void)
 
 			// Only generate trees if we have all the surrdounding neighbors,
 			// 	so that we wont have trees cut in half;
-			if (0 && chunk_info.generate_structures && neighbors_found >= 10 &&
+			if (chunk_info.generate_structures && neighbors_found >= 10 &&
 				chunks[ent].update_structures)
 			{
 				t_chunk *highest = get_highest_chunk(&chunk_info, chunks[ent].coordinate[0], chunks[ent].coordinate[2]);
@@ -543,11 +543,9 @@ int	main(void)
 				{
 					tree_gen(&chunks[ent]);
 					chunks[ent].needs_to_update = 1;
-					chunks[ent].update_structures = 0;
 				}
+				chunks[ent].update_structures = 0;
 			}
-
-			chunks[ent].update_structures = 0;
 
 			if (chunks[ent].needs_to_update)
 			{
@@ -737,8 +735,8 @@ int	main(void)
 		{
 			if (chunks[nth_chunk].render)
 			{
-				if (chunks[nth_chunk].blocks_liquid_amount > 0)
-					render_chunk_mesh_v2(&chunks[nth_chunk].meshes, LIQUID_MESH, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
+				if (chunks[nth_chunk].blocks_fluid_amount > 0)
+					render_chunk_mesh_v2(&chunks[nth_chunk].meshes, FLUID_MESH, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
 			}
 		}
 

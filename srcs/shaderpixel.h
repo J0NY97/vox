@@ -302,7 +302,7 @@ typedef struct s_chunk_args
 enum e_mesh_types
 {
 	BLOCK_MESH = 0,		// ex. dirt
-	LIQUID_MESH,		// ex. water
+	FLUID_MESH,			// ex. water
 	FLORA_MESH,			// ex. grass
 	BLOCK_ALPHA_MESH,	// ex. cactus
 	MESH_TYPE_AMOUNT
@@ -351,7 +351,7 @@ struct	s_chunk
 	int				update_structures; // the terrain needs to be generated before the structures, thats why we have this; 
 
 	int				blocks_solid_amount; // amount of blocks in this mesh;
-	int				blocks_liquid_amount; // amount of blocks in this mesh;
+	int				blocks_fluid_amount; // amount of blocks in this mesh;
 	int				blocks_flora_amount; // amount of blocks in this mesh;
 	int				blocks_solid_alpha_amount; // amount of blocks in this mesh;
 
