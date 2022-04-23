@@ -275,24 +275,31 @@ t_block	*get_block(t_chunk_info *info, float *coords)
 	return (NULL);
 }
 
+/*
+ * 'chunk' : the chunk of the block we are currently checking;
+ * 'i' : index of the block in 'chunk->blocks';
+ * 'local_pos' : local coordinates of the block in the chunk (x/y/z == 0 - 15);
+ * 'face' : which cardinal direction the block we want to check is in;
+ * 'neighbor' : the neighbor in the same cardinal direction (we give this whether or not needed);
+*/
 void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_chunk *neighbor)
 {
 	t_block	*tmp_block;
 	t_block	*blocks = chunk->blocks;
-	float	coords[3];
+	int		coords[3];
 	float	block_world[3];
 
-	vec3_new(coords, local_pos[0], local_pos[1], local_pos[2]);
-	vec3_add(coords, coords, (float *)g_card_dir[face]);
-
-	block_world_pos(block_world, chunk->world_coordinate, local_pos);
+	coords[0] = local_pos[0] + g_card_dir[face][0];
+	coords[1] = local_pos[1] + g_card_dir[face][1];
+	coords[2] = local_pos[2] + g_card_dir[face][2];
 
 	tmp_block = NULL;
+	// Try to get from the same chunk first;
 	if (coords[0] >= 0 && coords[0] <= 15 &&
 		coords[1] >= 0 && coords[1] <= 15 &&
 		coords[2] >= 0 && coords[2] <= 15)
 		tmp_block = &blocks[get_block_index(chunk->info, coords[0], coords[1], coords[2])];
-	else if (neighbor)
+	else if (neighbor) // then check the neighbor; (the neighbor should already be the correct one)
 		tmp_block = &neighbor->blocks[get_block_index(chunk->info,
 			mod(coords[0], 16), mod(coords[1], 16), mod(coords[2], 16))];
 	else
@@ -302,10 +309,11 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 		if (is_fluid(&blocks[i]) &&
 			!(is_fluid(&blocks[i]) && is_fluid(tmp_block)))
 		{
-			// If both blocks are liquid, we dont add face to mesh;
+			// If both blocks are fluid, we dont add face to mesh;
 			float	verts[12];
 			int		type = -1;
 
+			block_world_pos(block_world, chunk->world_coordinate, local_pos);
 			flowing_water_verts(verts, face, &blocks[i], block_world, chunk->info);
 
 			add_to_chunk_mesh_v2(&chunk->meshes, FLUID_MESH, local_pos, verts, g_fluid_data[blocks[i].type - FLUID_FIRST - 1].texture, (int)g_face_light[face]);

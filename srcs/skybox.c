@@ -115,18 +115,10 @@ void	render_skybox(t_skybox *skybox, t_camera *camera)
 	glDepthFunc(GL_LESS);
 }
 
-t_skybox	*new_skybox(t_skybox *skybox)
+t_skybox	*new_skybox(t_skybox *skybox, char (*faces)[6])
 {
 	int	error = glGetError();
 
-	char	*faces[] = {
-		ROOT_PATH"skybox/land-3.bmp",
-		ROOT_PATH"skybox/land-1.bmp",
-		ROOT_PATH"skybox/land-5.bmp",
-		ROOT_PATH"skybox/land-0.bmp",
-		ROOT_PATH"skybox/land-2.bmp",
-		ROOT_PATH"skybox/land-4.bmp"
-	};
 	skybox->texture = load_cube_map(faces, 6);
 	new_shader(&skybox->shader, SHADER_PATH"skybox.vs", SHADER_PATH"skybox.fs");
 	skybox_vertices(skybox->vertices, &skybox->vertices_size);

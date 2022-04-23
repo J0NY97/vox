@@ -138,7 +138,7 @@ int	main(void)
 	new_fractal2d(&fractal);
 
 	t_skybox	skybox;
-	new_skybox(&skybox);
+	new_skybox(&skybox, g_mc_skybox);
 
 	t_obj		cube_obj;
 	obj_load(&cube_obj, MODEL_PATH"cube/cube.obj");
@@ -509,18 +509,13 @@ int	main(void)
 		if (regen_chunks)
 		{
 			int	max_get = 1;
-			int	reload_these_chunks[max_get * 16];
+			int	reload_these_chunks[max_get * 16];	// '* 16' because we regenerate one chunk column at a time;
 			int	into_these_coords[max_get][2];
 			int	start_coord[3];
 
 			tobegen = get_chunks_to_reload_v2(reload_these_chunks, into_these_coords, start_coord, &chunk_info, player_chunk, max_get);
-			for (int i = 0; i < tobegen; i++)
-			{
-				int n = i * 16;
-				if (n >= tobegen)
-					break;
-				regenerate_chunks_v2(reload_these_chunks + n, into_these_coords[i], &chunk_info);
-			}
+			for (int i = 0; i * 16 < tobegen; i++)
+				regenerate_chunks_v2(reload_these_chunks + (i * 16), into_these_coords[i], &chunk_info);
 
 
 //			tobegen = regenerate_chunks(chunks, &chunk_info, player_chunk);	

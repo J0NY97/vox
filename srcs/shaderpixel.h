@@ -184,8 +184,26 @@ typedef struct s_skybox
 	size_t		vertices_size;
 }	t_skybox;
 
+static const	char	*g_realistic_skybox[6] = {
+	ROOT_PATH"skybox/realistic/land-3.bmp",
+	ROOT_PATH"skybox/realistic/land-1.bmp",
+	ROOT_PATH"skybox/realistic/land-5.bmp",
+	ROOT_PATH"skybox/realistic/land-0.bmp",
+	ROOT_PATH"skybox/realistic/land-2.bmp",
+	ROOT_PATH"skybox/realistic/land-4.bmp"
+};
+
+static const	char	*g_mc_skybox[6] = {
+	ROOT_PATH"skybox/mc/side.bmp",
+	ROOT_PATH"skybox/mc/side.bmp",
+	ROOT_PATH"skybox/mc/bot.bmp",
+	ROOT_PATH"skybox/mc/top.bmp",
+	ROOT_PATH"skybox/mc/side.bmp",
+	ROOT_PATH"skybox/mc/side.bmp"
+};
+
 unsigned int	load_cube_map(char **paths, int paths_size);
-t_skybox		*new_skybox(t_skybox *skybox);
+t_skybox		*new_skybox(t_skybox *skybox, char (*faces)[6]);
 float			*skybox_vertices(float *res, size_t *size);
 void			render_skybox(t_skybox *skybox, t_camera *camera);
 
@@ -257,7 +275,7 @@ typedef struct s_chunk		t_chunk;
 typedef struct s_block
 {
 	int		type; // e_block_type;
-	void	*data;
+	char	light_lvl;
 }	t_block;
 
 typedef struct s_chunk_info
