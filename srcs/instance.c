@@ -505,6 +505,76 @@ int	get_chunks_to_reload(int *chunks, int *start_coord, t_chunk_info *info, int 
 }
 
 /*
+ * Figures out which chunks will be loaded into which chunks;
+*/
+int	get_chunks_to_reload_v2(int *these, int **into_these, int *start_coord, t_chunk_info *info, int *player_chunk_v3)
+{
+	int	reload_amount = 0;
+	int	found;
+
+	start_coord[0] = player_chunk_v3[0] - (info->render_distance / 2);
+	start_coord[1] = 0;
+	start_coord[2] = player_chunk_v3[2] - (info->render_distance / 2);
+
+	// Find chunk that shouldnt be loaded anymore;
+	int	coord_x = start_coord[0];
+	int	coord_z = start_coord[2];
+	for (int i = 0; i < info->chunks_loaded; i++)
+	{
+		found = 0;
+		for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
+		{
+			for (int z = start_coord[2], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
+			{
+				if (info->chunks[i].coordinate[0] == x && info->chunks[i].coordinate[2] == z)
+					found = 1;
+				if (found)
+					break;
+			}
+			if (found)
+				break ;
+		}
+		if (!found)
+		{
+			these[reload_amount] = i;
+			++reload_amount;
+		}
+	}
+
+	int	coord_amount = 0;
+	for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
+	{
+		for (int z = start_coord[2], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
+		{
+			for (int y = 0; y < 16; y++)
+			{
+				found = 0;
+				for (int i = 0; i < info->chunks_loaded; i++)
+				{
+					if (info->chunks[i].coordinate[0] == x &&
+						info->chunks[i].coordinate[1] == y &&
+						info->chunks[i].coordinate[2] == z)
+					{
+						found = 1;
+						break;
+					}
+				}
+				if (!found)
+				{
+					ft_printf("Coords %d %d %d, not found in the loaded chunks.", x, y, z);
+					into_these[coord_amount][0] = x;
+					into_these[coord_amount][1] = y;
+					into_these[coord_amount][2] = z;
+					ft_printf("Added to the thingy");
+					coord_amount++;
+				}
+			}
+		}
+	}
+	return (reload_amount);
+}
+
+/*
  * Returns amount of chunks that still need to get generated;
 */
 int	regenerate_chunks(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3)
@@ -564,6 +634,28 @@ int	regenerate_chunks(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3)
 			break ;
 	}
 	return (reload_amount - nth_chunk);
+}
+
+int	regenerate_chunks_thread(int *these, int *coord, t_chunk *chunks, t_chunk_info *info)
+{
+	int			nth_chunk = 0;
+	int			noise_map[256];
+
+	create_noise_map(noise_map, 16, 16, coord[0], coord[2]);
+	for (int y = coord[1]; y < 16; y++)
+	{
+		if (nth_chunk >= 16 || nth_chunk >= info->chunks_loaded) 
+			break ;
+		int index = these[nth_chunk];
+		chunks[index].args.chunk = &chunks[index];
+		chunks[index].args.coords[0] = coord[0];
+		chunks[index].args.coords[1] = coord[1];
+		chunks[index].args.coords[2] = coord[2];
+		chunks[index].args.noise_map = noise_map;
+		update_chunk_threaded_v2(&chunks[index].args);
+		nth_chunk++;
+	}
+	return (nth_chunk);
 }
 
 void	regenerate_chunks_v3(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3, t_thread_manager *tm)

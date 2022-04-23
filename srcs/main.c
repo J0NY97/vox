@@ -508,8 +508,27 @@ int	main(void)
 		int	tobegen = 0;
 		if (regen_chunks)
 		{
-		//	regenerate_chunks_v3(chunks, &chunk_info, player_chunk, &tm);
-			tobegen = regenerate_chunks(chunks, &chunk_info, player_chunk);	
+			int	reload_these_chunks[chunk_info.chunks_loaded];
+			int	into_these_coords[chunk_info.chunks_loaded][3];
+			int	start_coord[3];
+	
+			tobegen = get_chunks_to_reload_v2(reload_these_chunks, into_these_coords, start_coord, &chunk_info, player_chunk);
+			ft_printf("reload_these : [%d]\n", tobegen);
+			for (int i = 0; i < tobegen; i++)
+				ft_printf("%d ", reload_these_chunks[i]);
+			if (tobegen > 0)
+			{
+				int			max_threads = 4;
+				pthread_t	threads[max_threads][16];
+				for (int i = 0; i < max_threads; i++)
+				{
+					int n = i * 16;
+					if (n >= tobegen)
+						break;
+					regenerate_chunks_thread(reload_these_chunks + n, into_these_coords + n, chunks, &chunk_info);	
+				}
+			}
+//			tobegen = regenerate_chunks(chunks, &chunk_info, player_chunk);	
 		}
 
 		thread_manager_check_threadiness(&tm);
