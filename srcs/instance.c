@@ -66,7 +66,7 @@ int	chunk_gen_v2(t_chunk *chunk, int *noise_map)
 						octave_perlin(block_world_x * freq, block_world_y * freq, block_world_z * freq, 8, pers);
 				}
 				*/
-				chunk->blocks[i].light_lvl = 15;
+				chunk->blocks[i].light_lvl = 0;
 				if (perper > 0.9f && y <= whatchumacallit)
 				{
 					if (y <= whatchumacallit - 1) // if we have 3 dirt block on top we make the rest stone blocks;
@@ -1715,18 +1715,78 @@ void	tree_gen(t_chunk *chunk)
 */
 void	update_chunk_light_0(t_chunk *chunk)
 {
-	for (int y = 15; y >= 0; y--)
+	t_block			*up_block;
+	t_block			*block;
+	t_block_data	data;
+	int				found;
+
+	// Get highest block in the column, make it emit light;
+	for (int x = 0; x < 16; x++)
 	{
-		for (int x = 15; x >= 0; x--)
+		for (int z = 0; z < 16; z++)
 		{
-			for (int z = 15; z >= 0; z--)
+			found = 0;
+			for (int y = 16; y > 0; y--)
 			{
-				t_block *block = &chunk->blocks[get_block_index(chunk->info, x, y, z)];
-				t_block	*up_block = NULL;
-				if (y + 1 < 16)
-					up_block = &chunk->blocks[get_block_index(chunk->info, x, y + 1, z)];
-				if (up_block)
-					block->light_lvl = ft_clamp(up_block->light_lvl + get_block_data(up_block).light_emit, 0, 15);
+				block = &chunk->blocks[get_block_index(chunk->info, x, y - 1, z)];
+				if (!found && !is_gas(block))
+				{
+					found = 1;
+					block->is_emit = 1;
+				}
+				else
+					block->is_emit = 0;
+			}
+		}
+	}
+		
+	for (int y = 16; y >= 0; y--)
+	{
+		for (int x = 0; x < 16; x++)
+		{
+			for (int z = 0; z < 16; z++)
+			{
+				block = &chunk->blocks[get_block_index(chunk->info, x, y, z)];
+				if (block->is_emit)
+					block->light_lvl = 15;
+				else
+				{
+					if (y + 1 < 16)
+					{
+						up_block = &chunk->blocks[get_block_index(chunk->info, x, y + 1, z)];
+						block->light_lvl = ft_clamp(up_block->light_lvl + get_block_data(up_block).light_emit, 0, 15);
+					}
+					int brightest = block->light_lvl;
+					// left
+					if (x - 1 >= 0)
+					{
+						up_block = &chunk->blocks[get_block_index(chunk->info, x - 1, y, z)];
+						if (up_block->light_lvl > brightest)
+							brightest = up_block->light_lvl;
+					}
+					// right
+					if (x + 1 < 16)
+					{
+						up_block = &chunk->blocks[get_block_index(chunk->info, x + 1, y, z)];
+						if (up_block->light_lvl > brightest)
+							brightest = up_block->light_lvl;
+					}
+					// front
+					if (z - 1 >= 0)
+					{
+						up_block = &chunk->blocks[get_block_index(chunk->info, x, y, z - 1)];
+						if (up_block->light_lvl > brightest)
+							brightest = up_block->light_lvl;
+					}
+					// back
+					if (z + 1 < 16)
+					{
+						up_block = &chunk->blocks[get_block_index(chunk->info, x, y, z + 1)];
+						if (up_block->light_lvl > brightest)
+							brightest = up_block->light_lvl;
+					}
+					block->light_lvl = ft_clamp(brightest - 1, 0, 15);
+				}
 			}
 		}
 	}
@@ -1739,6 +1799,7 @@ void	block_print(t_block *block)
 	data = get_block_data(block);
 	ft_printf("\n[%s] :\n", data.name);
 	ft_printf("\tType : %d\n", block->type);
+	ft_printf("\tIs Emit : %d\n", block->is_emit);
 	ft_printf("\tLight Level : %d\n", block->light_lvl);
 	ft_printf("Data :\n");
 	ft_printf("\tLight Emit : %d\n", data.light_emit);
