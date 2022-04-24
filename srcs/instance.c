@@ -1376,7 +1376,8 @@ void	set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_type
 		block_local[0], block_local[1], block_local[2],
 		index);
 	chunk->needs_to_update = 1;
-	chunk->has_blocks = 1;
+	if (!is_type_gas(block_type))
+		chunk->has_blocks = 1;
 }
 
 void	set_block_at_world_pos_if_empty(t_chunk_info *info, float *world_pos, int block_type)
@@ -1729,13 +1730,12 @@ void	update_chunk_light_0(t_chunk *chunk)
 			for (int y = 16; y > 0; y--)
 			{
 				block = &chunk->blocks[get_block_index(chunk->info, x, y - 1, z)];
-				if (!found && !is_gas(block))
-				{
-					found = 1;
+				if (is_gas(block) && !found)
 					block->is_emit = 1;
-				}
 				else
 					block->is_emit = 0;
+				if (!is_gas(block))
+					found = 1;
 			}
 		}
 	}
@@ -1757,35 +1757,41 @@ void	update_chunk_light_0(t_chunk *chunk)
 						block->light_lvl = ft_clamp(up_block->light_lvl + get_block_data(up_block).light_emit, 0, 15);
 					}
 					int brightest = block->light_lvl;
+					int	adj_light = 15;
 					// left
 					if (x - 1 >= 0)
 					{
 						up_block = &chunk->blocks[get_block_index(chunk->info, x - 1, y, z)];
-						if (up_block->light_lvl > brightest)
-							brightest = up_block->light_lvl;
+						data = get_block_data(up_block);
+						adj_light = up_block->light_lvl + data.light_emit;
+						if (adj_light > brightest)
+							brightest = adj_light;
 					}
 					// right
 					if (x + 1 < 16)
 					{
 						up_block = &chunk->blocks[get_block_index(chunk->info, x + 1, y, z)];
-						if (up_block->light_lvl > brightest)
-							brightest = up_block->light_lvl;
+						adj_light = up_block->light_lvl + data.light_emit;
+						if (adj_light > brightest)
+							brightest = adj_light;
 					}
 					// front
 					if (z - 1 >= 0)
 					{
 						up_block = &chunk->blocks[get_block_index(chunk->info, x, y, z - 1)];
-						if (up_block->light_lvl > brightest)
-							brightest = up_block->light_lvl;
+						adj_light = up_block->light_lvl + data.light_emit;
+						if (adj_light > brightest)
+							brightest = adj_light;
 					}
 					// back
 					if (z + 1 < 16)
 					{
 						up_block = &chunk->blocks[get_block_index(chunk->info, x, y, z + 1)];
-						if (up_block->light_lvl > brightest)
-							brightest = up_block->light_lvl;
+						adj_light = up_block->light_lvl + data.light_emit;
+						if (adj_light > brightest)
+							brightest = adj_light;
 					}
-					block->light_lvl = ft_clamp(brightest - 1, 0, 15);
+					block->light_lvl = ft_clamp(brightest, 0, 15);
 				}
 			}
 		}

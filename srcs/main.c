@@ -720,15 +720,11 @@ int	main(void)
 				mouse[GLFW_MOUSE_BUTTON_MIDDLE].state == BUTTON_PRESS))
 			{
 				if (mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS)
-				{
-					hovered_block->type = GAS_AIR;
-					chunks[closest_index].needs_to_update = 1;
-				}
+					set_block_at_world_pos(&chunk_info, block_pos, GAS_AIR);
 				else if (mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS)
 				{
 					float	block_world[3];
 					vec3_add(block_world, block_pos, (float *)g_card_dir[face]);
-
 					// Check if block or item equipped;
 					LG_INFO("Place Item at %f %f %f", block_world[0], block_world[1], block_world[2]);
 					if (is_type_solid(player_info.equipped_block) ||
