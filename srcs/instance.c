@@ -1727,14 +1727,16 @@ void	update_chunk_light_0(t_chunk *chunk)
 		for (int z = 0; z < 16; z++)
 		{
 			found = 0;
-			for (int y = 16; y > 0; y--)
+			for (int y = 15; y >= 0; y--)
 			{
-				block = &chunk->blocks[get_block_index(chunk->info, x, y - 1, z)];
+				block = &chunk->blocks[get_block_index(chunk->info, x, y, z)];
+				block->is_emit = 0;
+				up_block = NULL;
+				if (y - 1 >= 0)
+					up_block = &chunk->blocks[get_block_index(chunk->info, x, y - 1, z)];
 				if (is_gas(block) && !found)
 					block->is_emit = 1;
-				else
-					block->is_emit = 0;
-				if (!is_gas(block))
+				if (up_block && !is_gas(up_block))
 					found = 1;
 			}
 		}
@@ -1749,6 +1751,14 @@ void	update_chunk_light_0(t_chunk *chunk)
 				block = &chunk->blocks[get_block_index(chunk->info, x, y, z)];
 				if (block->is_emit)
 					block->light_lvl = 15;
+				else if (0)
+				{
+					if (y + 1 < 16)
+					{
+						up_block = &chunk->blocks[get_block_index(chunk->info, x, y + 1, z)];
+						block->light_lvl = max(up_block->light_lvl - 1, 0);
+					}
+				}
 				else
 				{
 					if (y + 1 < 16)
