@@ -17,13 +17,13 @@ enum e_solid_type
 	BLOCK_SAND,
 	BLOCK_OAK_LOG,
 	BLOCK_OAK_PLANK,
-	BLOCK_OAK_LEAF,
 	BLOCK_LAST
 };
 
 enum e_solid_alpha_type
 {
 	BLOCK_ALPHA_FIRST = BLOCK_LAST,
+	BLOCK_ALPHA_OAK_LEAF,
 	BLOCK_ALPHA_CACTUS,
 	BLOCK_ALPHA_LAST
 };
@@ -114,15 +114,15 @@ static const t_block_data g_block_data[] = {
 		BLOCK_OAK_PLANK, 
 		"BLOCK_OAK_PLANK",
 		{280, 280, 280, 280, 280, 280}
-	},
-	{
-		BLOCK_OAK_LEAF, 
-		"BLOCK_OAK_LEAF",
-		{52, 52, 52, 52, 52, 52}
 	}
 };
 
 static const t_block_data	g_block_alpha_data[] = {
+	{
+		BLOCK_ALPHA_OAK_LEAF, 
+		"BLOCK_ALPHA_OAK_LEAF",
+		{52, 52, 52, 52, 52, 52}
+	},
 	{
 		BLOCK_ALPHA_CACTUS, 
 		"BLOCK_ALPHA_CACTUS",

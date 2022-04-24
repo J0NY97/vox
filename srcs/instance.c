@@ -304,7 +304,7 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 			mod(coords[0], 16), mod(coords[1], 16), mod(coords[2], 16))];
 	else
 		return ;
-	if (tmp_block && !is_solid(tmp_block))
+	if (tmp_block)
 	{
 		if (is_fluid(&blocks[i]) &&
 			!(is_fluid(&blocks[i]) && is_fluid(tmp_block)))
@@ -319,7 +319,7 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 			add_to_chunk_mesh_v2(&chunk->meshes, FLUID_MESH, local_pos, verts, g_fluid_data[blocks[i].type - FLUID_FIRST - 1].texture, (int)g_face_light[face]);
 			++chunk->blocks_fluid_amount;
 		}
-		else if (is_solid(&blocks[i]))
+		else if (is_solid(&blocks[i]) && !is_solid(tmp_block))
 		{
 			add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_MESH, local_pos, (float *)g_faces[face], g_block_data[blocks[i].type - BLOCK_FIRST - 1].face_texture[face], (int)g_face_light[face]);
 			++chunk->blocks_solid_amount;
@@ -1431,9 +1431,9 @@ void	create_tree(t_chunk_info *info, float *world_pos)
 	for (int i = 0; i < 3; i++)
 	{
 		set_block_at_world_pos_if_empty(info,
-			(float []){world_pos[0] - 1 + i, world_pos[1] + 6, world_pos[2]}, BLOCK_OAK_LEAF);
+			(float []){world_pos[0] - 1 + i, world_pos[1] + 6, world_pos[2]}, BLOCK_ALPHA_OAK_LEAF);
 		set_block_at_world_pos_if_empty(info,
-			(float []){world_pos[0], world_pos[1] + 6, world_pos[2] - 1 + i}, BLOCK_OAK_LEAF);
+			(float []){world_pos[0], world_pos[1] + 6, world_pos[2] - 1 + i}, BLOCK_ALPHA_OAK_LEAF);
 	}
 	// 2nd top leaves
 	for (int i = 0; i < 3; i++)
@@ -1444,7 +1444,7 @@ void	create_tree(t_chunk_info *info, float *world_pos)
 				continue ;
 			set_block_at_world_pos_if_empty(info,
 				(float []){world_pos[0] - 1 + i, world_pos[1] + 5, world_pos[2] - 1 + j},
-				BLOCK_OAK_LEAF);
+				BLOCK_ALPHA_OAK_LEAF);
 		}
 	}
 	// 3nd top leaves
@@ -1457,7 +1457,7 @@ void	create_tree(t_chunk_info *info, float *world_pos)
 				continue ;
 			set_block_at_world_pos_if_empty(info,
 				(float []){world_pos[0] - 2 + i, world_pos[1] + 4, world_pos[2] - 2 + j},
-				BLOCK_OAK_LEAF);
+				BLOCK_ALPHA_OAK_LEAF);
 		}
 	}
 	// 4nd top leaves
@@ -1469,7 +1469,7 @@ void	create_tree(t_chunk_info *info, float *world_pos)
 				continue ;
 			set_block_at_world_pos_if_empty(info,
 				(float []){world_pos[0] - 2 + i, world_pos[1] + 3, world_pos[2] - 2 + j},
-				BLOCK_OAK_LEAF);
+				BLOCK_ALPHA_OAK_LEAF);
 		}
 	}
 	// 5nd top leaves
@@ -1483,7 +1483,7 @@ void	create_tree(t_chunk_info *info, float *world_pos)
 				continue ;
 			set_block_at_world_pos_if_empty(info,
 				(float []){world_pos[0] - 2 + i, world_pos[1] + 2, world_pos[2] - 2 + j},
-				BLOCK_OAK_LEAF);
+				BLOCK_ALPHA_OAK_LEAF);
 		}
 	}
 }

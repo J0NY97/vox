@@ -422,7 +422,7 @@ int	main(void)
 		if (keys[GLFW_KEY_5].state == BUTTON_PRESS)
 			player_info.equipped_block = BLOCK_OAK_PLANK;
 		if (keys[GLFW_KEY_6].state == BUTTON_PRESS)
-			player_info.equipped_block = BLOCK_OAK_LEAF;
+			player_info.equipped_block = BLOCK_ALPHA_OAK_LEAF;
 		if (keys[GLFW_KEY_7].state == BUTTON_PRESS)
 			player_info.equipped_block = BLOCK_ALPHA_CACTUS;
 		if (keys[GLFW_KEY_0].state == BUTTON_PRESS)
@@ -744,6 +744,8 @@ int	main(void)
 		{
 			if (chunks[nth_chunk].render)
 			{
+				if (chunks[nth_chunk].blocks_solid_alpha_amount > 0)
+					render_chunk_mesh_v2(&chunks[nth_chunk].meshes, BLOCK_ALPHA_MESH, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
 				if (chunks[nth_chunk].blocks_fluid_amount > 0)
 					render_chunk_mesh_v2(&chunks[nth_chunk].meshes, FLUID_MESH, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
 			}
@@ -757,14 +759,10 @@ int	main(void)
 		{
 			if (chunks[nth_chunk].render)
 			{
-				if (chunks[nth_chunk].blocks_solid_alpha_amount > 0)
-					render_chunk_mesh_v2(&chunks[nth_chunk].meshes, BLOCK_ALPHA_MESH, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
 				if (chunks[nth_chunk].blocks_flora_amount > 0)
 					render_chunk_mesh_v2(&chunks[nth_chunk].meshes, FLORA_MESH, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
 			}
 		}
-
-//		ft_printf("CPU : %d, GPU : %d\n", chunk_info.chunks_loaded, sent_to_gpu);
 
 /////////////////
 		// END Chunk things
