@@ -278,6 +278,8 @@ typedef struct s_block
 	char	light_lvl;
 }	t_block;
 
+void		block_print(t_block *block);
+
 typedef struct s_chunk_info
 {
 	int			width; // in blocks;
@@ -299,6 +301,7 @@ typedef struct s_chunk_info
 	int			player_collision_enabled;
 	int			fancy_graphics;
 	int			generate_structures;
+	int			light_calculation;
 
 	t_chunk		*chunks; // you should not store the chunks here mainly; its just here so you can acces from places you need, without having to pass them in the function as argumnet;
 	GLuint		texture; // the texture is stored here so we dont load a texture per chunk_mesh;
@@ -415,6 +418,10 @@ int			get_chunks_to_reload(int *chunks, int *start_coord, t_chunk_info *info, in
 int			get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, t_chunk_info *info, int *player_chunk_v3, int max_get);
 int			get_surrounding_coords(int *res, int x, int z, int r);
 int			get_block_type_at_world_pos(t_chunk_info *info, float *world_pos);
+
+t_block_data	get_block_data(t_block *block);
+
+void		update_chunk_light_0(t_chunk *chunk);
 
 unsigned long int	get_chunk_hash_key(int *coords);
 

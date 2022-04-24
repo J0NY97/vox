@@ -66,6 +66,7 @@ int	chunk_gen_v2(t_chunk *chunk, int *noise_map)
 						octave_perlin(block_world_x * freq, block_world_y * freq, block_world_z * freq, 8, pers);
 				}
 				*/
+				chunk->blocks[i].light_lvl = 15;
 				if (perper > 0.9f && y <= whatchumacallit)
 				{
 					if (y <= whatchumacallit - 1) // if we have 3 dirt block on top we make the rest stone blocks;
@@ -276,6 +277,28 @@ t_block	*get_block(t_chunk_info *info, float *coords)
 }
 
 /*
+ * Tries getting block from 'chunk' and then 'chunk2';
+ * 'coords' : are in local position, can go over 0 and 15, if that happesn we check the adjacent chunk;
+ * 'chunk' : the chunk we think the block is in;
+ * 'chunk2' : the neighboring chunk we think the block is in;
+*/
+t_block	*get_block_faster(t_chunk *chunk, t_chunk *chunk2, int *coords)
+{
+	t_block	*adj;
+
+	adj = NULL;
+	// Try to get from the same chunk first;
+	if (coords[0] >= 0 && coords[0] <= 15 &&
+		coords[1] >= 0 && coords[1] <= 15 &&
+		coords[2] >= 0 && coords[2] <= 15)
+		adj = &chunk->blocks[get_block_index(chunk->info, coords[0], coords[1], coords[2])];
+	else if (chunk2) // then check the neighbor; (the neighbor should already be the correct one)
+		adj = &chunk2->blocks[get_block_index(chunk->info,
+			mod(coords[0], 16), mod(coords[1], 16), mod(coords[2], 16))];
+	return (adj);
+}
+
+/*
  * 'chunk' : the chunk of the block we are currently checking;
  * 'i' : index of the block in 'chunk->blocks';
  * 'local_pos' : local coordinates of the block in the chunk (x/y/z == 0 - 15);
@@ -287,25 +310,17 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 	t_block	*tmp_block;
 	t_block	*blocks = chunk->blocks;
 	int		coords[3];
+	int		light;
 	float	block_world[3];
 
 	coords[0] = local_pos[0] + g_card_dir[face][0];
 	coords[1] = local_pos[1] + g_card_dir[face][1];
 	coords[2] = local_pos[2] + g_card_dir[face][2];
 
-	tmp_block = NULL;
-	// Try to get from the same chunk first;
-	if (coords[0] >= 0 && coords[0] <= 15 &&
-		coords[1] >= 0 && coords[1] <= 15 &&
-		coords[2] >= 0 && coords[2] <= 15)
-		tmp_block = &blocks[get_block_index(chunk->info, coords[0], coords[1], coords[2])];
-	else if (neighbor) // then check the neighbor; (the neighbor should already be the correct one)
-		tmp_block = &neighbor->blocks[get_block_index(chunk->info,
-			mod(coords[0], 16), mod(coords[1], 16), mod(coords[2], 16))];
-	else
-		return ;
+	tmp_block = get_block_faster(chunk, neighbor, coords);
 	if (tmp_block)
 	{
+		light = (100 / 15) * min(blocks[i].light_lvl, 15);//(int)g_face_light[face];
 		if (is_fluid(&blocks[i]) &&
 			!(is_fluid(&blocks[i]) && is_fluid(tmp_block)))
 		{
@@ -316,17 +331,17 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 			block_world_pos(block_world, chunk->world_coordinate, local_pos);
 			flowing_water_verts(verts, face, &blocks[i], block_world, chunk->info);
 
-			add_to_chunk_mesh_v2(&chunk->meshes, FLUID_MESH, local_pos, verts, g_fluid_data[blocks[i].type - FLUID_FIRST - 1].texture, (int)g_face_light[face]);
+			add_to_chunk_mesh_v2(&chunk->meshes, FLUID_MESH, local_pos, verts, g_fluid_data[blocks[i].type - FLUID_FIRST - 1].face_texture[0], light);
 			++chunk->blocks_fluid_amount;
 		}
 		else if (is_solid(&blocks[i]) && !is_solid(tmp_block))
 		{
-			add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_MESH, local_pos, (float *)g_faces[face], g_block_data[blocks[i].type - BLOCK_FIRST - 1].face_texture[face], (int)g_face_light[face]);
+			add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_MESH, local_pos, (float *)g_faces[face], g_block_data[blocks[i].type - BLOCK_FIRST - 1].face_texture[face], light);
 			++chunk->blocks_solid_amount;
 		}
 		else if (is_solid_alpha(&blocks[i]))
 		{
-			add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_ALPHA_MESH, local_pos, (float *)g_faces_cactus[face], g_block_alpha_data[blocks[i].type - BLOCK_ALPHA_FIRST - 1].face_texture[face], (int)g_face_light[face]);
+			add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_ALPHA_MESH, local_pos, (float *)g_faces_cactus[face], g_block_alpha_data[blocks[i].type - BLOCK_ALPHA_FIRST - 1].face_texture[face], light);
 			++chunk->blocks_solid_alpha_amount;
 		}
 	}
@@ -1692,4 +1707,39 @@ void	tree_gen(t_chunk *chunk)
 			}
 		}
 	}
+}
+
+/*
+ * We only want to do this once per column of chunks;
+ *	Give into this only the highest chunk in the column, that has blocks;
+*/
+void	update_chunk_light_0(t_chunk *chunk)
+{
+	for (int y = 15; y >= 0; y--)
+	{
+		for (int x = 15; x >= 0; x--)
+		{
+			for (int z = 15; z >= 0; z--)
+			{
+				t_block *block = &chunk->blocks[get_block_index(chunk->info, x, y, z)];
+				t_block	*up_block = NULL;
+				if (y + 1 < 16)
+					up_block = &chunk->blocks[get_block_index(chunk->info, x, y + 1, z)];
+				if (up_block)
+					block->light_lvl = ft_clamp(up_block->light_lvl + get_block_data(up_block).light_emit, 0, 15);
+			}
+		}
+	}
+}
+
+void	block_print(t_block *block)
+{
+	t_block_data	data;
+
+	data = get_block_data(block);
+	ft_printf("\n[%s] :\n", data.name);
+	ft_printf("\tType : %d\n", block->type);
+	ft_printf("\tLight Level : %d\n", block->light_lvl);
+	ft_printf("Data :\n");
+	ft_printf("\tLight Emit : %d\n", data.light_emit);
 }

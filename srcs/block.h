@@ -82,38 +82,54 @@ typedef struct s_block_data
 	char			type; // 'e_block_type', at some point maybe same array index in 'g_block_data';
 	char			*name;
 	unsigned short	face_texture[6]; // same order as 'e_face'
+	char			light_emit; // negative is remove, positive is add;
 }	t_block_data;
+
+static const t_block_data	g_gas_data[] = {
+	{
+		GAS_AIR,
+		"GAS_AIR",
+		{0, 0, 0, 0, 0, 0},
+		0
+	}
+};
 
 static const t_block_data g_block_data[] = {
 	{
 		BLOCK_DIRT, 
 		"BLOCK_DIRT",
-		{132, 132, 132, 132, 135, 224}
+		{132, 132, 132, 132, 135, 224},
+		-15
 	},
 	{
 		BLOCK_STONE, 
 		"BLOCK_STONE",
-		{164, 164, 164, 164, 164, 164}
+		{164, 164, 164, 164, 164, 164},
+		-15
 	},
 	{
 		BLOCK_BEDROCK, 
 		"BLOCK_BEDROCK",
-		{292, 292, 292, 292, 292, 292}
+		{292, 292, 292, 292, 292, 292},
+		-15
 	},
 	{
 		BLOCK_SAND, 
 		"BLOCK_SAND",
-		{211, 211, 211, 211, 211, 211}
+		{211, 211, 211, 211, 211, 211},
+		-15
 	},
 	{
 		BLOCK_OAK_LOG, 
 		"BLOCK_OAK_LOG",
-		{27, 27, 27, 27, 28, 28}
+		{27, 27, 27, 27, 28, 28},
+		-15
 	},
 	{
 		BLOCK_OAK_PLANK, 
 		"BLOCK_OAK_PLANK",
-		{280, 280, 280, 280, 280, 280}
+		{280, 280, 280, 280, 280, 280},
+		-15
 	}
 };
 
@@ -121,12 +137,14 @@ static const t_block_data	g_block_alpha_data[] = {
 	{
 		BLOCK_ALPHA_OAK_LEAF, 
 		"BLOCK_ALPHA_OAK_LEAF",
-		{52, 52, 52, 52, 52, 52}
+		{52, 52, 52, 52, 52, 52},
+		-1
 	},
 	{
 		BLOCK_ALPHA_CACTUS, 
 		"BLOCK_ALPHA_CACTUS",
-		{342, 342, 342, 342, 318, 366}
+		{342, 342, 342, 342, 318, 366},
+		-1
 	}
 };
 
@@ -134,17 +152,20 @@ static const t_block_data	g_flora_data[] = {
 	{
 		FLORA_GRASS, 
 		"FLORA_GRASS",
-		{275, 275, 0, 0, 0, 0}
+		{275, 275, 0, 0, 0, 0},
+		0
 	},
 	{
 		FLORA_FLOWER_RED, 
 		"FLORA_FLOWER_RED",
-		{231, 231, 0, 0, 0, 0}
+		{231, 231, 0, 0, 0, 0},
+		0
 	},
 	{
 		FLORA_FLOWER_YELLOW, 
 		"FLORA_FLOWER_YELLOW",
-		{327, 327, 0, 0, 0, 0}
+		{327, 327, 0, 0, 0, 0},
+		0
 	}
 };
 

@@ -194,6 +194,7 @@ int	main(void)
 		chunk_info.player_collision_enabled = 0;
 		chunk_info.fancy_graphics = 0;
 		chunk_info.generate_structures = 0;
+		chunk_info.light_calculation = 1;
 
 		// Creation of hashtable
 //		chunk_info.hash_table_size = (int)(chunk_info.chunks_loaded * 1.3f) + 1;
@@ -407,6 +408,16 @@ int	main(void)
 				LG_INFO("Generate Structures => OFF.");
 		}
 
+		// Toggle light calculation;
+		if (keys[GLFW_KEY_L].state == BUTTON_PRESS)
+		{
+			chunk_info.light_calculation = chunk_info.light_calculation != 1;
+			if (chunk_info.light_calculation)
+				LG_INFO("Light Calculation => ON.");
+			else
+				LG_INFO("Light Calculation => OFF.");
+		}
+
 // Select equipped block;
 		if (keys[GLFW_KEY_1].state == BUTTON_PRESS)
 			player_info.equipped_block = BLOCK_DIRT;
@@ -524,11 +535,13 @@ int	main(void)
 
 		thread_manager_check_threadiness(&tm);
 
+		t_chunk *highest;
 		t_chunk	*neighbors[DIR_AMOUNT];
 		int		neighbors_found;
 		for (int ent = 0; ent < chunk_info.chunks_loaded; ++ent)
 		{
 			neighbors_found = 0;
+			highest = NULL;
 
 			// We only need to update the chunks if a chunk has been regenerated
 			if ((chunks[ent].needs_to_update ||
@@ -544,10 +557,12 @@ int	main(void)
 
 			// Only generate trees if we have all the surrdounding neighbors,
 			// 	so that we wont have trees cut in half;
+			if ((chunk_info.generate_structures && neighbors_found >= 10 &&
+				chunks[ent].update_structures) || chunk_info.light_calculation)
+				highest = get_highest_chunk(&chunk_info, chunks[ent].coordinate[0], chunks[ent].coordinate[2]);
 			if (chunk_info.generate_structures && neighbors_found >= 10 &&
 				chunks[ent].update_structures)
 			{
-				t_chunk *highest = get_highest_chunk(&chunk_info, chunks[ent].coordinate[0], chunks[ent].coordinate[2]);
 				if (highest == &chunks[ent])
 				{
 					tree_gen(&chunks[ent]);
@@ -558,6 +573,8 @@ int	main(void)
 
 			if (chunks[ent].needs_to_update)
 			{
+				if (chunk_info.light_calculation && highest == &chunks[ent])
+					update_chunk_light_0(&chunks[ent]);
 				update_chunk_visible_blocks(&chunks[ent]);
 				update_chunk_mesh_v2(&chunks[ent].meshes);
 				chunk_aabb_update(&chunks[ent]);
@@ -699,7 +716,8 @@ int	main(void)
 				render_block_outline(block_pos, (float []){0, 0, 0}, player.camera.view, player.camera.projection);
 			if (hovered_block &&
 				(mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS ||
-				mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS))
+				mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS ||
+				mouse[GLFW_MOUSE_BUTTON_MIDDLE].state == BUTTON_PRESS))
 			{
 				if (mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS)
 				{
@@ -727,6 +745,8 @@ int	main(void)
 					else
 						LG_WARN("We dont allow the placing of that type of block.");
 				}
+				else if (mouse[GLFW_MOUSE_BUTTON_MIDDLE].state == BUTTON_PRESS)
+					block_print(hovered_block);
 			}
 		}
 		/* END OF COLLISION */

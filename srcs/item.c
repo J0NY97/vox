@@ -60,6 +60,19 @@ int	is_type_item(int type)
 	return (type > ITEM_FIRST && type < ITEM_LAST);
 }
 
+t_block_data	get_block_data(t_block *block)
+{
+	if (is_gas(block))
+		return (g_gas_data[block->type - GAS_FIRST - 1]);
+	if (is_solid(block))
+		return (g_block_data[block->type - BLOCK_FIRST - 1]);
+	if (is_flora(block))
+		return (g_flora_data[block->type - FLORA_FIRST - 1]);
+	if (is_fluid(block))
+		return (g_fluid_data[block->type - FLUID_FIRST - 1]);
+	return (g_gas_data[GAS_AIR - GAS_FIRST - 1]);
+}
+
 /*
  * Returns 1 if the water block could be placed;
 */
@@ -154,7 +167,7 @@ void	flowing_water_verts(float *verts, int face, t_block *block, float *block_wo
 			if (most > GAS_FIRST && most < GAS_LAST)
 				most = FLUID_WATER_7;
 
-			final = 1.0f - ((g_fluid_data[most - FLUID_FIRST - 1].dist_from_source) * 0.25f);
+			final = 1.0f - ((most - FLUID_WATER) * 0.25f);
 			if (face == DIR_UP)
 				verts[1] *= final;
 			if (face == DIR_WEST)
@@ -183,7 +196,7 @@ void	flowing_water_verts(float *verts, int face, t_block *block, float *block_wo
 			if (most > GAS_FIRST && most < GAS_LAST)
 				most = FLUID_WATER_7;
 
-			final = 1.0f - ((g_fluid_data[most - FLUID_FIRST - 1].dist_from_source) * 0.25f);
+			final = 1.0f - ((most - FLUID_WATER) * 0.25f);
 			if (face == DIR_UP)
 				verts[4] *= final;
 			if (face == DIR_SOUTH)
@@ -212,7 +225,7 @@ void	flowing_water_verts(float *verts, int face, t_block *block, float *block_wo
 			if (most > GAS_FIRST && most < GAS_LAST)
 				most = FLUID_WATER_7;
 			
-			final = 1.0f - ((g_fluid_data[most - FLUID_FIRST - 1].dist_from_source) * 0.25f);
+			final = 1.0f - ((most - FLUID_WATER) * 0.25f);
 			if (face == DIR_UP)
 				verts[7] *= final;
 			if (face == DIR_EAST)
@@ -241,7 +254,7 @@ void	flowing_water_verts(float *verts, int face, t_block *block, float *block_wo
 			if (most > GAS_FIRST && most < GAS_LAST)
 				most = FLUID_WATER_7;
 			
-			final = 1.0f - ((g_fluid_data[most - FLUID_FIRST - 1].dist_from_source) * 0.25f);
+			final = 1.0f - ((most - FLUID_WATER) * 0.25f);
 			if (face == DIR_UP)
 				verts[10] *= final;
 			if (face == DIR_NORTH)
