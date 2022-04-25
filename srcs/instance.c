@@ -1305,11 +1305,10 @@ int	chunk_mesh_collision_v56(float *orig, float *dir, t_chunk *chunk, float reac
 
 void	render_block_outline(float *pos, float *color, float *view, float *projection)
 {
-	// Front
-	float	p1[3]; // top left
-	float	p2[3]; // bot left
-	float	p3[3]; // bot right
-	float	p4[3]; // top right
+	float	p1[3]; // top front left
+	float	p2[3]; // top back left
+	float	p3[3]; // top back right
+	float	p4[3]; // top front right
 
 	p1[0] = (g_faces[DIR_UP][0] * 0.5) + pos[0];
 	p1[1] = (g_faces[DIR_UP][1] * 0.5) + pos[1];
@@ -1327,46 +1326,46 @@ void	render_block_outline(float *pos, float *color, float *view, float *projecti
 	p4[1] = (g_faces[DIR_UP][10] * 0.5) + pos[1];
 	p4[2] = (g_faces[DIR_UP][11] * 0.5) + pos[2];
 
-	// Back
-	float	b1[3]; // top left
-	float	b2[3]; // bot left
-	float	b3[3]; // bot right
-	float	b4[3]; // top right
+	float	b1[3]; // bot front left
+	float	b2[3]; // bot front right
+	float	b3[3]; // bot back right
+	float	b4[3]; // bot back left
 
-	b1[0] = (g_faces[1][0] * 0.5) + pos[0];
-	b1[1] = (g_faces[1][1] * 0.5) + pos[1];
-	b1[2] = (g_faces[1][2] * 0.5) + pos[2];
+	b1[0] = (g_faces[DIR_DOWN][0] * 0.5) + pos[0];
+	b1[1] = (g_faces[DIR_DOWN][1] * 0.5) + pos[1];
+	b1[2] = (g_faces[DIR_DOWN][2] * 0.5) + pos[2];
 
-	b2[0] = (g_faces[1][3] * 0.5) + pos[0];
-	b2[1] = (g_faces[1][4] * 0.5) + pos[1];
-	b2[2] = (g_faces[1][5] * 0.5) + pos[2];
+	b2[0] = (g_faces[DIR_DOWN][3] * 0.5) + pos[0];
+	b2[1] = (g_faces[DIR_DOWN][4] * 0.5) + pos[1];
+	b2[2] = (g_faces[DIR_DOWN][5] * 0.5) + pos[2];
 
-	b3[0] = (g_faces[1][6] * 0.5) + pos[0];
-	b3[1] = (g_faces[1][7] * 0.5) + pos[1];
-	b3[2] = (g_faces[1][8] * 0.5) + pos[2];
+	b3[0] = (g_faces[DIR_DOWN][6] * 0.5) + pos[0];
+	b3[1] = (g_faces[DIR_DOWN][7] * 0.5) + pos[1];
+	b3[2] = (g_faces[DIR_DOWN][8] * 0.5) + pos[2];
 
-	b4[0] = (g_faces[1][9] * 0.5) + pos[0];
-	b4[1] = (g_faces[1][10] * 0.5) + pos[1];
-	b4[2] = (g_faces[1][11] * 0.5) + pos[2];
+	b4[0] = (g_faces[DIR_DOWN][9] * 0.5) + pos[0];
+	b4[1] = (g_faces[DIR_DOWN][10] * 0.5) + pos[1];
+	b4[2] = (g_faces[DIR_DOWN][11] * 0.5) + pos[2];
 
-	// Front
+	// TOP
 	render_3d_line(p1, p2, color, view, projection);
 	render_3d_line(p2, p3, color, view, projection);
 	render_3d_line(p3, p4, color, view, projection);
 	render_3d_line(p4, p1, color, view, projection);
 
-	// Back
+	// BOT
 	render_3d_line(b1, b2, color, view, projection);
 	render_3d_line(b2, b3, color, view, projection);
 	render_3d_line(b3, b4, color, view, projection);
 	render_3d_line(b4, b1, color, view, projection);
 
-	// Top / Bot
-	render_3d_line(p1, b4, color, view, projection);
-	render_3d_line(p4, b1, color, view, projection);
+	// BACK
+	render_3d_line(p2, b4, color, view, projection);
+	render_3d_line(p3, b3, color, view, projection);
 
-	render_3d_line(p2, b3, color, view, projection);
-	render_3d_line(p3, b2, color, view, projection);
+	// FRONT
+	render_3d_line(p1, b1, color, view, projection);
+	render_3d_line(p4, b2, color, view, projection);
 }
 
 void	player_terrain_collision(float *res, float *pos, float *velocity, t_chunk_info *info)

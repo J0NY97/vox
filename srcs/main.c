@@ -621,7 +621,6 @@ int	main(void)
 		int		intersect_chunk_index[5]; // correspond with the index in 'intersect_point';
 		float	closest_point[3];
 		int		closest_index = -1; // the index of the chunk that has the closest collision;
-		float	block_pos[3];
 		int		face = -1; // -1 is no face;
 		int		collision_result = 0; // will be the amount of collisions that has happened;
 	
@@ -695,6 +694,7 @@ int	main(void)
 		// Save the closest point, of a maximum 16 points
 		//	gotten from chunk_mesh_collision, in the closest_point var;
 		// Also the index of which chunk the collision is in;
+		float	block_pos[3]; // get_block_from_chunk(); stores the pos of the block we are hovering over;
 		if (collision_result > 0)
 		{
 			float	distancione = -1;
