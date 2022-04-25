@@ -1775,10 +1775,6 @@ void	tree_gen(t_chunk *chunk)
 	}
 }
 
-/*
- * We only want to do this once per column of chunks;
- *	Give into this only the highest chunk in the column, that has blocks;
-*/
 void	update_chunk_light_0(t_chunk *chunk)
 {
 	t_block			*up_block;
@@ -1806,7 +1802,7 @@ void	update_chunk_light_0(t_chunk *chunk)
 			}
 		}
 	}
-		
+
 	for (int y = 16; y >= 0; y--)
 	{
 		for (int x = 0; x < 16; x++)
@@ -1846,6 +1842,7 @@ void	update_chunk_light_0(t_chunk *chunk)
 					if (x + 1 < 16)
 					{
 						up_block = &chunk->blocks[get_block_index(chunk->info, x + 1, y, z)];
+						data = get_block_data(up_block);
 						adj_light = up_block->light_lvl + data.light_emit;
 						if (adj_light > brightest)
 							brightest = adj_light;
@@ -1854,6 +1851,7 @@ void	update_chunk_light_0(t_chunk *chunk)
 					if (z - 1 >= 0)
 					{
 						up_block = &chunk->blocks[get_block_index(chunk->info, x, y, z - 1)];
+						data = get_block_data(up_block);
 						adj_light = up_block->light_lvl + data.light_emit;
 						if (adj_light > brightest)
 							brightest = adj_light;
@@ -1862,6 +1860,7 @@ void	update_chunk_light_0(t_chunk *chunk)
 					if (z + 1 < 16)
 					{
 						up_block = &chunk->blocks[get_block_index(chunk->info, x, y, z + 1)];
+						data = get_block_data(up_block);
 						adj_light = up_block->light_lvl + data.light_emit;
 						if (adj_light > brightest)
 							brightest = adj_light;
@@ -1870,7 +1869,104 @@ void	update_chunk_light_0(t_chunk *chunk)
 				}
 			}
 		}
+	}	
+		/*
+	for (int y = 16; y >= 0; y--)
+	{
+		for (int x = 0; x < 16; x++)
+		{
+			for (int z = 0; z < 16; z++)
+			{
+				block = &chunk->blocks[get_block_index(chunk->info, x, y, z)];
+				if (block->is_emit)
+					block->light_lvl = 15;
+				else
+				{
+					if (y + 1 < 16)
+					{
+						up_block = &chunk->blocks[get_block_index(chunk->info, x, y + 1, z)];
+						block->light_lvl = ft_clamp(up_block->light_lvl + get_block_data(up_block).light_emit, 0, 15);
+					}
+				}
+			}
+		}
 	}
+	*/
+}
+
+void	update_chunk_light_1(t_chunk *chunk)
+{
+	t_block			*block = NULL;
+	t_block			*other_block = NULL;
+	t_block_data	data;
+
+	for (int y = 16; y >= 0; y--)
+	{
+		for (int x = 0; x < 16; x++)
+		{
+			for (int z = 0; z < 16; z++)
+			{
+				if (y + 1 < 16)
+				{
+					other_block = &chunk->blocks[get_block_index(chunk->info, x, y + 1, z)];
+					if (is_solid(other_block))
+						continue;
+				}
+				block = &chunk->blocks[get_block_index(chunk->info, x, y, z)];
+
+				int brightest = block->light_lvl;
+				int	adj_light = 15;
+				// left
+				if (x - 1 >= 0)
+				{
+					other_block = &chunk->blocks[get_block_index(chunk->info, x - 1, y, z)];
+					data = get_block_data(other_block);
+					adj_light = other_block->light_lvl + data.light_emit;
+					if (adj_light > brightest)
+						brightest = adj_light;
+				}
+				// right
+				if (x + 1 < 16)
+				{
+					other_block = &chunk->blocks[get_block_index(chunk->info, x + 1, y, z)];
+					data = get_block_data(other_block);
+					adj_light = other_block->light_lvl + data.light_emit;
+					if (adj_light > brightest)
+						brightest = adj_light;
+				}
+				// front
+				if (z - 1 >= 0)
+				{
+					other_block = &chunk->blocks[get_block_index(chunk->info, x, y, z - 1)];
+					data = get_block_data(other_block);
+					adj_light = other_block->light_lvl + data.light_emit;
+					if (adj_light > brightest)
+						brightest = adj_light;
+				}
+				// back
+				if (z + 1 < 16)
+				{
+					other_block = &chunk->blocks[get_block_index(chunk->info, x, y, z + 1)];
+					data = get_block_data(other_block);
+					adj_light = other_block->light_lvl + data.light_emit;
+					if (adj_light > brightest)
+						brightest = adj_light;
+				}
+				block->light_lvl = ft_clamp(brightest, 0, 15);
+			}
+		}
+	}
+
+}
+
+/*
+ * We only want to do this once per column of chunks;
+ *	Give into this only the highest chunk in the column, that has blocks;
+*/
+void	update_chunk_light(t_chunk *chunk)
+{
+	update_chunk_light_0(chunk);
+//	update_chunk_light_1(chunk);
 }
 
 void	block_print(t_block *block)
