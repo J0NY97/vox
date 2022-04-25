@@ -423,7 +423,7 @@ int			get_block_type_at_world_pos(t_chunk_info *info, float *world_pos);
 
 t_block_data	get_block_data(t_block *block);
 
-void		update_chunk_light_0(t_chunk *chunk);
+void		update_chunk_light(t_chunk *chunk);
 
 unsigned long int	get_chunk_hash_key(int *coords);
 

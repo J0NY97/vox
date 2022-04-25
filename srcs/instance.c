@@ -1802,94 +1802,51 @@ void	update_chunk_light_0(t_chunk *chunk)
 			}
 		}
 	}
+}
 
-	for (int y = 16; y >= 0; y--)
-	{
-		for (int x = 0; x < 16; x++)
-		{
-			for (int z = 0; z < 16; z++)
-			{
-				block = &chunk->blocks[get_block_index(chunk->info, x, y, z)];
-				if (block->is_emit)
-					block->light_lvl = 15;
-				else
-				{
-					if (y + 1 < 16)
-					{
-						up_block = &chunk->blocks[get_block_index(chunk->info, x, y + 1, z)];
-						block->light_lvl = ft_clamp(up_block->light_lvl + get_block_data(up_block).light_emit, 0, 15);
-					}
-				}
-			}
-		}
-	}
+void	emit_sky_light(t_chunk *chunk, int *coord, int light)
+{
+	t_block			*block;
+	t_block_data	data;
+
+	if (light <= 0 ||
+		coord[0] < 0 || coord[0] > 15 ||
+		coord[1] < 0 || coord[1] > 15 ||
+		coord[2] < 0 || coord[2] > 15)
+		return ;
+
+	block = &chunk->blocks[get_block_index(chunk->info, coord[0], coord[1], coord[2])];
+	data = get_block_data(block);
+	if (light > block->light_lvl)
+		block->light_lvl = light;
+	//emit_sky_light(chunk, (int []){coord[0], coord[1] + 1, coord[2]}, light + data.light_emit - 1);
+	emit_sky_light(chunk, (int []){coord[0], coord[1] - 1, coord[2]}, light + data.light_emit);
+	//emit_sky_light(chunk, (int []){coord[0] + 1, coord[1], coord[2]}, light + data.light_emit - 1);
+	//emit_sky_light(chunk, (int []){coord[0] - 1, coord[1], coord[2]}, light + data.light_emit - 1);
+	//emit_sky_light(chunk, (int []){coord[0], coord[1], coord[2] + 1}, light + data.light_emit - 1);
+	//emit_sky_light(chunk, (int []){coord[0], coord[1], coord[2] - 1}, light + data.light_emit - 1);
 }
 
 void	update_chunk_light_1(t_chunk *chunk)
 {
-	t_block			*block = NULL;
-	t_block			*other_block = NULL;
-	t_block_data	data;
+	t_block	*block;
 
-	for (int y = 16; y >= 0; y--)
+	// for all emitters in the column of blocks, flood fill light around;
+	for (int x = 0; x < 16; x++)
 	{
-		for (int x = 0; x < 16; x++)
+		for (int z = 0; z < 16; z++)
 		{
-			for (int z = 0; z < 16; z++)
+			for (int y = 15; y >= 0; y--)
 			{
 				block = &chunk->blocks[get_block_index(chunk->info, x, y, z)];
-
-				int brightest = block->light_lvl;
-				int	adj_light = 15;
-				// left
-				if (x - 1 >= 0)
+				if (block->is_emit)
 				{
-					other_block = &chunk->blocks[get_block_index(chunk->info, x - 1, y, z)];
-					data = get_block_data(other_block);
-					if (other_block->type == GAS_AIR)
-						data.light_emit -= 1;
-					adj_light = other_block->light_lvl + data.light_emit;
-					if (adj_light > brightest)
-						brightest = adj_light;
+					emit_sky_light(chunk, (int []){x, y, z}, 15);
+					break ;
 				}
-				// right
-				if (x + 1 < 16)
-				{
-					other_block = &chunk->blocks[get_block_index(chunk->info, x + 1, y, z)];
-					data = get_block_data(other_block);
-					if (other_block->type == GAS_AIR)
-						data.light_emit -= 1;
-					adj_light = other_block->light_lvl + data.light_emit;
-					if (adj_light > brightest)
-						brightest = adj_light;
-				}
-				// front
-				if (z - 1 >= 0)
-				{
-					other_block = &chunk->blocks[get_block_index(chunk->info, x, y, z - 1)];
-					data = get_block_data(other_block);
-					if (other_block->type == GAS_AIR)
-						data.light_emit -= 1;
-					adj_light = other_block->light_lvl + data.light_emit;
-					if (adj_light > brightest)
-						brightest = adj_light;
-				}
-				// back
-				if (z + 1 < 16)
-				{
-					other_block = &chunk->blocks[get_block_index(chunk->info, x, y, z + 1)];
-					data = get_block_data(other_block);
-					if (other_block->type == GAS_AIR)
-						data.light_emit -= 1;
-					adj_light = other_block->light_lvl + data.light_emit;
-					if (adj_light > brightest)
-						brightest = adj_light;
-				}
-				block->light_lvl = ft_clamp(brightest, 0, 15);
 			}
 		}
 	}
-
 }
 
 /*
