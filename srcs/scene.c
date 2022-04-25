@@ -83,7 +83,10 @@ void	remove_entity_from_scene(t_scene *scene, t_entity *entity)
 t_entity	*get_scene_entity(t_scene *scene, size_t index)
 {
 	if (index >= scene->entities_allocated)
-		LG_ERROR("Index goes over amount allocated (%d - %d).", index, scene->entities_allocated);
+	{
+		LG_WARN("Index goes over amount allocated (%d - %d).", index, scene->entities_allocated);
+		return (NULL);
+	}
 	if (!scene->entities[index])
 		LG_WARN("Entity youre trying to get is NULL, but whatever, we are returning it.");
 	return (scene->entities[index]);

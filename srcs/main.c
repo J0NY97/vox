@@ -140,22 +140,6 @@ int	main(void)
 	t_skybox	skybox;
 	new_skybox(&skybox, g_mc_skybox);
 
-	t_obj		cube_obj;
-	obj_load(&cube_obj, MODEL_PATH"cube/cube.obj");
-
-	t_entity	*test_cube = malloc(sizeof(t_entity));
-	new_entity(test_cube);
-	new_model(&test_cube->model, &cube_obj);
-	add_entity_to_scene(&scene, test_cube);
-	new_vec3(test_cube->pos, 2, 90, -2.0);
-	test_cube->scale_value = 0.1f;
-	test_cube->rot_x_angle = 0;
-	test_cube->rot_y_angle = 0;
-	test_cube->rot_z_angle = 0;
-	test_cube->collision_detection_enabled = 1;
-	test_cube->collision_use_precise = 1;
-	test_cube->render_aabb = 0;
-
 //////////////////////////////
 	// Instance testing
 //////////////////////////////
@@ -273,7 +257,7 @@ int	main(void)
 		}
 
 		float		rot_amount_delta = rot_amount * 10.0f * fps.delta_time;
-		t_entity	*selected_entity = get_scene_entity(&scene, display_index);
+		t_entity	*selected_entity = NULL; //get_scene_entity(&scene, display_index);
 
 		if (keys[GLFW_KEY_KP_ENTER].state == BUTTON_PRESS)
 			rot_amount *= -1;

@@ -1806,6 +1806,9 @@ void	update_chunk_light_0(t_chunk *chunk)
 	}
 }
 
+/*
+ *
+*/
 void	emit_sky_light(t_chunk *chunk, int *coord, int light)
 {
 	t_block			*block;
@@ -1816,19 +1819,24 @@ void	emit_sky_light(t_chunk *chunk, int *coord, int light)
 		coord[1] < 0 || coord[1] > 15 ||
 		coord[2] < 0 || coord[2] > 15)
 		return ;
-
 	block = &chunk->blocks[get_block_index(chunk->info, coord[0], coord[1], coord[2])];
 	data = get_block_data(block);
 	if (light > block->light_lvl)
 		block->light_lvl = light;
 	else // if block doesnt want more light, we can assume other blocks in that direction doesnt either;
 		return ;
+	if (block->light_lvl == 0)
+		return ;
+/*
 	emit_sky_light(chunk, (int []){coord[0], coord[1] + 1, coord[2]}, block->light_lvl + data.light_emit - 1);
+*/
 	emit_sky_light(chunk, (int []){coord[0], coord[1] - 1, coord[2]}, block->light_lvl + data.light_emit);
+/*
 	emit_sky_light(chunk, (int []){coord[0] + 1, coord[1], coord[2]}, block->light_lvl + data.light_emit - 1);
 	emit_sky_light(chunk, (int []){coord[0] - 1, coord[1], coord[2]}, block->light_lvl + data.light_emit - 1);
 	emit_sky_light(chunk, (int []){coord[0], coord[1], coord[2] + 1}, block->light_lvl + data.light_emit - 1);
 	emit_sky_light(chunk, (int []){coord[0], coord[1], coord[2] - 1}, block->light_lvl + data.light_emit - 1);
+*/
 }
 
 void	update_chunk_light_1(t_chunk *chunk)
