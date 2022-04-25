@@ -35,6 +35,8 @@
 # define MODEL_PATH ROOT_PATH"models/"
 # define SHADER_PATH ROOT_PATH"shaders/"
 
+# define ARRAY_SIZE(a) sizeof(a) / sizeof(a[0])
+
 typedef struct	s_player	t_player;
 typedef struct	s_camera	t_camera;
 typedef struct	s_model		t_model;

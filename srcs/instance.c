@@ -343,23 +343,10 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 		}
 		else if (is_solid_alpha(&blocks[i]))
 		{
-			block_print(&blocks[i]);
-			for (int p = 0; p < 6; p++)
-			{
-				ft_printf("{ ");
-				for (int j = 0; j < 12; j++)
-					ft_printf("%f ", g_faces[p][j]);
-				ft_printf("}\n");
-			}
-			for (int p = 0; p < 6; p++)
-			{
-				ft_printf("{ ");
-				for (int j = 0; j < 12; j++)
-					ft_printf("%f ", data.faces[p][j]);
-				ft_printf("}\n");
-			}
-			exit(0);
-			add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_ALPHA_MESH, local_pos, (float *)g_faces_cactus[face], data.texture[face], light);
+			if (blocks[i].type == BLOCK_ALPHA_OAK_LEAF)
+				add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_ALPHA_MESH, local_pos, (float *)g_faces[face], data.texture[face], light);
+			else
+				add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_ALPHA_MESH, local_pos, (float *)g_faces_cactus[face], data.texture[face], light);
 			++chunk->blocks_solid_alpha_amount;
 		}
 	}
@@ -1116,6 +1103,51 @@ int	is_hovering_flora_block(float *block_pos, float *point, int *face)
 	return (0);
 }
 
+int	is_hovering_block(float *block_pos, float *point, int *face, float (*faces)[12], int face_amount)
+{
+	float	p1[3];
+	float	p2[3];
+	float	p3[3];
+
+	for (int f = 0; f < face_amount; f++)
+	{
+		p1[0] = (faces[f][0] * 0.5f) + block_pos[0];
+		p1[1] = (faces[f][1] * 0.5f) + block_pos[1];
+		p1[2] = (faces[f][2] * 0.5f) + block_pos[2];
+
+		p2[0] = (faces[f][3] * 0.5f) + block_pos[0];
+		p2[1] = (faces[f][4] * 0.5f) + block_pos[1];
+		p2[2] = (faces[f][5] * 0.5f) + block_pos[2];
+
+		p3[0] = (faces[f][6] * 0.5f) + block_pos[0];
+		p3[1] = (faces[f][7] * 0.5f) + block_pos[1];
+		p3[2] = (faces[f][8] * 0.5f) + block_pos[2];
+		if (point_in_triangle(point, p1, p2, p3))
+		{
+			*face = f;
+			return (1);
+		}
+
+		p1[0] = (faces[f][0] * 0.5f) + block_pos[0];
+		p1[1] = (faces[f][1] * 0.5f) + block_pos[1];
+		p1[2] = (faces[f][2] * 0.5f) + block_pos[2];
+
+		p2[0] = (faces[f][6] * 0.5f) + block_pos[0];
+		p2[1] = (faces[f][7] * 0.5f) + block_pos[1];
+		p2[2] = (faces[f][8] * 0.5f) + block_pos[2];
+
+		p3[0] = (faces[f][9] * 0.5f) + block_pos[0];
+		p3[1] = (faces[f][10] * 0.5f) + block_pos[1];
+		p3[2] = (faces[f][11] * 0.5f) + block_pos[2];
+		if (point_in_triangle(point, p1, p2, p3))
+		{
+			*face = f;
+			return (1);
+		}
+	}
+	return (0);
+}
+
 /*
  * If block found : we save the position of the block in 'block_pos'
  *	(which is the world position of the block) and
@@ -1127,31 +1159,47 @@ t_block	*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, in
 	float	block_world[3];
 	int		blocal[3];
 	int		i;
+	float	faces[6][12];
+	int		face_amount;
 
 	i = 0;
 	for (; i < chunk->block_amount; i++)
 	{
-		// not solid and not flora, we can just skip it;
-		if (!is_solid(&chunk->blocks[i]) &&
-			!is_flora(&chunk->blocks[i]))
+		// skip if gas or fluid;
+		if (is_gas(&chunk->blocks[i]) || is_fluid(&chunk->blocks[i]))
 			continue;
+
 		get_block_local_pos_from_index(blocal, i);
 		block_world_pos(block_world, chunk->world_coordinate, blocal);
-		if (is_solid(&chunk->blocks[i]))
+
+		face_amount = 0;
+		if (is_solid(&chunk->blocks[i]) ||
+			(is_solid(&chunk->blocks[i]) && chunk->blocks[i].type == BLOCK_ALPHA_OAK_LEAF))
 		{
-			if (is_hovering_solid_block(block_world, point, face))
-			{
-				vec3_assign(block_pos, block_world);
-				return (&chunk->blocks[i]);
-			}
+			face_amount = 6;
+			for (int j = 0; j < face_amount; j++)
+				for (int p = 0; p < 12; p++)
+					faces[j][p] = g_faces[j][p];
 		}
 		else if (is_flora(&chunk->blocks[i]))
 		{
-			if (is_hovering_flora_block(block_world, point, face))
-			{
-				vec3_assign(block_pos, block_world);
-				return (&chunk->blocks[i]);
-			}
+			face_amount = 2;
+			for (int j = 0; j < face_amount; j++)
+				for (int p = 0; p < 12; p++)
+					faces[j][p] = g_flora_faces[j][p];
+		}
+		else if (is_solid_alpha(&chunk->blocks[i]))
+		{
+			face_amount = 6;
+			for (int j = 0; j < face_amount; j++)
+				for (int p = 0; p < 12; p++)
+					faces[j][p] = g_faces_cactus[j][p];
+		}
+
+		if (is_hovering_block(block_world, point, face, faces, face_amount))
+		{
+			vec3_assign(block_pos, block_world);
+			return (&chunk->blocks[i]);
 		}
 	}
 	return (NULL);
