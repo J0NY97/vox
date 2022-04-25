@@ -133,7 +133,7 @@ static const t_block_data	g_gas_data[] = {
 		GAS_AIR,
 		"GAS_AIR",
 		{0, 0, 0, 0, 0, 0},
-		-1, (float **)g_faces
+		0, (float **)g_faces
 	}
 };
 

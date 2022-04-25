@@ -574,7 +574,7 @@ int	main(void)
 			if (chunks[ent].needs_to_update)
 			{
 				if (chunk_info.light_calculation && highest == &chunks[ent])
-					update_chunk_light_0(&chunks[ent]);
+					update_chunk_light(&chunks[ent]);
 				update_chunk_visible_blocks(&chunks[ent]);
 				update_chunk_mesh_v2(&chunks[ent].meshes);
 				chunk_aabb_update(&chunks[ent]);
