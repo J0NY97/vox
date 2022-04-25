@@ -178,7 +178,7 @@ int	main(void)
 		chunk_info.player_collision_enabled = 0;
 		chunk_info.fancy_graphics = 0;
 		chunk_info.generate_structures = 1;
-		chunk_info.light_calculation = 1;
+		chunk_info.light_calculation = 0;
 
 		// Creation of hashtable
 		/*
@@ -512,7 +512,6 @@ int	main(void)
 			for (int i = 0; i * 16 < tobegen; i++)
 				regenerate_chunks_v2(reload_these_chunks + (i * 16), into_these_coords[i], &chunk_info);
 
-
 //			tobegen = regenerate_chunks(chunks, &chunk_info, player_chunk);	
 
 		}
@@ -590,7 +589,7 @@ int	main(void)
 		/*
 		if (tobegen == 0)
 			exit(0);
-		*/
+			*/
 
 		// head
 		player_terrain_collision(player.velocity, (float []){player.camera.pos[0], player.camera.pos[1] + 0.25f, player.camera.pos[2]}, player.velocity, &chunk_info);
