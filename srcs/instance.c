@@ -1777,7 +1777,7 @@ void	tree_gen(t_chunk *chunk)
 
 void	update_chunk_light_0(t_chunk *chunk)
 {
-	t_block			*up_block;
+	t_block			*down_block;
 	t_block			*block;
 	t_block_data	data;
 	int				found;
@@ -1792,13 +1792,14 @@ void	update_chunk_light_0(t_chunk *chunk)
 			{
 				block = &chunk->blocks[get_block_index(chunk->info, x, y, z)];
 				block->is_emit = 0;
-				up_block = NULL;
-				if (y - 1 >= 0)
-					up_block = &chunk->blocks[get_block_index(chunk->info, x, y - 1, z)];
 				if (is_gas(block) && !found)
 					block->is_emit = 1;
-				if (up_block && !is_gas(up_block))
-					found = 1;
+				if (y - 1 >= 0)
+				{
+					down_block = &chunk->blocks[get_block_index(chunk->info, x, y - 1, z)];
+					if (down_block && !is_gas(down_block))
+						found = 1;
+				}
 			}
 		}
 	}
@@ -1809,8 +1810,7 @@ void	emit_sky_light(t_chunk *chunk, int *coord, int light)
 	t_block			*block;
 	t_block_data	data;
 
-	if (light <= 0 ||
-		coord[0] < 0 || coord[0] > 15 ||
+	if (coord[0] < 0 || coord[0] > 15 ||
 		coord[1] < 0 || coord[1] > 15 ||
 		coord[2] < 0 || coord[2] > 15)
 		return ;
@@ -1819,12 +1819,14 @@ void	emit_sky_light(t_chunk *chunk, int *coord, int light)
 	data = get_block_data(block);
 	if (light > block->light_lvl)
 		block->light_lvl = light;
-	//emit_sky_light(chunk, (int []){coord[0], coord[1] + 1, coord[2]}, light + data.light_emit - 1);
-	emit_sky_light(chunk, (int []){coord[0], coord[1] - 1, coord[2]}, light + data.light_emit);
-	//emit_sky_light(chunk, (int []){coord[0] + 1, coord[1], coord[2]}, light + data.light_emit - 1);
-	//emit_sky_light(chunk, (int []){coord[0] - 1, coord[1], coord[2]}, light + data.light_emit - 1);
-	//emit_sky_light(chunk, (int []){coord[0], coord[1], coord[2] + 1}, light + data.light_emit - 1);
-	//emit_sky_light(chunk, (int []){coord[0], coord[1], coord[2] - 1}, light + data.light_emit - 1);
+	if (block->light_lvl <= 0)
+		return ;
+	//emit_sky_light(chunk, (int []){coord[0], coord[1] + 1, coord[2]}, block->light_lvl + data.light_emit - 1);
+	emit_sky_light(chunk, (int []){coord[0], coord[1] - 1, coord[2]}, block->light_lvl + data.light_emit);
+	//emit_sky_light(chunk, (int []){coord[0] + 1, coord[1], coord[2]}, block->light_lvl + data.light_emit - 1);
+	//emit_sky_light(chunk, (int []){coord[0] - 1, coord[1], coord[2]}, block->light_lvl + data.light_emit - 1);
+	//emit_sky_light(chunk, (int []){coord[0], coord[1], coord[2] + 1}, block->light_lvl + data.light_emit - 1);
+	//emit_sky_light(chunk, (int []){coord[0], coord[1], coord[2] - 1}, block->light_lvl + data.light_emit - 1);
 }
 
 void	update_chunk_light_1(t_chunk *chunk)
