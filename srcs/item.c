@@ -66,6 +66,8 @@ t_block_data	get_block_data(t_block *block)
 		return (g_gas_data[block->type - GAS_FIRST - 1]);
 	if (is_solid(block))
 		return (g_block_data[block->type - BLOCK_FIRST - 1]);
+	if (is_solid_alpha(block))
+		return (g_block_alpha_data[block->type - BLOCK_ALPHA_FIRST - 1]);
 	if (is_flora(block))
 		return (g_flora_data[block->type - FLORA_FIRST - 1]);
 	if (is_fluid(block))

@@ -176,7 +176,7 @@ int	main(void)
 
 		t_chunk_info	chunk_info;
 
-		chunk_info.render_distance = 12;
+		chunk_info.render_distance = 14;
 		chunk_info.seed = 896868766;
 //		chunk_info.seed = 596547633;
 		chunk_info.width = 16;
@@ -197,11 +197,11 @@ int	main(void)
 		chunk_info.light_calculation = 1;
 
 		// Creation of hashtable
-//		chunk_info.hash_table_size = (int)(chunk_info.chunks_loaded * 1.3f) + 1;
+		/*
 		chunk_info.hash_table_size = (int)(chunk_info.chunks_loaded * 3);
-//		chunk_info.hash_table_size = 7919;
 		chunk_info.hash_table = malloc(sizeof(t_hash_item) * chunk_info.hash_table_size);
 		hash_table_clear(chunk_info.hash_table, chunk_info.hash_table_size);
+		*/
 
 		glGenTextures(1, &chunk_info.texture);
 		new_texture(&chunk_info.texture, MODEL_PATH"cube/version_3_texture_alpha.bmp");

@@ -307,11 +307,12 @@ t_block	*get_block_faster(t_chunk *chunk, t_chunk *chunk2, int *coords)
 */
 void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_chunk *neighbor)
 {
-	t_block	*tmp_block;
-	t_block	*blocks = chunk->blocks;
-	int		coords[3];
-	int		light;
-	float	block_world[3];
+	t_block_data	data;
+	t_block			*tmp_block;
+	t_block			*blocks = chunk->blocks;
+	int				coords[3];
+	int				light;
+	float			block_world[3];
 
 	coords[0] = local_pos[0] + g_card_dir[face][0];
 	coords[1] = local_pos[1] + g_card_dir[face][1];
@@ -320,7 +321,8 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 	tmp_block = get_block_faster(chunk, neighbor, coords);
 	if (tmp_block)
 	{
-		light = (100 / 15) * min(blocks[i].light_lvl, 15);//(int)g_face_light[face];
+		data = get_block_data(&blocks[i]);
+		light = (100 / 15) * ft_clamp(blocks[i].light_lvl, 0, 15);//(int)g_face_light[face];
 		if (is_fluid(&blocks[i]) &&
 			!(is_fluid(&blocks[i]) && is_fluid(tmp_block)))
 		{
@@ -331,17 +333,33 @@ void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_c
 			block_world_pos(block_world, chunk->world_coordinate, local_pos);
 			flowing_water_verts(verts, face, &blocks[i], block_world, chunk->info);
 
-			add_to_chunk_mesh_v2(&chunk->meshes, FLUID_MESH, local_pos, verts, g_fluid_data[blocks[i].type - FLUID_FIRST - 1].face_texture[0], light);
+			add_to_chunk_mesh_v2(&chunk->meshes, FLUID_MESH, local_pos, verts, data.texture[0], light);
 			++chunk->blocks_fluid_amount;
 		}
 		else if (is_solid(&blocks[i]) && !is_solid(tmp_block))
 		{
-			add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_MESH, local_pos, (float *)g_faces[face], g_block_data[blocks[i].type - BLOCK_FIRST - 1].face_texture[face], light);
+			add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_MESH, local_pos, (float *)g_faces[face], data.texture[face], light);
 			++chunk->blocks_solid_amount;
 		}
 		else if (is_solid_alpha(&blocks[i]))
 		{
-			add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_ALPHA_MESH, local_pos, (float *)g_faces_cactus[face], g_block_alpha_data[blocks[i].type - BLOCK_ALPHA_FIRST - 1].face_texture[face], light);
+			block_print(&blocks[i]);
+			for (int p = 0; p < 6; p++)
+			{
+				ft_printf("{ ");
+				for (int j = 0; j < 12; j++)
+					ft_printf("%f ", g_faces[p][j]);
+				ft_printf("}\n");
+			}
+			for (int p = 0; p < 6; p++)
+			{
+				ft_printf("{ ");
+				for (int j = 0; j < 12; j++)
+					ft_printf("%f ", data.faces[p][j]);
+				ft_printf("}\n");
+			}
+			exit(0);
+			add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_ALPHA_MESH, local_pos, (float *)g_faces_cactus[face], data.texture[face], light);
 			++chunk->blocks_solid_alpha_amount;
 		}
 	}
@@ -384,8 +402,8 @@ void	get_blocks_visible(t_chunk *chunk)
 		get_block_local_pos_from_index(pos, i);
 		if (is_flora(&blocks[i]))
 		{
-			add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, (float *)g_flora_faces[0], g_flora_data[blocks[i].type - FLORA_FIRST - 1].face_texture[0], 100);
-			add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, (float *)g_flora_faces[1], g_flora_data[blocks[i].type - FLORA_FIRST - 1].face_texture[1], 100);
+			add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, (float *)g_flora_faces[0], g_flora_data[blocks[i].type - FLORA_FIRST - 1].texture[0], 100);
+			add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, (float *)g_flora_faces[1], g_flora_data[blocks[i].type - FLORA_FIRST - 1].texture[1], 100);
 			++chunk->blocks_flora_amount;
 		}
 		else // these are the solid blocks;
