@@ -193,7 +193,7 @@ int	main(void)
 		chunk_info.block_collision_enabled = 0;
 		chunk_info.player_collision_enabled = 0;
 		chunk_info.fancy_graphics = 0;
-		chunk_info.generate_structures = 0;
+		chunk_info.generate_structures = 1;
 		chunk_info.light_calculation = 1;
 
 		// Creation of hashtable
