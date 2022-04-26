@@ -514,10 +514,7 @@ int	main(void)
 
 			tobegen = get_chunks_to_reload_v2(reload_these_chunks, into_these_coords, start_coord, &chunk_info, player_chunk, max_get);
 			for (int i = 0; i * 16 < tobegen; i++)
-				regenerate_chunks_v2(reload_these_chunks + (i * 16), into_these_coords[i], &chunk_info);
-
-//			tobegen = regenerate_chunks(chunks, &chunk_info, player_chunk);	
-
+				regenerate_chunks(reload_these_chunks + (i * 16), into_these_coords[i], &chunk_info);
 		}
 
 		thread_manager_check_threadiness(&tm);

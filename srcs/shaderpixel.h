@@ -437,10 +437,7 @@ typedef struct s_regen_args
 }	t_regen_args;
 
 void		*regen_thread_func(void *args);
-int			regenerate_chunks(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v2);
-int			regenerate_chunks_v2(int *these, int coord[2], t_chunk_info *info);
-int			regenerate_chunks_thread(int *these, int *coord, t_chunk_info *info);
-void		regenerate_chunks_v3(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3, t_thread_manager *tm);
+int			regenerate_chunks(int *these, int coord[2], t_chunk_info *info);
 
 void		init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount);
 void		reset_chunk_mesh_v2(t_chunk_mesh_v2 *mesh);

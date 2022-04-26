@@ -301,55 +301,50 @@ t_block	*get_block_faster(t_chunk *chunk, t_chunk *chunk2, int *coords)
 	return (adj);
 }
 
-/*
- * 'chunk' : the chunk of the block we are currently checking;
- * 'i' : index of the block in 'chunk->blocks';
- * 'local_pos' : local coordinates of the block in the chunk (x/y/z == 0 - 15);
- * 'face' : which cardinal direction the block we want to check is in;
- * 'neighbor' : the neighbor in the same cardinal direction (we give this whether or not needed);
-*/
-void	adjacent_block_checker(t_chunk *chunk, int i, int *local_pos, int face, t_chunk *neighbor)
+t_block	*get_block_in_dir(t_chunk *chunk, t_chunk *neighbor, int *local_pos, int dir)
+{
+	int				coords[3];
+
+	coords[0] = local_pos[0] + g_card_dir[dir][0];
+	coords[1] = local_pos[1] + g_card_dir[dir][1];
+	coords[2] = local_pos[2] + g_card_dir[dir][2];
+	return (get_block_faster(chunk, neighbor, coords));
+}
+
+void	add_block_to_correct_mesh(t_chunk *chunk, t_block *block, t_block *adjacent, int *local_pos, int dir)
 {
 	t_block_data	data;
-	t_block			*tmp_block;
-	t_block			*blocks = chunk->blocks;
-	int				coords[3];
+	float			*block_world;
 	int				light;
-	float			block_world[3];
 
-	coords[0] = local_pos[0] + g_card_dir[face][0];
-	coords[1] = local_pos[1] + g_card_dir[face][1];
-	coords[2] = local_pos[2] + g_card_dir[face][2];
-
-	tmp_block = get_block_faster(chunk, neighbor, coords);
-	if (tmp_block)
+	if (adjacent)
 	{
-		data = get_block_data(&blocks[i]);
-		light = (100 / 15) * ft_clamp(blocks[i].light_lvl, 0, 15);//(int)g_face_light[face];
-		if (is_fluid(&blocks[i]) && !is_solid(tmp_block) &&
-			!(is_fluid(&blocks[i]) && is_fluid(tmp_block)))
+		data = get_block_data(block);
+		light = (100 / 15) * ft_clamp(block->light_lvl, 0, 15);//(int)g_face_light[face];
+		if (is_fluid(block) && !is_solid(adjacent) &&
+			!(is_fluid(block) && is_fluid(adjacent)))
 		{
 			// If both blocks are fluid, we dont add face to mesh;
 			float	verts[12];
 			int		type = -1;
 
 			block_world_pos(block_world, chunk->world_coordinate, local_pos);
-			flowing_water_verts(verts, face, &blocks[i], block_world, chunk->info);
+			flowing_water_verts(verts, dir, block, block_world, chunk->info);
 
 			add_to_chunk_mesh_v2(&chunk->meshes, FLUID_MESH, local_pos, verts, data.texture[0], light);
 			++chunk->blocks_fluid_amount;
 		}
-		else if (is_solid(&blocks[i]) && !is_solid(tmp_block))
+		else if (is_solid(block) && !is_solid(adjacent))
 		{
-			add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_MESH, local_pos, (float *)g_faces[face], data.texture[face], light);
+			add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_MESH, local_pos, (float *)g_faces[dir], data.texture[dir], light);
 			++chunk->blocks_solid_amount;
 		}
-		else if (is_solid_alpha(&blocks[i]))
+		else if (is_solid_alpha(block))
 		{
-			if (blocks[i].type == BLOCK_ALPHA_OAK_LEAF)
-				add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_ALPHA_MESH, local_pos, (float *)g_faces[face], data.texture[face], light);
+			if (block->type == BLOCK_ALPHA_OAK_LEAF)
+				add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_ALPHA_MESH, local_pos, (float *)g_faces[dir], data.texture[dir], light);
 			else
-				add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_ALPHA_MESH, local_pos, (float *)g_faces_cactus[face], data.texture[face], light);
+				add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_ALPHA_MESH, local_pos, (float *)g_faces_cactus[dir], data.texture[dir], light);
 			++chunk->blocks_solid_alpha_amount;
 		}
 	}
@@ -398,12 +393,13 @@ void	get_blocks_visible(t_chunk *chunk)
 		}
 		else // these are the solid blocks;
 		{
-			adjacent_block_checker(chunk, i, pos, DIR_NORTH, neighbors[DIR_NORTH]);
-			adjacent_block_checker(chunk, i, pos, DIR_EAST, neighbors[DIR_EAST]);
-			adjacent_block_checker(chunk, i, pos, DIR_SOUTH, neighbors[DIR_SOUTH]);
-			adjacent_block_checker(chunk, i, pos, DIR_WEST, neighbors[DIR_WEST]);
-			adjacent_block_checker(chunk, i, pos, DIR_UP, neighbors[DIR_UP]);
-			adjacent_block_checker(chunk, i, pos, DIR_DOWN, neighbors[DIR_DOWN]);
+			t_block	*adj = NULL;
+			for (int dir = 0; dir < DIR_DOWN; dir++)
+			{
+				adj = get_block_in_dir(chunk, neighbors[dir], pos, dir);
+				if (adj)
+					add_block_to_correct_mesh(chunk, &blocks[i], adj, pos, dir);
+			}
 		}
 	}
 }
@@ -433,16 +429,6 @@ unsigned long int	get_chunk_hash_key(int *coords)
 
 void	update_chunk_v2(t_chunk *chunk, int *coord, int *noise_map)
 {
-	// Get old data;
-	/*
-	unsigned long int	old_key = get_chunk_hash_key(chunk->coordinate);
-	t_hash_item *old_item = hash_item_search(chunk->info->hash_table, chunk->info->hash_table_size, old_key);
-	int	old_data = old_item->data;
-	hash_item_delete(chunk->info->hash_table, chunk->info->hash_table_size, old_key);
-	*/
-
-//	ft_printf("old coord %d %d %d\n", chunk->coordinate[0], chunk->coordinate[1], chunk->coordinate[2]);
-
 	for (int i = 0; i < 3; i++)
 		chunk->coordinate[i] = coord[i];
 	vec3_new(chunk->world_coordinate,
@@ -450,13 +436,6 @@ void	update_chunk_v2(t_chunk *chunk, int *coord, int *noise_map)
 		chunk->coordinate[1] * chunk->info->chunk_size[1],
 		chunk->coordinate[2] * chunk->info->chunk_size[2]);
 
-	// insert new data;
-	/*
-	unsigned long int	new_key = get_chunk_hash_key(chunk->coordinate);	
-	if (!hash_item_insert(chunk->info->hash_table, chunk->info->hash_table_size, new_key, old_data))
-		LG_WARN("Chunk data couldnt be inserted.");
-		*/
-	
 	// Generate Chunks	
 	chunk->block_amount = chunk_gen_v2(chunk, noise_map); // should always return max amount of blocks in a chunk;
 
@@ -576,6 +555,7 @@ int	get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, 
 			break;
 	}
 
+	// Find coords that should be loaded and arent, and add those to the 'into_these' arr;
 	int	coord_amount = 0;
 	for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
 	{
@@ -609,66 +589,7 @@ int	get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, 
 /*
  * Returns amount of chunks that still need to get generated;
 */
-int	regenerate_chunks(t_chunk *chunks, t_chunk_info *info, int *player_chunk_v3)
-{
-	int	reload_these_chunks[info->chunks_loaded];
-	int	start_coord[3];
-	int found = 0;
-	int reload_amount;
-	
-	reload_amount = get_chunks_to_reload(reload_these_chunks, start_coord, info, player_chunk_v3);
-	if (reload_amount <= 0)
-		return (reload_amount);
-
-	// Go through all the coordinates that will be loaded next time, and
-	//  check if any of the loaded chunks have those coordinates, if not
-	//	we take one of the chunks that are not going to be loaded next time
-	// 	and update the new chunk into that memory;
-	int	nth_chunk = 0;
-
-	for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
-	{
-		for (int z = start_coord[2], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
-		{
-			found = 0;
-			for (int i = 0; i < info->chunks_loaded; i++)
-			{
-				if (chunks[i].coordinate[0] == x && chunks[i].coordinate[2] == z)
-				{
-					found = 1;
-					break ;
-				}
-			}
-			if (!found)
-			{
-				int	noise_map[256];
-				create_noise_map(noise_map, 16, 16, x, z);
-				for (int y = start_coord[1], y_amount = 0; y_amount < info->y_chunk_amount; y++, y_amount++)
-				{
-					if (nth_chunk >= 16) // MUST BE 16
-						break ;
-					int index = reload_these_chunks[nth_chunk];
-					chunks[index].args.chunk = &chunks[index];
-					chunks[index].args.coords[0] = x;
-					chunks[index].args.coords[1] = y;
-					chunks[index].args.coords[2] = z;
-					chunks[index].args.noise_map = noise_map;
-					update_chunk_threaded_v2(&chunks[index].args);
-					nth_chunk++;
-					if (nth_chunk >= info->chunks_loaded) 
-						break ;
-				}
-			}
-			if (nth_chunk >= info->chunks_loaded || nth_chunk >= 16) 
-				break ;
-		}
-		if (nth_chunk >= info->chunks_loaded || nth_chunk >= 16) 
-			break ;
-	}
-	return (reload_amount - nth_chunk);
-}
-
-int	regenerate_chunks_v2(int *these, int coord[2], t_chunk_info *info)
+int	regenerate_chunks(int *these, int coord[2], t_chunk_info *info)
 {
 	int			nth_chunk = 0;
 	int			noise_map[256];
