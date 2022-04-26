@@ -271,6 +271,13 @@ typedef struct s_player_info
 	int		equipped_block; // one from 'e_block_type';
 }	t_player_info;
 
+#define CHUNK_WIDTH 16
+#define CHUNK_BREADTH 16
+#define CHUNK_HEIGHT 16
+#define CHUNKS_PER_COLUMN 256 / CHUNK_HEIGHT
+#define BLOCK_SCALE 0.5f
+#define BLOCK_SIZE BLOCK_SCALE * 2
+
 typedef struct s_chunk		t_chunk;
 
 enum e_mesh_types
@@ -323,12 +330,6 @@ void		block_print(t_block *block);
 
 typedef struct s_chunk_info
 {
-	int			width; // in blocks;
-	int			breadth; // in blocks;
-	int			height; // in blocks;
-	int			y_chunk_amount;
-	float		block_scale;
-	float		block_size;
 	float		chunk_size[VEC3_SIZE];
 
 	unsigned int	seed;

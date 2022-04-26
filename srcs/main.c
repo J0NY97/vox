@@ -163,16 +163,10 @@ int	main(void)
 		chunk_info.render_distance = 14;
 		chunk_info.seed = 896868766;
 //		chunk_info.seed = 596547633;
-		chunk_info.width = 16;
-		chunk_info.breadth = 16;
-		chunk_info.height = 16;
-		chunk_info.y_chunk_amount = 256 / chunk_info.height;
-		chunk_info.chunks_loaded = chunk_info.y_chunk_amount * ((int)chunk_info.render_distance * (int)chunk_info.render_distance);
-		chunk_info.block_scale = 0.5f;
-		chunk_info.block_size = chunk_info.block_scale * 2;
-		chunk_info.chunk_size[0] = chunk_info.width * chunk_info.block_size;
-		chunk_info.chunk_size[1] = chunk_info.height * chunk_info.block_size;
-		chunk_info.chunk_size[2] = chunk_info.breadth * chunk_info.block_size;
+		chunk_info.chunks_loaded = CHUNKS_PER_COLUMN * ((int)chunk_info.render_distance * (int)chunk_info.render_distance);
+		chunk_info.chunk_size[0] = CHUNK_WIDTH * BLOCK_SIZE;
+		chunk_info.chunk_size[1] = CHUNK_HEIGHT * BLOCK_SIZE;
+		chunk_info.chunk_size[2] = CHUNK_BREADTH * BLOCK_SIZE;
 
 		chunk_info.block_collision_enabled = 0;
 		chunk_info.player_collision_enabled = 0;
@@ -508,13 +502,13 @@ int	main(void)
 		if (regen_chunks)
 		{
 			int	max_get = 1;
-			int	reload_these_chunks[max_get * 16];	// '* 16' because we regenerate one chunk column at a time;
+			int	reload_these_chunks[max_get * CHUNKS_PER_COLUMN];	// '* 16' because we regenerate one chunk column at a time;
 			int	into_these_coords[max_get][2];
 			int	start_coord[3];
 
 			tobegen = get_chunks_to_reload_v2(reload_these_chunks, into_these_coords, start_coord, &chunk_info, player_chunk, max_get);
-			for (int i = 0; i * 16 < tobegen; i++)
-				regenerate_chunks(reload_these_chunks + (i * 16), into_these_coords[i], &chunk_info);
+			for (int i = 0; i * CHUNKS_PER_COLUMN < tobegen; i++)
+				regenerate_chunks(reload_these_chunks + (i * CHUNKS_PER_COLUMN), into_these_coords[i], &chunk_info);
 		}
 
 		thread_manager_check_threadiness(&tm);
@@ -522,6 +516,13 @@ int	main(void)
 		t_chunk *highest;
 		t_chunk	*neighbors[DIR_AMOUNT];
 		int		neighbors_found;
+		float	total_time = 0.0f;
+
+		if (keys[GLFW_KEY_T].state == BUTTON_PRESS)
+		{
+			ft_printf("First pass\n");
+			ft_timer_start();
+		}
 		for (int ent = 0; ent < chunk_info.chunks_loaded; ++ent)
 		{
 			neighbors_found = 0;
@@ -570,27 +571,36 @@ int	main(void)
 						neighbors[i]->secondary_update = 1;
 			}
 		}
+		if (keys[GLFW_KEY_T].state == BUTTON_PRESS)
+			ft_printf("Time : %f\n", ft_timer_end());
 
 		// Secondary updater;
 		// We dont want to immediately update the chunks that other chunks want
 		//	updated, because they might update themselves;
 		// So if theres still chunks that needs updating after we've gone through
 		// 	the chunks once, we update them here;
-		for (int ent = 0; ent < chunk_info.chunks_loaded; ++ent)
-		{
-			if (chunks[ent].secondary_update || chunks[ent].needs_to_update)
-			{
-				chunks[ent].secondary_update = 0;
-				chunks[ent].needs_to_update = 0;
-				update_chunk_visible_blocks(&chunks[ent]);
-				update_chunk_mesh_v2(&chunks[ent].meshes);
-				chunk_aabb_update(&chunks[ent]);
-			}
-		}
-		/*
 		if (tobegen == 0)
-			exit(0);
-			*/
+		{
+			if (keys[GLFW_KEY_T].state == BUTTON_PRESS)
+			{
+				ft_printf("Second pass\n");
+				ft_timer_start();
+			}
+			for (int ent = 0; ent < chunk_info.chunks_loaded; ++ent)
+			{
+				if (chunks[ent].secondary_update || chunks[ent].needs_to_update)
+				{
+					chunks[ent].secondary_update = 0;
+					chunks[ent].needs_to_update = 0;
+					update_chunk_border_visible_blocks(&chunks[ent]);
+//					update_chunk_visible_blocks(&chunks[ent]);
+					update_chunk_mesh_v2(&chunks[ent].meshes);
+					chunk_aabb_update(&chunks[ent]);
+				}
+			}
+			if (keys[GLFW_KEY_T].state == BUTTON_PRESS)
+				ft_printf("Time : %f\n", ft_timer_end());
+		}
 
 		// head
 		player_terrain_collision(player.velocity, (float []){player.camera.pos[0], player.camera.pos[1] + 0.25f, player.camera.pos[2]}, player.velocity, &chunk_info);

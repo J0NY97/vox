@@ -11,7 +11,7 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, int nth)
 
 	chunk->needs_to_update = 0;
 
-	int	max_blocks = chunk->info->width * chunk->info->breadth * chunk->info->height;
+	int	max_blocks = CHUNK_WIDTH * CHUNK_BREADTH * CHUNK_HEIGHT;
 
 	chunk->blocks = malloc(sizeof(t_block) * (max_blocks));
 
@@ -43,15 +43,15 @@ int	chunk_gen_v2(t_chunk *chunk, int *noise_map)
 	int i = 0;
 
 	chunk->has_blocks = 0;
-	for (int x = 0; x < chunk->info->width; x++)
+	for (int x = 0; x < CHUNK_WIDTH; x++)
 	{
 		float	block_world_x = fabs(chunk->world_coordinate[0] + x);
-		for (int z = 0; z < chunk->info->breadth; z++)
+		for (int z = 0; z < CHUNK_BREADTH; z++)
 		{
 			float	block_world_z = fabs(chunk->world_coordinate[2] + z);
-			int		whatchumacallit = noise_map[x * 16 + z] - (int)chunk->world_coordinate[1];
+			int		whatchumacallit = noise_map[x * CHUNK_HEIGHT + z] - (int)chunk->world_coordinate[1];
 
-			for (int y = 0; y < chunk->info->height; y++)
+			for (int y = 0; y < CHUNK_HEIGHT; y++)
 			{
 				float	block_world_y = chunk->world_coordinate[1] + y;
 				float	perper = 100.0f;
@@ -108,7 +108,9 @@ int	chunk_gen_v2(t_chunk *chunk, int *noise_map)
 */
 void	get_chunk_world_pos_from_local_pos(float *res, int *local_pos)
 {
-	vec3_multiply_f(res, (float []){local_pos[0], local_pos[1], local_pos[2]}, 16.0f);
+	res[0] = local_pos[0] * CHUNK_WIDTH;
+	res[1] = local_pos[1] * CHUNK_HEIGHT;
+	res[2] = local_pos[2] * CHUNK_BREADTH;
 }
 
 int	create_noise_map(int *map, int size_x, int size_z, int coord_x, int coord_z)
@@ -160,9 +162,9 @@ void	chunk_aabb_update(t_chunk *chunk)
 	t_aabb	*a;
 
 	a = &chunk->aabb;
-	a->min[0] = chunk->world_coordinate[0] - (chunk->info->block_size / 2);
-	a->min[1] = chunk->world_coordinate[1] - (chunk->info->block_size / 2);
-	a->min[2] = chunk->world_coordinate[2] - (chunk->info->block_size / 2);
+	a->min[0] = chunk->world_coordinate[0] - (BLOCK_SIZE / 2);
+	a->min[1] = chunk->world_coordinate[1] - (BLOCK_SIZE / 2);
+	a->min[2] = chunk->world_coordinate[2] - (BLOCK_SIZE / 2);
 	a->max[0] = a->min[0] + chunk->info->chunk_size[0];
 	a->max[1] = a->min[1] + chunk->info->chunk_size[1];
 	a->max[2] = a->min[2] + chunk->info->chunk_size[2];
@@ -178,21 +180,11 @@ void	chunk_aabb_update(t_chunk *chunk)
 */
 t_chunk	*get_adjacent_chunk(t_chunk_info *info, t_chunk *from, float *dir)
 {
-	static int times_called = -1;
 	int	from_coord[3];
-//	ft_printf("times_called %d\n", ++times_called);
 
 	from_coord[0] = from->coordinate[0] + (int)dir[0];
 	from_coord[1] = from->coordinate[1] + (int)dir[1];
 	from_coord[2] = from->coordinate[2] + (int)dir[2];
-
-	/*
-	unsigned long int	key = get_chunk_hash_key(from_coord);
-	t_hash_item	*item = hash_item_search(info->hash_table, info->hash_table_size, key);
-	if (!item)
-		return (NULL);
-	return (&info->chunks[item->data]);
-	*/
 	for (int i = 0; i < info->chunks_loaded; i++)
 	{
 		if (info->chunks[i].coordinate[0] == from_coord[0] &&
@@ -220,14 +212,14 @@ t_chunk	*get_chunk(t_chunk_info	*info, int *pos)
 */
 int	get_block_index(t_chunk_info *info, int x, int y, int z)
 {
-	return ((x * info->width * info->breadth) + (z * info->height) + y);
+	return ((x * CHUNK_WIDTH * CHUNK_BREADTH) + (z * CHUNK_HEIGHT) + y);
 }
 
 int	*get_block_local_pos_from_world_pos(int *res, float *world)
 {
-	res[0] = mod(world[0], 16);
-	res[1] = mod(world[1], 16);
-	res[2] = mod(world[2], 16);
+	res[0] = mod(world[0], CHUNK_WIDTH);
+	res[1] = mod(world[1], CHUNK_HEIGHT);
+	res[2] = mod(world[2], CHUNK_BREADTH);
 	return (res);
 }
 
@@ -251,10 +243,10 @@ float *block_world_pos(float *res, float *chunk_world_pos, int *block_local_pos)
 */
 int	*get_block_local_pos_from_index(int *res, int index)
 {
-	// TODO use chunk->w, h, b;
-	res[0] = index / (16 * 16);
-	res[2] = (index / 16) % 16;
-	res[1] = index % 16;
+	// TODO : for sure doesnt work;
+	res[0] = index / (CHUNK_WIDTH * CHUNK_HEIGHT);
+	res[1] = index % CHUNK_HEIGHT;
+	res[2] = (index / CHUNK_WIDTH) % CHUNK_HEIGHT;
 	return (res);
 }
 
@@ -297,7 +289,7 @@ t_block	*get_block_faster(t_chunk *chunk, t_chunk *chunk2, int *coords)
 		adj = &chunk->blocks[get_block_index(chunk->info, coords[0], coords[1], coords[2])];
 	else if (chunk2) // then check the neighbor; (the neighbor should already be the correct one)
 		adj = &chunk2->blocks[get_block_index(chunk->info,
-			mod(coords[0], 16), mod(coords[1], 16), mod(coords[2], 16))];
+			mod(coords[0], CHUNK_WIDTH), mod(coords[1], CHUNK_HEIGHT), mod(coords[2], CHUNK_BREADTH))];
 	return (adj);
 }
 
@@ -311,6 +303,13 @@ t_block	*get_block_in_dir(t_chunk *chunk, t_chunk *neighbor, int *local_pos, int
 	return (get_block_faster(chunk, neighbor, coords));
 }
 
+/*
+ * 'block' : from which block we want to add a face to the mesh;
+ * 'chunk' : the chunk in which the block recides; (and mesh);
+ * 'adjacent' : the adjacent block in the direction of the face of 'block';
+ * 'local_pos' : the local pos of the 'block' in 'chunk';
+ * 'dir' : aka face, of the 'block' we want to add to 'chunk->meshes';
+*/
 void	add_block_to_correct_mesh(t_chunk *chunk, t_block *block, t_block *adjacent, int *local_pos, int dir)
 {
 	t_block_data	data;
@@ -350,6 +349,32 @@ void	add_block_to_correct_mesh(t_chunk *chunk, t_block *block, t_block *adjacent
 	}
 }
 
+void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *pos)
+{
+	int index;
+	
+	index = get_block_index(chunk->info, pos[0], pos[1], pos[2]);
+	if (chunk->blocks[index].type == GAS_AIR) // <-- very important, im not sure what happens if we are trying to render an air block;
+		return ;
+
+	if (is_flora(&chunk->blocks[index]))
+	{
+		add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, (float *)g_flora_faces[0], g_flora_data[chunk->blocks[index].type - FLORA_FIRST - 1].texture[0], 100);
+		add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, (float *)g_flora_faces[1], g_flora_data[chunk->blocks[index].type - FLORA_FIRST - 1].texture[1], 100);
+		++chunk->blocks_flora_amount;
+	}
+	else // these are the solid blocks;
+	{
+		t_block	*adj = NULL;
+		for (int dir = 0; dir <= DIR_DOWN; dir++)
+		{
+			adj = get_block_in_dir(chunk, neighbors[dir], pos, dir);
+			if (adj)
+				add_block_to_correct_mesh(chunk, &chunk->blocks[index], adj, pos, dir);
+		}
+	}
+}
+
 /*
  * For each block in chunk;
  *	Go through each block in chunk;
@@ -362,12 +387,44 @@ void	add_block_to_correct_mesh(t_chunk *chunk, t_block *block, t_block *adjacent
 */
 void	get_blocks_visible(t_chunk *chunk)
 {
-	t_block	*blocks;
+	int	pos[3];
 
 	chunk->blocks_solid_amount = 0;
 	chunk->blocks_flora_amount = 0;
 	chunk->blocks_fluid_amount = 0;
 	chunk->blocks_solid_alpha_amount = 0;
+
+	if (!chunk->has_blocks)
+		return ;
+
+	// Get all neighbors of current chunk;
+	t_chunk *neighbors[6];
+	for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
+		neighbors[i] = get_adjacent_chunk(chunk->info, chunk, (float *)g_card_dir[dir]);
+
+/*
+	for (int i = 0; i < chunk->block_amount; i++)
+	{
+		get_block_local_pos_from_index(pos, i);
+		helper_pelper(chunk, neighbors, pos);
+	}
+	*/
+	for (int y = 1; y < 15; y++)
+	{
+		for (int x = 1; x < 15; x++)
+		{
+			for (int z = 1; z < 15; z++)
+			{
+				helper_pelper(chunk, neighbors, (int []){x, y, z});
+			}
+		}
+	}
+}
+
+
+void	update_chunk_border_visible_blocks(t_chunk *chunk)
+{
+	t_block	*blocks;
 
 	if (!chunk->has_blocks)
 		return ;
@@ -378,28 +435,25 @@ void	get_blocks_visible(t_chunk *chunk)
 	for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
 		neighbors[i] = get_adjacent_chunk(chunk->info, chunk, (float *)g_card_dir[dir]);
 
-	int		pos[3];
-	for (int i = 0; i < chunk->block_amount; i++)
+	for (int y = 0; y <= 15; y++)
 	{
-		if (blocks[i].type == GAS_AIR) // <-- very important, im not sure what happens if we are trying to render an air block;
-			continue ;
-
-		get_block_local_pos_from_index(pos, i);
-		if (is_flora(&blocks[i]))
+		for (int x = 0; x <= 15; x++)
 		{
-			add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, (float *)g_flora_faces[0], g_flora_data[blocks[i].type - FLORA_FIRST - 1].texture[0], 100);
-			add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, (float *)g_flora_faces[1], g_flora_data[blocks[i].type - FLORA_FIRST - 1].texture[1], 100);
-			++chunk->blocks_flora_amount;
+			helper_pelper(chunk, neighbors, (int []){x, y, 0});
+			helper_pelper(chunk, neighbors, (int []){x, y, 15});
 		}
-		else // these are the solid blocks;
+		for (int z = 0; z <= 15; z++)
 		{
-			t_block	*adj = NULL;
-			for (int dir = 0; dir < DIR_DOWN; dir++)
-			{
-				adj = get_block_in_dir(chunk, neighbors[dir], pos, dir);
-				if (adj)
-					add_block_to_correct_mesh(chunk, &blocks[i], adj, pos, dir);
-			}
+			helper_pelper(chunk, neighbors, (int []){0, y, z});
+			helper_pelper(chunk, neighbors, (int []){15, y, z});
+		}
+	}
+	for (int x = 0; x <= 15; x++)
+	{
+		for (int z = 0; z <= 15; z++)
+		{
+			helper_pelper(chunk, neighbors, (int []){x, 0, z});
+			helper_pelper(chunk, neighbors, (int []){x, 15, z});
 		}
 	}
 }
@@ -551,7 +605,7 @@ int	get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, 
 			these[reload_amount] = i;
 			++reload_amount;
 		}
-		if (reload_amount >= max_get * 16)
+		if (reload_amount >= max_get * CHUNKS_PER_COLUMN)
 			break;
 	}
 
@@ -594,10 +648,10 @@ int	regenerate_chunks(int *these, int coord[2], t_chunk_info *info)
 	int			nth_chunk = 0;
 	int			noise_map[256];
 
-	create_noise_map(noise_map, 16, 16, coord[0], coord[1]);
-	for (int y = 0; y < 16; y++)
+	create_noise_map(noise_map, CHUNK_WIDTH, CHUNK_BREADTH, coord[0], coord[1]);
+	for (int y = 0; y < CHUNK_HEIGHT; y++)
 	{
-		if (nth_chunk >= 16 || nth_chunk >= info->chunks_loaded) 
+		if (nth_chunk >= CHUNKS_PER_COLUMN || nth_chunk >= info->chunks_loaded) 
 			break ;
 		int index = these[nth_chunk];
 		info->chunks[index].args.chunk = &info->chunks[index];
@@ -1553,36 +1607,6 @@ t_chunk *get_highest_chunk(t_chunk_info *info, int x, int z)
 	if (highest_index >= 0 && highest_index < info->chunks_loaded)
 		return (&info->chunks[highest_index]);
 	return (NULL);
-
-	/*
-	int	coords[3];
-	int	highest = -1;
-	int	highest_index = -1;
-	unsigned long int	key;
-	t_hash_item	*item;
-	t_chunk	*chunk;
-
-	coords[0] = x;
-	coords[2] = z;
-	for (int y = 0; y < 16; y++)
-	{
-		coords[1] = y;
-		key = get_chunk_hash_key(coords);
-		item = hash_item_search(info->hash_table, info->hash_table_size, key);
-		if (item)
-		{
-			chunk = &info->chunks[item->data];
-			if (chunk->has_blocks && y > highest)
-			{
-				highest = y;
-				highest_index = item->data;
-			}
-		}
-	}
-	if (highest_index >= 0 && highest_index < info->chunks_loaded)
-		return (&info->chunks[highest_index]);
-	return (NULL);
-	*/
 }
 
 /*
@@ -1663,11 +1687,11 @@ void	tree_gen(t_chunk *chunk)
 	float	freq = 0.99f;
 	float	pers = 0.5;
 
-	for (int x = 0; x < chunk->info->width; x++)
+	for (int x = 0; x < CHUNK_WIDTH; x++)
 	{
 		float	block_world_x = fabs(chunk->world_coordinate[0] + x);
 		float	to_use_x = block_world_x * freq;
-		for (int z = 0; z < chunk->info->breadth; z++)
+		for (int z = 0; z < CHUNK_BREADTH; z++)
 		{
 			float	block_world_z = fabs(chunk->world_coordinate[2] + z);
 			float	to_use_z = block_world_z * freq;
@@ -1707,12 +1731,12 @@ void	update_chunk_light_0(t_chunk *chunk)
 	int				found;
 
 	// Get highest block in the column, make it emit light;
-	for (int x = 0; x < 16; x++)
+	for (int x = 0; x < CHUNK_WIDTH; x++)
 	{
-		for (int z = 0; z < 16; z++)
+		for (int z = 0; z < CHUNK_BREADTH; z++)
 		{
 			found = 0;
-			for (int y = 15; y >= 0; y--)
+			for (int y = CHUNK_HEIGHT - 1; y >= 0; y--)
 			{
 				block = &chunk->blocks[get_block_index(chunk->info, x, y, z)];
 				block->is_emit = 0;
@@ -1768,11 +1792,11 @@ void	update_chunk_light_1(t_chunk *chunk)
 	t_block	*block;
 
 	// for all emitters in the column of blocks, flood fill light around;
-	for (int x = 0; x < 16; x++)
+	for (int x = 0; x < CHUNK_WIDTH; x++)
 	{
-		for (int z = 0; z < 16; z++)
+		for (int z = 0; z < CHUNK_WIDTH; z++)
 		{
-			for (int y = 15; y >= 0; y--)
+			for (int y = CHUNK_HEIGHT - 1; y >= 0; y--)
 			{
 				block = &chunk->blocks[get_block_index(chunk->info, x, y, z)];
 				if (block->is_emit)
