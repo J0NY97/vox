@@ -271,20 +271,21 @@ typedef struct s_player_info
 	int		equipped_block; // one from 'e_block_type';
 }	t_player_info;
 
-#define CHUNK_WIDTH 16
-#define CHUNK_HEIGHT 16
-#define CHUNK_BREADTH 16
-#define CHUNKS_PER_COLUMN 256 / CHUNK_HEIGHT
+#define CHUNK_WIDTH 32
+#define CHUNK_HEIGHT 32
+#define CHUNK_BREADTH 32
+static const int g_chunks_per_column = 256 / CHUNK_HEIGHT;
+#define CHUNKS_PER_COLUMN g_chunks_per_column
 #define BLOCK_SCALE 0.5f
 #define BLOCK_SIZE BLOCK_SCALE * 2
-static float g_chunk_size_x = CHUNK_WIDTH * BLOCK_SIZE;
-static float g_chunk_size_y = CHUNK_HEIGHT * BLOCK_SIZE;
-static float g_chunk_size_z = CHUNK_BREADTH * BLOCK_SIZE;
+static const float g_chunk_size_x = CHUNK_WIDTH * BLOCK_SIZE;
+static const float g_chunk_size_y = CHUNK_HEIGHT * BLOCK_SIZE;
+static const float g_chunk_size_z = CHUNK_BREADTH * BLOCK_SIZE;
 #define CHUNK_SIZE_X g_chunk_size_x
 #define CHUNK_SIZE_Y g_chunk_size_y
 #define CHUNK_SIZE_Z g_chunk_size_z
-#define RENDER_DISTANCE 14
-static int g_chunks_loaded = CHUNKS_PER_COLUMN * RENDER_DISTANCE * RENDER_DISTANCE;
+#define RENDER_DISTANCE 7 
+static const int g_chunks_loaded = CHUNKS_PER_COLUMN * RENDER_DISTANCE * RENDER_DISTANCE;
 #define CHUNKS_LOADED g_chunks_loaded
 
 typedef struct s_chunk		t_chunk;
@@ -375,7 +376,7 @@ struct	s_chunk
 	float			world_coordinate[VEC3_SIZE];
 
 	int				block_amount;
-	t_block			*blocks; //x*y*z real amount should be : 20 736
+	t_block			*blocks; //x*y*z real amount should be : CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_BREADTH;
 
 	int				has_blocks; // 1/0 whether the chunk has other than air blocks;
 	int				update_structures; // the terrain needs to be generated before the structures, thats why we have this; 
@@ -410,7 +411,7 @@ void		chunk_aabb_update(t_chunk *chunk);
 void		show_chunk_borders(t_chunk *chunk, t_camera *camera, float *col);
 void		render_aabb(t_aabb *a, t_camera *camera, float *col);
 
-int			*get_chunk_pos_from_world_pos(int *res, float *world_coords, t_chunk_info *info);
+int			*get_chunk_pos_from_world_pos(int *res, float *world_coords);
 float		*block_world_pos(float *res, float *chunk_world_pos, int *block_local_pos);
 t_chunk		*get_chunk(t_chunk_info *info, int *pos);
 t_chunk		*get_adjacent_chunk(t_chunk_info *info, t_chunk *from, float *dir);

@@ -31,7 +31,6 @@ typedef struct s_aabb
 	float	min[3];
 	float	max[3];
 	float	vertices[24];
-	float	normals[24];
 }			t_aabb;
 
 void		aabb_create(t_aabb *res, float *vertices, size_t vertex_amount);

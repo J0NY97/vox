@@ -103,14 +103,11 @@ int	chunk_gen_v2(t_chunk *chunk, int *noise_map)
 	return (i);
 }
 
-/*
- * @MODULAR : MAKE
-*/
 void	get_chunk_world_pos_from_local_pos(float *res, int *local_pos)
 {
-	res[0] = local_pos[0] * CHUNK_WIDTH;
-	res[1] = local_pos[1] * CHUNK_HEIGHT;
-	res[2] = local_pos[2] * CHUNK_BREADTH;
+	res[0] = local_pos[0] * (float)CHUNK_WIDTH;
+	res[1] = local_pos[1] * (float)CHUNK_HEIGHT;
+	res[2] = local_pos[2] * (float)CHUNK_BREADTH;
 }
 
 int	create_noise_map(int *map, int size_x, int size_z, int coord_x, int coord_z)
@@ -149,7 +146,7 @@ int	create_noise_map(int *map, int size_x, int size_z, int coord_x, int coord_z)
  * Give any world position to 'world_coords' and this calculates the 
  *	chunk coordinate that you're in;
 */
-int	*get_chunk_pos_from_world_pos(int *res, float *world_coords, t_chunk_info *info)
+int	*get_chunk_pos_from_world_pos(int *res, float *world_coords)
 {
 	res[0] = floor(world_coords[0] / CHUNK_SIZE_X);
 	res[1] = floor(world_coords[1] / CHUNK_SIZE_Y);
@@ -259,7 +256,7 @@ t_block	*get_block(t_chunk_info *info, float *coords)
 	int		chunk_pos[3];
 	t_chunk	*chunk;
 
-	get_chunk_pos_from_world_pos(chunk_pos, coords, info);
+	get_chunk_pos_from_world_pos(chunk_pos, coords);
 	chunk = get_chunk(info, chunk_pos);
 	if (chunk)
 	{
@@ -273,7 +270,7 @@ t_block	*get_block(t_chunk_info *info, float *coords)
 
 /*
  * Tries getting block from 'chunk' and then 'chunk2';
- * 'coords' : are in local position, can go over 0 and 15, if that happesn we check the adjacent chunk;
+ * 'coords' : are in local position, can go over 0 and CHUNK_W/H/B, if that happesn we check the adjacent chunk;
  * 'chunk' : the chunk we think the block is in;
  * 'chunk2' : the neighboring chunk we think the block is in;
 */
@@ -283,9 +280,9 @@ t_block	*get_block_faster(t_chunk *chunk, t_chunk *chunk2, int *coords)
 
 	adj = NULL;
 	// Try to get from the same chunk first;
-	if (coords[0] >= 0 && coords[0] <= 15 &&
-		coords[1] >= 0 && coords[1] <= 15 &&
-		coords[2] >= 0 && coords[2] <= 15)
+	if (coords[0] >= 0 && coords[0] < CHUNK_WIDTH &&
+		coords[1] >= 0 && coords[1] < CHUNK_HEIGHT &&
+		coords[2] >= 0 && coords[2] < CHUNK_BREADTH)
 		adj = &chunk->blocks[get_block_index(chunk->info, coords[0], coords[1], coords[2])];
 	else if (chunk2) // then check the neighbor; (the neighbor should already be the correct one)
 		adj = &chunk2->blocks[get_block_index(chunk->info,
@@ -387,8 +384,6 @@ void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *pos)
 */
 void	get_blocks_visible(t_chunk *chunk)
 {
-	int	pos[3];
-
 	chunk->blocks_solid_amount = 0;
 	chunk->blocks_flora_amount = 0;
 	chunk->blocks_fluid_amount = 0;
@@ -402,18 +397,11 @@ void	get_blocks_visible(t_chunk *chunk)
 	for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
 		neighbors[i] = get_adjacent_chunk(chunk->info, chunk, (float *)g_card_dir[dir]);
 
-/*
-	for (int i = 0; i < chunk->block_amount; i++)
+	for (int y = 1; y < CHUNK_HEIGHT - 1; y++)
 	{
-		get_block_local_pos_from_index(pos, i);
-		helper_pelper(chunk, neighbors, pos);
-	}
-	*/
-	for (int y = 1; y < 15; y++)
-	{
-		for (int x = 1; x < 15; x++)
+		for (int x = 1; x < CHUNK_WIDTH - 1; x++)
 		{
-			for (int z = 1; z < 15; z++)
+			for (int z = 1; z < CHUNK_BREADTH - 1; z++)
 			{
 				helper_pelper(chunk, neighbors, (int []){x, y, z});
 			}
@@ -435,25 +423,25 @@ void	update_chunk_border_visible_blocks(t_chunk *chunk)
 	for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
 		neighbors[i] = get_adjacent_chunk(chunk->info, chunk, (float *)g_card_dir[dir]);
 
-	for (int y = 0; y <= 15; y++)
+	for (int y = 0; y <= CHUNK_HEIGHT - 1; y++)
 	{
-		for (int x = 0; x <= 15; x++)
+		for (int x = 0; x <= CHUNK_WIDTH - 1; x++)
 		{
 			helper_pelper(chunk, neighbors, (int []){x, y, 0});
-			helper_pelper(chunk, neighbors, (int []){x, y, 15});
+			helper_pelper(chunk, neighbors, (int []){x, y, CHUNK_BREADTH - 1});
 		}
-		for (int z = 0; z <= 15; z++)
+		for (int z = 0; z <= CHUNK_BREADTH - 1; z++)
 		{
 			helper_pelper(chunk, neighbors, (int []){0, y, z});
-			helper_pelper(chunk, neighbors, (int []){15, y, z});
+			helper_pelper(chunk, neighbors, (int []){CHUNK_WIDTH - 1, y, z});
 		}
 	}
-	for (int x = 0; x <= 15; x++)
+	for (int x = 0; x <= CHUNK_WIDTH - 1; x++)
 	{
-		for (int z = 0; z <= 15; z++)
+		for (int z = 0; z <= CHUNK_BREADTH - 1; z++)
 		{
 			helper_pelper(chunk, neighbors, (int []){x, 0, z});
-			helper_pelper(chunk, neighbors, (int []){x, 15, z});
+			helper_pelper(chunk, neighbors, (int []){x, CHUNK_HEIGHT - 1, z});
 		}
 	}
 }
@@ -583,8 +571,6 @@ int	get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, 
 	start_coord[2] = player_chunk_v3[2] - (RENDER_DISTANCE / 2);
 
 	// Find chunk that shouldnt be loaded anymore;
-	int	coord_x = start_coord[0];
-	int	coord_z = start_coord[2];
 	for (int i = 0; i < CHUNKS_LOADED; i++)
 	{
 		found = 0;
@@ -634,8 +620,8 @@ int	get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, 
 			if (coord_amount >= max_get)
 				break;
 		}
-			if (coord_amount >= max_get)
-				break;
+		if (coord_amount >= max_get)
+			break;
 	}
 	return (reload_amount);
 }
@@ -646,7 +632,7 @@ int	get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, 
 int	regenerate_chunks(int *these, int coord[2], t_chunk_info *info)
 {
 	int			nth_chunk = 0;
-	int			noise_map[256];
+	int			noise_map[CHUNK_WIDTH * CHUNK_BREADTH];
 
 	create_noise_map(noise_map, CHUNK_WIDTH, CHUNK_BREADTH, coord[0], coord[1]);
 	for (int y = 0; y < CHUNK_HEIGHT; y++)
@@ -1359,7 +1345,7 @@ void	player_terrain_collision(float *res, float *pos, float *velocity, t_chunk_i
 	vec3_assign(final, velocity);
 	while (velocity_dist > EPSILON)
 	{
-		get_chunk_pos_from_world_pos(player_chunk, pos, info);
+		get_chunk_pos_from_world_pos(player_chunk, pos);
 		player_collision_amount = 0;
 		vec3_normalize(normed_velocity, final);
 		for (int i = 0; i < CHUNKS_LOADED; i++)
@@ -1406,7 +1392,7 @@ void	set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_type
 	int		index;
 	t_chunk	*chunk;
 
-	get_chunk_pos_from_world_pos(chunk_pos, world_pos, info);
+	get_chunk_pos_from_world_pos(chunk_pos, world_pos);
 	chunk = get_chunk(info, chunk_pos);
 	if (!chunk)
 		return ;
@@ -1430,7 +1416,7 @@ void	set_block_at_world_pos_if_empty(t_chunk_info *info, float *world_pos, int b
 	int		index;
 	t_chunk	*chunk;
 
-	get_chunk_pos_from_world_pos(chunk_pos, world_pos, info);
+	get_chunk_pos_from_world_pos(chunk_pos, world_pos);
 	chunk = get_chunk(info, chunk_pos);
 	if (!chunk)
 		return ;
@@ -1457,7 +1443,7 @@ int	get_block_type_at_world_pos(t_chunk_info *info, float *world_pos)
 	int		index;
 
 	vec3_new(under_block, world_pos[0], world_pos[1], world_pos[2]);
-	get_chunk_pos_from_world_pos(chunk_pos, under_block, info);
+	get_chunk_pos_from_world_pos(chunk_pos, under_block);
 	chunk = get_chunk(info, chunk_pos);
 	if (!chunk)
 		return (-1);
@@ -1618,7 +1604,7 @@ float	get_highest_point(t_chunk_info *info, float x, float z)
 	float	curr_highest = -1;
 	t_chunk	*highest_chunk;
 
-	get_chunk_pos_from_world_pos(chunk_pos, (float []){x, 0, z}, info);
+	get_chunk_pos_from_world_pos(chunk_pos, (float []){x, 0, z});
 	highest_chunk = get_highest_chunk(info, chunk_pos[0], chunk_pos[2]);
 	if (highest_chunk == NULL)
 		return (-1); // error;
@@ -1648,7 +1634,7 @@ float	get_highest_point_of_type(t_chunk_info *info, float x, float z, int type)
 	float	curr_highest = -1;
 	t_chunk	*highest_chunk;
 
-	get_chunk_pos_from_world_pos(chunk_pos, (float []){x, 0, z}, info);
+	get_chunk_pos_from_world_pos(chunk_pos, (float []){x, 0, z});
 	highest_chunk = get_highest_chunk(info, chunk_pos[0], chunk_pos[2]);
 	if (highest_chunk == NULL)
 		return (-1); // error;
@@ -1763,9 +1749,9 @@ void	emit_sky_light(t_chunk *chunk, int *coord, int light)
 	t_block_data	data;
 
 	if (light <= 0 ||
-		coord[0] < 0 || coord[0] > 15 ||
-		coord[1] < 0 || coord[1] > 15 ||
-		coord[2] < 0 || coord[2] > 15)
+		coord[0] < 0 || coord[0] > CHUNK_WIDTH - 1 ||
+		coord[1] < 0 || coord[1] > CHUNK_HEIGHT - 1 ||
+		coord[2] < 0 || coord[2] > CHUNK_BREADTH - 1)
 		return ;
 	block = &chunk->blocks[get_block_index(chunk->info, coord[0], coord[1], coord[2])];
 	data = get_block_data(block);

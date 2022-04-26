@@ -189,7 +189,7 @@ int	main(void)
 		int		nth_chunk = 0;
 		int		player_chunk[VEC3_SIZE];
 		
-		get_chunk_pos_from_world_pos(player_chunk, player.camera.pos, &chunk_info);
+		get_chunk_pos_from_world_pos(player_chunk, player.camera.pos);
 
 		LG_INFO("Inits done, lets create some chunks (%d wanted)\n", CHUNKS_LOADED);
 		for (; nth_chunk < CHUNKS_LOADED; ++nth_chunk)
@@ -489,13 +489,13 @@ int	main(void)
 /////////////////
 		// Chunk things
 /////////////////
-		get_chunk_pos_from_world_pos(player_chunk, player.camera.pos, &chunk_info);
+		get_chunk_pos_from_world_pos(player_chunk, player.camera.pos);
 
 		int	tobegen = 0;
 		if (regen_chunks)
 		{
 			int	max_get = 1;
-			int	reload_these_chunks[max_get * CHUNKS_PER_COLUMN];	// '* 16' because we regenerate one chunk column at a time;
+			int	reload_these_chunks[max_get * CHUNKS_PER_COLUMN];	// '* CHUNKS_PER_COLUMN' because we regenerate one chunk column at a time;
 			int	into_these_coords[max_get][2];
 			int	start_coord[3];
 
