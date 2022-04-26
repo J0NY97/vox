@@ -143,8 +143,6 @@ int	main(void)
 //////////////////////////////
 	// Instance testing
 //////////////////////////////
-		t_shader	cube_shader;
-		new_shader(&cube_shader, SHADER_PATH"simple_instance.vs", SHADER_PATH"simple_instance.fs");
 		t_shader	cube_shader_v2;
 		new_shader(&cube_shader_v2, SHADER_PATH"block_mesh.vs", SHADER_PATH"block_mesh.fs");
 
@@ -160,13 +158,8 @@ int	main(void)
 
 		t_chunk_info	chunk_info;
 
-		chunk_info.render_distance = 14;
 		chunk_info.seed = 896868766;
 //		chunk_info.seed = 596547633;
-		chunk_info.chunks_loaded = CHUNKS_PER_COLUMN * ((int)chunk_info.render_distance * (int)chunk_info.render_distance);
-		chunk_info.chunk_size[0] = CHUNK_WIDTH * BLOCK_SIZE;
-		chunk_info.chunk_size[1] = CHUNK_HEIGHT * BLOCK_SIZE;
-		chunk_info.chunk_size[2] = CHUNK_BREADTH * BLOCK_SIZE;
 
 		chunk_info.block_collision_enabled = 0;
 		chunk_info.player_collision_enabled = 0;
@@ -182,14 +175,14 @@ int	main(void)
 		*/
 
 		// Creation of rendering lists;
-		chunk_info.meshes_render_indices = malloc(sizeof(int *) * chunk_info.chunks_loaded);
+		chunk_info.meshes_render_indices = malloc(sizeof(int *) * CHUNKS_LOADED);
 		chunk_info.meshes_render_amount = 0;
 
 		glGenTextures(1, &chunk_info.texture);
 		new_texture(&chunk_info.texture, MODEL_PATH"cube/version_3_texture_alpha.bmp");
 
 		t_chunk	*chunks;
-		chunks = malloc(sizeof(t_chunk) * chunk_info.chunks_loaded);
+		chunks = malloc(sizeof(t_chunk) * CHUNKS_LOADED);
 
 		chunk_info.chunks = chunks;
 
@@ -198,8 +191,8 @@ int	main(void)
 		
 		get_chunk_pos_from_world_pos(player_chunk, player.camera.pos, &chunk_info);
 
-		LG_INFO("Inits done, lets create some chunks (%d wanted)\n", chunk_info.chunks_loaded);
-		for (; nth_chunk < chunk_info.chunks_loaded; ++nth_chunk)
+		LG_INFO("Inits done, lets create some chunks (%d wanted)\n", CHUNKS_LOADED);
+		for (; nth_chunk < CHUNKS_LOADED; ++nth_chunk)
 		{
 			new_chunk(&chunks[nth_chunk], &chunk_info, nth_chunk);
 			chunks[nth_chunk].meshes.texture = chunk_info.texture;
@@ -346,7 +339,7 @@ int	main(void)
 			int	most_vertices = 0;
 			int	most_textures = 0;
 			int	most_indices = 0;
-			for (int j = 0; j < chunk_info.chunks_loaded; j++)
+			for (int j = 0; j < CHUNKS_LOADED; j++)
 			{
 				if (chunks[j].meshes.vertices_amount > most_vertices)
 					most_vertices = chunks[j].meshes.vertices_amount;
@@ -365,8 +358,8 @@ int	main(void)
 		// Force update all chunks
 		if (keys[GLFW_KEY_T].state == BUTTON_PRESS)
 		{
-			LG_INFO("Force updating all chunks. (Chunks Loaded : %d)", chunk_info.chunks_loaded);
-			for (int i = 0; i < chunk_info.chunks_loaded; i++)
+			LG_INFO("Force updating all chunks. (Chunks Loaded : %d)", CHUNKS_LOADED);
+			for (int i = 0; i < CHUNKS_LOADED; i++)
 				chunks[i].needs_to_update = 1;
 		}
 
@@ -523,7 +516,7 @@ int	main(void)
 			ft_printf("First pass\n");
 			ft_timer_start();
 		}
-		for (int ent = 0; ent < chunk_info.chunks_loaded; ++ent)
+		for (int ent = 0; ent < CHUNKS_LOADED; ++ent)
 		{
 			neighbors_found = 0;
 			highest = NULL;
@@ -586,7 +579,7 @@ int	main(void)
 				ft_printf("Second pass\n");
 				ft_timer_start();
 			}
-			for (int ent = 0; ent < chunk_info.chunks_loaded; ++ent)
+			for (int ent = 0; ent < CHUNKS_LOADED; ++ent)
 			{
 				if (chunks[ent].secondary_update || chunks[ent].needs_to_update)
 				{
@@ -626,13 +619,13 @@ int	main(void)
 		// Reset the rendering amount to 0;
 		chunk_info.meshes_render_amount = 0;
 
-		for (; nth_chunk < chunk_info.chunks_loaded; ++nth_chunk)
+		for (; nth_chunk < CHUNKS_LOADED; ++nth_chunk)
 		{
 			// Decide if we want to render the chunk or not;
 			// Dont render chunk if the chunk is further away than the farplane of the camear;
 			// Dont render if the chunk is outside the view fustrum;
 			if (vec3_dist(player.camera.pos, chunks[nth_chunk].world_coordinate) <
-				player.camera.far_plane + chunks[nth_chunk].info->chunk_size[0] &&
+				player.camera.far_plane + CHUNK_SIZE_X &&
 				aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum))
 			{
 				chunk_info.meshes_render_indices[chunk_info.meshes_render_amount] = nth_chunk;

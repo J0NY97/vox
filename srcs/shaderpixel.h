@@ -272,11 +272,20 @@ typedef struct s_player_info
 }	t_player_info;
 
 #define CHUNK_WIDTH 16
-#define CHUNK_BREADTH 16
 #define CHUNK_HEIGHT 16
+#define CHUNK_BREADTH 16
 #define CHUNKS_PER_COLUMN 256 / CHUNK_HEIGHT
 #define BLOCK_SCALE 0.5f
 #define BLOCK_SIZE BLOCK_SCALE * 2
+static float g_chunk_size_x = CHUNK_WIDTH * BLOCK_SIZE;
+static float g_chunk_size_y = CHUNK_HEIGHT * BLOCK_SIZE;
+static float g_chunk_size_z = CHUNK_BREADTH * BLOCK_SIZE;
+#define CHUNK_SIZE_X g_chunk_size_x
+#define CHUNK_SIZE_Y g_chunk_size_y
+#define CHUNK_SIZE_Z g_chunk_size_z
+#define RENDER_DISTANCE 14
+static int g_chunks_loaded = CHUNKS_PER_COLUMN * RENDER_DISTANCE * RENDER_DISTANCE;
+#define CHUNKS_LOADED g_chunks_loaded
 
 typedef struct s_chunk		t_chunk;
 
@@ -330,14 +339,7 @@ void		block_print(t_block *block);
 
 typedef struct s_chunk_info
 {
-	float		chunk_size[VEC3_SIZE];
-
 	unsigned int	seed;
-
-	// TODO: These could be moved to 't_game_info' or something like that.
-	// 		something like t_world, so you can pass it in to the helper functions like 'get_block();'
-	int			chunks_loaded; // amount of chunks currently loaded;
-	int			render_distance;
 
 	int			block_collision_enabled;
 	int			player_collision_enabled;

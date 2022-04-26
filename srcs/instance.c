@@ -151,9 +151,9 @@ int	create_noise_map(int *map, int size_x, int size_z, int coord_x, int coord_z)
 */
 int	*get_chunk_pos_from_world_pos(int *res, float *world_coords, t_chunk_info *info)
 {
-	res[0] = floor(world_coords[0] / info->chunk_size[0]);
-	res[1] = floor(world_coords[1] / info->chunk_size[1]);
-	res[2] = floor(world_coords[2] / info->chunk_size[2]);
+	res[0] = floor(world_coords[0] / CHUNK_SIZE_X);
+	res[1] = floor(world_coords[1] / CHUNK_SIZE_Y);
+	res[2] = floor(world_coords[2] / CHUNK_SIZE_Z);
 	return (res);
 }
 
@@ -162,12 +162,12 @@ void	chunk_aabb_update(t_chunk *chunk)
 	t_aabb	*a;
 
 	a = &chunk->aabb;
-	a->min[0] = chunk->world_coordinate[0] - (BLOCK_SIZE / 2);
-	a->min[1] = chunk->world_coordinate[1] - (BLOCK_SIZE / 2);
-	a->min[2] = chunk->world_coordinate[2] - (BLOCK_SIZE / 2);
-	a->max[0] = a->min[0] + chunk->info->chunk_size[0];
-	a->max[1] = a->min[1] + chunk->info->chunk_size[1];
-	a->max[2] = a->min[2] + chunk->info->chunk_size[2];
+	a->min[0] = chunk->world_coordinate[0] - BLOCK_SCALE;
+	a->min[1] = chunk->world_coordinate[1] - BLOCK_SCALE;
+	a->min[2] = chunk->world_coordinate[2] - BLOCK_SCALE;
+	a->max[0] = a->min[0] + CHUNK_SIZE_X;
+	a->max[1] = a->min[1] + CHUNK_SIZE_Y;
+	a->max[2] = a->min[2] + CHUNK_SIZE_Z;
 }
 
 /*
@@ -185,7 +185,7 @@ t_chunk	*get_adjacent_chunk(t_chunk_info *info, t_chunk *from, float *dir)
 	from_coord[0] = from->coordinate[0] + (int)dir[0];
 	from_coord[1] = from->coordinate[1] + (int)dir[1];
 	from_coord[2] = from->coordinate[2] + (int)dir[2];
-	for (int i = 0; i < info->chunks_loaded; i++)
+	for (int i = 0; i < CHUNKS_LOADED; i++)
 	{
 		if (info->chunks[i].coordinate[0] == from_coord[0] &&
 			info->chunks[i].coordinate[1] == from_coord[1] &&
@@ -197,7 +197,7 @@ t_chunk	*get_adjacent_chunk(t_chunk_info *info, t_chunk *from, float *dir)
 
 t_chunk	*get_chunk(t_chunk_info	*info, int *pos)
 {
-	for (int i = 0; i < info->chunks_loaded; i++)
+	for (int i = 0; i < CHUNKS_LOADED; i++)
 	{
 		if (info->chunks[i].coordinate[0] == pos[0] && 
 			info->chunks[i].coordinate[1] == pos[1] && 
@@ -486,9 +486,9 @@ void	update_chunk_v2(t_chunk *chunk, int *coord, int *noise_map)
 	for (int i = 0; i < 3; i++)
 		chunk->coordinate[i] = coord[i];
 	vec3_new(chunk->world_coordinate,
-		chunk->coordinate[0] * chunk->info->chunk_size[0],
-		chunk->coordinate[1] * chunk->info->chunk_size[1],
-		chunk->coordinate[2] * chunk->info->chunk_size[2]);
+		chunk->coordinate[0] * CHUNK_SIZE_X,
+		chunk->coordinate[1] * CHUNK_SIZE_Y,
+		chunk->coordinate[2] * CHUNK_SIZE_Z);
 
 	// Generate Chunks	
 	chunk->block_amount = chunk_gen_v2(chunk, noise_map); // should always return max amount of blocks in a chunk;
@@ -542,15 +542,15 @@ int	get_chunks_to_reload(int *chunks, int *start_coord, t_chunk_info *info, int 
 	int	reload_amount = 0;
 	int	found = 0;
 
-	start_coord[0] = player_chunk_v3[0] - (info->render_distance / 2);
+	start_coord[0] = player_chunk_v3[0] - (RENDER_DISTANCE / 2);
 	start_coord[1] = 0;
-	start_coord[2] = player_chunk_v3[2] - (info->render_distance / 2);
-	for (int i = 0; i < info->chunks_loaded; i++)
+	start_coord[2] = player_chunk_v3[2] - (RENDER_DISTANCE / 2);
+	for (int i = 0; i < CHUNKS_LOADED; i++)
 	{
 		found = 0;
-		for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
+		for (int x = start_coord[0], x_amount = 0; x_amount < RENDER_DISTANCE; x++, x_amount++)
 		{
-			for (int z = start_coord[2], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
+			for (int z = start_coord[2], z_amount = 0; z_amount < RENDER_DISTANCE; z++, z_amount++)
 			{
 				if (info->chunks[i].coordinate[0] == x && info->chunks[i].coordinate[2] == z)
 				{
@@ -578,19 +578,19 @@ int	get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, 
 	int	reload_amount = 0;
 	int	found;
 
-	start_coord[0] = player_chunk_v3[0] - (info->render_distance / 2);
+	start_coord[0] = player_chunk_v3[0] - (RENDER_DISTANCE / 2);
 	start_coord[1] = 0;
-	start_coord[2] = player_chunk_v3[2] - (info->render_distance / 2);
+	start_coord[2] = player_chunk_v3[2] - (RENDER_DISTANCE / 2);
 
 	// Find chunk that shouldnt be loaded anymore;
 	int	coord_x = start_coord[0];
 	int	coord_z = start_coord[2];
-	for (int i = 0; i < info->chunks_loaded; i++)
+	for (int i = 0; i < CHUNKS_LOADED; i++)
 	{
 		found = 0;
-		for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
+		for (int x = start_coord[0], x_amount = 0; x_amount < RENDER_DISTANCE; x++, x_amount++)
 		{
-			for (int z = start_coord[2], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
+			for (int z = start_coord[2], z_amount = 0; z_amount < RENDER_DISTANCE; z++, z_amount++)
 			{
 				if (info->chunks[i].coordinate[0] == x && info->chunks[i].coordinate[2] == z)
 					found = 1;
@@ -611,12 +611,12 @@ int	get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, 
 
 	// Find coords that should be loaded and arent, and add those to the 'into_these' arr;
 	int	coord_amount = 0;
-	for (int x = start_coord[0], x_amount = 0; x_amount < info->render_distance; x++, x_amount++)
+	for (int x = start_coord[0], x_amount = 0; x_amount < RENDER_DISTANCE; x++, x_amount++)
 	{
-		for (int z = start_coord[2], z_amount = 0; z_amount < info->render_distance; z++, z_amount++)
+		for (int z = start_coord[2], z_amount = 0; z_amount < RENDER_DISTANCE; z++, z_amount++)
 		{
 			found = 0;
-			for (int i = 0; i < info->chunks_loaded; i++)
+			for (int i = 0; i < CHUNKS_LOADED; i++)
 			{
 				if (info->chunks[i].coordinate[0] == x &&
 					info->chunks[i].coordinate[2] == z)
@@ -651,7 +651,7 @@ int	regenerate_chunks(int *these, int coord[2], t_chunk_info *info)
 	create_noise_map(noise_map, CHUNK_WIDTH, CHUNK_BREADTH, coord[0], coord[1]);
 	for (int y = 0; y < CHUNK_HEIGHT; y++)
 	{
-		if (nth_chunk >= CHUNKS_PER_COLUMN || nth_chunk >= info->chunks_loaded) 
+		if (nth_chunk >= CHUNKS_PER_COLUMN || nth_chunk >= CHUNKS_LOADED) 
 			break ;
 		int index = these[nth_chunk];
 		info->chunks[index].args.chunk = &info->chunks[index];
@@ -1362,7 +1362,7 @@ void	player_terrain_collision(float *res, float *pos, float *velocity, t_chunk_i
 		get_chunk_pos_from_world_pos(player_chunk, pos, info);
 		player_collision_amount = 0;
 		vec3_normalize(normed_velocity, final);
-		for (int i = 0; i < info->chunks_loaded; i++)
+		for (int i = 0; i < CHUNKS_LOADED; i++)
 		{
 			if (!(info->chunks[i].blocks_solid_amount > 0 &&
 				vec3i_dist(player_chunk, info->chunks[i].coordinate) < 2))
@@ -1593,7 +1593,7 @@ t_chunk *get_highest_chunk(t_chunk_info *info, int x, int z)
 	int	highest = -1;
 	int	highest_index = -1;
 
-	for (int i = 0; i < info->chunks_loaded; i++)
+	for (int i = 0; i < CHUNKS_LOADED; i++)
 	{
 		if (info->chunks[i].coordinate[0] == x &&
 			info->chunks[i].coordinate[2] == z &&
@@ -1604,7 +1604,7 @@ t_chunk *get_highest_chunk(t_chunk_info *info, int x, int z)
 			highest_index = i;
 		}
 	}
-	if (highest_index >= 0 && highest_index < info->chunks_loaded)
+	if (highest_index >= 0 && highest_index < CHUNKS_LOADED)
 		return (&info->chunks[highest_index]);
 	return (NULL);
 }
