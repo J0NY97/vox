@@ -407,6 +407,7 @@ void		new_chunk(t_chunk *chunk, t_chunk_info *info, int nth);
 int			chunk_gen(t_chunk *chunk);
 void		update_chunk(t_chunk *chunk, int *coord);
 void		update_chunk_visible_blocks(t_chunk *chunk);
+void		update_chunk_border_visible_blocks(t_chunk *chunk);
 void		chunk_aabb_update(t_chunk *chunk);
 void		show_chunk_borders(t_chunk *chunk, t_camera *camera, float *col);
 void		render_aabb(t_aabb *a, t_camera *camera, float *col);
@@ -442,11 +443,12 @@ typedef struct s_regen_args
 
 void		*regen_thread_func(void *args);
 int			regenerate_chunks(int *these, int coord[2], t_chunk_info *info);
+int			regenerate_chunks_threading(int *these, int coord[2], t_chunk_info *info);
 
 void		init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount);
 void		reset_chunk_mesh_v2(t_chunk_mesh_v2 *mesh);
 void		add_to_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, int *coord, float *face_vertices, int texture_id, int light);
-void		update_chunk_mesh_v2(t_chunk_mesh_v2 *mesh);
+void		update_chunk_mesh(t_chunk_mesh_v2 *mesh);
 void		render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinate, t_camera *camera, t_shader *shader);
 int			chunk_mesh_collision_v2(float *orig, float *dir, t_chunk_mesh_v2 *mesh, int mesh_type, float *world_coords, float reach, float intersect_point[16][3]);
 

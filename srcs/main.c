@@ -219,6 +219,10 @@ int	main(void)
 	char	fps_str[10];
 	while (!glfwWindowShouldClose(sp.win))
 	{
+		error = glGetError();
+		if (error)
+			LG_ERROR("errors in start of while : %d", error);
+
 		glCullFace(GL_BACK);
 		/*
 		glDisable(GL_DEPTH_TEST);
@@ -500,8 +504,14 @@ int	main(void)
 			int	start_coord[3];
 
 			tobegen = get_chunks_to_reload_v2(reload_these_chunks, into_these_coords, start_coord, &chunk_info, player_chunk, max_get);
-			for (int i = 0; i * CHUNKS_PER_COLUMN < tobegen; i++)
-				regenerate_chunks(reload_these_chunks + (i * CHUNKS_PER_COLUMN), into_these_coords[i], &chunk_info);
+			if (tobegen)
+			{
+				ft_timer_start();
+				for (int i = 0; i * CHUNKS_PER_COLUMN < tobegen; i++)
+					regenerate_chunks(reload_these_chunks + (i * CHUNKS_PER_COLUMN), into_these_coords[i], &chunk_info);
+//					regenerate_chunks_threading(reload_these_chunks + (i * CHUNKS_PER_COLUMN), into_these_coords[i], &chunk_info);
+				ft_printf("time to regen : %f\n", ft_timer_end());
+			}
 		}
 
 		thread_manager_check_threadiness(&tm);
@@ -549,12 +559,13 @@ int	main(void)
 				chunks[ent].update_structures = 0;
 			}
 
+			/*
 			if (chunks[ent].needs_to_update)
 			{
 				if (chunk_info.light_calculation && highest == &chunks[ent])
 					update_chunk_light(&chunks[ent]);
 				update_chunk_visible_blocks(&chunks[ent]);
-				update_chunk_mesh_v2(&chunks[ent].meshes);
+				update_chunk_mesh(&chunks[ent].meshes);
 				chunk_aabb_update(&chunks[ent]);
 				chunks[ent].needs_to_update = 0;
 
@@ -563,6 +574,7 @@ int	main(void)
 					if (neighbors[i])
 						neighbors[i]->secondary_update = 1;
 			}
+			*/
 		}
 		if (keys[GLFW_KEY_T].state == BUTTON_PRESS)
 			ft_printf("Time : %f\n", ft_timer_end());
@@ -587,7 +599,7 @@ int	main(void)
 					chunks[ent].needs_to_update = 0;
 					update_chunk_border_visible_blocks(&chunks[ent]);
 //					update_chunk_visible_blocks(&chunks[ent]);
-					update_chunk_mesh_v2(&chunks[ent].meshes);
+					update_chunk_mesh(&chunks[ent].meshes);
 					chunk_aabb_update(&chunks[ent]);
 				}
 			}

@@ -409,7 +409,6 @@ void	get_blocks_visible(t_chunk *chunk)
 	}
 }
 
-
 void	update_chunk_border_visible_blocks(t_chunk *chunk)
 {
 	t_block	*blocks;
@@ -483,15 +482,6 @@ void	update_chunk_v2(t_chunk *chunk, int *coord, int *noise_map)
 
 	chunk->update_structures = 1;
 	chunk->needs_to_update = 1;
-}
-
-void	*update_chunk_threaded_v2(void *arg)
-{
-	t_chunk_args	*info = arg;
-
-	update_chunk_v2(info->chunk, info->coords, info->noise_map);
-	info->chunk->args.being_threaded = 0;
-	return (NULL);
 }
 
 /*
@@ -626,26 +616,64 @@ int	get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, 
 	return (reload_amount);
 }
 
-/*
- * Returns amount of chunks that still need to get generated;
-*/
-int	regenerate_chunks(int *these, int coord[2], t_chunk_info *info)
+void	*chunk_thread_func(void *args)
 {
-	int			nth_chunk = 0;
-	int			noise_map[CHUNK_WIDTH * CHUNK_BREADTH];
+	t_chunk_args	*info;
+
+	info = args;
+	update_chunk_v2(info->chunk, info->coords, info->noise_map);
+	update_chunk_visible_blocks(info->chunk);
+	chunk_aabb_update(info->chunk);
+	return (NULL);
+}
+
+int	regenerate_chunks_threading(int *these, int coord[2], t_chunk_info *info)
+{
+	int				ind;
+	int				nth_chunk = 0;
+	int				noise_map[CHUNK_WIDTH * CHUNK_BREADTH];
+	t_chunk_args	args[CHUNKS_PER_COLUMN];
+	pthread_t		threads[CHUNKS_PER_COLUMN];
 
 	create_noise_map(noise_map, CHUNK_WIDTH, CHUNK_BREADTH, coord[0], coord[1]);
 	for (int y = 0; y < CHUNK_HEIGHT; y++)
 	{
 		if (nth_chunk >= CHUNKS_PER_COLUMN || nth_chunk >= CHUNKS_LOADED) 
 			break ;
-		int index = these[nth_chunk];
-		info->chunks[index].args.chunk = &info->chunks[index];
-		info->chunks[index].args.coords[0] = coord[0];
-		info->chunks[index].args.coords[1] = y;
-		info->chunks[index].args.coords[2] = coord[1];
-		info->chunks[index].args.noise_map = noise_map;
-		update_chunk_threaded_v2(&info->chunks[index].args);
+		ind = these[nth_chunk];
+		args[nth_chunk].chunk = &info->chunks[ind];
+		args[nth_chunk].coords[0] = coord[0];
+		args[nth_chunk].coords[1] = y;
+		args[nth_chunk].coords[2] = coord[1];
+		args[nth_chunk].noise_map = noise_map;
+		pthread_create(&threads[nth_chunk], NULL, chunk_thread_func, &args[nth_chunk]);
+		nth_chunk++;
+	}
+	for (int i = 0; i < nth_chunk; i++)
+		pthread_join(threads[i], NULL);
+	for (int i = 0; i < nth_chunk; i++)
+		update_chunk_mesh(&info->chunks[these[i]].meshes);
+	return (nth_chunk);
+}
+/*
+ * Returns amount of chunks that still need to get generated;
+*/
+int	regenerate_chunks(int *these, int coord[2], t_chunk_info *info)
+{
+	int				ind;
+	int				nth_chunk = 0;
+	int				noise_map[CHUNK_WIDTH * CHUNK_BREADTH];
+
+	create_noise_map(noise_map, CHUNK_WIDTH, CHUNK_BREADTH, coord[0], coord[1]);
+	for (int y = 0; y < CHUNK_HEIGHT; y++)
+	{
+		if (nth_chunk >= CHUNKS_PER_COLUMN || nth_chunk >= CHUNKS_LOADED) 
+			break ;
+		ind = these[nth_chunk];
+		update_chunk_v2(&info->chunks[ind], (int []){coord[0], y, coord[1]}, noise_map);
+		update_chunk_visible_blocks(&info->chunks[ind]);
+		update_chunk_mesh(&info->chunks[ind].meshes);
+		chunk_aabb_update(&info->chunks[ind]);
 		nth_chunk++;
 	}
 	return (nth_chunk);
@@ -793,7 +821,6 @@ void	init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount)
 	if (error)
 		LG_ERROR("(%d)", error);
 
-
 	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_pos);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
 
@@ -863,7 +890,7 @@ void	render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinat
 /*
  * Sends the mesh info to the GPU;
 */
-void	update_chunk_mesh_v2(t_chunk_mesh_v2 *mesh)
+void	update_chunk_mesh(t_chunk_mesh_v2 *mesh)
 {
 	int error;
 	error = glGetError();
