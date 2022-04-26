@@ -273,55 +273,6 @@ typedef struct s_player_info
 
 typedef struct s_chunk		t_chunk;
 
-typedef struct s_block
-{
-	int		type; // e_block_type;
-	char	is_emit; // is the block currently emitting light; 0 - 1
-	char	light_lvl; // the current light lvl of the block; 0 - 15
-}	t_block;
-
-void		block_print(t_block *block);
-
-typedef struct s_chunk_info
-{
-	int			width; // in blocks;
-	int			breadth; // in blocks;
-	int			height; // in blocks;
-	int			y_chunk_amount;
-	float		block_scale;
-	float		block_size;
-	float		chunk_size[VEC3_SIZE];
-
-	unsigned int	seed;
-
-	// TODO: These could be moved to 't_game_info' or something like that.
-	// 		something like t_world, so you can pass it in to the helper functions like 'get_block();'
-	int			chunks_loaded; // amount of chunks currently loaded;
-	int			render_distance;
-
-	int			block_collision_enabled;
-	int			player_collision_enabled;
-	int			fancy_graphics;
-	int			generate_structures;
-	int			light_calculation;
-
-	t_chunk		*chunks; // you should not store the chunks here mainly; its just here so you can acces from places you need, without having to pass them in the function as argumnet;
-	GLuint		texture; // the texture is stored here so we dont load a texture per chunk_mesh;
-
-	t_hash_item	*hash_table;
-	int			hash_table_size;
-
-}	t_chunk_info;
-
-/* Used for threading */
-typedef struct s_chunk_args
-{
-	t_chunk	*chunk;
-	int		coords[VEC3_SIZE];
-	int		*noise_map;
-	int		being_threaded;
-}	t_chunk_args;
-
 enum e_mesh_types
 {
 	BLOCK_MESH = 0,		// ex. dirt
@@ -361,6 +312,59 @@ typedef struct s_chunk_mesh_v2
 	size_t			index_amount; // how many indices we have; (one face has 4 indices);
 }	t_chunk_mesh_v2;
 
+typedef struct s_block
+{
+	int		type; // e_block_type;
+	char	is_emit; // is the block currently emitting light; 0 - 1
+	char	light_lvl; // the current light lvl of the block; 0 - 15
+}	t_block;
+
+void		block_print(t_block *block);
+
+typedef struct s_chunk_info
+{
+	int			width; // in blocks;
+	int			breadth; // in blocks;
+	int			height; // in blocks;
+	int			y_chunk_amount;
+	float		block_scale;
+	float		block_size;
+	float		chunk_size[VEC3_SIZE];
+
+	unsigned int	seed;
+
+	// TODO: These could be moved to 't_game_info' or something like that.
+	// 		something like t_world, so you can pass it in to the helper functions like 'get_block();'
+	int			chunks_loaded; // amount of chunks currently loaded;
+	int			render_distance;
+
+	int			block_collision_enabled;
+	int			player_collision_enabled;
+	int			fancy_graphics;
+	int			generate_structures;
+	int			light_calculation;
+
+	t_chunk		*chunks; // you should not store the chunks here mainly; its just here so you can acces from places you need, without having to pass them in the function as argumnet;
+	GLuint		texture; // the texture is stored here so we dont load a texture per chunk_mesh;
+
+	t_hash_item	*hash_table;
+	int			hash_table_size;
+
+	// Rendering lists;
+	int				*meshes_render_indices;
+	int				meshes_render_amount;
+
+}	t_chunk_info;
+
+/* Used for threading */
+typedef struct s_chunk_args
+{
+	t_chunk	*chunk;
+	int		coords[VEC3_SIZE];
+	int		*noise_map;
+	int		being_threaded;
+}	t_chunk_args;
+
 struct	s_chunk
 {
 	t_chunk_info	*info;
@@ -391,8 +395,6 @@ struct	s_chunk
 
 	int				needs_to_update;
 	int				secondary_update;
-
-	int				render; // if we want to render the chunk this frame;
 
 	t_chunk_args	args;
 };

@@ -187,6 +187,10 @@ int	main(void)
 		hash_table_clear(chunk_info.hash_table, chunk_info.hash_table_size);
 		*/
 
+		// Creation of rendering lists;
+		chunk_info.meshes_render_indices = malloc(sizeof(int *) * chunk_info.chunks_loaded);
+		chunk_info.meshes_render_amount = 0;
+
 		glGenTextures(1, &chunk_info.texture);
 		new_texture(&chunk_info.texture, MODEL_PATH"cube/version_3_texture_alpha.bmp");
 
@@ -556,7 +560,7 @@ int	main(void)
 
 			if (chunks[ent].needs_to_update)
 			{
-				if (chunk_info.light_calculation)// && highest == &chunks[ent])
+				if (chunk_info.light_calculation && highest == &chunks[ent])
 					update_chunk_light(&chunks[ent]);
 				update_chunk_visible_blocks(&chunks[ent]);
 				update_chunk_mesh_v2(&chunks[ent].meshes);
@@ -572,7 +576,7 @@ int	main(void)
 
 		// Secondary updater;
 		// We dont want to immediately update the chunks that other chunks want
-		//	updated, because they might updated themselves;
+		//	updated, because they might update themselves;
 		// So if theres still chunks that needs updating after we've gone through
 		// 	the chunks once, we update them here;
 		for (int ent = 0; ent < chunk_info.chunks_loaded; ++ent)
@@ -612,6 +616,9 @@ int	main(void)
 
 		glDisable(GL_BLEND);
 		glEnable(GL_CULL_FACE);
+		// Reset the rendering amount to 0;
+		chunk_info.meshes_render_amount = 0;
+
 		for (; nth_chunk < chunk_info.chunks_loaded; ++nth_chunk)
 		{
 			// Decide if we want to render the chunk or not;
@@ -620,17 +627,11 @@ int	main(void)
 			if (vec3_dist(player.camera.pos, chunks[nth_chunk].world_coordinate) <
 				player.camera.far_plane + chunks[nth_chunk].info->chunk_size[0] &&
 				aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum))
-				chunks[nth_chunk].render = 1;
-			else
-				chunks[nth_chunk].render = 0;
-			
-			// Render solid mesh;
-			if (chunks[nth_chunk].render)
 			{
-				if (chunks[nth_chunk].blocks_solid_amount > 0)
-					render_chunk_mesh_v2(&chunks[nth_chunk].meshes, BLOCK_MESH, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
+				chunk_info.meshes_render_indices[chunk_info.meshes_render_amount] = nth_chunk;
+				++chunk_info.meshes_render_amount;
 			}
-
+			
 			if (chunks[nth_chunk].blocks_solid_amount > 0 ||
 				chunks[nth_chunk].blocks_flora_amount > 0 ||
 				chunks[nth_chunk].blocks_solid_alpha_amount > 0)
@@ -735,32 +736,47 @@ int	main(void)
 		glDisable(GL_BLEND);
 		render_skybox(&skybox, &player.camera);
 
+		// Render solid meshes;
+		glDisable(GL_BLEND);
+		glEnable(GL_CULL_FACE);
+		for (int r = 0; r < chunk_info.meshes_render_amount; r++)
+		{
+			int render_index = chunk_info.meshes_render_indices[r];
+			if (chunks[render_index].blocks_solid_amount > 0)
+				render_chunk_mesh_v2(&chunks[render_index].meshes, BLOCK_MESH, chunks[render_index].world_coordinate, &player.camera, &cube_shader_v2);
+		}
+
+		// Render solid alpha meshes;
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
 		glEnable(GL_CULL_FACE);
-		nth_chunk = 0;
-		for (; nth_chunk < chunk_info.chunks_loaded; ++nth_chunk)
+		for (int r = 0; r < chunk_info.meshes_render_amount; r++)
 		{
-			if (chunks[nth_chunk].render)
-			{
-				if (chunks[nth_chunk].blocks_solid_alpha_amount > 0)
-					render_chunk_mesh_v2(&chunks[nth_chunk].meshes, BLOCK_ALPHA_MESH, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
-				if (chunks[nth_chunk].blocks_fluid_amount > 0)
-					render_chunk_mesh_v2(&chunks[nth_chunk].meshes, FLUID_MESH, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
-			}
+			int render_index = chunk_info.meshes_render_indices[r];
+			if (chunks[render_index].blocks_solid_alpha_amount > 0)
+				render_chunk_mesh_v2(&chunks[render_index].meshes, BLOCK_ALPHA_MESH, chunks[render_index].world_coordinate, &player.camera, &cube_shader_v2);
 		}
 
+		// Render flora meshes;
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
-		nth_chunk = 0;
-		for (; nth_chunk < chunk_info.chunks_loaded; ++nth_chunk)
+		for (int r = 0; r < chunk_info.meshes_render_amount; r++)
 		{
-			if (chunks[nth_chunk].render)
-			{
-				if (chunks[nth_chunk].blocks_flora_amount > 0)
-					render_chunk_mesh_v2(&chunks[nth_chunk].meshes, FLORA_MESH, chunks[nth_chunk].world_coordinate, &player.camera, &cube_shader_v2);
-			}
+			int render_index = chunk_info.meshes_render_indices[r];
+			if (chunks[render_index].blocks_flora_amount > 0)
+				render_chunk_mesh_v2(&chunks[render_index].meshes, FLORA_MESH, chunks[render_index].world_coordinate, &player.camera, &cube_shader_v2);
+		}
+
+		// Render fluid meshes;
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+		glDisable(GL_CULL_FACE);
+		for (int r = 0; r < chunk_info.meshes_render_amount; r++)
+		{
+			int render_index = chunk_info.meshes_render_indices[r];
+			if (chunks[render_index].blocks_fluid_amount > 0)
+				render_chunk_mesh_v2(&chunks[render_index].meshes, FLUID_MESH, chunks[render_index].world_coordinate, &player.camera, &cube_shader_v2);
 		}
 
 /////////////////
