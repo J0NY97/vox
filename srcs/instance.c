@@ -409,6 +409,9 @@ void	get_blocks_visible(t_chunk *chunk)
 	}
 }
 
+/*
+ * TODO: only update blocks that have not already been added to the mesh;
+*/
 void	update_chunk_border_visible_blocks(t_chunk *chunk)
 {
 	t_block	*blocks;
@@ -674,6 +677,7 @@ int	regenerate_chunks(int *these, int coord[2], t_chunk_info *info)
 		update_chunk_visible_blocks(&info->chunks[ind]);
 		update_chunk_mesh(&info->chunks[ind].meshes);
 		chunk_aabb_update(&info->chunks[ind]);
+		info->chunks[ind].needs_to_update = 0;
 		nth_chunk++;
 	}
 	return (nth_chunk);

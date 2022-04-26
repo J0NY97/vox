@@ -251,37 +251,6 @@ int	main(void)
 			glPolygonMode(GL_FRONT_AND_BACK, sp.polygon_mode);
 		}
 
-		float		rot_amount_delta = rot_amount * 10.0f * fps.delta_time;
-		t_entity	*selected_entity = NULL; //get_scene_entity(&scene, display_index);
-
-		if (keys[GLFW_KEY_KP_ENTER].state == BUTTON_PRESS)
-			rot_amount *= -1;
-
-		if (keys[GLFW_KEY_KP_1].state == BUTTON_PRESS)
-			selected_entity->rot_x_angle += rot_amount;
-		if (keys[GLFW_KEY_KP_2].state == BUTTON_PRESS)
-			selected_entity->rot_y_angle += rot_amount;
-		if (keys[GLFW_KEY_KP_3].state == BUTTON_PRESS)
-			selected_entity->rot_z_angle += rot_amount;
-
-		if (keys[GLFW_KEY_KP_4].state == BUTTON_PRESS)
-			toggle_rot_x = toggle_rot_x != 1;
-		if (toggle_rot_x)
-			selected_entity->rot_x_angle += rot_amount_delta;
-
-		if (keys[GLFW_KEY_KP_5].state == BUTTON_PRESS)
-			toggle_rot_y = toggle_rot_y != 1;
-		if (toggle_rot_y)
-			selected_entity->rot_y_angle += rot_amount_delta;
-
-		if (keys[GLFW_KEY_KP_6].state == BUTTON_PRESS)
-			toggle_rot_z = toggle_rot_z != 1;
-		if (toggle_rot_z)
-			selected_entity->rot_z_angle += rot_amount_delta;
-		
-		if (keys[GLFW_KEY_N].state == BUTTON_PRESS)
-			selected_entity->show_normal_map = selected_entity->show_normal_map != 1;
-
 		if (keys[GLFW_KEY_P].state == BUTTON_PRESS)
 		{
 			player_print(&player);
@@ -472,12 +441,6 @@ int	main(void)
 				entities_collisioned += 1;
 			}
 		}
-		}
-
-/*
-		player_apply_velocity(&player);
-		update_camera(&player.camera);
-		*/
 
 		glEnable(GL_DEPTH_TEST);
 		size_t	entities_rendered = 0;
@@ -488,6 +451,7 @@ int	main(void)
 				render_entity(scene.entities[i], &player.camera, &scene.entities[i]->model, &shader1);
 				entities_rendered += 1;
 			}
+		}
 		}
 
 /////////////////
@@ -559,7 +523,6 @@ int	main(void)
 				chunks[ent].update_structures = 0;
 			}
 
-			/*
 			if (chunks[ent].needs_to_update)
 			{
 				if (chunk_info.light_calculation && highest == &chunks[ent])
@@ -574,7 +537,6 @@ int	main(void)
 					if (neighbors[i])
 						neighbors[i]->secondary_update = 1;
 			}
-			*/
 		}
 		if (keys[GLFW_KEY_T].state == BUTTON_PRESS)
 			ft_printf("Time : %f\n", ft_timer_end());
@@ -598,7 +560,6 @@ int	main(void)
 					chunks[ent].secondary_update = 0;
 					chunks[ent].needs_to_update = 0;
 					update_chunk_border_visible_blocks(&chunks[ent]);
-//					update_chunk_visible_blocks(&chunks[ent]);
 					update_chunk_mesh(&chunks[ent].meshes);
 					chunk_aabb_update(&chunks[ent]);
 				}
