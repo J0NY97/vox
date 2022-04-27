@@ -66,6 +66,7 @@ int	chunk_gen_v2(t_chunk *chunk, int *noise_map)
 						octave_perlin(block_world_x * freq, block_world_y * freq, block_world_z * freq, 8, pers);
 				}
 				*/
+				chunk->blocks[i].visible_faces = 0;
 				if (chunk->info->light_calculation)
 					chunk->blocks[i].light_lvl = 0;
 				else
@@ -356,6 +357,7 @@ void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *pos)
 
 	if (is_flora(&chunk->blocks[index]))
 	{
+		chunk->blocks[index].visible_faces |= g_visible_faces[6];
 		add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, (float *)g_flora_faces[0], g_flora_data[chunk->blocks[index].type - FLORA_FIRST - 1].texture[0], 100);
 		add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, (float *)g_flora_faces[1], g_flora_data[chunk->blocks[index].type - FLORA_FIRST - 1].texture[1], 100);
 		++chunk->blocks_flora_amount;
@@ -367,23 +369,41 @@ void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *pos)
 		{
 			adj = get_block_in_dir(chunk, neighbors[dir], pos, dir);
 			if (adj)
-				add_block_to_correct_mesh(chunk, &chunk->blocks[index], adj, pos, dir);
+			{
+				// Dont add to mesh if face already in it;
+				if (!(chunk->blocks[index].visible_faces & g_visible_faces[dir]))
+				{
+					chunk->blocks[index].visible_faces |= g_visible_faces[dir];
+					add_block_to_correct_mesh(chunk, &chunk->blocks[index], adj, pos, dir);
+				}
+			}
+			else
+				chunk->blocks[index].visible_faces &= ~g_visible_faces[dir];
 		}
 	}
+	/*
+	chunk->blocks[index].visible_faces = g_visible_faces[6];
+	print_binary(chunk->blocks[index].visible_faces, 8);
+	ft_putstr("\n");
+	chunk->blocks[index].visible_faces |= g_visible_faces[0];
+	print_binary(chunk->blocks[index].visible_faces, 8);
+	ft_putstr("\n");
+	chunk->blocks[index].visible_faces &= ~g_visible_faces[0];
+	print_binary(chunk->blocks[index].visible_faces, 8);
+	ft_putstr("\n");
+	exit(0);
+	*/
 }
 
 /*
- * For each block in chunk;
- *	Go through each block in chunk;
- *		check if not touching solid block;
- *	if touching;
- *		add to render array;
+ * For each block in chunk, check all its adjacent blocks,
+ *	if touching air, add that face to the chunk's mesh.
  *
- * THIS MIGHT ONLY WORK NOW THAT THE CHUNKS ARE SYMMETRIC, IF SOMETHING BREAKS
- * CHECK THAT THE XYZ CORRESPOND CORRECTLY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * This func resets the mesh before doing anything;
 */
 void	get_blocks_visible(t_chunk *chunk)
 {
+	static float total_time = 0;
 	chunk->blocks_solid_amount = 0;
 	chunk->blocks_flora_amount = 0;
 	chunk->blocks_fluid_amount = 0;
@@ -396,6 +416,11 @@ void	get_blocks_visible(t_chunk *chunk)
 	t_chunk *neighbors[6];
 	for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
 		neighbors[i] = get_adjacent_chunk(chunk->info, chunk, (float *)g_card_dir[dir]);
+
+	// TODO: remove this, try to integrate it to the loop under this;
+	// Reset visible faces;
+	for (int i = 0; i < chunk->block_amount; i++)
+		chunk->blocks[i].visible_faces = 0;
 
 	for (int y = 1; y < CHUNK_HEIGHT - 1; y++)
 	{
@@ -450,15 +475,6 @@ void	update_chunk_border_visible_blocks(t_chunk *chunk)
 
 unsigned long int	get_chunk_hash_key(int *coords)
 {
-	/*
-	int	res;
-
-	res = coords[0] +
-		(8 * coords[1]) +
-		(8 * 8 * coords[2]);
-	return (res);
-	*/
-
 	char	str[256];
 	unsigned long int	hash = 5381;
 

@@ -329,11 +329,16 @@ typedef struct s_chunk_mesh_v2
 	size_t			index_amount; // how many indices we have; (one face has 4 indices);
 }	t_chunk_mesh_v2;
 
+/*
+ * 'visible_faces' : has 'e_faces' 'OR':ed into it, IF the face has been added
+ *		to it's chunk's mesh;
+*/
 typedef struct s_block
 {
 	int		type; // e_block_type;
 	char	is_emit; // is the block currently emitting light; 0 - 1
 	char	light_lvl; // the current light lvl of the block; 0 - 15
+	char	visible_faces; // any of 'e_faces', can have multiple 'OR':ed;
 }	t_block;
 
 void		block_print(t_block *block);

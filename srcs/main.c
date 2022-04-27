@@ -470,11 +470,8 @@ int	main(void)
 			tobegen = get_chunks_to_reload_v2(reload_these_chunks, into_these_coords, start_coord, &chunk_info, player_chunk, max_get);
 			if (tobegen)
 			{
-				ft_timer_start();
 				for (int i = 0; i * CHUNKS_PER_COLUMN < tobegen; i++)
 					regenerate_chunks(reload_these_chunks + (i * CHUNKS_PER_COLUMN), into_these_coords[i], &chunk_info);
-//					regenerate_chunks_threading(reload_these_chunks + (i * CHUNKS_PER_COLUMN), into_these_coords[i], &chunk_info);
-				ft_printf("time to regen : %f\n", ft_timer_end());
 			}
 		}
 
@@ -531,6 +528,7 @@ int	main(void)
 				update_chunk_mesh(&chunks[ent].meshes);
 				chunk_aabb_update(&chunks[ent]);
 				chunks[ent].needs_to_update = 0;
+				chunks[ent].secondary_update = 1;
 
 				// Set needs to update to all 6 neighbors of the chunk;
 				for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)

@@ -51,6 +51,20 @@ enum e_fluid_type
 	FLUID_LAST
 };
 
+/*
+ * Used in 't_block->visible_faces' to 'OR' all face into a char;
+ *	Not used anywhere else, if you need faces somewhere, use the cardinal dirs;
+*/
+static const int g_visible_faces[] = {
+	0x00000080,
+	0x00000040,
+	0x00000020,
+	0x00000010,
+	0x00000008,
+	0x00000004,
+	0x000000ff // ALL faces
+};
+
 enum e_card_dir // cardinal direction aka väderstreck?
 {
 	DIR_NORTH = 0,
