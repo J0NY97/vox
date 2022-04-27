@@ -368,7 +368,7 @@ void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *pos)
 		for (int dir = 0; dir <= DIR_DOWN; dir++)
 		{
 			adj = get_block_in_dir(chunk, neighbors[dir], pos, dir);
-			if (adj && !is_solid(adj))
+			if (adj && !is_solid(adj)) // add to mesh if adjacent block isnt solid;
 			{
 				// Dont add to mesh if face already in it;
 				if (!(chunk->blocks[index].visible_faces & g_visible_faces[dir]))
@@ -1849,8 +1849,8 @@ void	block_print(t_block *block)
 	ft_printf("\tIs Emit : %d\n", block->is_emit);
 	ft_printf("\tLight Level : %d\n", block->light_lvl);
 	ft_printf("\tVisible Faces : ");
-	print_binary(block->visible_faces, 6);
-	ft_printf("\n");
+	print_binary(block->visible_faces, 8);
+	ft_printf(" (last 2 bits are not used)\n");
 	ft_printf("Data :\n");
 	ft_printf("\tLight Emit : %d\n", data.light_emit);
 }
