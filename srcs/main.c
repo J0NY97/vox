@@ -143,61 +143,61 @@ int	main(void)
 //////////////////////////////
 	// Instance testing
 //////////////////////////////
-		t_shader	cube_shader_v2;
-		new_shader(&cube_shader_v2, SHADER_PATH"block_mesh.vs", SHADER_PATH"block_mesh.fs");
+	t_shader	cube_shader_v2;
+	new_shader(&cube_shader_v2, SHADER_PATH"block_mesh.vs", SHADER_PATH"block_mesh.fs");
 
-		t_thread_manager	tm;
-		thread_manager_new(&tm, 64);
+	t_thread_manager	tm;
+	thread_manager_new(&tm, 64);
 
-		int	regen_chunks = 1;
+	int	regen_chunks = 1;
 
-		t_player_info	player_info;
+	t_player_info	player_info;
 
-		player_info.reach = 5;
-		player_info.equipped_block = BLOCK_STONE;
+	player_info.reach = 5;
+	player_info.equipped_block = BLOCK_STONE;
 
-		t_chunk_info	chunk_info;
+	t_chunk_info	chunk_info;
 
-		chunk_info.seed = 896868766;
-//		chunk_info.seed = 596547633;
+	chunk_info.seed = 896868766;
+//	chunk_info.seed = 596547633;
 
-		chunk_info.block_collision_enabled = 0;
-		chunk_info.player_collision_enabled = 0;
-		chunk_info.fancy_graphics = 0;
-		chunk_info.generate_structures = 1;
-		chunk_info.light_calculation = 0;
+	chunk_info.block_collision_enabled = 0;
+	chunk_info.player_collision_enabled = 0;
+	chunk_info.fancy_graphics = 0;
+	chunk_info.generate_structures = 1;
+	chunk_info.light_calculation = 0;
 
-		// Creation of hashtable
-		/*
-		chunk_info.hash_table_size = (int)(chunk_info.chunks_loaded * 3);
-		chunk_info.hash_table = malloc(sizeof(t_hash_item) * chunk_info.hash_table_size);
-		hash_table_clear(chunk_info.hash_table, chunk_info.hash_table_size);
-		*/
+	// Creation of hashtable
+	/*
+	chunk_info.hash_table_size = (int)(chunk_info.chunks_loaded * 3);
+	chunk_info.hash_table = malloc(sizeof(t_hash_item) * chunk_info.hash_table_size);
+	hash_table_clear(chunk_info.hash_table, chunk_info.hash_table_size);
+	*/
 
-		// Creation of rendering lists;
-		chunk_info.meshes_render_indices = malloc(sizeof(int *) * CHUNKS_LOADED);
-		chunk_info.meshes_render_amount = 0;
+	// Creation of rendering lists;
+	chunk_info.meshes_render_indices = malloc(sizeof(int *) * CHUNKS_LOADED);
+	chunk_info.meshes_render_amount = 0;
 
-		glGenTextures(1, &chunk_info.texture);
-		new_texture(&chunk_info.texture, MODEL_PATH"cube/version_3_texture_alpha.bmp");
+	glGenTextures(1, &chunk_info.texture);
+	new_texture(&chunk_info.texture, MODEL_PATH"cube/version_3_texture_alpha.bmp");
 
-		t_chunk	*chunks;
-		chunks = malloc(sizeof(t_chunk) * CHUNKS_LOADED);
+	t_chunk	*chunks;
+	chunks = malloc(sizeof(t_chunk) * CHUNKS_LOADED);
 
-		chunk_info.chunks = chunks;
+	chunk_info.chunks = chunks;
 
-		int		nth_chunk = 0;
-		int		player_chunk[VEC3_SIZE];
-		
-		get_chunk_pos_from_world_pos(player_chunk, player.camera.pos);
+	int		nth_chunk = 0;
+	int		player_chunk[VEC3_SIZE];
+	
+	get_chunk_pos_from_world_pos(player_chunk, player.camera.pos);
 
-		LG_INFO("Inits done, lets create some chunks (%d wanted)\n", CHUNKS_LOADED);
-		for (; nth_chunk < CHUNKS_LOADED; ++nth_chunk)
-		{
-			new_chunk(&chunks[nth_chunk], &chunk_info, nth_chunk);
-			chunks[nth_chunk].meshes.texture = chunk_info.texture;
-		}
-		ft_printf("Total Chunks created : %d\n", nth_chunk);
+	LG_INFO("Inits done, lets create some chunks (%d wanted)\n", CHUNKS_LOADED);
+	for (; nth_chunk < CHUNKS_LOADED; ++nth_chunk)
+	{
+		new_chunk(&chunks[nth_chunk], &chunk_info, nth_chunk);
+		chunks[nth_chunk].meshes.texture = chunk_info.texture;
+	}
+	ft_printf("Total Chunks created : %d\n", nth_chunk);
 //////////////////////////////
 	// END Instance testing
 //////////////////////////////
@@ -482,11 +482,6 @@ int	main(void)
 		int		neighbors_found;
 		float	total_time = 0.0f;
 
-		if (keys[GLFW_KEY_T].state == BUTTON_PRESS)
-		{
-			ft_printf("First pass\n");
-			ft_timer_start();
-		}
 		for (int ent = 0; ent < CHUNKS_LOADED; ++ent)
 		{
 			neighbors_found = 0;
@@ -522,7 +517,7 @@ int	main(void)
 
 			if (chunks[ent].needs_to_update)
 			{
-				ft_printf("[%d] Chunk needs updating.\n", ent);
+				//ft_printf("[%d] Chunk needs updating.\n", ent);
 				if (chunk_info.light_calculation && highest == &chunks[ent])
 					update_chunk_light(&chunks[ent]);
 				update_chunk_visible_blocks(&chunks[ent]);
@@ -537,8 +532,6 @@ int	main(void)
 						neighbors[i]->secondary_update = 1;
 			}
 		}
-		if (keys[GLFW_KEY_T].state == BUTTON_PRESS)
-			ft_printf("Time : %f\n", ft_timer_end());
 
 		// Secondary updater;
 		// We dont want to immediately update the chunks that other chunks want
@@ -551,7 +544,7 @@ int	main(void)
 			{
 				if (chunks[ent].secondary_update)
 				{
-					ft_printf("[%d] Chunk needs secondary updating.\n", ent);
+				//	ft_printf("[%d] Chunk needs secondary updating.\n", ent);
 					chunks[ent].secondary_update = 0;
 					chunks[ent].needs_to_update = 0;
 					update_chunk_border_visible_blocks(&chunks[ent]);

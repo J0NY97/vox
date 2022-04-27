@@ -10,6 +10,7 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, int nth)
 	chunk->info = info;
 
 	chunk->needs_to_update = 0;
+	chunk->secondary_update = 0;
 
 	int	max_blocks = CHUNK_WIDTH * CHUNK_BREADTH * CHUNK_HEIGHT;
 
