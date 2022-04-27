@@ -36,7 +36,6 @@ void	render_crosshair(void)
 	GLint	viewport[4];
 
 	glGetIntegerv(GL_VIEWPORT, viewport);
-	glDisable(GL_DEPTH_TEST);
 	float	len = 0.009;
 	float	h_len = (viewport[2] * len) / viewport[3];
 	render_2d_line((float []){-len, 0, 0}, (float []){len, 0, 0}, (float []){1, 1, 1});

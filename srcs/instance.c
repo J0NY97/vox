@@ -403,7 +403,6 @@ void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *pos)
 */
 void	get_blocks_visible(t_chunk *chunk)
 {
-	static float total_time = 0;
 	chunk->blocks_solid_amount = 0;
 	chunk->blocks_flora_amount = 0;
 	chunk->blocks_fluid_amount = 0;
@@ -710,66 +709,54 @@ void	render_aabb(t_aabb *a, t_camera *camera, float *col)
 	render_3d_line(
 		(float []){a->min[0], a->min[1], a->min[2]},
 		(float []){a->min[0], a->max[1], a->min[2]},
-		col,
-		camera->view, camera->projection);
+		col, camera->view, camera->projection);
 	render_3d_line(
 		(float []){a->max[0], a->min[1], a->min[2]},
 		(float []){a->max[0], a->max[1], a->min[2]},
-		col,
-		camera->view, camera->projection);
+		col, camera->view, camera->projection);
 	render_3d_line(
 		(float []){a->min[0], a->min[1], a->max[2]},
 		(float []){a->min[0], a->max[1], a->max[2]},
-		col,
-		camera->view, camera->projection);
+		col, camera->view, camera->projection);
 	render_3d_line(
 		(float []){a->max[0], a->min[1], a->max[2]},
 		(float []){a->max[0], a->max[1], a->max[2]},
-		col,
-		camera->view, camera->projection);
+		col, camera->view, camera->projection);
 
 	// HORIZONTAL LINES Bottom
 	render_3d_line(
 		(float []){a->min[0], a->min[1], a->min[2]},
 		(float []){a->max[0], a->min[1], a->min[2]},
-		col,
-		camera->view, camera->projection);
+		col, camera->view, camera->projection);
 	render_3d_line(
 		(float []){a->max[0], a->min[1], a->min[2]},
 		(float []){a->max[0], a->min[1], a->max[2]},
-		col,
-		camera->view, camera->projection);
+		col, camera->view, camera->projection);
 	render_3d_line(
 		(float []){a->max[0], a->min[1], a->max[2]},
 		(float []){a->min[0], a->min[1], a->max[2]},
-		col,
-		camera->view, camera->projection);
+		col, camera->view, camera->projection);
 	render_3d_line(
 		(float []){a->min[0], a->min[1], a->max[2]},
 		(float []){a->min[0], a->min[1], a->min[2]},
-		col,
-		camera->view, camera->projection);
+		col, camera->view, camera->projection);
 	// TOP
 	render_3d_line(
 		(float []){a->min[0], a->max[1], a->min[2]},
 		(float []){a->max[0], a->max[1], a->min[2]},
-		col,
-		camera->view, camera->projection);
+		col, camera->view, camera->projection);
 	render_3d_line(
 		(float []){a->max[0], a->max[1], a->min[2]},
 		(float []){a->max[0], a->max[1], a->max[2]},
-		col,
-		camera->view, camera->projection);
+		col, camera->view, camera->projection);
 	render_3d_line(
 		(float []){a->max[0], a->max[1], a->max[2]},
 		(float []){a->min[0], a->max[1], a->max[2]},
-		col,
-		camera->view, camera->projection);
+		col, camera->view, camera->projection);
 	render_3d_line(
 		(float []){a->min[0], a->max[1], a->max[2]},
 		(float []){a->min[0], a->max[1], a->min[2]},
-		col,
-		camera->view, camera->projection);
+		col, camera->view, camera->projection);
 }
 
 /*

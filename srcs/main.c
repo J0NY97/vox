@@ -553,7 +553,7 @@ int	main(void)
 			}
 			for (int ent = 0; ent < CHUNKS_LOADED; ++ent)
 			{
-				if (chunks[ent].secondary_update || chunks[ent].needs_to_update)
+				if (chunks[ent].secondary_update)
 				{
 					chunks[ent].secondary_update = 0;
 					chunks[ent].needs_to_update = 0;
@@ -586,7 +586,9 @@ int	main(void)
 		int sent_to_gpu = 0;
 
 		glDisable(GL_BLEND);
-		glEnable(GL_CULL_FACE);
+		glDisable(GL_CULL_FACE);
+		glEnable(GL_DEPTH_TEST); // note to self, if we disable depth_test. we dont write to it either, which means the next thing checking int the depth tester wont see what you have not written there.... aka the skybox in this case
+
 		// Reset the rendering amount to 0;
 		chunk_info.meshes_render_amount = 0;
 
