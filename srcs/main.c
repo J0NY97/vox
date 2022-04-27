@@ -547,11 +547,6 @@ int	main(void)
 		// 	the chunks once, we update them here;
 		if (tobegen == 0)
 		{
-			if (keys[GLFW_KEY_T].state == BUTTON_PRESS)
-			{
-				ft_printf("Second pass\n");
-				ft_timer_start();
-			}
 			for (int ent = 0; ent < CHUNKS_LOADED; ++ent)
 			{
 				if (chunks[ent].secondary_update)
@@ -562,10 +557,9 @@ int	main(void)
 					update_chunk_border_visible_blocks(&chunks[ent]);
 					update_chunk_mesh(&chunks[ent].meshes);
 					chunk_aabb_update(&chunks[ent]);
+					break ;
 				}
 			}
-			if (keys[GLFW_KEY_T].state == BUTTON_PRESS)
-				ft_printf("Time : %f\n", ft_timer_end());
 		}
 
 		// head
