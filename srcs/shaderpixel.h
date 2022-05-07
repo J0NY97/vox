@@ -271,9 +271,9 @@ typedef struct s_player_info
 	int		equipped_block; // one from 'e_block_type';
 }	t_player_info;
 
-#define CHUNK_WIDTH 32
-#define CHUNK_HEIGHT 32
-#define CHUNK_BREADTH 32
+#define CHUNK_WIDTH 16
+#define CHUNK_HEIGHT 16
+#define CHUNK_BREADTH 16
 static const int g_chunks_per_column = 256 / CHUNK_HEIGHT;
 #define CHUNKS_PER_COLUMN g_chunks_per_column
 #define BLOCK_SCALE 0.5f

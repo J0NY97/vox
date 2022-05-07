@@ -72,7 +72,7 @@ t_block_data	get_block_data(t_block *block)
 		return (g_flora_data[block->type - FLORA_FIRST - 1]);
 	if (is_fluid(block))
 		return (g_fluid_data[block->type - FLUID_FIRST - 1]);
-	return (g_gas_data[GAS_AIR - GAS_FIRST - 1]);
+	return (g_gas_data[0]);
 }
 
 /*
