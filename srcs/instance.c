@@ -674,6 +674,7 @@ int	regenerate_chunks_threading(int *these, int coord[2], t_chunk_info *info)
 		update_chunk_mesh(&info->chunks[these[i]].meshes);
 	return (nth_chunk);
 }
+
 /*
  * Returns amount of chunks that still need to get generated;
 */
