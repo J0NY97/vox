@@ -457,6 +457,7 @@ int	main(void)
 /////////////////
 		// Chunk things
 /////////////////
+
 		get_chunk_pos_from_world_pos(player_chunk, player.camera.pos);
 
 		int	tobegen = 0;
