@@ -518,7 +518,6 @@ int	main(void)
 
 			if (chunks[ent].needs_to_update)
 			{
-				//ft_printf("[%d] Chunk needs updating.\n", ent);
 				if (chunk_info.light_calculation && highest == &chunks[ent])
 					update_chunk_light(&chunks[ent]);
 				update_chunk_visible_blocks(&chunks[ent]);
