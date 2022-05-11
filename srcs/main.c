@@ -567,9 +567,6 @@ int	main(void)
 	// Used for block collision
 		float	intersect_point[5][3];
 		int		intersect_chunk_index[5]; // correspond with the index in 'intersect_point';
-		float	closest_point[3];
-		int		closest_index = -1; // the index of the chunk that has the closest collision;
-		int		face = -1; // -1 is no face;
 		int		collision_result = 0; // will be the amount of collisions that has happened;
 	
 		nth_chunk = 0;
@@ -583,12 +580,14 @@ int	main(void)
 
 		for (; nth_chunk < CHUNKS_LOADED; ++nth_chunk)
 		{
+			if (!chunks[nth_chunk].has_visible_blocks)
+				continue ;
+
 			// Decide if we want to render the chunk or not;
 			// Dont render chunk if the chunk is further away than the farplane of the camear;
 			// Dont render if the chunk is outside the view fustrum;
 			// Dont render if has been sent to gpu yet;
-			if (chunks[nth_chunk].has_visible_blocks &&
-				chunks[nth_chunk].was_updated == 0 &&
+			if (chunks[nth_chunk].was_updated == 0 &&
 				vec3_dist(player.camera.pos, chunks[nth_chunk].world_coordinate) <
 				player.camera.far_plane + CHUNK_SIZE_X &&
 				aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum))
@@ -596,12 +595,11 @@ int	main(void)
 				chunk_info.meshes_render_indices[chunk_info.meshes_render_amount] = nth_chunk;
 				++chunk_info.meshes_render_amount;
 			}
-			
-			if (chunks[nth_chunk].has_visible_blocks)
+
+			// Collision Detection
+			if (chunk_info.block_collision_enabled)
 			{
-				// Collision Detection
-				if (chunk_info.block_collision_enabled &&
-					vec3i_dist(player_chunk, chunks[nth_chunk].coordinate) < 2)
+				if (vec3i_dist_sqrd(player_chunk, chunks[nth_chunk].coordinate) < 4)
 				{
 					show_chunk_borders(&chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
 					// Place Blocking and Removing;
@@ -642,13 +640,16 @@ int	main(void)
 		//	gotten from chunk_mesh_collision, in the closest_point var;
 		// Also the index of which chunk the collision is in;
 		float	block_pos[3]; // get_block_from_chunk(); stores the pos of the block we are hovering over;
+		float	closest_point[3];
+		int		closest_index = -1; // the index of the chunk that has the closest collision;
+		int		face = -1; // -1 is no face; which face has been hovered on the block;
 		if (collision_result > 0)
 		{
 			float	distancione = -1;
 			float	closest_dist = INFINITY;
 			for (int colli = 0; colli < collision_result; ++colli)
 			{
-				distancione = vec3_dist(player.camera.pos, intersect_point[colli]);
+				distancione = vec3_dist_sqrd(player.camera.pos, intersect_point[colli]);
 				if (distancione < closest_dist)
 				{
 					closest_dist = distancione;

@@ -113,6 +113,13 @@ float	vec3_dist(float *v0, float *v1)
 	return (sqrt(a + b + c));
 }
 
+float	vec3_dist_sqrd(float *v0, float *v1)
+{
+	return ((v0[0] - v1[0]) * (v0[0] - v1[0]) +
+		(v0[1] - v1[1]) * (v0[1] - v1[1]) +
+		(v0[2] - v1[2]) * (v0[2] - v1[2]));
+}
+
 float	vec3_length(float *v0)
 {
 	return sqrt(v0[0] * v0[0] + v0[1] * v0[1] + v0[2] * v0[2]);
