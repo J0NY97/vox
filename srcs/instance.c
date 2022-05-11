@@ -1127,33 +1127,28 @@ int	chunk_mesh_collision_v2(float *orig, float *dir, t_chunk_mesh_v2 *mesh, int 
 	float			p3[3];
 	float			norm_dir[3];
 	int				collisions = 0;
+	int				triangle_amount;
 
 	vec3_normalize(norm_dir, dir);
 	vertices = mesh->vertices;
 	indices = mesh->indices[mesh_type];
-	for (int i = 0; i < mesh->indices_amount[mesh_type] / 3; i++)
+	triangle_amount = mesh->indices_amount[mesh_type] / 3;
+	for (int i = 0; i < triangle_amount; i++)
 	{
 		int k = i * 3;
-		vec3_new(p1,
-			vertices[indices[k + 0] * 3 + 0],
-			vertices[indices[k + 0] * 3 + 1],
-			vertices[indices[k + 0] * 3 + 2]);
-		vec3_new(p2,
-			vertices[indices[k + 1] * 3 + 0],
-			vertices[indices[k + 1] * 3 + 1],
-			vertices[indices[k + 1] * 3 + 2]);
-		vec3_new(p3,
-			vertices[indices[k + 2] * 3 + 0],
-			vertices[indices[k + 2] * 3 + 1],
-			vertices[indices[k + 2] * 3 + 2]);
+		int k0 = indices[k + 0] * 3;
+		int k1 = indices[k + 1] * 3;
+		int k2 = indices[k + 2] * 3;
+		vec3_new(p1, vertices[k0 + 0], vertices[k0 + 1], vertices[k0 + 2]);
+		vec3_new(p2, vertices[k1 + 0], vertices[k1 + 1], vertices[k1 + 2]);
+		vec3_new(p3, vertices[k2 + 0], vertices[k2 + 1], vertices[k2 + 2]);
 		
-		// We have to add the chunk position to the chunk mesh, since that is 
-		//		what we are doing in the shader;
+		// We are adding chunk woorld coordinate to points, to get the world point coordinate;
 		vec3_add(p1, p1, world_coords);
 		vec3_add(p2, p2, world_coords);
 		vec3_add(p3, p3, world_coords);
-		if (ray_triangle_intersect(orig, dir, p1, p2, p3, 0, intersect_point[collisions]))
-			if (vec3_dist(orig, intersect_point[collisions]) <= reach + 0.001f)
+		if (ray_triangle_intersect(orig, dir, p1, p2, p3, intersect_point[collisions]))
+			if (vec3_dist(orig, intersect_point[collisions]) <= reach + EPSILON)
 				collisions += 1;
 	}
 	return (collisions);
@@ -1197,7 +1192,7 @@ int	chunk_mesh_collision_v56(float *orig, float *dir, t_chunk *chunk, float reac
 		vec3_add(p1, p1, chunk->world_coordinate);
 		vec3_add(p2, p2, chunk->world_coordinate);
 		vec3_add(p3, p3, chunk->world_coordinate);
-		if (ray_triangle_intersect(orig, dir, p1, p2, p3, 1, intersect_points[collisions]))
+		if (ray_triangle_intersect(orig, dir, p1, p2, p3, intersect_points[collisions]))
 		{
 			if (vec3_dist(orig, intersect_points[collisions]) <= reach + EPSILON)
 			{
