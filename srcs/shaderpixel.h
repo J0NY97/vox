@@ -271,9 +271,9 @@ typedef struct s_player_info
 	int		equipped_block; // one from 'e_block_type';
 }	t_player_info;
 
-#define CHUNK_WIDTH 16
-#define CHUNK_HEIGHT 16
-#define CHUNK_BREADTH 16
+#define CHUNK_WIDTH 32
+#define CHUNK_HEIGHT 32
+#define CHUNK_BREADTH 32
 static const int g_chunks_per_column = 256 / CHUNK_HEIGHT;
 #define CHUNKS_PER_COLUMN g_chunks_per_column
 #define BLOCK_SCALE 0.5f
@@ -281,6 +281,8 @@ static const int g_chunks_per_column = 256 / CHUNK_HEIGHT;
 static const float g_chunk_size_x = CHUNK_WIDTH * BLOCK_SIZE;
 static const float g_chunk_size_y = CHUNK_HEIGHT * BLOCK_SIZE;
 static const float g_chunk_size_z = CHUNK_BREADTH * BLOCK_SIZE;
+static const float g_chunk_block_amount = CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_BREADTH;
+#define CHUNK_BLOCK_AMOUNT g_chunk_block_amount
 #define CHUNK_SIZE_X g_chunk_size_x
 #define CHUNK_SIZE_Y g_chunk_size_y
 #define CHUNK_SIZE_Z g_chunk_size_z

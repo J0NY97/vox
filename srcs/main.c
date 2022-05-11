@@ -545,6 +545,7 @@ int	main(void)
 					update_chunk_border_visible_blocks(&chunks[ent]);
 					chunk_aabb_update(&chunks[ent]);
 				}
+				// Only send mesh info to gpu, if the chunk actually was changed;
 				if (chunks[ent].was_updated)
 				{
 					chunks[ent].was_updated = 0;

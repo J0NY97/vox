@@ -639,9 +639,10 @@ int	get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, 
 void	update_chunk(t_chunk *chunk)
 {
 	update_chunk_visible_blocks(chunk);
-	chunk_aabb_update(chunk);
-// NOTE : Only update chunk light if the chunk has visible blocks;
-//	update_chunk_light(chunk);
+	/*
+	if (chunk->has_blocks)
+		update_chunk_light(chunk);
+		*/
 	chunk->needs_to_update = 0;
 	chunk->secondary_update = 1;
 }
@@ -811,11 +812,11 @@ void	init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount)
 	if (error)
 		LG_ERROR("BEFORE (%d)", error);
 
-	mesh->vertices_allocated = 52752;
+	mesh->vertices_allocated = 162576;
 	mesh->vertices = malloc(sizeof(float) * mesh->vertices_allocated);
 	mesh->vertices_amount = 0;
 
-	mesh->texture_ids_allocated = 17748; 
+	mesh->texture_ids_allocated = 54536; 
 	mesh->texture_ids = malloc(sizeof(int) * mesh->texture_ids_allocated);
 	mesh->texture_id_amount = 0;
 
@@ -826,7 +827,7 @@ void	init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount)
 	mesh->index_amount = 0;
 	for (int i = 0; i < mesh->amount; i++)
 	{
-		mesh->indices_allocated[i] = 22864;
+		mesh->indices_allocated[i] = 68688;
 		mesh->indices[i] = malloc(sizeof(unsigned int) * mesh->indices_allocated[i]);
 		mesh->indices_amount[i] = 0;
 	}
@@ -1661,7 +1662,7 @@ float	get_highest_point(t_chunk_info *info, float x, float z)
 	highest_chunk = get_highest_chunk(info, chunk_pos[0], chunk_pos[2]);
 	if (highest_chunk == NULL)
 		return (-1); // error;
-	for (int i = 0; i < 4096; i++)
+	for (int i = 0; i < CHUNK_BLOCK_AMOUNT; i++)
 	{
 		if (highest_chunk->blocks[i].type != GAS_AIR)
 		{
@@ -1691,7 +1692,7 @@ float	get_highest_point_of_type(t_chunk_info *info, float x, float z, int type)
 	highest_chunk = get_highest_chunk(info, chunk_pos[0], chunk_pos[2]);
 	if (highest_chunk == NULL)
 		return (-1); // error;
-	for (int i = 0; i < 4096; i++)
+	for (int i = 0; i < CHUNK_BLOCK_AMOUNT; i++)
 	{
 		if (highest_chunk->blocks[i].type == type)
 		{
