@@ -134,3 +134,32 @@ void	aabb_print(t_aabb *a)
 	for (int i = 0; i < 3; i++)
 		printf("\tmax[%d] = %.2f;\n", i, a->max[i]);
 }
+
+/*
+ * From 'point' distance to nearest corner in 'b';
+*/
+float	point_aabb_nearest_distance(float *point, t_aabb *b)
+{
+	float	dist = INFINITY;
+
+	float d0 = vec3_dist_sqrd(point, (float []){b->min[0], b->min[1], b->min[2]});
+	float d1 = vec3_dist_sqrd(point, (float []){b->min[0], b->max[1], b->min[2]});
+	float d2 = vec3_dist_sqrd(point, (float []){b->max[0], b->max[1], b->min[2]});
+	float d3 = vec3_dist_sqrd(point, (float []){b->max[0], b->min[1], b->min[2]});
+
+	float b0 = vec3_dist_sqrd(point, (float []){b->max[0], b->max[1], b->max[2]});
+	float b1 = vec3_dist_sqrd(point, (float []){b->max[0], b->min[1], b->max[2]});
+	float b2 = vec3_dist_sqrd(point, (float []){b->min[0], b->min[1], b->max[2]});
+	float b3 = vec3_dist_sqrd(point, (float []){b->min[0], b->max[1], b->max[2]});
+
+	float c0 = fmin(d0, d1);
+	float c1 = fmin(d2, d3);
+
+	float e0 = fmin(b0, b1);
+	float e1 = fmin(b2, b3);
+
+	float f0 = fmin(c0, c1);
+	float f1 = fmin(e0, e1);
+
+	return (fmin(f0, f1));
+}

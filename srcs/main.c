@@ -578,9 +578,6 @@ int	main(void)
 		// Reset the rendering amount to 0;
 		chunk_info.meshes_render_amount = 0;
 
-		int chunk_colls_checkd = 0;
-		int chunk_colls_colld = 0;
-		float	time_spent_colling = 0;
 		for (; nth_chunk < CHUNKS_LOADED; ++nth_chunk)
 		{
 			if (!chunks[nth_chunk].has_visible_blocks)
@@ -602,10 +599,9 @@ int	main(void)
 			// Collision Detection
 			if (chunk_info.block_collision_enabled)
 			{
-				++chunk_colls_checkd;
-				if (vec3i_dist_sqrd(player_chunk, chunks[nth_chunk].coordinate) <= 2)
+//				if (vec3i_dist_sqrd(player_chunk, chunks[nth_chunk].coordinate) <= 2)
+				if (point_aabb_nearest_distance(player.camera.pos, &chunks[nth_chunk].aabb) <= (CHUNK_WIDTH * CHUNK_WIDTH) / 2)
 				{
-					++chunk_colls_colld;
 					show_chunk_borders(&chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
 					// Place Blocking and Removing;
 					// Go through all chunks and check for collision on blocks,
@@ -613,7 +609,6 @@ int	main(void)
 					// is in;
 
 					// Collision on solid mesh;
-					ft_timer_start();
 					if (chunks[nth_chunk].blocks_solid_amount > 0)
 					{
 						int collisions_on_chunk = chunk_mesh_collision_v2(player.camera.pos, player.camera.front, &chunks[nth_chunk].meshes, BLOCK_MESH, chunks[nth_chunk].world_coordinate, player_info.reach, intersect_point + collision_result);
@@ -637,14 +632,9 @@ int	main(void)
 							intersect_chunk_index[collision_result + i] = nth_chunk;
 						collision_result += collisions_on_chunk;
 					}
-					time_spent_colling += ft_timer_end();
 				}
 			}
 		}
-
-		ft_printf("chunk_colls_checked : %d/%d\n", chunk_colls_checkd, CHUNKS_LOADED);
-		ft_printf("chunk_colls_colld : %d/%d\n", chunk_colls_colld, chunk_colls_checkd);
-		ft_printf("time spent colling : %f\n", time_spent_colling);
 
 		/* START OF COLLISION */
 		// Save the closest point, of a maximum 16 points
