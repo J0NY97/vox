@@ -541,6 +541,7 @@ int	main(void)
 				{
 					chunks[ent].secondary_update = 0;
 					chunks[ent].needs_to_update = 0;
+					chunks[ent].was_updated = 1;
 					update_chunk_border_visible_blocks(&chunks[ent]);
 					chunk_aabb_update(&chunks[ent]);
 				}
