@@ -21,6 +21,7 @@ void	player_entity_collision(t_player *player, t_entity *entity)
 	float	normed[3];
 	int		aabb_collision = aabb_aabb_collision(&player->aabb, &entity->aabb);
 	int		triangle_collision = 0;
+	float	dist;
 
 	entity->collision = 0;
 	if (player->moving && aabb_collision)
@@ -48,7 +49,7 @@ void	player_entity_collision(t_player *player, t_entity *entity)
 
 			if (ray_triangle_intersect(player->camera.pos,
 					vec3_normalize(normed, player->velocity),
-					p1, p2, p3, intersect_point))
+					p1, p2, p3, intersect_point, &dist))
 			{
 				triangle_collision = 1;
 				break ;
@@ -95,6 +96,7 @@ int	player_entity_mesh_collision(t_player *player, t_entity *entity)
 	float	p1[4];
 	float	p2[4];
 	float	p3[4];
+	float	dist;
 
 	entity->collision = 0;
 	for (int i = 0; i < entity->model.info_amount; i++)
@@ -119,7 +121,7 @@ int	player_entity_mesh_collision(t_player *player, t_entity *entity)
 					vertices[indices[ind + 2] * 3 + 1],
 					vertices[indices[ind + 2] * 3 + 2]);
 				if (ray_triangle_intersect(local_player_pos, player->camera.front,
-					p3, p2, p1, intersection_p))
+					p3, p2, p1, intersection_p, &dist))
 				{
 					entity->collision = 1;
 

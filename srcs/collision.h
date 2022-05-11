@@ -55,7 +55,7 @@ int			ray_line_intersect(float *orig, float *dir, float *p1, float *p2, float *i
 
 int			point_in_triangle(float *p, float *v1, float *v2, float *v3);
 int			old_ray_triangle_intersect(float *orig, float *dir, float *p1, float *p2, float *p3, int cull_backface, float *intersect_point);
-int			ray_triangle_intersect(float *orig, float *dir, float *p0, float *p1, float *p2, float *out_intersection_point);
+int			ray_triangle_intersect(float *orig, float *dir, float *p0, float *p1, float *p2, float *out_intersection_point, float *out_dist);
 float		*triangle_face_normal(float *res, float *n0, float *n1, float *n2);
 
 ////////////////////////

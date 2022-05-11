@@ -1128,6 +1128,7 @@ int	chunk_mesh_collision_v2(float *orig, float *dir, t_chunk_mesh_v2 *mesh, int 
 	float			norm_dir[3];
 	int				collisions = 0;
 	int				triangle_amount;
+	float			dist;
 
 	vec3_normalize(norm_dir, dir);
 	vertices = mesh->vertices;
@@ -1147,8 +1148,8 @@ int	chunk_mesh_collision_v2(float *orig, float *dir, t_chunk_mesh_v2 *mesh, int 
 		vec3_add(p1, p1, world_coords);
 		vec3_add(p2, p2, world_coords);
 		vec3_add(p3, p3, world_coords);
-		if (ray_triangle_intersect(orig, dir, p1, p2, p3, intersect_point[collisions]))
-			if (vec3_dist(orig, intersect_point[collisions]) <= reach + EPSILON)
+		if (ray_triangle_intersect(orig, dir, p1, p2, p3, intersect_point[collisions], &dist))
+			if (dist <= reach + EPSILON)
 				collisions += 1;
 	}
 	return (collisions);
@@ -1167,6 +1168,7 @@ int	chunk_mesh_collision_v56(float *orig, float *dir, t_chunk *chunk, float reac
 	float			p3[3];
 	float			norm_dir[3];
 	int				collisions = 0;
+	float			dist;
 
 	vec3_normalize(norm_dir, dir);
 	vertices = chunk->meshes.vertices;
@@ -1192,9 +1194,9 @@ int	chunk_mesh_collision_v56(float *orig, float *dir, t_chunk *chunk, float reac
 		vec3_add(p1, p1, chunk->world_coordinate);
 		vec3_add(p2, p2, chunk->world_coordinate);
 		vec3_add(p3, p3, chunk->world_coordinate);
-		if (ray_triangle_intersect(orig, dir, p1, p2, p3, intersect_points[collisions]))
+		if (ray_triangle_intersect(orig, dir, p1, p2, p3, intersect_points[collisions], &dist))
 		{
-			if (vec3_dist(orig, intersect_points[collisions]) <= reach + EPSILON)
+			if (dist <= reach + EPSILON)
 			{
 				triangle_face_normal(intersect_normals[collisions], p1, p2, p3);
 				collisions += 1;

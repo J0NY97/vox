@@ -100,14 +100,14 @@ int	old_ray_triangle_intersect(float *orig, float *dir, float *v0, float *v1, fl
 /*
  * Möller omega 3 fish oil and trumbone algorithm;
 */
-int	ray_triangle_intersect(float *orig, float *dir, float *p0, float *p1, float *p2, float *out_intersection_point)
+int	ray_triangle_intersect(float *orig, float *dir, float *p0, float *p1, float *p2, float *out_intersection_point, float *out_dist)
 {
 	float	e1[3];
 	float	e2[3];
 	float	s[3];
 	float	q[3];
 	float	h[3];
-	float	a, f, u, t, v;
+	float	a, f, u, v;
 
 	vec3_sub(e1, p1, p0);
 	vec3_sub(e2, p2, p0);
@@ -125,9 +125,9 @@ int	ray_triangle_intersect(float *orig, float *dir, float *p0, float *p1, float 
 	if (v < 0.0f || u + v > 1.0f)
 		return (0);
 	// Get intersection point;
-	t = f * vec3_dot(e2, q);
-	if (t > EPSILON)
-		vec3_add(out_intersection_point, orig, vec3_multiply_f(out_intersection_point, dir, t));
+	*out_dist = f * vec3_dot(e2, q);
+	if (*out_dist > EPSILON)
+		vec3_add(out_intersection_point, orig, vec3_multiply_f(out_intersection_point, dir, *out_dist));
 	else
 		return (0);
 	return (1);
