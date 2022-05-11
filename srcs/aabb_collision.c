@@ -163,3 +163,16 @@ float	point_aabb_nearest_distance(float *point, t_aabb *b)
 
 	return (fmin(f0, f1));
 }
+
+/*
+ * Returns distance from the center of the aabb 'b' to the point 'point';
+*/
+float	point_aabb_center_distance(float *point, t_aabb *b)
+{
+	float	e[3];
+	float	c[3];
+
+	vec3_multiply_f(e, vec3_sub(e, b->max, b->min), 0.5f);
+	vec3_add(c, b->min, e);
+	return (vec3_dist_sqrd(point, c));
+}

@@ -600,7 +600,8 @@ int	main(void)
 			if (chunk_info.block_collision_enabled)
 			{
 //				if (vec3i_dist_sqrd(player_chunk, chunks[nth_chunk].coordinate) <= 2)
-				if (point_aabb_nearest_distance(player.camera.pos, &chunks[nth_chunk].aabb) <= (CHUNK_WIDTH * CHUNK_WIDTH) / 2)
+//				if (point_aabb_nearest_distance(player.camera.pos, &chunks[nth_chunk].aabb) <= (CHUNK_WIDTH * CHUNK_WIDTH) / 2)
+				if (point_aabb_center_distance(player.camera.pos, &chunks[nth_chunk].aabb) <= (CHUNK_WIDTH * CHUNK_WIDTH))
 				{
 					show_chunk_borders(&chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
 					// Place Blocking and Removing;
