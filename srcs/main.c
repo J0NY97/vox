@@ -573,7 +573,6 @@ int	main(void)
 		int		collision_result = 0; // will be the amount of collisions that has happened;
 	
 		nth_chunk = 0;
-		int sent_to_gpu = 0;
 
 		glDisable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
@@ -588,8 +587,7 @@ int	main(void)
 			// Dont render chunk if the chunk is further away than the farplane of the camear;
 			// Dont render if the chunk is outside the view fustrum;
 			// Dont render if has been sent to gpu yet;
-			if (chunks[nth_chunk].has_blocks &&
-				chunks[nth_chunk].has_visible_blocks &&
+			if (chunks[nth_chunk].has_visible_blocks &&
 				chunks[nth_chunk].was_updated == 0 &&
 				vec3_dist(player.camera.pos, chunks[nth_chunk].world_coordinate) <
 				player.camera.far_plane + CHUNK_SIZE_X &&
@@ -599,10 +597,7 @@ int	main(void)
 				++chunk_info.meshes_render_amount;
 			}
 			
-			if (chunks[nth_chunk].has_blocks &&
-				(chunks[nth_chunk].blocks_solid_amount > 0 ||
-				chunks[nth_chunk].blocks_flora_amount > 0 ||
-				chunks[nth_chunk].blocks_solid_alpha_amount > 0))
+			if (chunks[nth_chunk].has_visible_blocks)
 			{
 				// Collision Detection
 				if (chunk_info.block_collision_enabled &&
@@ -705,6 +700,7 @@ int	main(void)
 		render_skybox(&skybox, &player.camera);
 
 		// Render solid meshes;
+		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_BLEND);
 		glEnable(GL_CULL_FACE);
 		for (int r = 0; r < chunk_info.meshes_render_amount; r++)

@@ -905,9 +905,6 @@ void	render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinat
 */
 void	update_chunk_mesh(t_chunk_mesh_v2 *mesh)
 {
-	static int meshes_sent = 0;
-	ft_printf("Meshes sent to gpu : %d\n", meshes_sent++);
-
 	int error;
 	error = glGetError();
 	if (error)
@@ -1015,101 +1012,6 @@ void	add_to_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, int *coord, floa
 	mesh->index_amount += 4;
 }
 
-/*
- * Returns true if hovering over;
- * Saves which face was hovered, in 'face';
-*/
-int	is_hovering_solid_block(float *block_pos, float *point, int *face)
-{
-	float	p1[3];
-	float	p2[3];
-	float	p3[3];
-
-	for (int f = DIR_NORTH; f <= DIR_DOWN; ++f)
-	{
-		p1[0] = (g_faces[f][0] * 0.5f) + block_pos[0];
-		p1[1] = (g_faces[f][1] * 0.5f) + block_pos[1];
-		p1[2] = (g_faces[f][2] * 0.5f) + block_pos[2];
-
-		p2[0] = (g_faces[f][3] * 0.5f) + block_pos[0];
-		p2[1] = (g_faces[f][4] * 0.5f) + block_pos[1];
-		p2[2] = (g_faces[f][5] * 0.5f) + block_pos[2];
-
-		p3[0] = (g_faces[f][6] * 0.5f) + block_pos[0];
-		p3[1] = (g_faces[f][7] * 0.5f) + block_pos[1];
-		p3[2] = (g_faces[f][8] * 0.5f) + block_pos[2];
-		if (point_in_triangle(point, p1, p2, p3))
-		{
-			*face = f;
-			return (1);
-		}
-
-		p1[0] = (g_faces[f][0] * 0.5f) + block_pos[0];
-		p1[1] = (g_faces[f][1] * 0.5f) + block_pos[1];
-		p1[2] = (g_faces[f][2] * 0.5f) + block_pos[2];
-
-		p2[0] = (g_faces[f][6] * 0.5f) + block_pos[0];
-		p2[1] = (g_faces[f][7] * 0.5f) + block_pos[1];
-		p2[2] = (g_faces[f][8] * 0.5f) + block_pos[2];
-
-		p3[0] = (g_faces[f][9] * 0.5f) + block_pos[0];
-		p3[1] = (g_faces[f][10] * 0.5f) + block_pos[1];
-		p3[2] = (g_faces[f][11] * 0.5f) + block_pos[2];
-		if (point_in_triangle(point, p1, p2, p3))
-		{
-			*face = f;
-			return (1);
-		}
-	}
-	return (0);
-}
-
-/* BUG : Whatever is being saved in 'face' is incorrect */
-int	is_hovering_flora_block(float *block_pos, float *point, int *face)
-{
-	float	p1[3];
-	float	p2[3];
-	float	p3[3];
-
-	for (int f = 0; f < FACE_FLORA_AMOUNT; f++)
-	{
-		p1[0] = (g_flora_faces[f][0] * 0.5f) + block_pos[0];
-		p1[1] = (g_flora_faces[f][1] * 0.5f) + block_pos[1];
-		p1[2] = (g_flora_faces[f][2] * 0.5f) + block_pos[2];
-
-		p2[0] = (g_flora_faces[f][3] * 0.5f) + block_pos[0];
-		p2[1] = (g_flora_faces[f][4] * 0.5f) + block_pos[1];
-		p2[2] = (g_flora_faces[f][5] * 0.5f) + block_pos[2];
-
-		p3[0] = (g_flora_faces[f][6] * 0.5f) + block_pos[0];
-		p3[1] = (g_flora_faces[f][7] * 0.5f) + block_pos[1];
-		p3[2] = (g_flora_faces[f][8] * 0.5f) + block_pos[2];
-		if (point_in_triangle(point, p1, p2, p3))
-		{
-			*face = f;
-			return (1);
-		}
-
-		p1[0] = (g_flora_faces[f][0] * 0.5f) + block_pos[0];
-		p1[1] = (g_flora_faces[f][1] * 0.5f) + block_pos[1];
-		p1[2] = (g_flora_faces[f][2] * 0.5f) + block_pos[2];
-
-		p2[0] = (g_flora_faces[f][6] * 0.5f) + block_pos[0];
-		p2[1] = (g_flora_faces[f][7] * 0.5f) + block_pos[1];
-		p2[2] = (g_flora_faces[f][8] * 0.5f) + block_pos[2];
-
-		p3[0] = (g_flora_faces[f][9] * 0.5f) + block_pos[0];
-		p3[1] = (g_flora_faces[f][10] * 0.5f) + block_pos[1];
-		p3[2] = (g_flora_faces[f][11] * 0.5f) + block_pos[2];
-		if (point_in_triangle(point, p1, p2, p3))
-		{
-			*face = f;
-			return (1);
-		}
-	}
-	return (0);
-}
-
 int	is_hovering_block(float *block_pos, float *point, int *face, float (*faces)[12], int face_amount)
 {
 	float	p1[3];
@@ -1166,12 +1068,15 @@ t_block	*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, in
 	float	block_world[3];
 	int		blocal[3];
 	int		i;
-	float	faces[6][12];
+	float	**faces;
 	int		face_amount;
 
 	i = 0;
 	for (; i < chunk->block_amount; i++)
 	{
+		if (chunk->blocks[i].visible_faces == 0)
+			continue ;
+
 		// skip if gas or fluid;
 		if (is_gas(&chunk->blocks[i]) || is_fluid(&chunk->blocks[i]))
 			continue;
@@ -1184,23 +1089,17 @@ t_block	*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, in
 			(is_solid(&chunk->blocks[i]) && chunk->blocks[i].type == BLOCK_ALPHA_OAK_LEAF))
 		{
 			face_amount = 6;
-			for (int j = 0; j < face_amount; j++)
-				for (int p = 0; p < 12; p++)
-					faces[j][p] = g_faces[j][p];
+			faces = g_faces;
 		}
 		else if (is_flora(&chunk->blocks[i]))
 		{
 			face_amount = 2;
-			for (int j = 0; j < face_amount; j++)
-				for (int p = 0; p < 12; p++)
-					faces[j][p] = g_flora_faces[j][p];
+			faces = g_flora_faces;
 		}
 		else if (is_solid_alpha(&chunk->blocks[i]))
 		{
 			face_amount = 6;
-			for (int j = 0; j < face_amount; j++)
-				for (int p = 0; p < 12; p++)
-					faces[j][p] = g_faces_cactus[j][p];
+			faces = g_faces_cactus;
 		}
 
 		if (is_hovering_block(block_world, point, face, faces, face_amount))
