@@ -363,6 +363,7 @@ void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *pos)
 		add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, (float *)g_flora_faces[0], g_flora_data[chunk->blocks[index].type - FLORA_FIRST - 1].texture[0], 100);
 		add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, (float *)g_flora_faces[1], g_flora_data[chunk->blocks[index].type - FLORA_FIRST - 1].texture[1], 100);
 		++chunk->blocks_flora_amount;
+		chunk->has_visible_blocks = 1;
 	}
 	else // these are the solid blocks;
 	{
@@ -377,24 +378,13 @@ void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *pos)
 				{
 					chunk->blocks[index].visible_faces |= g_visible_faces[dir];
 					add_block_to_correct_mesh(chunk, &chunk->blocks[index], adj, pos, dir);
+					chunk->has_visible_blocks = 1;
 				}
 			}
 			else
 				chunk->blocks[index].visible_faces &= ~g_visible_faces[dir];
 		}
 	}
-	/*
-	chunk->blocks[index].visible_faces = g_visible_faces[6];
-	print_binary(chunk->blocks[index].visible_faces, 8);
-	ft_putstr("\n");
-	chunk->blocks[index].visible_faces |= g_visible_faces[0];
-	print_binary(chunk->blocks[index].visible_faces, 8);
-	ft_putstr("\n");
-	chunk->blocks[index].visible_faces &= ~g_visible_faces[0];
-	print_binary(chunk->blocks[index].visible_faces, 8);
-	ft_putstr("\n");
-	exit(0);
-	*/
 }
 
 /*
@@ -405,6 +395,8 @@ void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *pos)
 */
 void	get_blocks_visible(t_chunk *chunk)
 {
+	chunk->has_visible_blocks = 0;
+
 	chunk->blocks_solid_amount = 0;
 	chunk->blocks_flora_amount = 0;
 	chunk->blocks_fluid_amount = 0;
@@ -496,6 +488,8 @@ void	generate_chunk(t_chunk *chunk, int *coord, int *noise_map)
 		chunk->coordinate[0] * CHUNK_SIZE_X,
 		chunk->coordinate[1] * CHUNK_SIZE_Y,
 		chunk->coordinate[2] * CHUNK_SIZE_Z);
+
+	chunk_aabb_update(chunk);
 
 	// Generate Chunks	
 	chunk->block_amount = chunk_gen_v2(chunk, noise_map); // should always return max amount of blocks in a chunk;
@@ -703,14 +697,6 @@ int	regenerate_chunks(int *these, int coord[2], t_chunk_info *info)
 			break ;
 		ind = these[nth_chunk];
 		generate_chunk(&info->chunks[ind], (int []){coord[0], y, coord[1]}, noise_map);
-
-		/*
-		update_chunk_v2(&info->chunks[ind], (int []){coord[0], y, coord[1]}, noise_map);
-		update_chunk_visible_blocks(&info->chunks[ind]);
-		update_chunk_mesh(&info->chunks[ind].meshes);
-		chunk_aabb_update(&info->chunks[ind]);
-		info->chunks[ind].needs_to_update = 0;
-		*/
 		nth_chunk++;
 	}
 	return (nth_chunk);
@@ -919,6 +905,9 @@ void	render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinat
 */
 void	update_chunk_mesh(t_chunk_mesh_v2 *mesh)
 {
+	static int meshes_sent = 0;
+	ft_printf("Meshes sent to gpu : %d\n", meshes_sent++);
+
 	int error;
 	error = glGetError();
 	if (error)

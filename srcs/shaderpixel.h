@@ -271,9 +271,12 @@ typedef struct s_player_info
 	int		equipped_block; // one from 'e_block_type';
 }	t_player_info;
 
-#define CHUNK_WIDTH 32
-#define CHUNK_HEIGHT 32
-#define CHUNK_BREADTH 32
+/*
+ * All dimensions should be '320 % x == 0'
+*/
+#define CHUNK_WIDTH 16
+#define CHUNK_HEIGHT 16
+#define CHUNK_BREADTH 16
 static const int g_chunks_per_column = 256 / CHUNK_HEIGHT;
 #define CHUNKS_PER_COLUMN g_chunks_per_column
 #define BLOCK_SCALE 0.5f
@@ -286,7 +289,8 @@ static const float g_chunk_block_amount = CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_BRE
 #define CHUNK_SIZE_X g_chunk_size_x
 #define CHUNK_SIZE_Y g_chunk_size_y
 #define CHUNK_SIZE_Z g_chunk_size_z
-#define RENDER_DISTANCE 7 
+static const int g_render_distance = 320 / CHUNK_WIDTH;
+#define RENDER_DISTANCE 7 /*g_render_distance*/
 static const int g_chunks_loaded = CHUNKS_PER_COLUMN * RENDER_DISTANCE * RENDER_DISTANCE;
 #define CHUNKS_LOADED g_chunks_loaded
 
@@ -386,6 +390,7 @@ struct	s_chunk
 	t_block			*blocks; //x*y*z real amount should be : CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_BREADTH;
 
 	int				has_blocks; // 1/0 whether the chunk has other than air blocks;
+	int				has_visible_blocks; // 1 / 0 whether chunk has visible blocks;
 	int				update_structures; // the terrain needs to be generated before the structures, thats why we have this; 
 
 	int				blocks_solid_amount; // amount of blocks in this mesh;

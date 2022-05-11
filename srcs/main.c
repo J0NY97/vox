@@ -543,15 +543,17 @@ int	main(void)
 					chunks[ent].needs_to_update = 0;
 					chunks[ent].was_updated = 1;
 					update_chunk_border_visible_blocks(&chunks[ent]);
-					chunk_aabb_update(&chunks[ent]);
 				}
-				// Only send mesh info to gpu, if the chunk actually was changed;
-				if (chunks[ent].was_updated)
+				if (chunks[ent].was_updated) // Only send mesh info to gpu, if the chunk actually was changed;
 				{
 					chunks[ent].was_updated = 0;
-					update_chunk_mesh(&chunks[ent].meshes);
+					if (chunks[ent].has_visible_blocks)
+						update_chunk_mesh(&chunks[ent].meshes);
 				}
 			}
+
+			// REMOVE DEBUG
+			//exit(0);
 		}
 
 		// head
@@ -586,7 +588,9 @@ int	main(void)
 			// Dont render chunk if the chunk is further away than the farplane of the camear;
 			// Dont render if the chunk is outside the view fustrum;
 			// Dont render if has been sent to gpu yet;
-			if (chunks[nth_chunk].was_updated == 0 &&
+			if (chunks[nth_chunk].has_blocks &&
+				chunks[nth_chunk].has_visible_blocks &&
+				chunks[nth_chunk].was_updated == 0 &&
 				vec3_dist(player.camera.pos, chunks[nth_chunk].world_coordinate) <
 				player.camera.far_plane + CHUNK_SIZE_X &&
 				aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum))
@@ -595,9 +599,10 @@ int	main(void)
 				++chunk_info.meshes_render_amount;
 			}
 			
-			if (chunks[nth_chunk].blocks_solid_amount > 0 ||
+			if (chunks[nth_chunk].has_blocks &&
+				(chunks[nth_chunk].blocks_solid_amount > 0 ||
 				chunks[nth_chunk].blocks_flora_amount > 0 ||
-				chunks[nth_chunk].blocks_solid_alpha_amount > 0)
+				chunks[nth_chunk].blocks_solid_alpha_amount > 0))
 			{
 				// Collision Detection
 				if (chunk_info.block_collision_enabled &&
