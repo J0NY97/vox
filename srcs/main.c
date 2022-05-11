@@ -314,13 +314,13 @@ int	main(void)
 			int	most_indices = 0;
 			for (int j = 0; j < CHUNKS_LOADED; j++)
 			{
-				if (chunks[j].meshes.vertices_amount > most_vertices)
-					most_vertices = chunks[j].meshes.vertices_amount;
-				if (chunks[j].meshes.texture_id_amount > most_textures)
-					most_textures = chunks[j].meshes.texture_id_amount;
+				if (chunks[j].meshes.vertices_allocated > most_vertices)
+					most_vertices = chunks[j].meshes.vertices_allocated;
+				if (chunks[j].meshes.texture_ids_allocated > most_textures)
+					most_textures = chunks[j].meshes.texture_ids_allocated;
 				for (int m = 0; m < chunks[j].meshes.amount; m++)
-					if (chunks[j].meshes.indices_amount[m] > most_indices)
-						most_indices = chunks[j].meshes.indices_amount[m];
+					if (chunks[j].meshes.indices_allocated[m] > most_indices)
+						most_indices = chunks[j].meshes.indices_allocated[m];
 			}
 			LG_INFO("Most vertices : %d", most_vertices);
 			LG_INFO("Most texture ids : %d", most_textures);
@@ -518,13 +518,8 @@ int	main(void)
 
 			if (chunks[ent].needs_to_update)
 			{
-				if (chunk_info.light_calculation && highest == &chunks[ent])
-					update_chunk_light(&chunks[ent]);
-				update_chunk_visible_blocks(&chunks[ent]);
-				update_chunk_mesh(&chunks[ent].meshes);
-				chunk_aabb_update(&chunks[ent]);
-				chunks[ent].needs_to_update = 0;
-				chunks[ent].secondary_update = 1;
+				update_chunk(&chunks[ent]);
+				chunks[ent].was_updated = 1;
 
 				// Set needs to update to all 6 neighbors of the chunk;
 				for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
@@ -544,13 +539,15 @@ int	main(void)
 			{
 				if (chunks[ent].secondary_update)
 				{
-				//	ft_printf("[%d] Chunk needs secondary updating.\n", ent);
 					chunks[ent].secondary_update = 0;
 					chunks[ent].needs_to_update = 0;
 					update_chunk_border_visible_blocks(&chunks[ent]);
-					update_chunk_mesh(&chunks[ent].meshes);
 					chunk_aabb_update(&chunks[ent]);
-					break ;
+				}
+				if (chunks[ent].was_updated)
+				{
+					chunks[ent].was_updated = 0;
+					update_chunk_mesh(&chunks[ent].meshes);
 				}
 			}
 		}
@@ -586,7 +583,9 @@ int	main(void)
 			// Decide if we want to render the chunk or not;
 			// Dont render chunk if the chunk is further away than the farplane of the camear;
 			// Dont render if the chunk is outside the view fustrum;
-			if (vec3_dist(player.camera.pos, chunks[nth_chunk].world_coordinate) <
+			// Dont render if has been sent to gpu yet;
+			if (chunks[nth_chunk].was_updated == 0 &&
+				vec3_dist(player.camera.pos, chunks[nth_chunk].world_coordinate) <
 				player.camera.far_plane + CHUNK_SIZE_X &&
 				aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum))
 			{

@@ -404,13 +404,14 @@ struct	s_chunk
 
 	int				needs_to_update;
 	int				secondary_update;
+	int				was_updated;
 
 	t_chunk_args	args;
 };
 
 void		new_chunk(t_chunk *chunk, t_chunk_info *info, int nth);
 int			chunk_gen(t_chunk *chunk);
-void		update_chunk(t_chunk *chunk, int *coord);
+void		generate_chunk(t_chunk *chunk, int *coord, int *noise_map);
 void		update_chunk_visible_blocks(t_chunk *chunk);
 void		update_chunk_border_visible_blocks(t_chunk *chunk);
 void		chunk_aabb_update(t_chunk *chunk);
@@ -449,6 +450,8 @@ typedef struct s_regen_args
 void		*regen_thread_func(void *args);
 int			regenerate_chunks(int *these, int coord[2], t_chunk_info *info);
 int			regenerate_chunks_threading(int *these, int coord[2], t_chunk_info *info);
+
+void		update_chunk(t_chunk *chunk);
 
 void		init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount);
 void		reset_chunk_mesh_v2(t_chunk_mesh_v2 *mesh);

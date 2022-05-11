@@ -11,6 +11,7 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, int nth)
 
 	chunk->needs_to_update = 0;
 	chunk->secondary_update = 0;
+	chunk->was_updated = 0;
 
 	int	max_blocks = CHUNK_WIDTH * CHUNK_BREADTH * CHUNK_HEIGHT;
 
@@ -487,7 +488,7 @@ unsigned long int	get_chunk_hash_key(int *coords)
 	return (hash);
 }
 
-void	update_chunk_v2(t_chunk *chunk, int *coord, int *noise_map)
+void	generate_chunk(t_chunk *chunk, int *coord, int *noise_map)
 {
 	for (int i = 0; i < 3; i++)
 		chunk->coordinate[i] = coord[i];
@@ -635,12 +636,22 @@ int	get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, 
 	return (reload_amount);
 }
 
+void	update_chunk(t_chunk *chunk)
+{
+	update_chunk_visible_blocks(chunk);
+	chunk_aabb_update(chunk);
+// NOTE : Only update chunk light if the chunk has visible blocks;
+//	update_chunk_light(chunk);
+	chunk->needs_to_update = 0;
+	chunk->secondary_update = 1;
+}
+
 void	*chunk_thread_func(void *args)
 {
 	t_chunk_args	*info;
 
 	info = args;
-	update_chunk_v2(info->chunk, info->coords, info->noise_map);
+	generate_chunk(info->chunk, info->coords, info->noise_map);
 	update_chunk_visible_blocks(info->chunk);
 	chunk_aabb_update(info->chunk);
 	return (NULL);
@@ -690,11 +701,15 @@ int	regenerate_chunks(int *these, int coord[2], t_chunk_info *info)
 		if (nth_chunk >= CHUNKS_PER_COLUMN || nth_chunk >= CHUNKS_LOADED) 
 			break ;
 		ind = these[nth_chunk];
+		generate_chunk(&info->chunks[ind], (int []){coord[0], y, coord[1]}, noise_map);
+
+		/*
 		update_chunk_v2(&info->chunks[ind], (int []){coord[0], y, coord[1]}, noise_map);
 		update_chunk_visible_blocks(&info->chunks[ind]);
 		update_chunk_mesh(&info->chunks[ind].meshes);
 		chunk_aabb_update(&info->chunks[ind]);
 		info->chunks[ind].needs_to_update = 0;
+		*/
 		nth_chunk++;
 	}
 	return (nth_chunk);
@@ -796,11 +811,11 @@ void	init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount)
 	if (error)
 		LG_ERROR("BEFORE (%d)", error);
 
-	mesh->vertices_allocated = 17964;
+	mesh->vertices_allocated = 52752;
 	mesh->vertices = malloc(sizeof(float) * mesh->vertices_allocated);
 	mesh->vertices_amount = 0;
 
-	mesh->texture_ids_allocated = 5988; 
+	mesh->texture_ids_allocated = 17748; 
 	mesh->texture_ids = malloc(sizeof(int) * mesh->texture_ids_allocated);
 	mesh->texture_id_amount = 0;
 
@@ -811,7 +826,7 @@ void	init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount)
 	mesh->index_amount = 0;
 	for (int i = 0; i < mesh->amount; i++)
 	{
-		mesh->indices_allocated[i] = 8466;
+		mesh->indices_allocated[i] = 22864;
 		mesh->indices[i] = malloc(sizeof(unsigned int) * mesh->indices_allocated[i]);
 		mesh->indices_amount[i] = 0;
 	}
@@ -898,6 +913,8 @@ void	render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinat
 
 /*
  * Sends the mesh info to the GPU;
+ *
+ * You have to call this function on the main thread;
 */
 void	update_chunk_mesh(t_chunk_mesh_v2 *mesh)
 {
