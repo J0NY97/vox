@@ -351,6 +351,7 @@ void		block_print(t_block *block);
 
 typedef struct s_block_water
 {
+	t_block	*block; // pointer to the actual block;
 	float	pos[3]; // world position of the block;
 	int		flow_dir; // e_card_dir; (can be changed to 'char');
 	int		dist_to_down; // shortest distance to down block;
