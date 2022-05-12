@@ -685,7 +685,7 @@ int	main(void)
 						if (player_info.equipped_block == ITEM_TREE_PLACER)
 							tree_placer(&chunk_info, block_world);
 						else if (player_info.equipped_block == ITEM_WATER_PLACER)
-							water_placer(&chunk_info, block_world, 0);
+							water_placer_v2(&chunk_info, block_world, 0);
 					}
 					else
 						LG_WARN("We dont allow the placing of that type of block.");

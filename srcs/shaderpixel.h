@@ -349,6 +349,13 @@ typedef struct s_block
 
 void		block_print(t_block *block);
 
+typedef struct s_block_water
+{
+	float	pos[3]; // world position of the block;
+	int		flow_dir; // e_card_dir; (can be changed to 'char');
+	int		dist_to_down; // shortest distance to down block;
+}	t_block_water;
+
 typedef struct s_chunk_info
 {
 	unsigned int	seed;
@@ -389,6 +396,9 @@ struct	s_chunk
 	int				block_amount;
 	t_block			*blocks; //x*y*z real amount should be : CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_BREADTH;
 
+	int				water_block_amount;
+	t_block_water	*water_blocks; // 
+
 	int				has_blocks; // 1/0 whether the chunk has other than air blocks;
 	int				has_visible_blocks; // 1 / 0 whether chunk has visible blocks;
 	int				update_structures; // the terrain needs to be generated before the structures, thats why we have this; 
@@ -399,10 +409,10 @@ struct	s_chunk
 	int				blocks_solid_alpha_amount; // amount of blocks in this mesh;
 
 	/* Mesh Types:
-	 * 0 : no alpha, collision, hitbox;
-	 * 1 : alpha, no collision, no hitbox;
-	 * 2 : alpha, no collision, hitbox;
-	 * 3 : alpha, collision, hitbox;
+	 * 0 : no alpha, collision, hitbox;		(solid)
+	 * 1 : alpha, no collision, no hitbox;	(fluid)
+	 * 2 : alpha, no collision, hitbox;		(flora)
+	 * 3 : alpha, collision, hitbox;		(solid alpha)
 	*/
 	t_chunk_mesh_v2	meshes; // TODO : rename to mesh;
 	int				mesh_amount; // same amount as the mesh types described above;
@@ -428,6 +438,7 @@ void		render_aabb(t_aabb *a, t_camera *camera, float *col);
 int			*get_chunk_pos_from_world_pos(int *res, float *world_coords);
 float		*block_world_pos(float *res, float *chunk_world_pos, int *block_local_pos);
 t_chunk		*get_chunk(t_chunk_info *info, int *pos);
+t_chunk		*get_chunk_from_world_pos(t_chunk_info *info, float *pos);
 t_chunk		*get_adjacent_chunk(t_chunk_info *info, t_chunk *from, float *dir);
 int			*get_block_local_pos_from_world_pos(int *res, float *world);
 int			*get_block_local_pos_from_index(int *res, int index);
@@ -474,7 +485,7 @@ int			chunk_mesh_collision_v56(float *orig, float *dir, t_chunk *chunk, float re
 t_block		*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, int *face);
 void		render_block_outline(float *pos, float *color, float *view, float *projection);
 
-void		set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_type);
+int			set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_type);
 
 void		player_terrain_collision(float *res, float *pos, float *velocity, t_chunk_info *info);
 

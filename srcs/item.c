@@ -103,7 +103,7 @@ int	water_placer(t_chunk_info *info, float *world_pos, int nth_from_source)
 
 	vec3_new(under, world_pos[0], world_pos[1] - 1.0f, world_pos[2]);
 	type = get_block_type_at_world_pos(info, under);
-	if (!is_type_solid(type))
+	if (!is_type_solid(type) && !is_type_solid_alpha(type))
 	{
 		water_placer(info, under, 0);
 		return (0);
@@ -117,6 +117,95 @@ int	water_placer(t_chunk_info *info, float *world_pos, int nth_from_source)
 		vec3_add(tmp, world_pos, (float *)g_card_dir[j]);
 		water_placer(info, tmp, 1 + nth_from_source);
 	}
+	return (1);
+}
+
+/*
+ * Return direction if found (from e_card_dir);
+ *
+ * 'pos' : block world position;
+*/
+int	find_shortest_down(t_chunk_info *info, float *pos, int curr_len, int max_len)
+{
+	if (curr_len > max_len)
+		return (-1);
+	
+	// Go through all directions and search if it goes down in that dir;
+	float	tmp[3];
+	// If we have gas block under this, we have found down;
+	int		type;
+
+	// Check first instantly down;
+	vec3_add(tmp, pos, (float *)g_card_dir[DIR_DOWN]);
+	type = get_block_type_at_world_pos(info, tmp);
+	if (is_type_gas(type) || is_type_flora(type) || is_type_fluid(type))
+		return (DIR_DOWN);
+
+	for (int j = DIR_NORTH; j <= DIR_WEST; j++)
+	{
+		vec3_add(tmp, pos, (float *)g_card_dir[j]);
+		vec3_add(tmp, tmp, (float *)g_card_dir[DIR_DOWN]);
+		type = get_block_type_at_world_pos(info, tmp);
+		if (is_type_gas(type) || is_type_flora(type) || is_type_fluid(type))
+			return (j);
+
+		vec3_add(tmp, pos, (float *)g_card_dir[j]);
+		int res = find_shortest_down(info, tmp, curr_len + 1, max_len);
+		if (res != -1)
+			return (res);
+	}
+
+	return (-1);
+}
+
+int	water_placer_v2(t_chunk_info *info, float *world_pos, int nth_from_source)
+{
+	int		shortest_dir;
+	int		type;
+	float	tmp[3];
+
+	if (nth_from_source > 7)
+		return (0);
+
+	// Check that position is not occupied;
+	type = get_block_type_at_world_pos(info, world_pos);
+	// If block is not solid, we can proceed;
+	// If block is smaller type of water block we can place this block there;
+	if (is_type_solid(type) || is_type_solid_alpha(type))
+		return (0);
+	if (is_type_fluid(type) && type < FLUID_WATER + nth_from_source)
+		return (0);
+
+	t_chunk	*chunk;
+
+	// Find shortest dir; up to 3 blocks;
+	shortest_dir = -1;
+	int	i = 0;
+	while (shortest_dir == -1 && i <= 3)
+	{
+		shortest_dir = find_shortest_down(info, world_pos, 0, i);
+		i++;
+	}
+
+	if (shortest_dir == -1) // if we havent found down block, we spread water around;
+	{
+		for (int j = DIR_NORTH; j <= DIR_WEST; j++)
+		{
+			vec3_add(tmp, world_pos, (float *)g_card_dir[j]);
+			set_block_at_world_pos(info, world_pos, FLUID_WATER + nth_from_source);
+			water_placer_v2(info, tmp, nth_from_source + 1);
+		}
+	}
+	else // go in the direction of the shortest down block;
+	{
+		vec3_add(tmp, world_pos, (float *)g_card_dir[shortest_dir]);
+		set_block_at_world_pos(info, world_pos, FLUID_WATER + nth_from_source);
+		if (shortest_dir == DIR_DOWN) // if dir is down we place source block there and it can spread up to 8 blocks again;
+			water_placer_v2(info, tmp, 0);
+		else
+			water_placer_v2(info, tmp, nth_from_source + 1);
+	}
+
 	return (1);
 }
 

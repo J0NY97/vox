@@ -207,6 +207,14 @@ t_chunk	*get_chunk(t_chunk_info	*info, int *pos)
 	return (NULL);
 }
 
+t_chunk	*get_chunk_from_world_pos(t_chunk_info *info, float *pos)
+{
+	int	local_pos[3];
+
+	get_chunk_pos_from_world_pos(local_pos, pos);
+	return (get_chunk(info, local_pos));
+}
+
 /*
  * From local chunk block pos to the index in the 'chunk->blocks' array;
 */
@@ -1319,10 +1327,12 @@ void	player_terrain_collision(float *res, float *pos, float *velocity, t_chunk_i
 }
 
 /*
+ * Returns 1 / 0 if the block could be placed;
+ *
  * Places block of type 'block_type' in the world position of 'world_pos' no
  *	matter what.
 */
-void	set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_type)
+int	set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_type)
 {
 	int		block_local[3];
 	int		chunk_pos[3];
@@ -1332,7 +1342,7 @@ void	set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_type
 	get_chunk_pos_from_world_pos(chunk_pos, world_pos);
 	chunk = get_chunk(info, chunk_pos);
 	if (!chunk)
-		return ;
+		return (0);
 	get_block_local_pos_from_world_pos(block_local, world_pos);
 	index = get_block_index(info, block_local[0], block_local[1], block_local[2]);
 	chunk->blocks[index].type = block_type;
@@ -1344,6 +1354,7 @@ void	set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_type
 	chunk->needs_to_update = 1;
 	if (!is_type_gas(block_type))
 		chunk->has_blocks = 1;
+	return (1);
 }
 
 void	set_block_at_world_pos_if_empty(t_chunk_info *info, float *world_pos, int block_type)
