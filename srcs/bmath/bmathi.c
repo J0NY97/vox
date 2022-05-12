@@ -26,3 +26,8 @@ int	vec3i_dist_sqrd(int *v0, int *v1)
 		(v0[1] - v1[1]) * (v0[1] - v1[1]) +
 		(v0[2] - v1[2]) * (v0[2] - v1[2]));
 }
+
+void	vec3i_string(char *str, int *v)
+{
+	ft_printf("%s { %d %d %d }\n", str, v[0], v[1], v[2]);
+}

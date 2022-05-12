@@ -501,7 +501,7 @@ int	main(void)
 			}
 
 			// Only generate trees if we have all the surrdounding neighbors,
-			// 	so that we wont have trees cut in half;
+			// 	so that we wont have trees cut in half; (doesnt work)
 			if ((chunk_info.generate_structures && neighbors_found >= 10 &&
 				chunks[ent].update_structures) || chunk_info.light_calculation)
 				highest = get_highest_chunk(&chunk_info, chunks[ent].coordinate[0], chunks[ent].coordinate[2]);
@@ -600,7 +600,6 @@ int	main(void)
 			if (chunk_info.block_collision_enabled)
 			{
 //				if (vec3i_dist_sqrd(player_chunk, chunks[nth_chunk].coordinate) <= 2)
-//				if (point_aabb_nearest_distance(player.camera.pos, &chunks[nth_chunk].aabb) <= (CHUNK_WIDTH * CHUNK_WIDTH) / 2)
 				if (point_aabb_center_distance(player.camera.pos, &chunks[nth_chunk].aabb) <= (CHUNK_WIDTH * CHUNK_WIDTH))
 				{
 					show_chunk_borders(&chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
@@ -677,12 +676,12 @@ int	main(void)
 					vec3_add(block_world, block_pos, (float *)g_card_dir[face]);
 					// Check if block or item equipped;
 					LG_INFO("Place Item at %f %f %f", block_world[0], block_world[1], block_world[2]);
-					if (is_type_solid(player_info.equipped_block) ||
-						is_type_solid_alpha(player_info.equipped_block) ||
-						is_type_flora(player_info.equipped_block))
+					if (!is_type_fluid(player_info.equipped_block) &&
+						!is_type_item(player_info.equipped_block))
 						set_block_at_world_pos(&chunk_info, block_world, player_info.equipped_block);
 					else if (is_type_item(player_info.equipped_block))
 					{
+						ft_printf("Using : %s\n", g_item_data[player_info.equipped_block - ITEM_FIRST - 1].name);
 						if (player_info.equipped_block == ITEM_TREE_PLACER)
 							tree_placer(&chunk_info, block_world);
 						else if (player_info.equipped_block == ITEM_WATER_PLACER)
@@ -692,7 +691,10 @@ int	main(void)
 						LG_WARN("We dont allow the placing of that type of block.");
 				}
 				else if (mouse[GLFW_MOUSE_BUTTON_MIDDLE].state == BUTTON_PRESS)
+				{
 					block_print(hovered_block);
+					vec3_string("Coordinates : ", block_pos);
+				}
 			}
 		}
 		/* END OF COLLISION */

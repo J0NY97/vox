@@ -88,37 +88,34 @@ int	water_placer(t_chunk_info *info, float *world_pos, int nth_from_source)
 
 	// Check that position is not occupied;
 	type = get_block_type_at_world_pos(info, world_pos);
-	if (!(type == GAS_AIR ||
-		(type > FLUID_WATER + nth_from_source && type < FLUID_WATER_7 + 1) ||
-		(type > FLORA_FIRST && type < FLORA_LAST)))
+	// If block is not solid, we can proceed;
+	// If block is smaller type of water block we can place this block there;
+	if (is_type_solid(type) || is_type_solid_alpha(type))
 		return (0);
-	
-	// Check that we have a block under this block;
-	type = get_block_type_at_world_pos(info, (float []) {world_pos[0], world_pos[1] - 1.0f, world_pos[2]});
-	if (type <= BLOCK_FIRST || type >= BLOCK_LAST)
-	{
-		set_block_at_world_pos(info, world_pos, FLUID_WATER + nth_from_source);
-		water_placer(info, (float []){world_pos[0], world_pos[1] - 1.0f, world_pos[2]}, 0);
+	if  (is_type_fluid(type) && type < FLUID_WATER + nth_from_source)
 		return (0);
-	}
 
 	// Set water block
 	set_block_at_world_pos(info, world_pos, FLUID_WATER + nth_from_source);
 
-	float	tmp[3];
-	float	dir_mult[3];
+	// If we dont have block under this, we place source block;
+	float	under[3];
 
-	for (int j = 0; j < DIR_AMOUNT; j++)
+	vec3_new(under, world_pos[0], world_pos[1] - 1.0f, world_pos[2]);
+	type = get_block_type_at_world_pos(info, under);
+	if (!is_type_solid(type))
 	{
-		if (j == DIR_UP || j == DIR_DOWN)
-			continue ;
-		for (int i = 1; i < 8 - nth_from_source; i++)
-		{
-			vec3_multiply_f(dir_mult, (float *)g_card_dir[j], i);
-			vec3_add(tmp, world_pos, dir_mult);
-			if (!water_placer(info, tmp, i + nth_from_source))
-				break ;
-		}
+		water_placer(info, under, 0);
+		return (0);
+	}
+
+	// Go through all directions and place water on the adjacent blocks;
+	float	tmp[3];
+
+	for (int j = DIR_NORTH; j <= DIR_WEST; j++)
+	{
+		vec3_add(tmp, world_pos, (float *)g_card_dir[j]);
+		water_placer(info, tmp, 1 + nth_from_source);
 	}
 	return (1);
 }
@@ -152,21 +149,21 @@ void	flowing_water_verts(float *verts, int face, t_block *block, float *block_wo
 			most = block->type;
 
 			// Check the highest vertex in the direction of whichever card dir the vertex is in;
-			type = get_block_type_at_world_pos(info, vec3_add(tmp, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_NORTH]), (float *)g_card_dir[DIR_WEST]));
-			if (type > FLUID_FIRST && type < FLUID_LAST && type < most)
+			type = get_block_type_at_world_pos(info, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_NORTHWEST]));
+			if (is_type_fluid(type) && type < most)
 				if (type < most)
 					most = type;
 			type = get_block_type_at_world_pos(info, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_NORTH]));
-			if (type > FLUID_FIRST && type < FLUID_LAST && type < most)
+			if (is_type_fluid(type) && type < most)
 				if (type < most)
 					most = type;
 			type = get_block_type_at_world_pos(info, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_WEST]));
-			if (type > FLUID_FIRST && type < FLUID_LAST && type < most)
+			if (is_type_fluid(type) && type < most)
 				if (type < most)
 					most = type;
 			
 			// If theres a gas block, we want the lowest position for that vertex;
-			if (most > GAS_FIRST && most < GAS_LAST)
+			if (is_type_gas(most))
 				most = FLUID_WATER_7;
 
 			final = 1.0f - ((most - FLUID_WATER) * 0.25f);
@@ -182,20 +179,20 @@ void	flowing_water_verts(float *verts, int face, t_block *block, float *block_wo
 		{
 			// South west
 			most = block->type;
-			type = get_block_type_at_world_pos(info, vec3_add(tmp, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_SOUTH]), (float *)g_card_dir[DIR_WEST]));
-			if (type > FLUID_FIRST && type < FLUID_LAST && type < most)
+			type = get_block_type_at_world_pos(info, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_SOUTHWEST]));
+			if (is_type_fluid(type) && type < most)
 				if (type < most)
 					most = type;
 			type = get_block_type_at_world_pos(info, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_SOUTH]));
-			if (type > FLUID_FIRST && type < FLUID_LAST && type < most)
+			if (is_type_fluid(type) && type < most)
 				if (type < most)
 					most = type;
 			type = get_block_type_at_world_pos(info, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_WEST]));
-			if (type > FLUID_FIRST && type < FLUID_LAST && type < most)
+			if (is_type_fluid(type) && type < most)
 				if (type < most)
 					most = type;
 
-			if (most > GAS_FIRST && most < GAS_LAST)
+			if (is_type_gas(most))
 				most = FLUID_WATER_7;
 
 			final = 1.0f - ((most - FLUID_WATER) * 0.25f);
@@ -211,20 +208,20 @@ void	flowing_water_verts(float *verts, int face, t_block *block, float *block_wo
 		{
 			// South East
 			most = block->type;
-			type = get_block_type_at_world_pos(info, vec3_add(tmp, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_SOUTH]), (float *)g_card_dir[DIR_EAST]));
-			if (type > FLUID_FIRST && type < FLUID_LAST && type < most)
+			type = get_block_type_at_world_pos(info, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_SOUTHEAST]));
+			if (is_type_fluid(type) && type < most)
 				if (type < most)
 					most = type;
 			type = get_block_type_at_world_pos(info, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_SOUTH]));
-			if (type > FLUID_FIRST && type < FLUID_LAST && type < most)
+			if (is_type_fluid(type) && type < most)
 				if (type < most)
 					most = type;
 			type = get_block_type_at_world_pos(info, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_EAST]));
-			if (type > FLUID_FIRST && type < FLUID_LAST && type < most)
+			if (is_type_fluid(type) && type < most)
 				if (type < most)
 					most = type;
 
-			if (most > GAS_FIRST && most < GAS_LAST)
+			if (is_type_gas(most))
 				most = FLUID_WATER_7;
 			
 			final = 1.0f - ((most - FLUID_WATER) * 0.25f);
@@ -240,20 +237,20 @@ void	flowing_water_verts(float *verts, int face, t_block *block, float *block_wo
 		{
 			// North East
 			most = block->type;
-			type = get_block_type_at_world_pos(info, vec3_add(tmp, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_NORTH]), (float *)g_card_dir[DIR_EAST]));
-			if (type > FLUID_FIRST && type < FLUID_LAST && type < most)
+			type = get_block_type_at_world_pos(info, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_NORTHEAST]));
+			if (is_type_fluid(type) && type < most)
 				if (type < most)
 					most = type;
 			type = get_block_type_at_world_pos(info, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_NORTH]));
-			if (type > FLUID_FIRST && type < FLUID_LAST && type < most)
+			if (is_type_fluid(type) && type < most)
 				if (type < most)
 					most = type;
 			type = get_block_type_at_world_pos(info, vec3_add(tmp, block_world, (float *)g_card_dir[DIR_EAST]));
-			if (type > FLUID_FIRST && type < FLUID_LAST && type < most)
+			if (is_type_fluid(type) && type < most)
 				if (type < most)
 					most = type;
 
-			if (most > GAS_FIRST && most < GAS_LAST)
+			if (is_type_gas(most))
 				most = FLUID_WATER_7;
 			
 			final = 1.0f - ((most - FLUID_WATER) * 0.25f);

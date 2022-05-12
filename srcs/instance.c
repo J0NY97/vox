@@ -313,7 +313,7 @@ t_block	*get_block_in_dir(t_chunk *chunk, t_chunk *neighbor, int *local_pos, int
 void	add_block_to_correct_mesh(t_chunk *chunk, t_block *block, t_block *adjacent, int *local_pos, int dir)
 {
 	t_block_data	data;
-	float			*block_world;
+	float			block_world[3];
 	int				light;
 
 	if (adjacent)
@@ -325,11 +325,9 @@ void	add_block_to_correct_mesh(t_chunk *chunk, t_block *block, t_block *adjacent
 		{
 			// If both blocks are fluid, we dont add face to mesh;
 			float	verts[12];
-			int		type = -1;
 
 			block_world_pos(block_world, chunk->world_coordinate, local_pos);
 			flowing_water_verts(verts, dir, block, block_world, chunk->info);
-
 			add_to_chunk_mesh_v2(&chunk->meshes, FLUID_MESH, local_pos, verts, data.texture[0], light);
 			++chunk->blocks_fluid_amount;
 		}
