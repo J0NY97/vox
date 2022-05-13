@@ -145,6 +145,7 @@ void	add_water_block(t_chunk_info *info, t_block *block, float *pos)
 		vec3_assign(water_block->pos, pos);
 		water_block->flow_dir = -1;
 		water_block->dist_to_down = INT_MAX;
+		water_block->statique = 0;
 		++chunk->water_block_amount;
 	}
 }
@@ -274,7 +275,7 @@ void	water_flow(t_chunk_info *info, t_block_water *water)
 	int				type;
 	
 	// If flow dist is more than 7, the water has traveled the max distance;
-	if (water->block->type >= FLUID_WATER_7)
+	if (water->block->type >= FLUID_WATER_7 || water->statique)
 		return ;
 
 	// For all directions, get neighboring blocks;
@@ -300,9 +301,9 @@ void	water_flow(t_chunk_info *info, t_block_water *water)
 		}
 	}
 
-/*
 	// Check neighbor 'dist_to_down', if its shorter than our own we take it;
 	// Dont look up;
+	// TODO: dont look in direction of where we came from;
 	for (int i = 0; i < 4; i++)
 	{
 		if (is_fluid(neighbor[i]) && neighbor_water[i] && neighbor_water[i]->dist_to_down < water->dist_to_down)
@@ -311,7 +312,6 @@ void	water_flow(t_chunk_info *info, t_block_water *water)
 			water->flow_dir = neighbor_water[i]->flow_dir;
 		}
 	}
-*/
 
 	// Flow
 	// If doesnt have flow_dir, we spread water to all directions;
@@ -363,8 +363,13 @@ void	chunk_water_flower(t_chunk_info *info, t_chunk *chunk)
 {
 	// For all water blocks in chunk;
 	for (int j = 0; j < chunk->water_block_amount; j++)
+	{
 		if (is_fluid(chunk->water_blocks[j].block))
+		{
 			water_flow(info, &chunk->water_blocks[j]);
+			chunk->water_blocks[j].statique = 1;
+		}
+	}
 }
 
 void	water_remove(t_chunk_info *info, t_block_water *water)

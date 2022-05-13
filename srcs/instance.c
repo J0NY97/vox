@@ -1361,6 +1361,9 @@ void	player_terrain_collision(float *res, float *pos, float *velocity, t_chunk_i
 */
 t_block	*set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_type)
 {
+	static int blocks_placed = 0;
+	ft_printf("Block Placed (%d)\n", blocks_placed++);
+
 	int		block_local[3];
 	int		chunk_pos[3];
 	int		index;

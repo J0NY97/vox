@@ -516,7 +516,7 @@ int	main(void)
 				chunks[ent].update_structures = 0;
 			}
 
-			if (chunks[ent].blocks_fluid_amount > 0 && chunks[ent].needs_to_update)
+			if (chunks[ent].blocks_fluid_amount > 0)// && chunks[ent].needs_to_update)
 			{
 				chunk_water_flower(&chunk_info, &chunks[ent]);
 				chunk_water_remover(&chunk_info, &chunks[ent]);
@@ -563,9 +563,9 @@ int	main(void)
 		}
 
 		// head
-		player_terrain_collision(player.velocity, (float []){player.camera.pos[0], player.camera.pos[1] + 0.25f, player.camera.pos[2]}, player.velocity, &chunk_info);
+//		player_terrain_collision(player.velocity, (float []){player.camera.pos[0], player.camera.pos[1] + 0.25f, player.camera.pos[2]}, player.velocity, &chunk_info);
 		// feet
-		player_terrain_collision(player.velocity, (float []){player.camera.pos[0], player.camera.pos[1] - 1.0f, player.camera.pos[2]}, player.velocity, &chunk_info);
+//		player_terrain_collision(player.velocity, (float []){player.camera.pos[0], player.camera.pos[1] - 1.0f, player.camera.pos[2]}, player.velocity, &chunk_info);
 
 		player_apply_velocity(&player);
 		update_camera(&player.camera);

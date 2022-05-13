@@ -355,6 +355,7 @@ typedef struct s_block_water
 	float	pos[3]; // world position of the block;
 	int		flow_dir; // e_card_dir; (can be changed to 'char');
 	int		dist_to_down; // shortest distance to down block;
+	int		statique;
 }	t_block_water;
 
 typedef struct s_chunk_info
