@@ -398,6 +398,7 @@ struct	s_chunk
 	t_block			*blocks; //x*y*z real amount should be : CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_BREADTH;
 
 	int				water_block_amount;
+	int				water_blocks_allocated;
 	t_block_water	*water_blocks; // 
 
 	int				has_blocks; // 1/0 whether the chunk has other than air blocks;
@@ -437,7 +438,7 @@ void		show_chunk_borders(t_chunk *chunk, t_camera *camera, float *col);
 void		render_aabb(t_aabb *a, t_camera *camera, float *col);
 
 int			*get_chunk_pos_from_world_pos(int *res, float *world_coords);
-float		*block_world_pos(float *res, float *chunk_world_pos, int *block_local_pos);
+float		*get_block_world_pos(float *res, float *chunk_world_pos, int *block_local_pos);
 t_chunk		*get_chunk(t_chunk_info *info, int *pos);
 t_chunk		*get_chunk_from_world_pos(t_chunk_info *info, float *pos);
 t_chunk		*get_adjacent_chunk(t_chunk_info *info, t_chunk *from, float *dir);
@@ -486,14 +487,17 @@ int			chunk_mesh_collision_v56(float *orig, float *dir, t_chunk *chunk, float re
 t_block		*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, int *face);
 void		render_block_outline(float *pos, float *color, float *view, float *projection);
 
-int			set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_type);
+t_block		*set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_type);
 
 void		player_terrain_collision(float *res, float *pos, float *velocity, t_chunk_info *info);
 
 void		tree_placer(t_chunk_info *info, float *world_pos);
 int			water_placer(t_chunk_info *info, float *world_pos, int nth_from_source);
 
+void		add_water_block(t_chunk_info *info, t_block *block, float *pos);
 void		flowing_water_verts(float *verts, int face, t_block *block, float *block_world, t_chunk_info *info);
+void		chunk_water_flower(t_chunk_info *info, t_chunk *chunk);
+void		chunk_water_remover(t_chunk_info *info, t_chunk *chunk);
 
 int			is_type_gas(int type);
 int			is_type_solid(int type);

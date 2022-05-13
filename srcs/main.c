@@ -516,6 +516,12 @@ int	main(void)
 				chunks[ent].update_structures = 0;
 			}
 
+			if (chunks[ent].blocks_fluid_amount > 0 && chunks[ent].needs_to_update)
+			{
+				chunk_water_flower(&chunk_info, &chunks[ent]);
+				chunk_water_remover(&chunk_info, &chunks[ent]);
+			}
+
 			if (chunks[ent].needs_to_update)
 			{
 				update_chunk(&chunks[ent]);
@@ -685,7 +691,8 @@ int	main(void)
 						if (player_info.equipped_block == ITEM_TREE_PLACER)
 							tree_placer(&chunk_info, block_world);
 						else if (player_info.equipped_block == ITEM_WATER_PLACER)
-							water_placer_v2(&chunk_info, block_world, 0);
+							set_block_at_world_pos(&chunk_info, block_world, FLUID_WATER);
+//							water_placer_v2(&chunk_info, block_world, 0);
 					}
 					else
 						LG_WARN("We dont allow the placing of that type of block.");

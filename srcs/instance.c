@@ -13,6 +13,10 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, int nth)
 	chunk->secondary_update = 0;
 	chunk->was_updated = 0;
 
+	chunk->water_block_amount = 0;
+	chunk->water_blocks_allocated = 0;
+	chunk->water_blocks = NULL;
+
 	int	max_blocks = CHUNK_WIDTH * CHUNK_BREADTH * CHUNK_HEIGHT;
 
 	chunk->blocks = malloc(sizeof(t_block) * (max_blocks));
@@ -235,7 +239,7 @@ int	*get_block_local_pos_from_world_pos(int *res, float *world)
  * Saves answer in 'res';
  * And returns it;
 */
-float *block_world_pos(float *res, float *chunk_world_pos, int *block_local_pos)
+float *get_block_world_pos(float *res, float *chunk_world_pos, int *block_local_pos)
 {
 	float	scale = 0.5; // t_chunk_info->block_scale;
 
@@ -334,7 +338,7 @@ void	add_block_to_correct_mesh(t_chunk *chunk, t_block *block, t_block *adjacent
 			// If both blocks are fluid, we dont add face to mesh;
 			float	verts[12];
 
-			block_world_pos(block_world, chunk->world_coordinate, local_pos);
+			get_block_world_pos(block_world, chunk->world_coordinate, local_pos);
 			flowing_water_verts(verts, dir, block, block_world, chunk->info);
 			add_to_chunk_mesh_v2(&chunk->meshes, FLUID_MESH, local_pos, verts, data.texture[0], light);
 			++chunk->blocks_fluid_amount;
@@ -500,6 +504,8 @@ void	generate_chunk(t_chunk *chunk, int *coord, int *noise_map)
 	// Generate Chunks	
 	chunk->block_amount = chunk_gen_v2(chunk, noise_map); // should always return max amount of blocks in a chunk;
 
+	chunk->water_block_amount = 0;
+
 	chunk->update_structures = 1;
 	chunk->needs_to_update = 1;
 }
@@ -636,9 +642,30 @@ int	get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, 
 	return (reload_amount);
 }
 
+void	update_water_blocks(t_chunk *chunk)
+{
+	t_block	*block;
+	int		local_pos[3];
+	float	pos[3];
+
+	chunk->water_block_amount = 0;
+
+	for (int i = 0; i < chunk->block_amount; i++)
+	{
+		block = &chunk->blocks[i];
+		if (is_fluid(block))
+		{
+			get_block_local_pos_from_index(local_pos, i);
+			get_block_world_pos(pos, chunk->world_coordinate, local_pos);
+			add_water_block(chunk->info, block, pos);
+		}
+	}
+}
+
 void	update_chunk(t_chunk *chunk)
 {
 	update_chunk_visible_blocks(chunk);
+	update_water_blocks(chunk);
 	/*
 	if (chunk->has_blocks)
 		update_chunk_light(chunk);
@@ -1088,7 +1115,7 @@ t_block	*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, in
 			continue;
 
 		get_block_local_pos_from_index(blocal, i);
-		block_world_pos(block_world, chunk->world_coordinate, blocal);
+		get_block_world_pos(block_world, chunk->world_coordinate, blocal);
 
 		face_amount = 0;
 		if (is_solid(&chunk->blocks[i]) ||
@@ -1327,12 +1354,12 @@ void	player_terrain_collision(float *res, float *pos, float *velocity, t_chunk_i
 }
 
 /*
- * Returns 1 / 0 if the block could be placed;
+ * Returns the block that was placed;
  *
  * Places block of type 'block_type' in the world position of 'world_pos' no
  *	matter what.
 */
-int	set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_type)
+t_block	*set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_type)
 {
 	int		block_local[3];
 	int		chunk_pos[3];
@@ -1342,7 +1369,7 @@ int	set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_type)
 	get_chunk_pos_from_world_pos(chunk_pos, world_pos);
 	chunk = get_chunk(info, chunk_pos);
 	if (!chunk)
-		return (0);
+		return (NULL);
 	get_block_local_pos_from_world_pos(block_local, world_pos);
 	index = get_block_index(info, block_local[0], block_local[1], block_local[2]);
 	chunk->blocks[index].type = block_type;
@@ -1354,7 +1381,7 @@ int	set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_type)
 	chunk->needs_to_update = 1;
 	if (!is_type_gas(block_type))
 		chunk->has_blocks = 1;
-	return (1);
+	return (&chunk->blocks[index]);
 }
 
 void	set_block_at_world_pos_if_empty(t_chunk_info *info, float *world_pos, int block_type)
@@ -1564,7 +1591,7 @@ float	get_highest_point(t_chunk_info *info, float x, float z)
 			float	world[3];
 
 			get_block_local_pos_from_index(local, i);
-			block_world_pos(world, highest_chunk->world_coordinate, local);
+			get_block_world_pos(world, highest_chunk->world_coordinate, local);
 			if (world[0] == x && world[2] == z)
 				if (world[1] > curr_highest)
 					curr_highest = world[1];
@@ -1594,7 +1621,7 @@ float	get_highest_point_of_type(t_chunk_info *info, float x, float z, int type)
 			float	world[3];
 
 			get_block_local_pos_from_index(local, i);
-			block_world_pos(world, highest_chunk->world_coordinate, local);
+			get_block_world_pos(world, highest_chunk->world_coordinate, local);
 			if (world[0] == x && world[2] == z)
 				if (world[1] > curr_highest)
 					curr_highest = world[1];
