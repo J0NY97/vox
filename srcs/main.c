@@ -516,10 +516,11 @@ int	main(void)
 				chunks[ent].update_structures = 0;
 			}
 
-			if (chunks[ent].blocks_fluid_amount > 0)// && chunks[ent].needs_to_update)
+			if (chunks[ent].blocks_fluid_amount > 0)
 			{
 				chunk_water_flower(&chunk_info, &chunks[ent]);
-				chunk_water_remover(&chunk_info, &chunks[ent]);
+				if (chunks[ent].needs_to_update)
+					chunk_water_remover(&chunk_info, &chunks[ent]);
 			}
 
 			if (chunks[ent].needs_to_update)
@@ -533,7 +534,6 @@ int	main(void)
 						neighbors[i]->secondary_update = 1;
 			}
 		}
-
 		// Secondary updater;
 		// We dont want to immediately update the chunks that other chunks want
 		//	updated, because they might update themselves;
@@ -640,6 +640,7 @@ int	main(void)
 					}
 				}
 			}
+
 		}
 
 		/* START OF COLLISION */

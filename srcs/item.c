@@ -372,7 +372,10 @@ void	chunk_water_flower(t_chunk_info *info, t_chunk *chunk)
 	}
 }
 
-void	water_remove(t_chunk_info *info, t_block_water *water)
+/*
+ * Returns whether water was removed;
+*/
+int	water_remove(t_chunk_info *info, t_block_water *water)
 {
 	t_block			*neighbor[6]; // neswud
 	t_block_water	*neighbor_water[6];
@@ -408,9 +411,10 @@ void	water_remove(t_chunk_info *info, t_block_water *water)
 			water->flow_dir = -1;
 			water->block = NULL;
 			ft_printf("water block should be removed\n");
-			return ; // gtfo from function since this is not water block anymore;
+			return (1); // gtfo from function since this is not water block anymore;
 		}
 	}
+	return (0);
 }
 
 void	chunk_water_remover(t_chunk_info *info, t_chunk *chunk)
