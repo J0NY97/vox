@@ -380,6 +380,21 @@ typedef struct s_chunk_info
 
 }	t_chunk_info;
 
+typedef struct s_block_info
+{
+	t_chunk	*chunk; // the chunk the block is a part of;
+	t_block	*block; // the actual block;
+	int		local[3]; // local position of the block;
+	float	pos[3]; // world position of the block;
+	int		index;	// the index of the block in the chunk blocks arr;
+}	t_block_info;
+
+/*
+t_block_info	*get_block_info(t_block_info *info, t_block *block);
+t_block_info	*get_block_info_index(t_block_info *info, int index);
+*/
+t_block_info	*get_block_info_pos(t_block_info *res, t_chunk_info *info, float *pos);
+
 /* Used for threading */
 typedef struct s_chunk_args
 {
@@ -405,6 +420,7 @@ struct	s_chunk
 	int				has_blocks; // 1/0 whether the chunk has other than air blocks;
 	int				has_visible_blocks; // 1 / 0 whether chunk has visible blocks;
 	int				update_structures; // the terrain needs to be generated before the structures, thats why we have this; 
+	int				update_water;
 
 	int				blocks_solid_amount; // amount of blocks in this mesh;
 	int				blocks_fluid_amount; // amount of blocks in this mesh;
@@ -495,7 +511,7 @@ void		player_terrain_collision(float *res, float *pos, float *velocity, t_chunk_
 void		tree_placer(t_chunk_info *info, float *world_pos);
 int			water_placer(t_chunk_info *info, float *world_pos, int nth_from_source);
 
-void		add_water_block(t_chunk_info *info, t_block *block, float *pos);
+void		add_water_block(t_chunk_info *info, t_chunk *chunk, t_block *block, float *pos);
 void		flowing_water_verts(float *verts, int face, t_block *block, float *block_world, t_chunk_info *info);
 void		chunk_water_flower(t_chunk_info *info, t_chunk *chunk);
 void		chunk_water_remover(t_chunk_info *info, t_chunk *chunk);

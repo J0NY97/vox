@@ -508,6 +508,8 @@ void	generate_chunk(t_chunk *chunk, int *coord, int *noise_map)
 
 	chunk->update_structures = 1;
 	chunk->needs_to_update = 1;
+
+	chunk->update_water = 0;
 }
 
 /*
@@ -657,7 +659,7 @@ void	update_water_blocks(t_chunk *chunk)
 		{
 			get_block_local_pos_from_index(local_pos, i);
 			get_block_world_pos(pos, chunk->world_coordinate, local_pos);
-			add_water_block(chunk->info, block, pos);
+			add_water_block(chunk->info, chunk, block, pos);
 		}
 	}
 }
@@ -670,6 +672,7 @@ void	update_chunk(t_chunk *chunk)
 	if (chunk->has_blocks)
 		update_chunk_light(chunk);
 		*/
+	chunk->was_updated = 1;
 	chunk->needs_to_update = 0;
 	chunk->secondary_update = 1;
 }

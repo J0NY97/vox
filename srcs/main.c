@@ -516,22 +516,29 @@ int	main(void)
 				chunks[ent].update_structures = 0;
 			}
 
-			if (chunks[ent].blocks_fluid_amount > 0)
-			{
-				chunk_water_flower(&chunk_info, &chunks[ent]);
-				if (chunks[ent].needs_to_update)
-					chunk_water_remover(&chunk_info, &chunks[ent]);
-			}
-
 			if (chunks[ent].needs_to_update)
 			{
 				update_chunk(&chunks[ent]);
-				chunks[ent].was_updated = 1;
 
 				// Set needs to update to all 6 neighbors of the chunk;
 				for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
 					if (neighbors[i])
 						neighbors[i]->secondary_update = 1;
+			}
+
+			if (chunks[ent].update_water)
+			{
+				ft_printf("We want update water\n");
+				if (chunks[ent].water_block_amount <= 0)
+					ft_printf("But we dont have water blocks... interesting\n");
+			}
+
+			if ((chunks[ent].update_water || chunks[ent].needs_to_update) &&
+				chunks[ent].water_block_amount > 0)
+			{
+				chunks[ent].update_water = 0; // this is set first, because 'chunk_water_flower()' might make it '1' again;
+				chunk_water_flower(&chunk_info, &chunks[ent]);
+				chunk_water_remover(&chunk_info, &chunks[ent]);
 			}
 		}
 		// Secondary updater;
@@ -546,7 +553,7 @@ int	main(void)
 				if (chunks[ent].secondary_update)
 				{
 					chunks[ent].secondary_update = 0;
-					chunks[ent].needs_to_update = 0;
+			//		chunks[ent].needs_to_update = 0;
 					chunks[ent].was_updated = 1;
 					update_chunk_border_visible_blocks(&chunks[ent]);
 				}
@@ -692,8 +699,11 @@ int	main(void)
 						if (player_info.equipped_block == ITEM_TREE_PLACER)
 							tree_placer(&chunk_info, block_world);
 						else if (player_info.equipped_block == ITEM_WATER_PLACER)
+						{
 							set_block_at_world_pos(&chunk_info, block_world, FLUID_WATER);
+							get_chunk_from_world_pos(&chunk_info, block_world)->update_water = 1;
 //							water_placer_v2(&chunk_info, block_world, 0);
+						}
 					}
 					else
 						LG_WARN("We dont allow the placing of that type of block.");
