@@ -520,6 +520,8 @@ int	main(void)
 			{
 				update_chunk(&chunks[ent]);
 
+				chunks[ent].update_water = 1;
+
 				// Set needs to update to all 6 neighbors of the chunk;
 				for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
 					if (neighbors[i])
@@ -528,17 +530,12 @@ int	main(void)
 
 			if (chunks[ent].update_water)
 			{
-				ft_printf("We want update water\n");
-				if (chunks[ent].water_block_amount <= 0)
-					ft_printf("But we dont have water blocks... interesting\n");
-			}
-
-			if ((chunks[ent].update_water || chunks[ent].needs_to_update) &&
-				chunks[ent].water_block_amount > 0)
-			{
 				chunks[ent].update_water = 0; // this is set first, because 'chunk_water_flower()' might make it '1' again;
-				chunk_water_flower(&chunk_info, &chunks[ent]);
-				chunk_water_remover(&chunk_info, &chunks[ent]);
+				if (chunks[ent].water_block_amount > 0)
+				{
+					chunk_water_flower(&chunk_info, &chunks[ent]);
+					chunk_water_remover(&chunk_info, &chunks[ent]);
+				}
 			}
 		}
 		// Secondary updater;
@@ -553,7 +550,7 @@ int	main(void)
 				if (chunks[ent].secondary_update)
 				{
 					chunks[ent].secondary_update = 0;
-			//		chunks[ent].needs_to_update = 0;
+			//		chunks[ent].needs_to_update = 0; // this was effing stuff up the next frame... dont remember why i had this in the first place, looks to work fine when commented out;
 					chunks[ent].was_updated = 1;
 					update_chunk_border_visible_blocks(&chunks[ent]);
 				}
