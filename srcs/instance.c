@@ -1387,11 +1387,6 @@ t_block	*set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_
 	get_block_local_pos_from_world_pos(block_local, world_pos);
 	index = get_block_index(info, block_local[0], block_local[1], block_local[2]);
 	chunk->blocks[index].type = block_type;
-	LG_DEBUG("Block placed in chunk <%d %d %d> at (world : %f %f %f) (local : %d %d %d) (index : %d)",
-		chunk->coordinate[0], chunk->coordinate[1], chunk->coordinate[2],
-		world_pos[0], world_pos[1], world_pos[2],
-		block_local[0], block_local[1], block_local[2],
-		index);
 	chunk->needs_to_update = 1;
 	if (!is_type_gas(block_type))
 		chunk->has_blocks = 1;
@@ -1414,11 +1409,6 @@ void	set_block_at_world_pos_if_empty(t_chunk_info *info, float *world_pos, int b
 	if (!is_gas(&chunk->blocks[index]))
 		return ;
 	chunk->blocks[index].type = block_type;
-	LG_DEBUG("Block placed in chunk <%d %d %d> at (world : %f %f %f) (local : %d %d %d) (index : %d)",
-		chunk->coordinate[0], chunk->coordinate[1], chunk->coordinate[2],
-		world_pos[0], world_pos[1], world_pos[2],
-		block_local[0], block_local[1], block_local[2],
-		index);
 	chunk->needs_to_update = 1;
 	chunk->has_blocks = 1;
 }
