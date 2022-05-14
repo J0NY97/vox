@@ -369,11 +369,14 @@ void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *pos)
 
 	if (is_flora(&chunk->blocks[index]))
 	{
-		chunk->blocks[index].visible_faces |= g_visible_faces[6];
-		add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, (float *)g_flora_faces[0], g_flora_data[chunk->blocks[index].type - FLORA_FIRST - 1].texture[0], 100);
-		add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, (float *)g_flora_faces[1], g_flora_data[chunk->blocks[index].type - FLORA_FIRST - 1].texture[1], 100);
-		++chunk->blocks_flora_amount;
-		chunk->has_visible_blocks = 1;
+		if (!(chunk->blocks[index].visible_faces & g_visible_faces[6]))
+		{
+			chunk->blocks[index].visible_faces |= g_visible_faces[6];
+			add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, (float *)g_flora_faces[0], g_flora_data[chunk->blocks[index].type - FLORA_FIRST - 1].texture[0], 100);
+			add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, (float *)g_flora_faces[1], g_flora_data[chunk->blocks[index].type - FLORA_FIRST - 1].texture[1], 100);
+			++chunk->blocks_flora_amount;
+			chunk->has_visible_blocks = 1;
+		}
 	}
 	else // these are the solid blocks;
 	{
@@ -455,20 +458,25 @@ void	update_chunk_border_visible_blocks(t_chunk *chunk)
 
 	for (int y = 0; y <= CHUNK_HEIGHT - 1; y++)
 	{
+		// front && back
 		for (int x = 0; x <= CHUNK_WIDTH - 1; x++)
 		{
 			helper_pelper(chunk, neighbors, (int []){x, y, 0});
 			helper_pelper(chunk, neighbors, (int []){x, y, CHUNK_BREADTH - 1});
 		}
-		for (int z = 0; z <= CHUNK_BREADTH - 1; z++)
+		// left && right
+		// skip corners that above loop has already checked;
+		for (int z = 1; z <= CHUNK_BREADTH - 2; z++)
 		{
 			helper_pelper(chunk, neighbors, (int []){0, y, z});
 			helper_pelper(chunk, neighbors, (int []){CHUNK_WIDTH - 1, y, z});
 		}
 	}
-	for (int x = 0; x <= CHUNK_WIDTH - 1; x++)
+	// top && down
+	// skip the corners, which have already been checked by the loops above;
+	for (int x = 1; x <= CHUNK_WIDTH - 2; x++)
 	{
-		for (int z = 0; z <= CHUNK_BREADTH - 1; z++)
+		for (int z = 1; z <= CHUNK_BREADTH - 2; z++)
 		{
 			helper_pelper(chunk, neighbors, (int []){x, 0, z});
 			helper_pelper(chunk, neighbors, (int []){x, CHUNK_HEIGHT - 1, z});
@@ -1000,16 +1008,16 @@ void	add_to_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, int *coord, floa
 	// Vertices and Texture
 	if (mesh->vertices_allocated < mesh->vertices_amount + 12)
 	{
-		mesh->vertices_allocated += 256;
+		mesh->vertices_allocated += 2048;
 		mesh->vertices = realloc(mesh->vertices, sizeof(float) * mesh->vertices_allocated);
-		LG_WARN("Reallocating Vertices from %d to %d", mesh->vertices_allocated - 256, mesh->vertices_allocated);
+		LG_WARN("Reallocating Vertices from %d to %d", mesh->vertices_allocated - 2048, mesh->vertices_allocated);
 	}
 
 	if (mesh->texture_ids_allocated < mesh->texture_id_amount + 4)
 	{
-		mesh->texture_ids_allocated += 256;
+		mesh->texture_ids_allocated += 2048;
 		mesh->texture_ids = realloc(mesh->texture_ids, sizeof(int) * mesh->texture_ids_allocated);
-		LG_WARN("Reallocating Texture Ids from %d to %d", mesh->texture_ids_allocated - 256, mesh->texture_ids_allocated);
+		LG_WARN("Reallocating Texture Ids from %d to %d", mesh->texture_ids_allocated - 2048, mesh->texture_ids_allocated);
 	}
 
 	int ind = 0;
@@ -1031,9 +1039,9 @@ void	add_to_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, int *coord, floa
 	// Indices
 	if (mesh->indices_allocated[mesh_type] < mesh->indices_amount[mesh_type] + 6)
 	{
-		mesh->indices_allocated[mesh_type] += 256;
+		mesh->indices_allocated[mesh_type] += 2048;
 		mesh->indices[mesh_type] = realloc(mesh->indices[mesh_type], sizeof(unsigned int) * mesh->indices_allocated[mesh_type]);
-		LG_WARN("Reallocating Indices from %d to %d", mesh->indices_allocated[mesh_type] - 256, mesh->indices_allocated[mesh_type]);
+		LG_WARN("Reallocating Indices from %d to %d", mesh->indices_allocated[mesh_type] - 2048, mesh->indices_allocated[mesh_type]);
 	}
 
 	mesh->indices[mesh_type][mesh->indices_amount[mesh_type] + 0] = mesh->index_amount;

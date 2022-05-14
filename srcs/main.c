@@ -516,6 +516,16 @@ int	main(void)
 				chunks[ent].update_structures = 0;
 			}
 
+			if (chunks[ent].update_water)
+			{
+				chunks[ent].update_water = 0; // this is set first, because 'chunk_water_flower()' might make it '1' again;
+				if (chunks[ent].water_block_amount > 0)
+				{
+					chunk_water_flower(&chunk_info, &chunks[ent]);
+					chunk_water_remover(&chunk_info, &chunks[ent]);
+				}
+			}
+
 			if (chunks[ent].needs_to_update)
 			{
 				update_chunk(&chunks[ent]);
@@ -526,16 +536,6 @@ int	main(void)
 				for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
 					if (neighbors[i])
 						neighbors[i]->secondary_update = 1;
-			}
-
-			if (chunks[ent].update_water)
-			{
-				chunks[ent].update_water = 0; // this is set first, because 'chunk_water_flower()' might make it '1' again;
-				if (chunks[ent].water_block_amount > 0)
-				{
-					chunk_water_flower(&chunk_info, &chunks[ent]);
-					chunk_water_remover(&chunk_info, &chunks[ent]);
-				}
 			}
 		}
 		// Secondary updater;

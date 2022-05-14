@@ -279,8 +279,18 @@ void	water_flow(t_chunk_info *info, t_block_water *water)
 	int				type;
 	
 	// If flow dist is more than 7, the water has traveled the max distance;
-	if (water->block->type >= FLUID_WATER_7 || water->statique)
+	if (water->statique)
 		return ;
+	if (water->block->type >= FLUID_WATER_7)
+	{
+		vec3_add(tmp, water->pos, (float *)g_card_dir[DIR_DOWN]);
+		neighbor[0] = get_block(info, tmp);
+		if ((!is_solid(neighbor[0]) && !is_solid_alpha(neighbor[0])) &&
+			(!is_fluid(neighbor[0]) || (is_fluid(neighbor[0]) && neighbor[0]->type > FLUID_WATER)))
+			set_block_at_world_pos(info, tmp, FLUID_WATER);
+		return ;
+	}
+	
 
 	// For all directions, get neighboring blocks;
 	for (int d = DIR_NORTH, i = 0; d <= DIR_DOWN; d++, i++)
