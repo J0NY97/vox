@@ -60,19 +60,14 @@ int	is_type_item(int type)
 	return (type > ITEM_FIRST && type < ITEM_LAST);
 }
 
+t_block_data	get_block_data_from_type(int type)
+{
+	return (g_block_data[type]);
+}
+
 t_block_data	get_block_data(t_block *block)
 {
-	if (is_gas(block))
-		return (g_gas_data[block->type - GAS_FIRST - 1]);
-	if (is_solid(block))
-		return (g_block_data[block->type - BLOCK_FIRST - 1]);
-	if (is_solid_alpha(block))
-		return (g_block_alpha_data[block->type - BLOCK_ALPHA_FIRST - 1]);
-	if (is_flora(block))
-		return (g_flora_data[block->type - FLORA_FIRST - 1]);
-	if (is_fluid(block))
-		return (g_fluid_data[block->type - FLUID_FIRST - 1]);
-	return (g_gas_data[0]);
+	return (get_block_data_from_type(block->type));
 }
 
 /*
@@ -131,11 +126,11 @@ void	add_water_block(t_chunk_info *info, t_chunk *chunk, t_block *block, float *
 
 	if (chunk)
 	{
-		if (chunk->water_block_amount + 1 >= chunk->water_blocks_allocated)
+		if (chunk->water_amount > chunk->water_blocks_allocated)
 		{
-			chunk->water_blocks_allocated += 64;
+			LG_WARN("Water blocks (%d) realloced. %d => %d", chunk->water_block_amount, chunk->water_blocks_allocated, chunk->water_amount);
+			chunk->water_blocks_allocated = chunk->water_amount;
 			chunk->water_blocks = realloc(chunk->water_blocks, sizeof(t_block_water) * chunk->water_blocks_allocated);
-			LG_WARN("Water blocks (%d) realloced. %d => %d", chunk->water_block_amount, chunk->water_blocks_allocated - 64, chunk->water_blocks_allocated);
 		}
 
 		water_block = &chunk->water_blocks[chunk->water_block_amount];

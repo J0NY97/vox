@@ -3,14 +3,14 @@
 
 enum e_gas_type
 {
-	GAS_FIRST = 0,
-	GAS_AIR,
-	GAS_LAST,
+	GAS_FIRST = -1,
+	GAS_AIR = 0,
+	GAS_LAST = 1,
 };
 
 enum e_solid_type
 {
-	BLOCK_FIRST = GAS_LAST,
+	BLOCK_FIRST = GAS_LAST - 1,
 	BLOCK_DIRT,
 	BLOCK_STONE,
 	BLOCK_BEDROCK,
@@ -22,7 +22,7 @@ enum e_solid_type
 
 enum e_solid_alpha_type
 {
-	BLOCK_ALPHA_FIRST = BLOCK_LAST,
+	BLOCK_ALPHA_FIRST = BLOCK_LAST - 1,
 	BLOCK_ALPHA_OAK_LEAF,
 	BLOCK_ALPHA_CACTUS,
 	BLOCK_ALPHA_LAST
@@ -30,7 +30,7 @@ enum e_solid_alpha_type
 
 enum e_flora_type
 {
-	FLORA_FIRST = BLOCK_ALPHA_LAST,
+	FLORA_FIRST = BLOCK_ALPHA_LAST - 1,
 	FLORA_GRASS,
 	FLORA_FLOWER_RED,
 	FLORA_FLOWER_YELLOW,
@@ -39,7 +39,7 @@ enum e_flora_type
 
 enum e_fluid_type
 {
-	FLUID_FIRST = FLORA_LAST,
+	FLUID_FIRST = FLORA_LAST - 1,
 	FLUID_WATER,
 	FLUID_WATER_1,
 	FLUID_WATER_2,
@@ -50,6 +50,9 @@ enum e_fluid_type
 	FLUID_WATER_7,
 	FLUID_LAST
 };
+
+/* 'FLUID_LAST' should be the last block type */
+#define BLOCK_TYPE_AMOUNT FLUID_LAST
 
 /*
  * Used in 't_block->visible_faces' to 'OR' all face into a char;
@@ -142,16 +145,15 @@ typedef struct s_block_data
 }	t_block_data;
 
 
-static const t_block_data	g_gas_data[] = {
+static const t_block_data	g_block_data[] = {
+// GAS
 	{
 		GAS_AIR,
 		"GAS_AIR",
 		{0, 0, 0, 0, 0, 0},
 		0, (float **)g_faces
-	}
-};
-
-static const t_block_data g_block_data[] = {
+	},
+// BLOCKS
 	{
 		BLOCK_DIRT, 
 		"BLOCK_DIRT",
@@ -187,10 +189,8 @@ static const t_block_data g_block_data[] = {
 		"BLOCK_OAK_PLANK",
 		{280, 280, 280, 280, 280, 280},
 		-15, (float **)g_faces
-	}
-};
-
-static const t_block_data	g_block_alpha_data[] = {
+	},
+// BLOCK ALPHA
 	{
 		BLOCK_ALPHA_OAK_LEAF, 
 		"BLOCK_ALPHA_OAK_LEAF",
@@ -202,10 +202,8 @@ static const t_block_data	g_block_alpha_data[] = {
 		"BLOCK_ALPHA_CACTUS",
 		{342, 342, 342, 342, 318, 366},
 		-1, (float **)g_faces_cactus
-	}
-};
-
-static const t_block_data	g_flora_data[] = {
+	},
+// FLORA
 	{
 		FLORA_GRASS, 
 		"FLORA_GRASS",
@@ -223,10 +221,8 @@ static const t_block_data	g_flora_data[] = {
 		"FLORA_FLOWER_YELLOW",
 		{327, 327, 0, 0, 0, 0},
 		0, (float **)g_flora_faces
-	}
-};
-
-static const t_block_data	g_fluid_data[] = {
+	},
+// FLUID
 	{
 		FLUID_WATER, "FLUID_WATER",
 		{362, 0, 0, 0, 0, 0},

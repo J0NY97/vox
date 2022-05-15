@@ -413,6 +413,9 @@ struct	s_chunk
 	int				block_amount;
 	t_block			*blocks; //x*y*z real amount should be : CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_BREADTH;
 
+	int				*block_palette; // amount of all different types of blocks; index is the type, value is the amount;
+
+	int				water_amount; // total water blocks (counting FLUID_WATER to FLUID_WATER_7) (taken from block_palette);
 	int				water_block_amount;
 	int				water_blocks_allocated;
 	t_block_water	*water_blocks; // 
@@ -472,6 +475,7 @@ int			get_surrounding_coords(int *res, int x, int z, int r);
 int			get_block_type_at_world_pos(t_chunk_info *info, float *world_pos);
 
 t_block_data	get_block_data(t_block *block);
+t_block_data	get_block_data_from_type(int type);
 
 void		update_chunk_light(t_chunk *chunk);
 

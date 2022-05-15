@@ -395,9 +395,9 @@ int	main(void)
 				if (is_type_solid(player_info.equipped_block))
 					ft_printf("Block[%d] : '%s' equipped.\n", player_info.equipped_block, g_block_data[player_info.equipped_block - BLOCK_FIRST - 1].name);
 				if (is_type_fluid(player_info.equipped_block))
-					ft_printf("Fluid[%d] : '%s' equipped.\n", player_info.equipped_block, g_fluid_data[player_info.equipped_block - FLUID_FIRST - 1].name);
+					ft_printf("Fluid[%d] : '%s' equipped.\n", player_info.equipped_block, g_block_data[player_info.equipped_block - FLUID_FIRST - 1].name);
 				if (is_type_solid_alpha(player_info.equipped_block))
-					ft_printf("Alpha Block[%d] : '%s' equipped.\n", player_info.equipped_block, g_block_alpha_data[player_info.equipped_block - BLOCK_ALPHA_FIRST - 1].name);
+					ft_printf("Alpha Block[%d] : '%s' equipped.\n", player_info.equipped_block, g_block_data[player_info.equipped_block - BLOCK_ALPHA_FIRST - 1].name);
 				if (is_type_item(player_info.equipped_block))
 					ft_printf("Item : '%s' equipped.\n", g_item_data[player_info.equipped_block - ITEM_FIRST - 1].name);
 			}

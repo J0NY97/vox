@@ -14,8 +14,10 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, int nth)
 	chunk->was_updated = 0;
 
 	chunk->water_block_amount = 0;
-	chunk->water_blocks_allocated = 0;
-	chunk->water_blocks = NULL;
+	chunk->water_blocks_allocated = 2048;
+	chunk->water_blocks = malloc(sizeof(t_block_water) * chunk->water_blocks_allocated);
+
+	chunk->block_palette = malloc(sizeof(int) * BLOCK_TYPE_AMOUNT);
 
 	int	max_blocks = CHUNK_WIDTH * CHUNK_BREADTH * CHUNK_HEIGHT;
 
@@ -372,8 +374,8 @@ void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *pos)
 		if (!(chunk->blocks[index].visible_faces & g_visible_faces[6]))
 		{
 			chunk->blocks[index].visible_faces |= g_visible_faces[6];
-			add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, (float *)g_flora_faces[0], g_flora_data[chunk->blocks[index].type - FLORA_FIRST - 1].texture[0], 100);
-			add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, (float *)g_flora_faces[1], g_flora_data[chunk->blocks[index].type - FLORA_FIRST - 1].texture[1], 100);
+			add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, (float *)g_flora_faces[0], g_block_data[chunk->blocks[index].type].texture[0], 100);
+			add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, (float *)g_flora_faces[1], g_block_data[chunk->blocks[index].type].texture[1], 100);
 			++chunk->blocks_flora_amount;
 			chunk->has_visible_blocks = 1;
 		}
@@ -660,6 +662,18 @@ void	update_water_blocks(t_chunk *chunk)
 
 	chunk->water_block_amount = 0;
 
+	chunk->water_amount = 0;
+	chunk->water_amount += chunk->block_palette[(FLUID_WATER)];
+	chunk->water_amount += chunk->block_palette[(FLUID_WATER_1)];
+	chunk->water_amount += chunk->block_palette[(FLUID_WATER_2)];
+	chunk->water_amount += chunk->block_palette[(FLUID_WATER_3)];
+	chunk->water_amount += chunk->block_palette[(FLUID_WATER_4)];
+	chunk->water_amount += chunk->block_palette[(FLUID_WATER_5)];
+	chunk->water_amount += chunk->block_palette[(FLUID_WATER_6)];
+	chunk->water_amount += chunk->block_palette[(FLUID_WATER_7)];
+
+//	ft_printf("Chunk water amount : %d\n", chunk->water_amount);
+
 	for (int i = 0; i < chunk->block_amount; i++)
 	{
 		block = &chunk->blocks[i];
@@ -672,8 +686,27 @@ void	update_water_blocks(t_chunk *chunk)
 	}
 }
 
+/*
+ * Counts the amount of every block in the chunk;
+*/
+void	update_chunk_block_palette(t_chunk *chunk)
+{
+	memset(chunk->block_palette, 0, sizeof(int) * BLOCK_TYPE_AMOUNT);
+	for (int i = 0; i < chunk->block_amount; i++)
+	{
+		++chunk->block_palette[chunk->blocks[i].type];
+	}
+
+	// DEBUG
+	/*
+	for (int i = 0; i < BLOCK_TYPE_AMOUNT; i++)
+		ft_printf("%2d : %5d [%s]\n", i, chunk->block_palette[i], get_block_data_from_type(i).name);
+		*/
+}
+
 void	update_chunk(t_chunk *chunk)
 {
+	update_chunk_block_palette(chunk);
 	update_chunk_visible_blocks(chunk);
 	update_water_blocks(chunk);
 	/*
@@ -1372,8 +1405,10 @@ void	player_terrain_collision(float *res, float *pos, float *velocity, t_chunk_i
 */
 t_block	*set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_type)
 {
+	/*
 	static int blocks_placed = 0;
 	ft_printf("Block Placed (%d)\n", blocks_placed++);
+	*/
 
 	int		block_local[3];
 	int		chunk_pos[3];
