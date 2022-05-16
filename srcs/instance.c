@@ -1451,11 +1451,6 @@ void	player_terrain_collision(float *res, float *pos, float *velocity, t_chunk_i
 */
 t_block	*set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_type)
 {
-	/*
-	static int blocks_placed = 0;
-	ft_printf("Block Placed (%d)\n", blocks_placed++);
-	*/
-
 	int		block_local[3];
 	int		chunk_pos[3];
 	int		index;
@@ -1467,6 +1462,8 @@ t_block	*set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_
 		return (NULL);
 	get_block_local_pos_from_world_pos(block_local, world_pos);
 	index = get_block_index(info, block_local[0], block_local[1], block_local[2]);
+	if (chunk->blocks[index].type == block_type)
+		return (NULL);
 	chunk->blocks[index].type = block_type;
 	chunk->needs_to_update = 1;
 	if (!is_type_gas(block_type))

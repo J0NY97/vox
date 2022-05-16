@@ -1,38 +1,50 @@
 #include "shaderpixel.h"
 
-void	explode(t_chunk_info *info, float pos[3], int curr_len, int max_len)
+void	explode(t_chunk_info *info, float pos[3], float intensity)
 {
-	float	tmp[3];
+	float			tmp[3];
+	t_block			*block;
+	t_block_data	data;
 
-	if (curr_len >= max_len)
+	if (intensity <= 0.0f)
 		return ;
-	
-	vec3_new(tmp, pos[0] - 1, pos[1], pos[2]);
-	set_block_at_world_pos(info, tmp, GAS_AIR);
-	explode(info, tmp, curr_len + 1, max_len);
 
+	block = get_block(info, pos);
+	if (!block) // CRASH : if the tnt is trying to explode something that doesnt exist;
+		return ;
+	data = get_block_data(block);
+	intensity -= (0.225f * 3);
+	if (!is_gas(block))
+		intensity -= (data.blast_resistance + 0.3f) * 0.3f;
+
+	set_block_at_world_pos(info, pos, GAS_AIR);
+
+	vec3_new(tmp, pos[0] - 1, pos[1], pos[2]);
+	explode(info, tmp, intensity);
+		
 	vec3_new(tmp, pos[0] + 1, pos[1], pos[2]);
-	set_block_at_world_pos(info, tmp, GAS_AIR);
-	explode(info, tmp, curr_len + 1, max_len);
+	explode(info, tmp, intensity);
 
 	vec3_new(tmp, pos[0], pos[1] - 1, pos[2]);
-	set_block_at_world_pos(info, tmp, GAS_AIR);
-	explode(info, tmp, curr_len + 1, max_len);
+	explode(info, tmp, intensity);
 
 	vec3_new(tmp, pos[0], pos[1] + 1, pos[2]);
-	set_block_at_world_pos(info, tmp, GAS_AIR);
-	explode(info, tmp, curr_len + 1, max_len);
+	explode(info, tmp, intensity);
 
 	vec3_new(tmp, pos[0], pos[1], pos[2] - 1);
-	set_block_at_world_pos(info, tmp, GAS_AIR);
-	explode(info, tmp, curr_len + 1, max_len);
+	explode(info, tmp, intensity);
 
 	vec3_new(tmp, pos[0], pos[1], pos[2] + 1);
-	set_block_at_world_pos(info, tmp, GAS_AIR);
-	explode(info, tmp, curr_len + 1, max_len);
+	explode(info, tmp, intensity);
 }
 
 void	tnt_explosion(t_chunk_info *info, t_chunk *chunk, t_block_event *event_block)
 {
-	explode(info, event_block->pos, 0, 4);
+	float	intensity = 0;
+	float	explosion_str = 4;
+	float	variance = 0.3f; // should be random (0.0f - 0.6f);
+
+    variance = ((float)rand()/(float)(RAND_MAX)) * 0.6f;
+	intensity = (0.7f + variance) * explosion_str;
+	explode(info, event_block->pos, intensity);
 }
