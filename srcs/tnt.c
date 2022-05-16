@@ -34,5 +34,5 @@ void	explode(t_chunk_info *info, float pos[3], int curr_len, int max_len)
 
 void	tnt_explosion(t_chunk_info *info, t_chunk *chunk, t_block_event *event_block)
 {
-	explode(info, event_block->pos, 0, 10);
+	explode(info, event_block->pos, 0, 4);
 }

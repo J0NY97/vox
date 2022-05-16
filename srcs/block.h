@@ -11,6 +11,7 @@ enum e_gas_type
 enum e_solid_type
 {
 	BLOCK_FIRST = GAS_LAST - 1,
+	BLOCK_DIRT_GRASS,
 	BLOCK_DIRT,
 	BLOCK_STONE,
 	BLOCK_BEDROCK,
@@ -160,6 +161,13 @@ static const t_block_data	g_block_data[] = {
 	{
 		BLOCK_DIRT, 
 		"BLOCK_DIRT",
+		{224, 224, 224, 224, 224, 224},
+		-15, 0.5f,
+		(float **)g_faces
+	},
+	{
+		BLOCK_DIRT_GRASS, 
+		"BLOCK_DIRT_GRASS",
 		{132, 132, 132, 132, 135, 224},
 		-15, 0.5f,
 		(float **)g_faces

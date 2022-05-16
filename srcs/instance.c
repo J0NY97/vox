@@ -81,8 +81,10 @@ int	chunk_gen_v2(t_chunk *chunk, int *noise_map)
 					chunk->blocks[i].light_lvl = 15;
 				if (perper > 0.9f && y <= whatchumacallit)
 				{
-					if (y <= whatchumacallit - 1) // if we have 3 dirt block on top we make the rest stone blocks;
+					if (y <= whatchumacallit - 3) // if we have 3 dirt block on top we make the rest stone blocks;
 						chunk->blocks[i].type = BLOCK_STONE;
+					else if (y <= whatchumacallit - 1)
+						chunk->blocks[i].type = BLOCK_DIRT_GRASS;
 					else
 					{
 						if ((block_world_y <= 67 && block_world_y >= 65) ||
