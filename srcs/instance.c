@@ -14,8 +14,9 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, int nth)
 	chunk->was_updated = 0;
 
 	chunk->water_block_amount = 0;
-	chunk->water_blocks_allocated = 2048;
-	chunk->water_blocks = malloc(sizeof(t_block_water) * chunk->water_blocks_allocated);
+	chunk->water_blocks_allocated = 0;
+	chunk->water_blocks = NULL;
+//	chunk->water_blocks = malloc(sizeof(t_block_water) * chunk->water_blocks_allocated);
 
 	chunk->block_palette = malloc(sizeof(int) * BLOCK_TYPE_AMOUNT);
 
