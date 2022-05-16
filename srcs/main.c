@@ -370,10 +370,7 @@ int	main(void)
 		if (keys[GLFW_KEY_1].state == BUTTON_PRESS)
 			player_info.equipped_block = BLOCK_DIRT;
 		if (keys[GLFW_KEY_2].state == BUTTON_PRESS)
-		{
 			player_info.equipped_block = BLOCK_STONE;
-			ft_printf("Stone equipped ? %d == %d\n", BLOCK_STONE, player_info.equipped_block);
-		}
 		if (keys[GLFW_KEY_3].state == BUTTON_PRESS)
 			player_info.equipped_block = BLOCK_SAND;
 		if (keys[GLFW_KEY_4].state == BUTTON_PRESS)
@@ -384,21 +381,21 @@ int	main(void)
 			player_info.equipped_block = BLOCK_ALPHA_OAK_LEAF;
 		if (keys[GLFW_KEY_7].state == BUTTON_PRESS)
 			player_info.equipped_block = BLOCK_ALPHA_CACTUS;
-		if (keys[GLFW_KEY_0].state == BUTTON_PRESS)
-			player_info.equipped_block = ITEM_TREE_PLACER;
+		if (keys[GLFW_KEY_8].state == BUTTON_PRESS)
+			player_info.equipped_block = BLOCK_TNT;
 		if (keys[GLFW_KEY_9].state == BUTTON_PRESS)
 			player_info.equipped_block = ITEM_WATER_PLACER;
+		if (keys[GLFW_KEY_0].state == BUTTON_PRESS)
+			player_info.equipped_block = ITEM_TREE_PLACER;
 		for (int i = GLFW_KEY_0; i <= GLFW_KEY_9; i++)
 		{
 			if (keys[i].state == BUTTON_PRESS)
 			{
-				if (is_type_solid(player_info.equipped_block))
-					ft_printf("Block[%d] : '%s' equipped.\n", player_info.equipped_block, g_block_data[player_info.equipped_block - BLOCK_FIRST - 1].name);
-				if (is_type_fluid(player_info.equipped_block))
-					ft_printf("Fluid[%d] : '%s' equipped.\n", player_info.equipped_block, g_block_data[player_info.equipped_block - FLUID_FIRST - 1].name);
-				if (is_type_solid_alpha(player_info.equipped_block))
-					ft_printf("Alpha Block[%d] : '%s' equipped.\n", player_info.equipped_block, g_block_data[player_info.equipped_block - BLOCK_ALPHA_FIRST - 1].name);
-				if (is_type_item(player_info.equipped_block))
+				if (is_type_solid(player_info.equipped_block) ||
+					is_type_fluid(player_info.equipped_block) ||
+					is_type_solid_alpha(player_info.equipped_block))
+					ft_printf("Block[%d] : '%s' equipped.\n", player_info.equipped_block, g_block_data[player_info.equipped_block].name);
+				else if (is_type_item(player_info.equipped_block))
 					ft_printf("Item : '%s' equipped.\n", g_item_data[player_info.equipped_block - ITEM_FIRST - 1].name);
 			}
 		}
@@ -516,15 +513,7 @@ int	main(void)
 				chunks[ent].update_structures = 0;
 			}
 
-			if (chunks[ent].update_water)
-			{
-				chunks[ent].update_water = 0; // this is set first, because 'chunk_water_flower()' might make it '1' again;
-				if (chunks[ent].water_block_amount > 0)
-				{
-					chunk_water_flower(&chunk_info, &chunks[ent]);
-					chunk_water_remover(&chunk_info, &chunks[ent]);
-				}
-			}
+			event_chunk(&chunks[ent]);
 
 			if (chunks[ent].needs_to_update)
 			{

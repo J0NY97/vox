@@ -17,6 +17,7 @@ enum e_solid_type
 	BLOCK_SAND,
 	BLOCK_OAK_LOG,
 	BLOCK_OAK_PLANK,
+	BLOCK_TNT,
 	BLOCK_LAST
 };
 
@@ -137,11 +138,12 @@ enum e_flora_face
 // Every block has a block_data corresponding with its type;
 typedef struct s_block_data
 {
-	char			type; // 'e_block_type', at some point maybe same array index in 'g_block_data';
+	char			type; // 'e_block_type', same as array index in 'g_block_data';
 	char			*name;
 	unsigned short	texture[6]; // same order as 'e_face'
 	char			light_emit; // negative is remove, positive is add;
-	float			**faces;
+	float			blast_resistance;
+	float			**faces; // TODO
 }	t_block_data;
 
 
@@ -151,117 +153,144 @@ static const t_block_data	g_block_data[] = {
 		GAS_AIR,
 		"GAS_AIR",
 		{0, 0, 0, 0, 0, 0},
-		0, (float **)g_faces
+		0, 0.0f,
+		(float **)g_faces
 	},
 // BLOCKS
 	{
 		BLOCK_DIRT, 
 		"BLOCK_DIRT",
 		{132, 132, 132, 132, 135, 224},
-		-15, (float **)g_faces
+		-15, 0.5f,
+		(float **)g_faces
 	},
 	{
 		BLOCK_STONE, 
 		"BLOCK_STONE",
 		{164, 164, 164, 164, 164, 164},
-		-15, (float **)g_faces
+		-15, 6.0f,
+		(float **)g_faces
 	},
 	{
 		BLOCK_BEDROCK, 
 		"BLOCK_BEDROCK",
 		{292, 292, 292, 292, 292, 292},
-		-15, (float **)g_faces
+		-15, 3600000.0f,
+		(float **)g_faces
 	},
 	{
 		BLOCK_SAND, 
 		"BLOCK_SAND",
 		{211, 211, 211, 211, 211, 211},
-		-15, (float **)g_faces
+		-15, 0.5f,
+		(float **)g_faces
 	},
 	{
 		BLOCK_OAK_LOG, 
 		"BLOCK_OAK_LOG",
 		{27, 27, 27, 27, 28, 28},
-		-15, (float **)g_faces
+		-15, 2.0f,
+		(float **)g_faces
 	},
 	{
 		BLOCK_OAK_PLANK, 
 		"BLOCK_OAK_PLANK",
 		{280, 280, 280, 280, 280, 280},
-		-15, (float **)g_faces
+		-15, 3.0f,
+		(float **)g_faces
+	},
+	{
+		BLOCK_TNT, 
+		"BLOCK_TNT",
+		{189, 189, 189, 189, 165, 213},
+		-15, 0.0f,
+		(float **)g_faces
 	},
 // BLOCK ALPHA
 	{
 		BLOCK_ALPHA_OAK_LEAF, 
 		"BLOCK_ALPHA_OAK_LEAF",
 		{52, 52, 52, 52, 52, 52},
-		-1, (float **)g_faces
+		-1, 0.2f,
+		(float **)g_faces
 	},
 	{
 		BLOCK_ALPHA_CACTUS, 
 		"BLOCK_ALPHA_CACTUS",
 		{342, 342, 342, 342, 318, 366},
-		-1, (float **)g_faces_cactus
+		-1, 0.4f,
+		(float **)g_faces_cactus
 	},
 // FLORA
 	{
 		FLORA_GRASS, 
 		"FLORA_GRASS",
 		{275, 275, 0, 0, 0, 0},
-		0, (float **)g_flora_faces
+		0, 0.0f,
+		(float **)g_flora_faces
 	},
 	{
 		FLORA_FLOWER_RED, 
 		"FLORA_FLOWER_RED",
 		{231, 231, 0, 0, 0, 0},
-		0, (float **)g_flora_faces
+		0, 0.0f,
+		(float **)g_flora_faces
 	},
 	{
 		FLORA_FLOWER_YELLOW, 
 		"FLORA_FLOWER_YELLOW",
 		{327, 327, 0, 0, 0, 0},
-		0, (float **)g_flora_faces
+		0, 0.0f,
+		(float **)g_flora_faces
 	},
 // FLUID
 	{
 		FLUID_WATER, "FLUID_WATER",
 		{362, 0, 0, 0, 0, 0},
-		-3, (float **)g_faces
+		-3, 100.0f,
+		(float **)g_faces
 	},
 	{
 		FLUID_WATER_1, "FLUID_WATER",
 		{362, 0, 0, 0, 0, 0},
-		-3, (float **)g_faces
+		-3, 100.0f,
+		(float **)g_faces
 	},
 	{
 		FLUID_WATER_2, "FLUID_WATER",
 		{362, 0, 0, 0, 0, 0},
-		-3, (float **)g_faces
+		-3, 100.0f,
+		(float **)g_faces
 	},
 	{
 		FLUID_WATER_3, "FLUID_WATER",
 		{362, 0, 0, 0, 0, 0},
-		-3, (float **)g_faces
+		-3, 100.0f,
+		(float **)g_faces
 	},
 	{
 		FLUID_WATER_4, "FLUID_WATER",
 		{362, 0, 0, 0, 0, 0},
-		-3, (float **)g_faces
+		-3, 100.0f,
+		(float **)g_faces
 	},
 	{
 		FLUID_WATER_5, "FLUID_WATER",
 		{362, 0, 0, 0, 0, 0},
-		-3, (float **)g_faces
+		-3, 100.0f,
+		(float **)g_faces
 	},
 	{
 		FLUID_WATER_6, "FLUID_WATER",
 		{362, 0, 0, 0, 0, 0},
-		-3, (float **)g_faces
+		-3, 100.0f,
+		(float **)g_faces
 	},
 	{
 		FLUID_WATER_7, "FLUID_WATER",
 		{362, 0, 0, 0, 0, 0},
-		-3, (float **)g_faces
+		-3, 100.0f,
+		(float **)g_faces
 	}
 };
 

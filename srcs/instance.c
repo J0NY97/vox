@@ -13,10 +13,9 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, int nth)
 	chunk->secondary_update = 0;
 	chunk->was_updated = 0;
 
-	chunk->water_block_amount = 0;
-	chunk->water_blocks_allocated = 0;
-	chunk->water_blocks = NULL;
-//	chunk->water_blocks = malloc(sizeof(t_block_water) * chunk->water_blocks_allocated);
+	chunk->event_block_amount = 0;
+	chunk->event_blocks_allocated = 0;
+	chunk->event_blocks = NULL;
 
 	chunk->block_palette = malloc(sizeof(int) * BLOCK_TYPE_AMOUNT);
 
@@ -515,7 +514,7 @@ void	generate_chunk(t_chunk *chunk, int *coord, int *noise_map)
 	// Generate Chunks	
 	chunk->block_amount = chunk_gen_v2(chunk, noise_map); // should always return max amount of blocks in a chunk;
 
-	chunk->water_block_amount = 0;
+	chunk->event_block_amount = 0;
 
 	chunk->update_structures = 1;
 	chunk->needs_to_update = 1;
@@ -655,36 +654,20 @@ int	get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, 
 	return (reload_amount);
 }
 
-void	update_water_blocks(t_chunk *chunk)
+int	get_chunk_water_amount(t_chunk *chunk)
 {
-	t_block	*block;
-	int		local_pos[3];
-	float	pos[3];
+	int	total;
 
-	chunk->water_block_amount = 0;
-
-	chunk->water_amount = 0;
-	chunk->water_amount += chunk->block_palette[(FLUID_WATER)];
-	chunk->water_amount += chunk->block_palette[(FLUID_WATER_1)];
-	chunk->water_amount += chunk->block_palette[(FLUID_WATER_2)];
-	chunk->water_amount += chunk->block_palette[(FLUID_WATER_3)];
-	chunk->water_amount += chunk->block_palette[(FLUID_WATER_4)];
-	chunk->water_amount += chunk->block_palette[(FLUID_WATER_5)];
-	chunk->water_amount += chunk->block_palette[(FLUID_WATER_6)];
-	chunk->water_amount += chunk->block_palette[(FLUID_WATER_7)];
-
-//	ft_printf("Chunk water amount : %d\n", chunk->water_amount);
-
-	for (int i = 0; i < chunk->block_amount; i++)
-	{
-		block = &chunk->blocks[i];
-		if (is_fluid(block))
-		{
-			get_block_local_pos_from_index(local_pos, i);
-			get_block_world_pos(pos, chunk->world_coordinate, local_pos);
-			add_water_block(chunk->info, chunk, block, pos);
-		}
-	}
+	total = 0;
+	total += chunk->block_palette[(FLUID_WATER)];
+	total += chunk->block_palette[(FLUID_WATER_1)];
+	total += chunk->block_palette[(FLUID_WATER_2)];
+	total += chunk->block_palette[(FLUID_WATER_3)];
+	total += chunk->block_palette[(FLUID_WATER_4)];
+	total += chunk->block_palette[(FLUID_WATER_5)];
+	total += chunk->block_palette[(FLUID_WATER_6)];
+	total += chunk->block_palette[(FLUID_WATER_7)];
+	return (total);
 }
 
 /*
@@ -705,11 +688,50 @@ void	update_chunk_block_palette(t_chunk *chunk)
 		*/
 }
 
+void	update_chunk_event_blocks(t_chunk *chunk)
+{
+	t_block			*block;
+	t_block_event	*event_block;
+	int				local_pos[3];
+	float			pos[3];
+
+	chunk->event_block_amount = 0;
+
+	// Figure out how many event blocks we want;
+	chunk->event_blocks_wanted = get_chunk_water_amount(chunk);
+	chunk->event_blocks_wanted += chunk->block_palette[BLOCK_TNT];
+
+	for (int i = 0; i < chunk->block_amount; i++)
+	{
+		block = &chunk->blocks[i];
+		if (is_water(block) || block->type == BLOCK_TNT)
+		{
+			get_block_local_pos_from_index(local_pos, i);
+			get_block_world_pos(pos, chunk->world_coordinate, local_pos);
+		}
+		if (is_water(block))
+		{
+			event_block = new_event_block(chunk->info, chunk);
+			event_block->block = block;
+			vec3_assign(event_block->pos, pos);
+			event_block->flow_dir = -1;
+			event_block->dist_to_down = INT_MAX;
+			event_block->statique = 0;
+		}
+		else if (block->type == BLOCK_TNT)
+		{
+			event_block = new_event_block(chunk->info, chunk);
+			event_block->block = block;
+			vec3_assign(event_block->pos, pos);
+		}
+	}
+}
+
 void	update_chunk(t_chunk *chunk)
 {
 	update_chunk_block_palette(chunk);
 	update_chunk_visible_blocks(chunk);
-	update_water_blocks(chunk);
+	update_chunk_event_blocks(chunk);
 	/*
 	if (chunk->has_blocks)
 		update_chunk_light(chunk);
@@ -717,6 +739,26 @@ void	update_chunk(t_chunk *chunk)
 	chunk->was_updated = 1;
 	chunk->needs_to_update = 0;
 	chunk->secondary_update = 1;
+}
+
+/*
+ * 'event' meaning : we are eventing the chunk;
+*/
+void	event_chunk(t_chunk *chunk)
+{
+	int	should_we_update_water = chunk->update_water;
+	chunk->update_water = 0;
+	for (int j = 0; j < chunk->event_block_amount; j++)
+	{
+		// Water block events;
+		if (should_we_update_water && is_water(chunk->event_blocks[j].block))
+		{
+			water_flow(chunk->info, &chunk->event_blocks[j]);
+			water_remove(chunk->info, &chunk->event_blocks[j]);
+		}
+		else if (chunk->event_blocks[j].block->type == BLOCK_TNT)
+			tnt_explosion(chunk->info, chunk, chunk->event_blocks[j].block);
+	}
 }
 
 void	*chunk_thread_func(void *args)

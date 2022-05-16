@@ -60,6 +60,11 @@ int	is_type_item(int type)
 	return (type > ITEM_FIRST && type < ITEM_LAST);
 }
 
+int	is_water(t_block *block)
+{
+	return (block && block->type >= FLUID_WATER && block->type <= FLUID_WATER_7);
+}
+
 t_block_data	get_block_data_from_type(int type)
 {
 	return (g_block_data[type]);
@@ -116,31 +121,22 @@ int	water_placer(t_chunk_info *info, float *world_pos, int nth_from_source)
 }
 
 /*
- * Adds new 't_block_water' to the chunk that the 'pos' is in;
- *
- * 'pos' : world position of the block;
+ * Adds new event block to 'chunk' and returns it;
 */
-void	add_water_block(t_chunk_info *info, t_chunk *chunk, t_block *block, float *pos)
+t_block_event	*new_event_block(t_chunk_info *info, t_chunk *chunk)
 {
-	t_block_water	*water_block;
-
 	if (chunk)
 	{
-		if (chunk->water_amount > chunk->water_blocks_allocated)
+		if (chunk->event_blocks_wanted > chunk->event_blocks_allocated)
 		{
-			LG_WARN("Water blocks (%d) realloced. %d => %d", chunk->water_block_amount, chunk->water_blocks_allocated, chunk->water_amount);
-			chunk->water_blocks_allocated = chunk->water_amount;
-			chunk->water_blocks = realloc(chunk->water_blocks, sizeof(t_block_water) * chunk->water_blocks_allocated);
+			LG_WARN("Event blocks (%d) realloced. %d => %d", chunk->event_block_amount, chunk->event_blocks_allocated, chunk->event_blocks_wanted);
+			chunk->event_blocks_allocated = chunk->event_blocks_wanted;
+			chunk->event_blocks = realloc(chunk->event_blocks, sizeof(t_block_event) * chunk->event_blocks_allocated);
 		}
-
-		water_block = &chunk->water_blocks[chunk->water_block_amount];
-		water_block->block = block;
-		vec3_assign(water_block->pos, pos);
-		water_block->flow_dir = -1;
-		water_block->dist_to_down = INT_MAX;
-		water_block->statique = 0;
-		++chunk->water_block_amount;
+		++chunk->event_block_amount;
+		return (&chunk->event_blocks[chunk->event_block_amount - 1]);
 	}
+	return (NULL);
 }
 
 /*
@@ -247,7 +243,7 @@ int	water_placer_v2(t_chunk_info *info, float *world_pos, int nth_from_source)
  * @param pos 
  * @return t_block_water* 
 */
-t_block_water	*get_water_block(t_chunk_info *info, float *pos)
+t_block_event	*get_water_block(t_chunk_info *info, float *pos)
 {
 	int		chunk_pos[3];
 	t_chunk	*chunk;
@@ -256,20 +252,20 @@ t_block_water	*get_water_block(t_chunk_info *info, float *pos)
 	chunk = get_chunk(info, chunk_pos);
 	if (chunk)
 	{
-		for (int i = 0; i < chunk->water_block_amount; i++)
-			if (is_fluid(chunk->water_blocks[i].block) &&
-				chunk->water_blocks[i].pos[0] == pos[0] &&
-				chunk->water_blocks[i].pos[1] == pos[1] &&
-				chunk->water_blocks[i].pos[2] == pos[2])
-				return (&chunk->water_blocks[i]);
+		for (int i = 0; i < chunk->event_block_amount; i++)
+			if (is_water(chunk->event_blocks[i].block) &&
+				chunk->event_blocks[i].pos[0] == pos[0] &&
+				chunk->event_blocks[i].pos[1] == pos[1] &&
+				chunk->event_blocks[i].pos[2] == pos[2])
+				return (&chunk->event_blocks[i]);
 	}
 	return (NULL);
 }
 
-void	water_flow(t_chunk_info *info, t_block_water *water)
+void	water_flow(t_chunk_info *info, t_block_event *water)
 {
 	t_block			*neighbor[6]; // neswud
-	t_block_water	*neighbor_water[6];
+	t_block_event	*neighbor_water[6];
 	float			tmp[3];
 	int				type;
 	
@@ -369,15 +365,16 @@ void	water_flow(t_chunk_info *info, t_block_water *water)
 	}
 }
 
+// TODO: Remove this function completely and place the water_flow function call in the chunk event handler; same with the remover;
 void	chunk_water_flower(t_chunk_info *info, t_chunk *chunk)
 {
 	// For all water blocks in chunk;
-	for (int j = 0; j < chunk->water_block_amount; j++)
+	for (int j = 0; j < chunk->event_block_amount; j++)
 	{
-		if (is_fluid(chunk->water_blocks[j].block))
+		if (is_water(chunk->event_blocks[j].block))
 		{
-			water_flow(info, &chunk->water_blocks[j]);
-			chunk->water_blocks[j].statique = 1;
+			water_flow(info, &chunk->event_blocks[j]);
+			chunk->event_blocks[j].statique = 1;
 		}
 	}
 }
@@ -385,10 +382,10 @@ void	chunk_water_flower(t_chunk_info *info, t_chunk *chunk)
 /*
  * Returns whether water was removed;
 */
-int	water_remove(t_chunk_info *info, t_block_water *water)
+int	water_remove(t_chunk_info *info, t_block_event *water)
 {
 	t_block			*neighbor[6]; // neswud
-	t_block_water	*neighbor_water[6];
+	t_block_event	*neighbor_water[6];
 	t_chunk			*neighbor_chunk[6];
 	float			tmp[3];
 	int				type;
@@ -433,12 +430,13 @@ int	water_remove(t_chunk_info *info, t_block_water *water)
 	return (0);
 }
 
+// TODO: Remove this funct
 void	chunk_water_remover(t_chunk_info *info, t_chunk *chunk)
 {
 	// For all water blocks in chunk;
-	for (int j = 0; j < chunk->water_block_amount; j++)
-		if (is_fluid(chunk->water_blocks[j].block))
-			water_remove(info, &chunk->water_blocks[j]);
+	for (int j = 0; j < chunk->event_block_amount; j++)
+		if (is_water(chunk->event_blocks[j].block))
+			water_remove(info, &chunk->event_blocks[j]);
 }
 
 void	water_vertex_height_decider(t_chunk_info *info, t_block *block, float *block_world, float *verts, int face, int faces[3], int dirs[3], int v[3])

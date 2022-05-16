@@ -29,6 +29,7 @@ CFILES = \
 	help.c \
 	hashtable.c \
 	item.c \
+	tnt.c \
 	bimgf/bimgf_bmp.c \
 	bimgf/bimgf_help.c \
 	bimgf/bimgf_jpg.c \

@@ -349,14 +349,18 @@ typedef struct s_block
 
 void		block_print(t_block *block);
 
-typedef struct s_block_water
+typedef struct s_block_event
 {
 	t_block	*block; // pointer to the actual block;
 	float	pos[3]; // world position of the block;
+
+	// WATER
 	int		flow_dir; // e_card_dir; (can be changed to 'char');
 	int		dist_to_down; // shortest distance to down block;
 	int		statique;
-}	t_block_water;
+
+	// TNT
+}	t_block_event;
 
 typedef struct s_chunk_info
 {
@@ -415,10 +419,10 @@ struct	s_chunk
 
 	int				*block_palette; // amount of all different types of blocks; index is the type, value is the amount;
 
-	int				water_amount; // total water blocks (counting FLUID_WATER to FLUID_WATER_7) (taken from block_palette);
-	int				water_block_amount;
-	int				water_blocks_allocated;
-	t_block_water	*water_blocks; // 
+	int				event_blocks_wanted;
+	int				event_block_amount;
+	int				event_blocks_allocated;
+	t_block_event	*event_blocks; // 
 
 	int				has_blocks; // 1/0 whether the chunk has other than air blocks;
 	int				has_visible_blocks; // 1 / 0 whether chunk has visible blocks;
@@ -515,10 +519,18 @@ void		player_terrain_collision(float *res, float *pos, float *velocity, t_chunk_
 void		tree_placer(t_chunk_info *info, float *world_pos);
 int			water_placer(t_chunk_info *info, float *world_pos, int nth_from_source);
 
-void		add_water_block(t_chunk_info *info, t_chunk *chunk, t_block *block, float *pos);
+// Event blocks
+t_block_event	*new_event_block(t_chunk_info *info, t_chunk *chunk);
+
+void		event_chunk(t_chunk *chunk);
+
+// WATER
 void		flowing_water_verts(float *verts, int face, t_block *block, float *block_world, t_chunk_info *info);
 void		chunk_water_flower(t_chunk_info *info, t_chunk *chunk);
 void		chunk_water_remover(t_chunk_info *info, t_chunk *chunk);
+
+// TNT
+void		tnt_explosion(t_chunk_info *info, t_chunk *chunk, t_block *block);
 
 int			is_type_gas(int type);
 int			is_type_solid(int type);
@@ -532,6 +544,8 @@ int			is_fluid(t_block *block);
 int			is_solid(t_block *block);
 int			is_flora(t_block *block);
 int			is_solid_alpha(t_block *block);
+
+int			is_water(t_block *block);
 
 ///////////////////
 //	NOISE
