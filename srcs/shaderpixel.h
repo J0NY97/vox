@@ -530,7 +530,7 @@ void		chunk_water_flower(t_chunk_info *info, t_chunk *chunk);
 void		chunk_water_remover(t_chunk_info *info, t_chunk *chunk);
 
 // TNT
-void		tnt_explosion(t_chunk_info *info, t_chunk *chunk, t_block *block);
+void		tnt_explosion(t_chunk_info *info, t_chunk *chunk, t_block_event *event_block);
 
 int			is_type_gas(int type);
 int			is_type_solid(int type);

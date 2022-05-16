@@ -747,6 +747,7 @@ void	update_chunk(t_chunk *chunk)
 void	event_chunk(t_chunk *chunk)
 {
 	int	should_we_update_water = chunk->update_water;
+
 	chunk->update_water = 0;
 	for (int j = 0; j < chunk->event_block_amount; j++)
 	{
@@ -757,7 +758,7 @@ void	event_chunk(t_chunk *chunk)
 			water_remove(chunk->info, &chunk->event_blocks[j]);
 		}
 		else if (chunk->event_blocks[j].block->type == BLOCK_TNT)
-			tnt_explosion(chunk->info, chunk, chunk->event_blocks[j].block);
+			tnt_explosion(chunk->info, chunk, &chunk->event_blocks[j]);
 	}
 }
 
