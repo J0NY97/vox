@@ -34,34 +34,51 @@ void	open_font(FT_Library library, FT_Face face, const char *font_path, int size
 		LG_ERROR("Houston");
 }
 
+typedef struct	s_bitmap
+{
+	Uint32	rows;
+	Uint32	width;
+	Uint32	pitch;
+	void	*pixels;
+}	t_bitmap;
+
 /*
  * Takes 'src' and places pixels on 'dst' starting at 'x', 'y';
 */
-void	cpy_bitmap(Uint32 *dst, FT_Bitmap bitmap, int top_left_x, int top_left_y)
+void	cpy_bitmap(t_bitmap *dst, FT_Bitmap *bitmap, int top_left_x, int top_left_y)
 {
-	
+	Uint32	*dst_pixels;
+	Uint32	*src_pixels;
+
+	dst_pixels = (Uint32 *)dst->pixels;
+	src_pixels = (Uint32 *)bitmap->buffer;
+	for (Uint32 row = 0; row < bitmap->rows; row++)
+	{
+		for (Uint32 p = 0; p < bitmap->width; p++)
+			dst_pixels[top_left_y * dst->pitch + top_left_x + p] = src_pixels[row * bitmap->pitch + p];
+	}
 }
 
 /*
  * TODO : Add support for multiple charsets;
  * charset : any of the enum FT_Encoding; FT_Select_Charmap();
 */
-void	render_face(FT_Face face, char *str, Uint32 *dst_pixels, int x, int y)
+void	render_face(FT_Face face, char *str, t_bitmap *dst_bmp, int x, int y)
 {
 	FT_GlyphSlot	slot;
 	Uint32			str_len;
-	FT_Uint			glyph_index;
+	FT_UInt			glyph_index;
 	int				error;
 
 	slot = face->glyph;
 	str_len = ft_strlen(str);
-	for (int i = 0; i < str_len; i++)
+	for (Uint32 i = 0; i < str_len; i++)
 	{
 		glyph_index = FT_Get_Char_Index(face, str[i]);
 		error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
 		if (error)
 			continue ;
-		cpy_bitmap(dst_pixels, &slot->bitmap, x + slot->bitmap_left, y - slot->bitmap_top);
+		cpy_bitmap(dst_bmp, &slot->bitmap, x + slot->bitmap_left, y - slot->bitmap_top);
 
 		x += slot->advance.x >> 6;
 		y += slot->advance.y >> 6;
