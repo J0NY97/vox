@@ -121,25 +121,6 @@ int	water_placer(t_chunk_info *info, float *world_pos, int nth_from_source)
 }
 
 /*
- * Adds new event block to 'chunk' and returns it;
-*/
-t_block_event	*new_event_block(t_chunk_info *info, t_chunk *chunk)
-{
-	if (chunk)
-	{
-		if (chunk->event_blocks_wanted > chunk->event_blocks_allocated)
-		{
-			LG_WARN("Event blocks (%d) realloced. %d => %d", chunk->event_block_amount, chunk->event_blocks_allocated, chunk->event_blocks_wanted);
-			chunk->event_blocks_allocated = chunk->event_blocks_wanted;
-			chunk->event_blocks = realloc(chunk->event_blocks, sizeof(t_block_event) * chunk->event_blocks_allocated);
-		}
-		++chunk->event_block_amount;
-		return (&chunk->event_blocks[chunk->event_block_amount - 1]);
-	}
-	return (NULL);
-}
-
-/*
  * Return direction if found (from e_card_dir); -1 if not found;
  *
  * 'pos' : block world position;

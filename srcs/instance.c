@@ -14,8 +14,8 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, int nth)
 	chunk->was_updated = 0;
 
 	chunk->event_block_amount = 0;
-	chunk->event_blocks_allocated = 0;
-	chunk->event_blocks = NULL;
+	chunk->event_blocks_allocated = 2048;
+	chunk->event_blocks = malloc(sizeof(t_block_event) * chunk->event_blocks_allocated);
 
 	chunk->block_palette = malloc(sizeof(int) * BLOCK_TYPE_AMOUNT);
 
@@ -698,33 +698,47 @@ void	update_chunk_event_blocks(t_chunk *chunk)
 	float			pos[3];
 
 	chunk->event_block_amount = 0;
+	chunk->update_water = 0;
 
 	// Figure out how many event blocks we want;
 	chunk->event_blocks_wanted = get_chunk_water_amount(chunk);
 	chunk->event_blocks_wanted += chunk->block_palette[BLOCK_TNT];
 
+	// No need doing anything if we dont have any event blocks for this chunk;
+	if (chunk->event_blocks_wanted <= 0)
+		return ;
+
+	// Lets free and malloc event_blocks (we dont need to realloc, because that memcpy from the old... and we dont need that);
+	if (chunk->event_blocks_wanted > chunk->event_blocks_allocated)
+	{
+		LG_WARN("Event blocks (%d) realloced. %d => %d", chunk->event_block_amount, chunk->event_blocks_allocated, chunk->event_blocks_wanted);
+		chunk->event_blocks_allocated = chunk->event_blocks_wanted;
+		free(chunk->event_blocks);
+		chunk->event_blocks = malloc(sizeof(t_block_event) * chunk->event_blocks_allocated);
+	}
+
 	for (int i = 0; i < chunk->block_amount; i++)
 	{
+		event_block = NULL;
 		block = &chunk->blocks[i];
 		if (is_water(block) || block->type == BLOCK_TNT)
 		{
 			get_block_local_pos_from_index(local_pos, i);
 			get_block_world_pos(pos, chunk->world_coordinate, local_pos);
-		}
-		if (is_water(block))
-		{
-			event_block = new_event_block(chunk->info, chunk);
+			event_block = &chunk->event_blocks[chunk->event_block_amount++];
 			event_block->block = block;
 			vec3_assign(event_block->pos, pos);
+		}
+		if (is_water(block) && event_block)
+		{
+			// Here you should add water specific stuff;
 			event_block->flow_dir = -1;
 			event_block->dist_to_down = INT_MAX;
 			event_block->statique = 0;
 		}
-		else if (block->type == BLOCK_TNT)
+		else if (block->type == BLOCK_TNT && event_block)
 		{
-			event_block = new_event_block(chunk->info, chunk);
-			event_block->block = block;
-			vec3_assign(event_block->pos, pos);
+			// Here you should add tnt specific stuff;
 		}
 	}
 }
@@ -748,6 +762,7 @@ void	update_chunk(t_chunk *chunk)
 */
 void	event_chunk(t_chunk *chunk)
 {
+	// water_flow() can re-enable update_water, so we are making duplicate variable here;
 	int	should_we_update_water = chunk->update_water;
 
 	chunk->update_water = 0;

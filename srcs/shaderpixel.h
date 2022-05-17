@@ -13,6 +13,9 @@
 #ifndef SHADERPIXEL_H
 # define SHADERPIXEL_H
 
+# include <ft2build.h>
+# include FT_FREETYPE_H
+
 # include "limits.h"
 # include "pthread.h"
 # include "libft.h"
@@ -518,9 +521,6 @@ void		player_terrain_collision(float *res, float *pos, float *velocity, t_chunk_
 
 void		tree_placer(t_chunk_info *info, float *world_pos);
 int			water_placer(t_chunk_info *info, float *world_pos, int nth_from_source);
-
-// Event blocks
-t_block_event	*new_event_block(t_chunk_info *info, t_chunk *chunk);
 
 void		event_chunk(t_chunk *chunk);
 

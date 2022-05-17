@@ -564,8 +564,8 @@ int	main(void)
 		update_camera(&player.camera);
 
 	// Used for block collision
-		float	intersect_point[5][3];
-		int		intersect_chunk_index[5]; // correspond with the index in 'intersect_point';
+		float	intersect_point[16][3]; // Make sure the amount of collisions that happen are less than the amount of stack memory in these 2 arrays;
+		int		intersect_chunk_index[16]; // correspond with the index in 'intersect_point';
 		int		collision_result = 0; // will be the amount of collisions that has happened;
 	
 		nth_chunk = 0;

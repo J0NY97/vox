@@ -30,6 +30,7 @@ CFILES = \
 	hashtable.c \
 	item.c \
 	tnt.c \
+	freetype.c \
 	bimgf/bimgf_bmp.c \
 	bimgf/bimgf_help.c \
 	bimgf/bimgf_jpg.c \
@@ -40,7 +41,7 @@ CFILES = \
 	bobj/bobj_loader.c \
 	bobj/bobj_print.c \
 	glad/glad.c \
-
+	
 CDIR = srcs
 ODIR = obj
 #SRCS = $(call rwildcard, $(CDIR), *.c)
@@ -62,15 +63,17 @@ INCS = \
 	-I$(CDIR)/glad \
 	-I$(CDIR)/KHR \
 	-I$(LIB_DIR)/GLFW \
+	-I$(LIB_DIR)/freetype/include \
 
 LIB_DIRS = \
 	-L$(LIB_DIR)/libft \
 	-L$(LIB_DIR)/libpf \
 	-L$(LIB_DIR)/liblg \
 	-L$(LIB_DIR)/GLFW \
+	-L$(LIB_DIR)/freetype \
 
 
-LIBS = -lpf -lft -llg -lglfw3 -lpthread
+LIBS = -lpf -lft -llg -lglfw3 -lpthread -lfreetype
 ifeq ($(SHELL_NAME), Darwin)
 LIBS += -framework OpenGL -framework Cocoa -framework IOKit
 else
