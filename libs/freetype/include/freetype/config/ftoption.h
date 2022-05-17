@@ -195,7 +195,8 @@ FT_BEGIN_HEADER
    *   Define this macro if you want to enable this 'feature'.  See also the
    *   macro `FT_CONFIG_OPTION_SYSTEM_ZLIB` below.
    */
-#define FT_CONFIG_OPTION_USE_ZLIB
+   // DEFAULT TOGGLED ON @jsalmi
+ //#define FT_CONFIG_OPTION_USE_ZLIB
 
 
   /**************************************************************************
@@ -224,7 +225,8 @@ FT_BEGIN_HEADER
    *   `configure` script) and you define this macro, you also have to pass
    *   `SYSTEM_ZLIB=yes` as an argument to make.
    */
-/* #define FT_CONFIG_OPTION_SYSTEM_ZLIB */
+   // DEFAULT TOGGLED OFF @jsalmi
+#define FT_CONFIG_OPTION_SYSTEM_ZLIB
 
 
   /**************************************************************************

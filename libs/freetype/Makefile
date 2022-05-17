@@ -6,7 +6,7 @@
 #    By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/05/17 13:09:50 by jsalmi            #+#    #+#              #
-#    Updated: 2022/05/17 13:23:12 by jsalmi           ###   ########.fr        #
+#    Updated: 2022/05/17 14:49:11 by jsalmi           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,6 +17,8 @@ RAW =	\
 	base/ftbase.c \
 	base/ftbbox.c \
 	base/ftglyph.c \
+	\
+	base/ftbitmap.c \
 	\
 	sfnt/sfnt.c \
 	psnames/psnames.c \

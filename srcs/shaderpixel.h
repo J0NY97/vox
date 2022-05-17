@@ -34,6 +34,8 @@
 
 # define DEBUG 0
 
+# define Uint32	unsigned int
+
 # define ROOT_PATH "./"
 # define MODEL_PATH ROOT_PATH"models/"
 # define SHADER_PATH ROOT_PATH"shaders/"
@@ -310,8 +312,6 @@ enum e_mesh_types
 
 /*
  * All different type of meshes are combined into this one
- *
- * 'nth_*_start / -end' are the nth mesh starting index and stopping index in the array;
 */
 typedef struct s_chunk_mesh_v2
 {
@@ -358,9 +358,9 @@ typedef struct s_block_event
 	float	pos[3]; // world position of the block;
 
 	// WATER
-	int		flow_dir; // e_card_dir; (can be changed to 'char');
-	int		dist_to_down; // shortest distance to down block;
-	int		statique;
+	int		flow_dir;		// e_card_dir;									(can be changed to 'char');
+	int		dist_to_down;	// shortest distance to down block;				(can be changed to 'char');
+	int		statique;		// if we are done event handling this block;	(can be changed to 'char');
 
 	// TNT
 }	t_block_event;
