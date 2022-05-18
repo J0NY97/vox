@@ -46,9 +46,9 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, int nth)
 /*
  * Create chunk from noise map;
 */
-int	chunk_gen_v2(t_chunk *chunk, int *noise_map)
+int	chunk_gen(t_chunk *chunk, int *noise_map)
 {
-	int i = 0;
+	int i = -1;
 
 	chunk->has_blocks = 0;
 	for (int x = 0; x < CHUNK_WIDTH; x++)
@@ -57,12 +57,14 @@ int	chunk_gen_v2(t_chunk *chunk, int *noise_map)
 		for (int z = 0; z < CHUNK_BREADTH; z++)
 		{
 			float	block_world_z = fabs(chunk->world_coordinate[2] + z);
+			// How many blocks there should be on that x/z coordinate; can be more than the chunk_height, which means it spans over multiple chunks;
 			int		whatchumacallit = noise_map[x * CHUNK_HEIGHT + z] - (int)chunk->world_coordinate[1];
 
 			for (int y = 0; y < CHUNK_HEIGHT; y++)
 			{
 				float	block_world_y = chunk->world_coordinate[1] + y;
 				float	perper = 100.0f;
+				i++;
 				/* Cave Gen
 				if (whatchumacallit > 0)
 				{
@@ -79,35 +81,38 @@ int	chunk_gen_v2(t_chunk *chunk, int *noise_map)
 					chunk->blocks[i].light_lvl = 0;
 				else
 					chunk->blocks[i].light_lvl = 15;
+
+				chunk->blocks[i].type = GAS_AIR; // Default to air;
 				if (perper > 0.9f && y <= whatchumacallit)
 				{
-					if (y <= whatchumacallit - 3) // if we have 3 dirt block on top we make the rest stone blocks;
-						chunk->blocks[i].type = BLOCK_STONE;
-					else if (y <= whatchumacallit - 1)
+					if (y == whatchumacallit)
 						chunk->blocks[i].type = BLOCK_DIRT_GRASS;
+					else if (y <= whatchumacallit - 3) // if we have 3 dirt block on top we make the rest stone blocks;
+						chunk->blocks[i].type = BLOCK_STONE;
+					else if (y < whatchumacallit)
+						chunk->blocks[i].type = BLOCK_DIRT;
 					else
 					{
-						if ((block_world_y <= 67 && block_world_y >= 65) ||
-							block_world_y + 1 <= 65)
-							chunk->blocks[i].type = BLOCK_SAND;
-						else if (block_world_y < 2)
+						if (block_world_y < 2)
 							chunk->blocks[i].type = BLOCK_BEDROCK;
 						else
-							chunk->blocks[i].type = BLOCK_DIRT;
+							continue ;
 					}
 					chunk->has_blocks = 1;
 				}
-				else
+				else // everything that is over the noise_map value;
 				{
-					if (block_world_y <= 65)
+					if (y >= whatchumacallit + 3 && block_world_y <= 62)
 					{
 						chunk->blocks[i].type = FLUID_WATER;
 						chunk->has_blocks = 1;
 					}
-					else
-						chunk->blocks[i].type = GAS_AIR;
+					else if (y >= whatchumacallit + 1 && y < whatchumacallit + 3 && block_world_y <= 65)
+					{
+						chunk->blocks[i].type = BLOCK_SAND;
+						chunk->has_blocks = 1;
+					}
 				}
-				i++;
 			}
 		}
 	}
@@ -514,7 +519,7 @@ void	generate_chunk(t_chunk *chunk, int *coord, int *noise_map)
 	chunk_aabb_update(chunk);
 
 	// Generate Chunks	
-	chunk->block_amount = chunk_gen_v2(chunk, noise_map); // should always return max amount of blocks in a chunk;
+	chunk->block_amount = chunk_gen(chunk, noise_map); // should always return max amount of blocks in a chunk;
 
 	chunk->event_block_amount = 0;
 
@@ -1618,7 +1623,7 @@ void	tree_placer(t_chunk_info *info, float *world_pos)
 		return ;
 	type = get_block_type_at_world_pos(info,
 		(float []){world_pos[0], world_pos[1] - 1.0f, world_pos[2]});
-	if (type == BLOCK_DIRT)
+	if (type == BLOCK_DIRT || type == BLOCK_DIRT_GRASS)
 		create_tree(info, world_pos);
 	if (type == BLOCK_SAND)
 		create_cactus(info, world_pos);
@@ -1698,6 +1703,50 @@ float	get_highest_point(t_chunk_info *info, float x, float z)
 }
 
 /*
+ * Returns y of the block, saves the block in 'out_block';
+ * We dont want the highest air block, since that is not an actual block;
+*/
+float	get_highest_block(t_chunk_info *info, t_block **out_block, float x, float z)
+{
+	int		chunk_pos[3];
+	float	curr_highest = -1;
+	t_chunk	*highest_chunk;
+	t_block	*curr_block;
+
+	get_chunk_pos_from_world_pos(chunk_pos, (float []){x, 0, z});
+	highest_chunk = get_highest_chunk(info, chunk_pos[0], chunk_pos[2]);
+	if (highest_chunk == NULL)
+	{
+		ft_printf("cant find highest chunk");
+		*out_block = NULL;
+		return (-1); // error;
+	}
+	curr_block = NULL;
+	for (int i = 0; i < CHUNK_BLOCK_AMOUNT; i++)
+	{
+		if (highest_chunk->blocks[i].type != GAS_AIR)
+		{
+			int		local[3];
+			float	world[3];
+
+			get_block_local_pos_from_index(local, i);
+			get_block_world_pos(world, highest_chunk->world_coordinate, local);
+			if (world[0] == x && world[2] == z)
+			{
+				if (world[1] > curr_highest)
+				{
+					curr_highest = world[1];
+					curr_block = &highest_chunk->blocks[i];
+				}
+			}
+		}
+	}
+
+	*out_block = curr_block;
+	return (curr_highest);
+}
+
+/*
  * Get highets point in the world at x/z coordinate of block type 'type';
 */
 float	get_highest_point_of_type(t_chunk_info *info, float x, float z, int type)
@@ -1744,6 +1793,8 @@ void	tree_gen(t_chunk *chunk)
 {
 	float	freq = 0.99f;
 	float	pers = 0.5;
+	t_block	*highest_block;
+	float	highest;
 
 	for (int x = 0; x < CHUNK_WIDTH; x++)
 	{
@@ -1758,24 +1809,27 @@ void	tree_gen(t_chunk *chunk)
 				octave_perlin(to_use_x, to_use_x / to_use_z, to_use_z, 2, pers) +
 				octave_perlin(to_use_x, to_use_x / to_use_z, to_use_z, 4, pers) +
 				octave_perlin(to_use_x, to_use_x / to_use_z, to_use_z, 8, pers);
+			highest_block = NULL;
+			highest = -1;
 			if (perper < 1.5f)
 			{
-				float world_x_pos = chunk->world_coordinate[0] + (float)x;
-				float world_z_pos = chunk->world_coordinate[2] + (float)z;
-				float highest = get_highest_point_of_type(chunk->info, world_x_pos, world_z_pos, BLOCK_DIRT);
-				if (highest == -1)
+				float	world_x_pos = chunk->world_coordinate[0] + (float)x;
+				float	world_z_pos = chunk->world_coordinate[2] + (float)z;
+				highest = get_highest_block(chunk->info, &highest_block, world_x_pos, world_z_pos);
+				if (highest == -1 || highest_block == NULL)
+					continue ;
+				if (highest_block->type == BLOCK_DIRT ||
+					highest_block->type == BLOCK_DIRT_GRASS ||
+					highest_block->type == BLOCK_SAND)
 				{
-					highest = get_highest_point_of_type(chunk->info, world_x_pos, world_z_pos, BLOCK_SAND);
-					if (highest == -1)
-						continue ;
+					if (perper < 1.25f)
+						tree_placer(chunk->info,
+							(float []){world_x_pos, highest + 1, world_z_pos});
+					else if (perper < 1.5f)
+						flora_decider(chunk->info, perper,
+							(float []){world_x_pos, highest + 1, world_z_pos});
+
 				}
-				if (perper < 1.25f)
-					tree_placer(chunk->info,
-						(float []){world_x_pos, highest + 1, world_z_pos});
-				else if (perper < 1.5f)
-					flora_decider(chunk->info, perper,
-						(float []){world_x_pos, highest + 1, world_z_pos});
-				
 			}
 		}
 	}

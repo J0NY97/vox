@@ -456,7 +456,7 @@ struct	s_chunk
 };
 
 void		new_chunk(t_chunk *chunk, t_chunk_info *info, int nth);
-int			chunk_gen(t_chunk *chunk);
+int			chunk_gen(t_chunk *chunk, int *noise_map);
 void		generate_chunk(t_chunk *chunk, int *coord, int *noise_map);
 void		update_chunk_visible_blocks(t_chunk *chunk);
 void		update_chunk_border_visible_blocks(t_chunk *chunk);
