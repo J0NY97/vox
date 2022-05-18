@@ -89,28 +89,28 @@ void	update_entity(t_entity *entity)
 	}
 }
 
-void	render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader *shader)
+void	render_entity(t_entity *entity, t_camera *camera, t_model *model, GLuint shader)
 {
 	int error = glGetError();
 
 	update_entity(entity);
 
-	glUseProgram(shader->program);
-	glUniformMatrix4fv(glGetUniformLocation(shader->program, "model"), 1, GL_FALSE, &entity->model_mat[0]);
-	glUniformMatrix4fv(glGetUniformLocation(shader->program, "view"), 1, GL_FALSE, &camera->view[0]);
-	glUniformMatrix4fv(glGetUniformLocation(shader->program, "projection"), 1, GL_FALSE, &camera->projection[0]);
-	glUniform3fv(glGetUniformLocation(shader->program, "aViewPos"), 3, &camera->pos[0]);
+	glUseProgram(shader);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, &entity->model_mat[0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, GL_FALSE, &camera->view[0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, GL_FALSE, &camera->projection[0]);
+	glUniform3fv(glGetUniformLocation(shader, "aViewPos"), 3, &camera->pos[0]);
 
 //	if (vec3_distance(camera->pos, entity->pos) <= 5.0f)
 	if (entity->collision)
-		glUniform1i(glGetUniformLocation(shader->program, "useColor"), 1);
+		glUniform1i(glGetUniformLocation(shader, "useColor"), 1);
 	else
-		glUniform1i(glGetUniformLocation(shader->program, "useColor"), 0);
+		glUniform1i(glGetUniformLocation(shader, "useColor"), 0);
 	
 	if (entity->show_normal_map)
-		glUniform1i(glGetUniformLocation(shader->program, "show_normal_map"), 1);
+		glUniform1i(glGetUniformLocation(shader, "show_normal_map"), 1);
 	else
-		glUniform1i(glGetUniformLocation(shader->program, "show_normal_map"), 0);
+		glUniform1i(glGetUniformLocation(shader, "show_normal_map"), 0);
 
 	render_model(model);
 
@@ -181,10 +181,10 @@ float	*create_bb_normals(float *res)
 
 typedef struct	s_render_info
 {
-	t_shader	shader;
-	GLuint		vao;
-	GLuint		vbo;
-	GLuint		ebo;
+	GLuint	shader;
+	GLuint	vao;
+	GLuint	vbo;
+	GLuint	ebo;
 }	t_render_info;
 
 int	setup_render_box(t_render_info *info)
@@ -211,7 +211,7 @@ void	render_box(float *vertices, unsigned int *indices, float *col, float *view,
 	if (!set)
 		set = setup_render_box(&info);
 
-	glUseProgram(info.shader.program);
+	glUseProgram(info.shader);
 
 	glBindVertexArray(info.vao);
 
@@ -222,9 +222,9 @@ void	render_box(float *vertices, unsigned int *indices, float *col, float *view,
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, info.ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 36, &indices[0], GL_DYNAMIC_DRAW);
 
-	glUniform3fv(glGetUniformLocation(info.shader.program, "inColor"), 1, col);
-	glUniformMatrix4fv(glGetUniformLocation(info.shader.program, "view"), 1, GL_FALSE, &view[0]);
-	glUniformMatrix4fv(glGetUniformLocation(info.shader.program, "projection"), 1, GL_FALSE, &proj[0]);
+	glUniform3fv(glGetUniformLocation(info.shader, "inColor"), 1, col);
+	glUniformMatrix4fv(glGetUniformLocation(info.shader, "view"), 1, GL_FALSE, &view[0]);
+	glUniformMatrix4fv(glGetUniformLocation(info.shader, "projection"), 1, GL_FALSE, &proj[0]);
 
 	GLint	prev_pol_mode;
 	glGetIntegerv(GL_POLYGON_MODE, &prev_pol_mode);

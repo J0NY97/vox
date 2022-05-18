@@ -1,4 +1,5 @@
 #include "shaderpixel.h"
+#include "ui_manager.h"
 
 void	init(t_shaderpixel *sp)
 {
@@ -85,10 +86,10 @@ int	main(void)
 
 	player.gravity = 0;
 
-	t_shader	crosshair_shader;
+	GLuint	crosshair_shader;
 	new_crosshair_shader(&crosshair_shader);
 
-	t_shader	shader1;
+	GLuint	shader1;
 	new_shader(&shader1, SHADER_PATH"simple.vs", SHADER_PATH"simple.fs");
 
 	t_obj		retrotv_obj;
@@ -132,7 +133,7 @@ int	main(void)
 	display->rot_y_angle = 90;
 	display->rot_z_angle = 0;
 
-	t_shader	mandelbrot_shader;
+	GLuint	mandelbrot_shader;
 	new_shader(&mandelbrot_shader, SHADER_PATH"mandelbrot.vs", SHADER_PATH"mandelbrot.fs");
 	t_fractal2d	fractal;
 	new_fractal2d(&fractal);
@@ -140,10 +141,20 @@ int	main(void)
 	t_skybox	skybox;
 	new_skybox(&skybox, g_mc_skybox);
 
+////////////////////////////////////////
+	// UI TESTING
+////////////////////////////////////////
+	t_ui_manager	ui;
+
+	ui_manager_init(&ui);
+////////////////////////////////////////
+	// END UI TESTING
+///////////////////////////////////////
+
 //////////////////////////////
 	// Instance testing
 //////////////////////////////
-	t_shader	cube_shader_v2;
+	GLuint	cube_shader_v2;
 	new_shader(&cube_shader_v2, SHADER_PATH"block_mesh.vs", SHADER_PATH"block_mesh.fs");
 
 	t_thread_manager	tm;
@@ -445,7 +456,7 @@ int	main(void)
 		{
 			if (scene.entities[i])
 			{
-				render_entity(scene.entities[i], &player.camera, &scene.entities[i]->model, &shader1);
+				render_entity(scene.entities[i], &player.camera, &scene.entities[i]->model, shader1);
 				entities_rendered += 1;
 			}
 		}
@@ -716,7 +727,7 @@ int	main(void)
 		{
 			int render_index = chunk_info.meshes_render_indices[r];
 			if (chunks[render_index].blocks_solid_amount > 0)
-				render_chunk_mesh_v2(&chunks[render_index].meshes, BLOCK_MESH, chunks[render_index].world_coordinate, &player.camera, &cube_shader_v2);
+				render_chunk_mesh_v2(&chunks[render_index].meshes, BLOCK_MESH, chunks[render_index].world_coordinate, &player.camera, cube_shader_v2);
 		}
 
 		// Render solid alpha meshes;
@@ -727,7 +738,7 @@ int	main(void)
 		{
 			int render_index = chunk_info.meshes_render_indices[r];
 			if (chunks[render_index].blocks_solid_alpha_amount > 0)
-				render_chunk_mesh_v2(&chunks[render_index].meshes, BLOCK_ALPHA_MESH, chunks[render_index].world_coordinate, &player.camera, &cube_shader_v2);
+				render_chunk_mesh_v2(&chunks[render_index].meshes, BLOCK_ALPHA_MESH, chunks[render_index].world_coordinate, &player.camera, cube_shader_v2);
 		}
 
 		// Render flora meshes;
@@ -738,7 +749,7 @@ int	main(void)
 		{
 			int render_index = chunk_info.meshes_render_indices[r];
 			if (chunks[render_index].blocks_flora_amount > 0)
-				render_chunk_mesh_v2(&chunks[render_index].meshes, FLORA_MESH, chunks[render_index].world_coordinate, &player.camera, &cube_shader_v2);
+				render_chunk_mesh_v2(&chunks[render_index].meshes, FLORA_MESH, chunks[render_index].world_coordinate, &player.camera, cube_shader_v2);
 		}
 
 		// Render fluid meshes;
@@ -749,7 +760,7 @@ int	main(void)
 		{
 			int render_index = chunk_info.meshes_render_indices[r];
 			if (chunks[render_index].blocks_fluid_amount > 0)
-				render_chunk_mesh_v2(&chunks[render_index].meshes, FLUID_MESH, chunks[render_index].world_coordinate, &player.camera, &cube_shader_v2);
+				render_chunk_mesh_v2(&chunks[render_index].meshes, FLUID_MESH, chunks[render_index].world_coordinate, &player.camera, cube_shader_v2);
 		}
 
 /////////////////

@@ -45,7 +45,6 @@
 typedef struct	s_player	t_player;
 typedef struct	s_camera	t_camera;
 typedef struct	s_model		t_model;
-typedef struct	s_shader	t_shader;
 typedef struct	s_fps		t_fps;
 typedef struct	s_key		t_key;
 
@@ -105,12 +104,7 @@ void		render_model(t_model *model);
 //	SHADER
 ///////////////////
 
-struct	s_shader
-{
-	unsigned int	program;
-};
-
-void		new_shader(t_shader *shader, const char *vs, const char *fs);
+void		new_shader(GLuint *shader, const char *vs, const char *fs);
 int			create_shader(GLuint *shader, const char *content, GLenum type);
 void		check_program_errors(GLuint program);
 
@@ -185,7 +179,7 @@ typedef struct s_skybox
 	GLuint		vao;
 	GLuint		vbo_position;
 	GLuint		texture;
-	t_shader	shader;
+	GLuint		shader;
 	float		vertices[6 * 3 * 6];
 	size_t		vertices_size;
 }	t_skybox;
@@ -227,7 +221,7 @@ typedef struct s_fractal2d
 }	t_fractal2d;
 
 void		new_fractal2d(t_fractal2d *fractal);
-void		render_fractal2d(t_fractal2d *fractal, t_shader *shader);
+void		render_fractal2d(t_fractal2d *fractal, GLuint shader);
 
 ///////////////////
 //	ENTITY
@@ -264,7 +258,7 @@ typedef struct	s_entity
 void				new_entity(t_entity *entity);
 void				entity_print(t_entity *entity);
 void				update_entity(t_entity *entity);
-void				render_entity(t_entity *entity, t_camera *camera, t_model *model, t_shader *shader);
+void				render_entity(t_entity *entity, t_camera *camera, t_model *model, GLuint shader);
 
 /////////////////////
 // ENTITY INSTANCED
@@ -505,7 +499,7 @@ void		init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount);
 void		reset_chunk_mesh_v2(t_chunk_mesh_v2 *mesh);
 void		add_to_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, int *coord, float *face_vertices, int texture_id, int light);
 void		update_chunk_mesh(t_chunk_mesh_v2 *mesh);
-void		render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinate, t_camera *camera, t_shader *shader);
+void		render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinate, t_camera *camera, GLuint shader);
 int			chunk_mesh_collision_v2(float *orig, float *dir, t_chunk_mesh_v2 *mesh, int mesh_type, float *world_coords, float reach, float intersect_point[16][3]);
 
 // This is used in the terrain collision; rename when you come it better;
@@ -669,7 +663,7 @@ void		normalized_device_coords(float *v3, float *mouse, int w, int h);
 //	Crosshair
 ///////////////////
 
-void		new_crosshair_shader(t_shader *shader);
+void		new_crosshair_shader(GLuint *shader);
 void		render_crosshair(void);
 
 ///////////////////

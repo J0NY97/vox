@@ -53,9 +53,9 @@ void	new_fractal2d(t_fractal2d *fractal)
 	LG_INFO("New fractal made. (%d)", glGetError());
 }
 
-void	render_fractal2d(t_fractal2d *fractal, t_shader *shader)
+void	render_fractal2d(t_fractal2d *fractal, GLuint shader)
 {
-	glUseProgram(shader->program);
+	glUseProgram(shader);
 	glBindVertexArray(fractal->vao);
 	glBindBuffer(GL_ARRAY_BUFFER, fractal->vbo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, fractal->ebo);

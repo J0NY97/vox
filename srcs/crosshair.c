@@ -1,6 +1,6 @@
 #include "shaderpixel.h"
 
-void	new_crosshair_shader(t_shader *shader)
+void	new_crosshair_shader(GLuint *shader)
 {
 	GLuint	vs_shader;
 	GLuint	gs_shader;
@@ -22,13 +22,13 @@ void	new_crosshair_shader(t_shader *shader)
 	free(gs_src);
 	free(fs_src);
 
-	shader->program = glCreateProgram();
-	glAttachShader(shader->program, vs_shader);
-	glAttachShader(shader->program, gs_shader);
-	glAttachShader(shader->program, fs_shader);
-	glLinkProgram(shader->program);
+	*shader = glCreateProgram();
+	glAttachShader(*shader, vs_shader);
+	glAttachShader(*shader, gs_shader);
+	glAttachShader(*shader, fs_shader);
+	glLinkProgram(*shader);
 
-	check_program_errors(shader->program);
+	check_program_errors(*shader);
 }
 
 void	render_crosshair(void)
@@ -44,10 +44,10 @@ void	render_crosshair(void)
 
 typedef struct s_render_line
 {
-	float		vertices[6];
-	t_shader	shader;
-	GLuint		vao;
-	GLuint		vbo_pos;
+	float	vertices[6];
+	GLuint	shader;
+	GLuint	vao;
+	GLuint	vbo_pos;
 }				t_render_line;
 
 ////////////////////////////////////
@@ -81,12 +81,12 @@ void	render_2d_line(float *p1, float *p2, float *col)
 	for (; i < 6; i++)
 		info.vertices[i] = p2[i - 3];
 
-	glUseProgram(info.shader.program);
+	glUseProgram(info.shader);
 	glBindVertexArray(info.vao);
 	glBindBuffer(GL_ARRAY_BUFFER, info.vbo_pos);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6, &info.vertices[0], GL_DYNAMIC_DRAW);
-	glUniform3fv(glGetUniformLocation(info.shader.program, "inColor"), 1, col);
+	glUniform3fv(glGetUniformLocation(info.shader, "inColor"), 1, col);
 
 	glDrawArrays(GL_LINES, 0, 2);
 
@@ -133,15 +133,15 @@ void	render_3d_line(float *p1, float *p2, float *col, float *view_mat, float *pr
 	for (; i < 6; i++)
 		info.vertices[i] = p2[i - 3];
 
-	glUseProgram(info.shader.program);
+	glUseProgram(info.shader);
 	glBindVertexArray(info.vao);
 	glBindBuffer(GL_ARRAY_BUFFER, info.vbo_pos);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6, &info.vertices[0], GL_DYNAMIC_DRAW);
 
-	glUniform3fv(glGetUniformLocation(info.shader.program, "inColor"), 1, col);
-	glUniformMatrix4fv(glGetUniformLocation(info.shader.program, "view"), 1, GL_FALSE, &view_mat[0]);
-	glUniformMatrix4fv(glGetUniformLocation(info.shader.program, "projection"), 1, GL_FALSE, &project_mat[0]);
+	glUniform3fv(glGetUniformLocation(info.shader, "inColor"), 1, col);
+	glUniformMatrix4fv(glGetUniformLocation(info.shader, "view"), 1, GL_FALSE, &view_mat[0]);
+	glUniformMatrix4fv(glGetUniformLocation(info.shader, "projection"), 1, GL_FALSE, &project_mat[0]);
 
 	glDrawArrays(GL_LINES, 0, 2);
 
@@ -175,15 +175,15 @@ void	render_3d_point(float *p1, float *col, float *view_mat, float *project_mat)
 	for (; i < 3; i++)
 		info.vertices[i] = p1[i];
 
-	glUseProgram(info.shader.program);
+	glUseProgram(info.shader);
 	glBindVertexArray(info.vao);
 	glBindBuffer(GL_ARRAY_BUFFER, info.vbo_pos);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3, &info.vertices[0], GL_DYNAMIC_DRAW);
 
-	glUniform3fv(glGetUniformLocation(info.shader.program, "inColor"), 1, col);
-	glUniformMatrix4fv(glGetUniformLocation(info.shader.program, "view"), 1, GL_FALSE, &view_mat[0]);
-	glUniformMatrix4fv(glGetUniformLocation(info.shader.program, "projection"), 1, GL_FALSE, &project_mat[0]);
+	glUniform3fv(glGetUniformLocation(info.shader, "inColor"), 1, col);
+	glUniformMatrix4fv(glGetUniformLocation(info.shader, "view"), 1, GL_FALSE, &view_mat[0]);
+	glUniformMatrix4fv(glGetUniformLocation(info.shader, "projection"), 1, GL_FALSE, &project_mat[0]);
 
 	glDrawArrays(GL_POINTS, 0, 1);
 

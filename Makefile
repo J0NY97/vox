@@ -30,7 +30,9 @@ CFILES = \
 	hashtable.c \
 	item.c \
 	tnt.c \
-	freetype.c \
+	font_manager.c \
+	ui_manager.c \
+	bitmap.c \
 	bimgf/bimgf_bmp.c \
 	bimgf/bimgf_help.c \
 	bimgf/bimgf_jpg.c \

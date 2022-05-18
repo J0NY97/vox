@@ -997,18 +997,18 @@ void	init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount)
 /*
  * 'coordinate' world coordinate of the chunk;
 */
-void	render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinate, t_camera *camera, t_shader *shader)
+void	render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinate, t_camera *camera, GLuint shader)
 {
 	int	error;
 	error = glGetError();
 	if (error)
 		LG_ERROR("BEFORE (%d)", error);
 	
-	glUseProgram(shader->program);
-	glUniformMatrix4fv(glGetUniformLocation(shader->program, "view"), 1, GL_FALSE, &camera->view[0]);
-	glUniformMatrix4fv(glGetUniformLocation(shader->program, "projection"), 1, GL_FALSE, &camera->projection[0]);
+	glUseProgram(shader);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, GL_FALSE, &camera->view[0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, GL_FALSE, &camera->projection[0]);
 
-	glUniform3fv(glGetUniformLocation(shader->program, "chunkPos"), 1, &coordinate[0]);
+	glUniform3fv(glGetUniformLocation(shader, "chunkPos"), 1, &coordinate[0]);
 
 	glBindVertexArray(mesh->vao);
 

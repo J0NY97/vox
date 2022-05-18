@@ -93,14 +93,14 @@ void	render_skybox(t_skybox *skybox, t_camera *camera)
 		return ;
 	}
 	glDepthFunc(GL_LEQUAL);
-	glUseProgram(skybox->shader.program);
+	glUseProgram(skybox->shader);
 
 	mat4_assign(view, camera->view);
 	view[12] = 0.0f;
 	view[13] = 0.0f;
 	view[14] = 0.0f;
-	glUniformMatrix4fv(glGetUniformLocation(skybox->shader.program, "view"), 1, GL_FALSE, &view[0]);
-	glUniformMatrix4fv(glGetUniformLocation(skybox->shader.program, "projection"), 1, GL_FALSE, &camera->projection[0]);
+	glUniformMatrix4fv(glGetUniformLocation(skybox->shader, "view"), 1, GL_FALSE, &view[0]);
+	glUniformMatrix4fv(glGetUniformLocation(skybox->shader, "projection"), 1, GL_FALSE, &camera->projection[0]);
 
 	glBindVertexArray(skybox->vao);
 

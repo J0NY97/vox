@@ -1,4 +1,5 @@
 #include "shaderpixel.h"
+#include "font_manager.h"
 
 /*
  * Inits freetype in to 'library';
@@ -34,14 +35,6 @@ void	open_font(FT_Library library, FT_Face face, const char *font_path, int size
 		LG_ERROR("Houston");
 }
 
-typedef struct	s_bitmap
-{
-	Uint32	rows;
-	Uint32	width;
-	Uint32	pitch;
-	void	*pixels;
-}	t_bitmap;
-
 /*
  * Takes 'src' and places pixels on 'dst' starting at 'x', 'y';
 */
@@ -52,16 +45,26 @@ void	cpy_bitmap(t_bitmap *dst, FT_Bitmap *bitmap, int top_left_x, int top_left_y
 
 	dst_pixels = (Uint32 *)dst->pixels;
 	src_pixels = (Uint32 *)bitmap->buffer;
-	for (Uint32 row = 0; row < bitmap->rows; row++)
+	for (int row = 0; row < bitmap->rows; row++)
 	{
-		for (Uint32 p = 0; p < bitmap->width; p++)
-			dst_pixels[top_left_y * dst->pitch + top_left_x + p] = src_pixels[row * bitmap->pitch + p];
+		for (int p = 0; p < bitmap->width; p++)
+		{
+			if (!(top_left_y >= 0 && top_left_y < dst->rows)) // break if y is not on dst bitmap;
+				break ;
+			if (top_left_x + p >= dst->width) // break if x is past the width of the dst bitmap;
+				break ;
+			if (top_left_x + p < 0) // but continue if it has not yet come to the left side on the x, since it can come there another iteration in the loop;
+				continue ;
+			dst_pixels[top_left_y * dst->pitch + top_left_x + p]
+				= src_pixels[row * bitmap->pitch + p];
+		}
 	}
 }
 
 /*
  * TODO : Add support for multiple charsets;
  * charset : any of the enum FT_Encoding; FT_Select_Charmap();
+ * TODO : Add support for multiple pixel bit modes (24bit & 32bit (more?));
 */
 void	render_face(FT_Face face, char *str, t_bitmap *dst_bmp, int x, int y)
 {
@@ -69,28 +72,30 @@ void	render_face(FT_Face face, char *str, t_bitmap *dst_bmp, int x, int y)
 	Uint32			str_len;
 	FT_UInt			glyph_index;
 	int				error;
+	int				curr_x;
+	int				curr_y;
 
 	slot = face->glyph;
 	str_len = ft_strlen(str);
+	curr_x = x;
+	curr_y = y;
 	for (Uint32 i = 0; i < str_len; i++)
 	{
 		glyph_index = FT_Get_Char_Index(face, str[i]);
 		error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
 		if (error)
 			continue ;
-		cpy_bitmap(dst_bmp, &slot->bitmap, x + slot->bitmap_left, y - slot->bitmap_top);
+		cpy_bitmap(dst_bmp, &slot->bitmap, curr_x + slot->bitmap_left, curr_y - slot->bitmap_top);
 
-		x += slot->advance.x >> 6;
-		y += slot->advance.y >> 6;
+		curr_x += slot->advance.x >> 6;
+		curr_y += slot->advance.y >> 6;
 	}
 }
 
-typedef struct	s_fntmngr
-{
-	FT_Library	library;
-	FT_Face		*font_faces;	//	array of font faces;
-}	t_fntmngr;
 /*
+ * Init the font_manager into 'fm';
+int		font_manager_init(t_font_manager *fm);
+
  * Returns index of face in 'font_faces';
 int		new_font(t_fntmngr *fm, char *font_path, int font_size);
 

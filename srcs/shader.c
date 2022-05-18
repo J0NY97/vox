@@ -52,7 +52,7 @@ int	create_program(GLuint *result, GLuint vs, GLuint fs)
 	return (1);
 }
 
-void	new_shader(t_shader *shader, const char *vs, const char *fs)
+void	new_shader(GLuint *shader, const char *vs, const char *fs)
 {
 	char	*vs_cont;
 	char	*fs_cont;
@@ -85,7 +85,7 @@ void	new_shader(t_shader *shader, const char *vs, const char *fs)
 		LG_WARN("Couldnt create shaders from fragment shader content.");
 		return ;
 	}
-	if (!create_program(&shader->program, v_shader, f_shader))
+	if (!create_program(shader, v_shader, f_shader))
 		LG_WARN("Couldnt create program.");
 	free(vs_cont);
 	free(fs_cont);
