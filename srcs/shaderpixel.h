@@ -101,14 +101,6 @@ void		new_model(t_model *model, t_obj *obj);
 void		render_model(t_model *model);
 
 ///////////////////
-//	SHADER
-///////////////////
-
-void		new_shader(GLuint *shader, const char *vs, const char *fs);
-int			create_shader(GLuint *shader, const char *content, GLenum type);
-void		check_program_errors(GLuint program);
-
-///////////////////
 //	TEXTURE
 ///////////////////
 

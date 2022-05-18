@@ -18,6 +18,8 @@ void	ui_manager_setup_opengl(t_ui_manager *ui)
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	new_shader(&ui->shader, SHADER_PATH"ui.vs", SHADER_PATH"ui.fs");
 }
 
 void	ui_manager_copy_to_canvas(t_ui_manager *ui, t_bitmap *src, int x, int y)

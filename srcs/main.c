@@ -1,5 +1,6 @@
 #include "shaderpixel.h"
 #include "ui_manager.h"
+#include "shader.h"
 
 void	init(t_shaderpixel *sp)
 {
