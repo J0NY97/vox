@@ -29,6 +29,13 @@ void	ui_manager_setup_opengl(t_ui_manager *ui)
 	glVertexAttribPointer(ui->attrib_uv, 2, GL_FLOAT, GL_FALSE, sizeof(t_ui_vertex), (void *)offsetof(t_ui_vertex, uv));
 	glVertexAttribPointer(ui->attrib_col, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(t_ui_vertex), (void *)offsetof(t_ui_vertex, col));
 
+	glGenTextures(1, &ui->texture);
+	glBindTexture(GL_TEXTURE_2D, ui->texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// TODO : move this to where we update the texture;
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ui->bitmap.width, ui->bitmap.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, ui->bitmap.pixels);
+
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -41,6 +48,8 @@ void	ui_manager_setup_opengl(t_ui_manager *ui)
 
 void	ui_manager_init(t_ui_manager *ui)
 {
+	bitmap_new(&ui->bitmap, 100, 100);
+	bitmap_fill(&ui->bitmap, 0xffffffff);
 	ui_manager_setup_opengl(ui);
 	ui->vertices_allocated = 2048;
 	ui->vertices = malloc(sizeof(t_ui_vertex) * ui->vertices_allocated);
@@ -85,10 +94,10 @@ void	ui_manager_render(t_ui_manager *ui, int width, int height /*window context*
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_SCISSOR_TEST);
-//	glActiveTexture(GL_TEXTURE0);
+	glActiveTexture(GL_TEXTURE0);
 
 	glUseProgram(ui->shader);
-//	glUniform1i(ui->uniform_tex, 0);
+	glUniform1i(ui->uniform_tex, 0);
 	glUniformMatrix4fv(ui->uniform_proj, 1, GL_FALSE, ortho);
 
 	// Drawing
@@ -99,9 +108,18 @@ void	ui_manager_render(t_ui_manager *ui, int width, int height /*window context*
 	glBufferData(GL_ARRAY_BUFFER, sizeof(t_ui_vertex) * ui->vertex_amount, ui->vertices, GL_STREAM_DRAW);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Uint8) * ui->index_amount, ui->indices, GL_STREAM_DRAW);
 
-//	glBindTexture(GL_TEXTURE_2D, 'texture_id');
+	glBindTexture(GL_TEXTURE_2D, ui->texture);
 // 	glScissor(); you should scissor the outer most vertex coordinates that we have created from all the ui elements;
-	glDrawElements(GL_TRIANGLES, ui->index_amount, GL_UNSIGNED_INT, NULL);
+
+	glDrawElements(GL_TRIANGLES, ui->index_amount / 3, GL_UNSIGNED_INT, NULL);
+
+	// Set to default opengl state
+	glUseProgram(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+	glDisable(GL_BLEND);
+	glDisable(GL_SCISSOR_TEST);
 }
 
 /*
@@ -129,24 +147,23 @@ int	ui_manager_new_vertex(t_ui_manager *ui, float *v2, float *uv, Uint8 *col)
 	v->col[2] = col[2];
 	v->col[3] = col[3];
 	++ui->vertex_amount;
-	return (ui->vertex_amount);
+	return (ui->vertex_amount - 1);
 }
 
 /*
 */
-void	ui_manager_new_triangle(t_ui_manager *ui, int v0, int v1, int v2)
+int	ui_manager_new_index(t_ui_manager *ui, int index)
 {
-	if (ui->index_amount + 3 > ui->indices_allocated)
+	if (ui->index_amount + 1 > ui->indices_allocated)
 	{
 		ui->indices_allocated += 256;
 		ui->indices = realloc(ui->indices, sizeof(Uint32) * ui->indices_allocated);
 		LG_WARN("Reallocated ui->indices (%d)", ui->indices_allocated);
 	}
 
-	ui->indices[ui->index_amount + 0] = v0;
-	ui->indices[ui->index_amount + 1] = v1;
-	ui->indices[ui->index_amount + 2] = v2;
-	ui->index_amount += 3;
+	ui->indices[ui->index_amount] = index;
+	++ui->index_amount;
+	return (ui->index_amount - 1);
 }
 
 /*
@@ -158,16 +175,14 @@ void	ui_manager_new_triangle(t_ui_manager *ui, int v0, int v1, int v2)
 void	ui_draw_rect(t_ui_manager *ui, float *pos, Uint8 *color)
 {
 	// TODO: check for some edge cases, like if w / h is <= 0 then we dont add rect, osv...;
-	int v1;
-	int v2;
-	int v3;
-	int v4;
 
-	v1 = ui_manager_new_vertex(ui, (float []){pos[0], pos[1]}, (float []){0, 0}, color);
-	v2 = ui_manager_new_vertex(ui, (float []){pos[0], pos[1] + pos[3]}, (float []){0, 0}, color);
-	v3 = ui_manager_new_vertex(ui, (float []){pos[0] + pos[2], pos[1] + pos[3]}, (float []){0, 0}, color);
-	v4 = ui_manager_new_vertex(ui, (float []){pos[0] + pos[2], pos[1]}, (float []){0, 0}, color);
+	int v1 = ui_manager_new_vertex(ui, (float []){pos[0], pos[1]}, (float []){0, 0}, color);
+	int v2 = ui_manager_new_vertex(ui, (float []){pos[0], pos[1] + pos[3]}, (float []){0, 0}, color);
+	int v3 = ui_manager_new_vertex(ui, (float []){pos[0] + pos[2], pos[1] + pos[3]}, (float []){0, 0}, color);
+	int v4 = ui_manager_new_vertex(ui, (float []){pos[0] + pos[2], pos[1]}, (float []){0, 0}, color);
 
-	ui_manager_new_triangle(ui, v1, v2, v3);
-	ui_manager_new_triangle(ui, v1, v3, v4);
+	ui_manager_new_index(ui, v1);
+	ui_manager_new_index(ui, v2);
+	ui_manager_new_index(ui, v3);
+	ui_manager_new_index(ui, v4);
 }

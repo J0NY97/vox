@@ -774,7 +774,7 @@ int	main(void)
 
 		ui_manager_start(&ui);
 		{
-			ui_draw_rect(&ui, (float []){10, 10, 100, 100}, (Uint8 []){255, 0, 0, 255});
+			ui_draw_rect(&ui, (float []){10, 10, 100, 100}, (Uint8 []){255, 255, 255, 255});
 		}
 		ui_manager_end(&ui);
 		ui_manager_render(&ui, sp.win_w, sp.win_h);

@@ -50,7 +50,7 @@ void	cpy_bitmap(t_bitmap *dst, FT_Bitmap *bitmap, int top_left_x, int top_left_y
 	{
 		for (int p = 0; p < bitmap->width; p++)
 		{
-			if (!(top_left_y >= 0 && top_left_y < dst->rows)) // break if y is not on dst bitmap;
+			if (!(top_left_y >= 0 && top_left_y < dst->height)) // break if y is not on dst bitmap;
 				break ;
 			if (top_left_x + p >= dst->width) // break if x is past the width of the dst bitmap;
 				break ;

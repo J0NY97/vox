@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/18 13:13:20 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/05/19 12:21:10 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/05/19 13:07:16 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,19 +20,19 @@
 # define Uint8 unsigned char
 #endif
 
-
-
 #include "string.h"
 #include "stdlib.h"
 
 typedef struct	s_bitmap
 {
-	Uint32	rows;
+	Uint32	height;
 	Uint32	width;
 	Uint32	pitch;
+	Uint32	pixel_amount;
 	void	*pixels;
 }	t_bitmap;
 
-void	new_bitmap(t_bitmap *bmp, int w, int h);
+void	bitmap_new(t_bitmap *bmp, int w, int h);
+void	bitmap_fill(t_bitmap *bmp, Uint32 col);
 
 #endif
