@@ -48,7 +48,7 @@ void	ui_manager_setup_opengl(t_ui_manager *ui)
 
 void	ui_manager_init(t_ui_manager *ui)
 {
-	bitmap_new(&ui->bitmap, 100, 100);
+	bitmap_new(&ui->bitmap, 1, 1);
 	bitmap_fill(&ui->bitmap, 0xffffffff);
 	ui_manager_setup_opengl(ui);
 	ui->vertices_allocated = 2048;
