@@ -249,7 +249,7 @@ void	water_flow(t_chunk_info *info, t_block_event *water)
 	t_block_event	*neighbor_water[6];
 	float			tmp[3];
 	int				type;
-	
+
 	// If flow dist is more than 7, the water has traveled the max distance;
 	if (water->statique)
 		return ;
@@ -342,20 +342,6 @@ void	water_flow(t_chunk_info *info, t_block_event *water)
 				set_block_at_world_pos(info, tmp, FLUID_WATER);
 			else
 				set_block_at_world_pos(info, tmp, water->block->type + 1);
-		}
-	}
-}
-
-// TODO: Remove this function completely and place the water_flow function call in the chunk event handler; same with the remover;
-void	chunk_water_flower(t_chunk_info *info, t_chunk *chunk)
-{
-	// For all water blocks in chunk;
-	for (int j = 0; j < chunk->event_block_amount; j++)
-	{
-		if (is_water(chunk->event_blocks[j].block))
-		{
-			water_flow(info, &chunk->event_blocks[j]);
-			chunk->event_blocks[j].statique = 1;
 		}
 	}
 }

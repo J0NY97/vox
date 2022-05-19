@@ -767,6 +767,9 @@ void	update_chunk(t_chunk *chunk)
 */
 void	event_chunk(t_chunk *chunk)
 {
+	if (chunk->event_block_amount <= 0)
+		return ;
+
 	// water_flow() can re-enable update_water, so we are making duplicate variable here;
 	int	should_we_update_water = chunk->update_water;
 
@@ -778,6 +781,7 @@ void	event_chunk(t_chunk *chunk)
 		{
 			water_flow(chunk->info, &chunk->event_blocks[j]);
 			water_remove(chunk->info, &chunk->event_blocks[j]);
+			chunk->event_blocks[j].statique = 1;
 		}
 		else if (chunk->event_blocks[j].block->type == BLOCK_TNT)
 			tnt_explosion(chunk->info, chunk, &chunk->event_blocks[j]);
@@ -834,7 +838,7 @@ int	regenerate_chunks(int *these, int coord[2], t_chunk_info *info)
 	int				noise_map[CHUNK_WIDTH * CHUNK_BREADTH];
 
 	create_noise_map(noise_map, CHUNK_WIDTH, CHUNK_BREADTH, coord[0], coord[1]);
-	for (int y = 0; y < CHUNK_HEIGHT; y++)
+	for (int y = 0; y < CHUNKS_PER_COLUMN; y++)
 	{
 		if (nth_chunk >= CHUNKS_PER_COLUMN || nth_chunk >= CHUNKS_LOADED) 
 			break ;

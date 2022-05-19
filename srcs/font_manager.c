@@ -36,6 +36,7 @@ void	open_font(FT_Library library, FT_Face face, const char *font_path, int size
 }
 
 /*
+ * TODO : instead of having those 3 'if' in the loop, just create in the beginning new coordinates that 100% are inside the bitmap dimensions;
  * Takes 'src' and places pixels on 'dst' starting at 'x', 'y';
 */
 void	cpy_bitmap(t_bitmap *dst, FT_Bitmap *bitmap, int top_left_x, int top_left_y)

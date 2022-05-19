@@ -1,12 +1,14 @@
 #version 330 core
 
-in vec3 inTex;
+precision mediump float;
+uniform sampler2D Texture;
 
-uniform sampler2D tex;
+in vec2 Frag_UV;
+in vec4 Frag_Color;
 
-out vec4 FragColor;
+out vec4 Out_Color;
 
-void main()
+void	main()
 {
-	FragColor = texture(tex, inTex);
+	Out_Color = Frag_Color * texture(Texture, Frag_UV.st);
 }

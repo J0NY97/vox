@@ -1,12 +1,17 @@
 #version 330 core
 
-layout (location = 0) in vec2 aPos;
-layout (location = 1) in vec3 aTex;
+uniform mat4 ProjMtx;
 
-out vec3 inTex;
+in vec2 Position;
+in vec2 TexCoord;
+in vec4 Color;
+
+out vec2 Frag_UV;
+out vec4 Frag_Color;
 
 void	main()
 {
-	inTex = aTex;
-	gl_Position = aPos.xy;
+	Frag_UV = TexCoord;
+	Frag_Color = Color;
+	gl_Position = ProjMtx * vec4(Position.xy, 0, 1);
 }

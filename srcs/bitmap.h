@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/18 13:13:20 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/05/18 13:16:22 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/05/19 12:21:10 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,8 +16,14 @@
 #ifndef Uint32
 # define Uint32 unsigned int
 #endif
+#ifndef Uint8
+# define Uint8 unsigned char
+#endif
 
-# include "string.h"
+
+
+#include "string.h"
+#include "stdlib.h"
 
 typedef struct	s_bitmap
 {
@@ -27,6 +33,6 @@ typedef struct	s_bitmap
 	void	*pixels;
 }	t_bitmap;
 
-void	new_bitmap(t_bitmap *bmp);
+void	new_bitmap(t_bitmap *bmp, int w, int h);
 
 #endif

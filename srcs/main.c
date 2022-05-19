@@ -772,6 +772,13 @@ int	main(void)
 		glDisable(GL_DEPTH_TEST);
 		render_crosshair();
 
+		ui_manager_start(&ui);
+		{
+			ui_draw_rect(&ui, (float []){10, 10, 100, 100}, (Uint8 []){255, 0, 0, 255});
+		}
+		ui_manager_end(&ui);
+		ui_manager_render(&ui, sp.win_w, sp.win_h);
+
 		glfwSwapBuffers(sp.win);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
