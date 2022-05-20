@@ -6,12 +6,22 @@ void	ui_manager_setup_opengl(t_ui_manager *ui)
 	int error;
 
 	new_shader(&ui->shader, SHADER_PATH"ui.vs", SHADER_PATH"ui.fs");
+	if (glIsProgram(ui->shader) != GL_TRUE)
+		ft_printf("UI shader program isnt...\n");
 
 	ui->uniform_tex = glGetUniformLocation(ui->shader, "Texture");
 	ui->uniform_proj = glGetUniformLocation(ui->shader, "ProjMtx");
+
 	ui->attrib_pos = glGetAttribLocation(ui->shader, "Position");
 	ui->attrib_uv = glGetAttribLocation(ui->shader, "TexCoord");
 	ui->attrib_col = glGetAttribLocation(ui->shader, "Color");
+
+	if (ui->attrib_pos == -1)
+		ft_printf("pos : %d\n", ui->attrib_pos);
+	if (ui->attrib_uv == -1)
+		ft_printf("uv : %d\n", ui->attrib_uv);
+	if (ui->attrib_col == -1)
+		ft_printf("col : %d\n", ui->attrib_col);
 
 	glGenVertexArrays(1, &ui->vao);
 	glGenBuffers(1, &ui->vbo);
@@ -35,6 +45,7 @@ void	ui_manager_setup_opengl(t_ui_manager *ui)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	// TODO : move this to where we update the texture;
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ui->bitmap.width, ui->bitmap.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, ui->bitmap.pixels);
+	glGenerateMipmap(GL_TEXTURE_2D);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -48,6 +59,10 @@ void	ui_manager_setup_opengl(t_ui_manager *ui)
 
 void	ui_manager_init(t_ui_manager *ui)
 {
+	font_manager_init(&ui->font_manager);
+	// Lets open default font;
+	font_manager_get_font(&ui->font_manager, "C:/Windows/Fonts/arial.ttf", 12);
+
 	bitmap_new(&ui->bitmap, 1, 1);
 	bitmap_fill(&ui->bitmap, 0xffffffff);
 	ui_manager_setup_opengl(ui);
@@ -106,12 +121,12 @@ void	ui_manager_render(t_ui_manager *ui, int width, int height /*window context*
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ui->ebo);
 
 	glBufferData(GL_ARRAY_BUFFER, sizeof(t_ui_vertex) * ui->vertex_amount, ui->vertices, GL_STREAM_DRAW);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Uint8) * ui->index_amount, ui->indices, GL_STREAM_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Uint32) * ui->index_amount, ui->indices, GL_STREAM_DRAW);
 
 	glBindTexture(GL_TEXTURE_2D, ui->texture);
 // 	glScissor(); you should scissor the outer most vertex coordinates that we have created from all the ui elements;
 
-	glDrawElements(GL_TRIANGLES, ui->index_amount / 3, GL_UNSIGNED_INT, NULL);
+	glDrawElements(GL_TRIANGLES, ui->index_amount, GL_UNSIGNED_INT, NULL);
 
 	// Set to default opengl state
 	glUseProgram(0);
@@ -183,6 +198,9 @@ void	ui_draw_rect(t_ui_manager *ui, float *pos, Uint8 *color)
 
 	ui_manager_new_index(ui, v1);
 	ui_manager_new_index(ui, v2);
+	ui_manager_new_index(ui, v3);
+
+	ui_manager_new_index(ui, v1);
 	ui_manager_new_index(ui, v3);
 	ui_manager_new_index(ui, v4);
 }

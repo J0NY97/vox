@@ -227,6 +227,7 @@ int	main(void)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_LINE_SMOOTH);
+	glClearColor(1, 0, 1, 1);
 
 	char	fps_str[10];
 	while (!glfwWindowShouldClose(sp.win))
@@ -774,7 +775,7 @@ int	main(void)
 
 		ui_manager_start(&ui);
 		{
-			ui_draw_rect(&ui, (float []){10, 10, 100, 100}, (Uint8 []){255, 255, 255, 255});
+			ui_draw_rect(&ui, (float []){10, 10, 100, 100}, (Uint8 []){255, 50, 50, 255});
 		}
 		ui_manager_end(&ui);
 		ui_manager_render(&ui, sp.win_w, sp.win_h);

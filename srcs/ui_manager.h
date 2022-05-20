@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/18 13:10:15 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/05/19 12:56:37 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/05/20 12:57:59 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 # include "shader.h"
 # include "bitmap.h"
+# include "font_manager.h"
 
 typedef struct s_ui_vertex
 {
@@ -25,7 +26,8 @@ typedef struct s_ui_vertex
 
 typedef struct s_ui_manager
 {
-	t_bitmap	bitmap;
+	t_font_manager	font_manager;
+	t_bitmap		bitmap;
 
 	// OpenGL Stuff
 	GLuint	vao;

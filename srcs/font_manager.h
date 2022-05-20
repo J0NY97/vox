@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/18 12:55:43 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/05/18 13:13:49 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/05/20 13:37:40 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,23 @@
 typedef struct	s_font_manager
 {
 	FT_Library	library;
-	FT_Face		*font_faces;	//	array of font faces;
+
+	FT_Face		*font_faces;			// array of font faces; (because for some reason FT_Face == FT_FontRec_ *);
+	Uint32		font_faces_allocated;	// amount of TF_Face's allocated to 'font_faces';
+	int			font_face_amount;		// amount of 'font_faces' values;
 }	t_font_manager;
+
+/////////////////////////////////
+//	FREETYPE
+/////////////////////////////////
+
+void	print_face(FT_Face face);
+
+/////////////////////////////////
+//	FONT_MANAGER
+/////////////////////////////////
+
+void	font_manager_init(t_font_manager *fm);
+int		font_manager_get_font(t_font_manager *fm, char *font_path, int font_size);
 
 #endif
