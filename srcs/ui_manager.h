@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/18 13:10:15 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/05/20 12:57:59 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/05/21 12:37:01 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,16 +24,32 @@ typedef struct s_ui_vertex
 	Uint8	col[4];
 }	t_ui_vertex;
 
+typedef struct s_ui_element
+{
+	GLuint	draw_type;
+	GLuint	texture;
+	int		index_start;
+	int		index_amount;
+}	t_ui_element;
+
 typedef struct s_ui_manager
 {
 	t_font_manager	font_manager;
 	t_bitmap		bitmap;
 
+	t_ui_element	*elements;
+	Uint32			elements_allocated;
+	Uint32			element_amount;
+
 	// OpenGL Stuff
 	GLuint	vao;
 	GLuint	vbo;
 	GLuint	ebo;
-	GLuint	texture;
+	GLuint	texture; // default texture;
+
+	GLuint	*all_textures;
+	Uint32	textures_generated;
+	Uint32	textures_in_use;
 
 	t_ui_vertex	*vertices;
 	Uint32		*indices;
@@ -58,6 +74,8 @@ void	ui_manager_end(t_ui_manager *ui);
 void	ui_manager_render(t_ui_manager *ui, int width, int height);
 
 // Shapes
+void	ui_draw_filled_rect(t_ui_manager *ui, float *pos, Uint8 *color);
 void	ui_draw_rect(t_ui_manager *ui, float *pos, Uint8 *color);
+void	ui_draw_bitmap(t_ui_manager *ui, float *pos, t_bitmap *bmp);
 
 #endif

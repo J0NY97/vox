@@ -30,18 +30,18 @@ void	set_font_size(FT_Face face, int size)
  *
 */
 /*"C:/Windows/Fonts/arial.ttf",*/
-void	open_font(FT_Library library, FT_Face face, const char *font_path)
+void	open_font(FT_Library library, FT_Face *face, const char *font_path)
 {
 	int	error;
 
-	error = FT_New_Face(library, font_path, 0, &face);
-	print_face(face);
+	error = FT_New_Face(library, font_path, 0, face);
+	print_face(*face);
 	if (error == FT_Err_Unknown_File_Format)
 		LG_ERROR("Font was opened and read, but its format is unsupported.");
 	else if (error)
 		LG_ERROR("Couldn\'t open/read/load font.");
 	// Default font size of 12;
-	set_font_size(face, 12);
+	set_font_size(*face, 12);
 }
 
 /*
@@ -50,23 +50,28 @@ void	open_font(FT_Library library, FT_Face face, const char *font_path)
 */
 void	cpy_bitmap(t_bitmap *dst, FT_Bitmap *bitmap, int top_left_x, int top_left_y)
 {
-	Uint32	*dst_pixels;
-	Uint32	*src_pixels;
+	Uint8	*dst_pixels;
+	Uint8	*src_pixels;
 
-	dst_pixels = (Uint32 *)dst->pixels;
-	src_pixels = (Uint32 *)bitmap->buffer;
+	dst_pixels = (Uint8 *)dst->pixels;
+	src_pixels = (Uint8 *)bitmap->buffer;
+
+	int	start_x = top_left_x * dst->bpp;
 	for (int row = 0; row < bitmap->rows; row++)
 	{
 		for (int p = 0; p < bitmap->width; p++)
 		{
-			if (!(top_left_y >= 0 && top_left_y < dst->height)) // break if y is not on dst bitmap;
+			int	y = ((top_left_y + row) * dst->pitch);
+			int	x = p * dst->bpp;
+			if (y < 0 || y >= dst->height) // break if y is not on dst bitmap;
 				break ;
-			if (top_left_x + p >= dst->width) // break if x is past the width of the dst bitmap;
+			if (start_x + x >= dst->width) // break if x is past the width of the dst bitmap;
 				break ;
-			if (top_left_x + p < 0) // but continue if it has not yet come to the left side on the x, since it can come there another iteration in the loop;
+			if (start_x + x < 0) // but continue if it has not yet come to the left side on the x, since it can come there another iteration in the loop;
 				continue ;
-			dst_pixels[top_left_y * dst->pitch + top_left_x + p]
-				= src_pixels[row * bitmap->pitch + p];
+			Uint8	dst_ind = y + start_x + x; 
+			Uint8	src_ind = row * bitmap->pitch + p;
+			dst_pixels[dst_ind] = src_pixels[src_ind];
 		}
 	}
 }
@@ -75,29 +80,57 @@ void	cpy_bitmap(t_bitmap *dst, FT_Bitmap *bitmap, int top_left_x, int top_left_y
  * TODO : Add support for multiple charsets;
  * charset : any of the enum FT_Encoding; FT_Select_Charmap();
  * TODO : Add support for multiple pixel bit modes (24bit & 32bit (more?));
+ * TODO : check that font_index is inside the array;
+ * TODO : Load all glyphs first, not loading duplicates. Then copy to bitmap;
+ * 
+ * You get 'font_index' by calling 'font_manager_get_font()';
 */
-void	render_face(FT_Face face, char *str, t_bitmap *dst_bmp, int x, int y)
+t_bitmap	*fm_render_text(t_font_manager *fm, int font_index, char *str, Uint32 text_color, Uint32 bg_color)
 {
+	t_bitmap		*bmp;
+	FT_Face			face;
 	FT_GlyphSlot	slot;
+	FT_UInt			glyph_index;
 	Uint32			str_len;
 	int				error;
 	int				curr_x;
 	int				curr_y;
 
+	face = fm->font_faces[font_index];
+	bmp = malloc(sizeof(t_bitmap));
 	slot = face->glyph;
 	str_len = ft_strlen(str);
-	curr_x = x;
-	curr_y = y;
+	bitmap_new(bmp, face->size->metrics.max_advance / 64 * str_len, face->size->metrics.height / 64);
+	bitmap_fill(bmp, bg_color);
+	ft_printf("%d %d\n", bmp->width, bmp->height);
+	ft_printf("strlen : %d\n", str_len);
+	curr_x = 0;
+	curr_y = bmp->height;
 	for (Uint32 i = 0; i < str_len; i++)
 	{
-		error = FT_Load_Char(face, str[i], FT_LOAD_RENDER);
+		glyph_index = FT_Get_Char_Index(face, str[i]);
+		error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
 		if (error)
+		{
+			ft_printf("error(1)(%s).", FT_Error_String(error));
 			continue ;
-		cpy_bitmap(dst_bmp, &slot->bitmap, curr_x + slot->bitmap_left, curr_y - slot->bitmap_top);
+		}
+		ft_printf("we have glyph_index %d\n", glyph_index);
+		//error = FT_Render_Glyph(slot, FT_RENDER_MODE_NORMAL);
+		if (error)
+		{
+			ft_printf("error(1)(%s).", FT_Error_String(error));
+			continue ;
+		}
+	ft_printf("slot advance : %d, index : %d, bmp : %d %d\n", slot->advance.x >> 6, slot->glyph_index, slot->bitmap_left, slot->bitmap_top);
+		cpy_bitmap(bmp, &slot->bitmap, curr_x + slot->bitmap_left, curr_y - slot->bitmap_top);
 
 		curr_x += slot->advance.x >> 6;
+	ft_printf("slot advance : %d\n", slot->advance.x >> 6);
 	//	curr_y += slot->advance.y >> 6;
 	}
+	ft_printf("curr_x %d\n", curr_x);
+	return (bmp);
 }
 
 void	print_face(FT_Face face)
@@ -142,12 +175,11 @@ int	font_manager_get_font(t_font_manager *fm, char *font_path, int font_size)
 		fm->font_faces_allocated += 1;
 		fm->font_faces = realloc(fm->font_faces, sizeof(FT_Face) * fm->font_faces_allocated);
 	}
-	open_font(fm->library, fm->font_faces[fm->font_face_amount], font_path);
+	open_font(fm->library, &fm->font_faces[fm->font_face_amount], font_path);
 	// IF the current selected font size is not the one requested;
 	// We check if the font has that size;
 	// if not, we create
 	// if has, we change it to that;
-
 
 	LG_INFO("Success opening font.");
 	++fm->font_face_amount;

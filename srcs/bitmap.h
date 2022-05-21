@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/18 13:13:20 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/05/19 13:07:16 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/05/21 12:46:51 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,12 +27,16 @@ typedef struct	s_bitmap
 {
 	Uint32	height;
 	Uint32	width;
+	Uint32	bpp; // Bytes per pixel; default 4;
 	Uint32	pitch;
 	Uint32	pixel_amount;
 	void	*pixels;
 }	t_bitmap;
 
 void	bitmap_new(t_bitmap *bmp, int w, int h);
+void	bitmap_free(t_bitmap *bmp);
 void	bitmap_fill(t_bitmap *bmp, Uint32 col);
+
+void	bitmap_print(t_bitmap *bmp);
 
 #endif

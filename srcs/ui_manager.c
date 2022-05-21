@@ -41,6 +41,8 @@ void	ui_manager_setup_opengl(t_ui_manager *ui)
 
 	glGenTextures(1, &ui->texture);
 	glBindTexture(GL_TEXTURE_2D, ui->texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	// TODO : move this to where we update the texture;
@@ -61,15 +63,26 @@ void	ui_manager_init(t_ui_manager *ui)
 {
 	font_manager_init(&ui->font_manager);
 	// Lets open default font;
-	font_manager_get_font(&ui->font_manager, "C:/Windows/Fonts/arial.ttf", 12);
+	int arial_font_index = font_manager_get_font(&ui->font_manager, "C:/Windows/Fonts/arial.ttf", 12);
+	print_face(ui->font_manager.font_faces[arial_font_index]);
 
 	bitmap_new(&ui->bitmap, 1, 1);
-	bitmap_fill(&ui->bitmap, 0xffffffff);
+	bitmap_fill(&ui->bitmap, 0xffffff00);
 	ui_manager_setup_opengl(ui);
 	ui->vertices_allocated = 2048;
 	ui->vertices = malloc(sizeof(t_ui_vertex) * ui->vertices_allocated);
 	ui->indices_allocated = 1024;
 	ui->indices = malloc(sizeof(Uint32) * ui->indices_allocated);
+
+	// Elements
+	ui->elements = NULL;
+	ui->element_amount = 0;
+	ui->elements_allocated = 0;
+
+	// Texture
+	ui->all_textures = NULL;
+	ui->textures_generated = 0;
+	ui->textures_in_use = 0;
 }
 
 /*
@@ -79,6 +92,8 @@ void	ui_manager_start(t_ui_manager *ui)
 {
 	ui->vertex_amount = 0;
 	ui->index_amount = 0;
+	ui->element_amount = 0;
+	ui->textures_in_use = 0;
 }
 
 /*
@@ -123,10 +138,17 @@ void	ui_manager_render(t_ui_manager *ui, int width, int height /*window context*
 	glBufferData(GL_ARRAY_BUFFER, sizeof(t_ui_vertex) * ui->vertex_amount, ui->vertices, GL_STREAM_DRAW);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Uint32) * ui->index_amount, ui->indices, GL_STREAM_DRAW);
 
+	for (int i = 0; i < ui->element_amount; i++)
+	{
+		glBindTexture(GL_TEXTURE_2D, ui->elements[i].texture);
+		glDrawElements(ui->elements[i].draw_type, ui->elements[i].index_amount, GL_UNSIGNED_INT, (void *)(ui->elements[i].index_start * sizeof(Uint32)));
+	}
+
+	/*
 	glBindTexture(GL_TEXTURE_2D, ui->texture);
 // 	glScissor(); you should scissor the outer most vertex coordinates that we have created from all the ui elements;
-
 	glDrawElements(GL_TRIANGLES, ui->index_amount, GL_UNSIGNED_INT, NULL);
+	*/
 
 	// Set to default opengl state
 	glUseProgram(0);
@@ -182,6 +204,60 @@ int	ui_manager_new_index(t_ui_manager *ui, int index)
 }
 
 /*
+ * Returns the new element's index;
+*/
+int	ui_new_element(t_ui_manager *ui)
+{
+	if (ui->element_amount + 1 > ui->elements_allocated)
+	{
+		ui->elements_allocated += 256;
+		ui->elements = realloc(ui->elements, sizeof(t_ui_element) * ui->elements_allocated);
+		LG_WARN("Reallocated ui->elements (%d)", ui->elements_allocated);
+	}
+
+	ui->elements[ui->element_amount].index_amount = 0;
+	ui->elements[ui->element_amount].index_start = 0;
+	ui->elements[ui->element_amount].texture = ui->texture;
+	ui->elements[ui->element_amount].draw_type = GL_TRIANGLES; 
+	++ui->element_amount;
+	return (ui->element_amount - 1);
+}
+
+/*
+ * Returns the OpenGL texture that was created.
+*/
+GLuint	ui_new_texture(t_ui_manager *ui, t_bitmap *bmp)
+{
+	int new_texture_gened = 0;
+
+	if (ui->textures_in_use + 1 > ui->textures_generated)
+	{
+		new_texture_gened = 1;
+		ui->textures_generated += 1;
+		ui->all_textures = realloc(ui->all_textures, sizeof(GLuint) * ui->textures_generated);
+		glGenTextures(1, &ui->all_textures[ui->textures_in_use]);
+		LG_WARN("New texture generated (%d)", ui->textures_generated);
+	}
+
+	glBindTexture(GL_TEXTURE_2D, ui->all_textures[ui->textures_in_use]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//	if (new_texture_gened)
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bmp->width, bmp->height, 0,
+			GL_RGBA, GL_UNSIGNED_BYTE, bmp->pixels);
+		/*
+	else
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, bmp->width, bmp->height,
+			GL_RGBA, GL_UNSIGNED_BYTE, bmp->pixels);
+		*/
+	glGenerateMipmap(GL_TEXTURE_2D);
+	++ui->textures_in_use;
+	return (ui->all_textures[ui->textures_in_use - 1]);
+}
+
+/*
  * Adds outline of rectangle to the ui_manager vertices;
  *
  * 'pos'[4] : dimensions of rectangle;
@@ -196,11 +272,62 @@ void	ui_draw_rect(t_ui_manager *ui, float *pos, Uint8 *color)
 	int v3 = ui_manager_new_vertex(ui, (float []){pos[0] + pos[2], pos[1] + pos[3]}, (float []){0, 0}, color);
 	int v4 = ui_manager_new_vertex(ui, (float []){pos[0] + pos[2], pos[1]}, (float []){0, 0}, color);
 
+	int start = ui_manager_new_index(ui, v1);
+	ui_manager_new_index(ui, v2);
+	ui_manager_new_index(ui, v3);
+	int end = ui_manager_new_index(ui, v4);
+
+	int elem_index = ui_new_element(ui);
+	ui->elements[elem_index].index_start = start;
+	ui->elements[elem_index].index_amount = end - start + 1; 
+	ui->elements[elem_index].draw_type = GL_LINE_LOOP; 
+}
+
+void	ui_draw_filled_rect(t_ui_manager *ui, float *pos, Uint8 *color)
+{
+	// TODO: check for some edge cases, like if w / h is <= 0 then we dont add rect, osv...;
+
+	int v1 = ui_manager_new_vertex(ui, (float []){pos[0], pos[1]}, (float []){0, 0}, color);
+	int v2 = ui_manager_new_vertex(ui, (float []){pos[0], pos[1] + pos[3]}, (float []){0, 0}, color);
+	int v3 = ui_manager_new_vertex(ui, (float []){pos[0] + pos[2], pos[1] + pos[3]}, (float []){0, 0}, color);
+	int v4 = ui_manager_new_vertex(ui, (float []){pos[0] + pos[2], pos[1]}, (float []){0, 0}, color);
+
+	int start = ui_manager_new_index(ui, v1);
+	ui_manager_new_index(ui, v2);
+	ui_manager_new_index(ui, v3);
+
 	ui_manager_new_index(ui, v1);
+	ui_manager_new_index(ui, v3);
+	int end = ui_manager_new_index(ui, v4);
+
+	int elem_index = ui_new_element(ui);
+	ui->elements[elem_index].index_start = start;
+	ui->elements[elem_index].index_amount = end - start + 1; 
+	ui->elements[elem_index].draw_type = GL_TRIANGLES; 
+}
+
+/*
+ *
+*/
+void	ui_draw_bitmap(t_ui_manager *ui, float *pos, t_bitmap *bmp)
+{
+	Uint8 col[] = {1, 1, 1, 255};
+	int v1 = ui_manager_new_vertex(ui, (float []){pos[0], pos[1]}, (float []){-1, -1}, col);
+	int v2 = ui_manager_new_vertex(ui, (float []){pos[0], pos[1] + pos[3]}, (float []){-1, 1}, col);
+	int v3 = ui_manager_new_vertex(ui, (float []){pos[0] + pos[2], pos[1] + pos[3]}, (float []){1, 1}, col);
+	int v4 = ui_manager_new_vertex(ui, (float []){pos[0] + pos[2], pos[1]}, (float []){1, -1}, col);
+
+	int start = ui_manager_new_index(ui, v1);
 	ui_manager_new_index(ui, v2);
 	ui_manager_new_index(ui, v3);
 
 	ui_manager_new_index(ui, v1);
 	ui_manager_new_index(ui, v3);
 	ui_manager_new_index(ui, v4);
+
+	int elem_index = ui_new_element(ui);
+	ui->elements[elem_index].index_start = start;
+	ui->elements[elem_index].index_amount = 6;
+	ui->elements[elem_index].draw_type = GL_TRIANGLES; 
+//	ui->elements[elem_index].texture = ui_new_texture(ui, bmp);
 }

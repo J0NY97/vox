@@ -5,9 +5,15 @@ void	bitmap_new(t_bitmap *bmp, int w, int h)
 	memset(bmp, 0, sizeof(t_bitmap));
 	bmp->height = h;
 	bmp->width = w;
-	bmp->pitch = sizeof(Uint32) * bmp->width;
+	bmp->bpp = 4;
+	bmp->pitch = 4 * bmp->width;
 	bmp->pixel_amount = bmp->width * bmp->height;
 	bmp->pixels = malloc(bmp->pitch * bmp->height);
+}
+
+void	bitmap_free(t_bitmap *bmp)
+{
+	free(bmp->pixels);
 }
 
 void	bitmap_fill(t_bitmap *bmp, Uint32 col)
@@ -17,4 +23,19 @@ void	bitmap_fill(t_bitmap *bmp, Uint32 col)
 	pix = (Uint32 *)bmp->pixels;
 	for (int i = 0; i < bmp->pixel_amount; i++)
 		pix[i] = col;
+}
+
+void	bitmap_print(t_bitmap *bmp)
+{
+	Uint32	*pixels;
+
+	pixels = (Uint32 *)bmp->pixels;
+	for (int i = 0; i < bmp->height; i++)
+	{
+		for (int j = 0; j < bmp->width; j++)
+		{
+			ft_printf("0x%08x ", pixels[i * bmp->width + j]);
+		}
+		ft_printf("\n");
+	}
 }

@@ -553,7 +553,8 @@ FT_BEGIN_HEADER
    *
    *   More details can be found in the file `fterrors.h`.
    */
-/* #define FT_CONFIG_OPTION_ERROR_STRINGS */
+// @jsalmi, default is off;
+#define FT_CONFIG_OPTION_ERROR_STRINGS
 
 
   /*************************************************************************/
