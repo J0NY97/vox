@@ -67,7 +67,7 @@ void	ui_manager_init(t_ui_manager *ui)
 	print_face(ui->font_manager.font_faces[arial_font_index]);
 
 	bitmap_new(&ui->bitmap, 1, 1);
-	bitmap_fill(&ui->bitmap, 0xffffff00);
+	bitmap_fill(&ui->bitmap, 0xffffffff);
 	ui_manager_setup_opengl(ui);
 	ui->vertices_allocated = 2048;
 	ui->vertices = malloc(sizeof(t_ui_vertex) * ui->vertices_allocated);
@@ -311,11 +311,11 @@ void	ui_draw_filled_rect(t_ui_manager *ui, float *pos, Uint8 *color)
 */
 void	ui_draw_bitmap(t_ui_manager *ui, float *pos, t_bitmap *bmp)
 {
-	Uint8 col[] = {1, 1, 1, 255};
-	int v1 = ui_manager_new_vertex(ui, (float []){pos[0], pos[1]}, (float []){-1, -1}, col);
-	int v2 = ui_manager_new_vertex(ui, (float []){pos[0], pos[1] + pos[3]}, (float []){-1, 1}, col);
-	int v3 = ui_manager_new_vertex(ui, (float []){pos[0] + pos[2], pos[1] + pos[3]}, (float []){1, 1}, col);
-	int v4 = ui_manager_new_vertex(ui, (float []){pos[0] + pos[2], pos[1]}, (float []){1, -1}, col);
+	Uint8 col[] = {255, 255, 255, 255};
+	int v1 = ui_manager_new_vertex(ui, (float []){pos[0], pos[1]}, (float []){0, 0}, col);
+	int v2 = ui_manager_new_vertex(ui, (float []){pos[0], pos[1] + pos[3]}, (float []){0, 0}, col);
+	int v3 = ui_manager_new_vertex(ui, (float []){pos[0] + pos[2], pos[1] + pos[3]}, (float []){0, 0}, col);
+	int v4 = ui_manager_new_vertex(ui, (float []){pos[0] + pos[2], pos[1]}, (float []){0, 0}, col);
 
 	int start = ui_manager_new_index(ui, v1);
 	ui_manager_new_index(ui, v2);
@@ -329,5 +329,5 @@ void	ui_draw_bitmap(t_ui_manager *ui, float *pos, t_bitmap *bmp)
 	ui->elements[elem_index].index_start = start;
 	ui->elements[elem_index].index_amount = 6;
 	ui->elements[elem_index].draw_type = GL_TRIANGLES; 
-//	ui->elements[elem_index].texture = ui_new_texture(ui, bmp);
+	ui->elements[elem_index].texture = ui_new_texture(ui, bmp);
 }

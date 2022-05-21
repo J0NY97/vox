@@ -775,7 +775,6 @@ int	main(void)
 
 		ui_manager_start(&ui);
 		{
-			ui_draw_rect(&ui, (float []){10, 10, 100, 100}, (Uint8 []){255, 0, 0, 255});
 
 			ft_printf("Render text\n");
 			t_bitmap *bmp = fm_render_text(&ui.font_manager, 0, "Hello World", 0xff0000ff, 0x00000000);
@@ -786,9 +785,11 @@ int	main(void)
 			t_bitmap bmp2;
 			bitmap_new(&bmp2, 100, 100);
 			bitmap_fill(&bmp2, 0x0000ffff);
-			ui_draw_bitmap(&ui, (float []){10, 230, bmp2.width, bmp2.height}, &bmp2);
+			ui_draw_bitmap(&ui, (float []){10, 340, bmp2.width, bmp2.height}, &bmp2);
 
+			ui_draw_rect(&ui, (float []){10, 10, 100, 100}, (Uint8 []){255, 0, 0, 255});
 			ui_draw_filled_rect(&ui, (float []){10, 120, 100, 100}, (Uint8 []){0, 255, 0, 255});
+			ui_draw_filled_rect(&ui, (float []){10, 230, 100, 100}, (Uint8 []){255, 255, 255, 125});
 		}
 		ui_manager_render(&ui, sp.win_w, sp.win_h);
 		ui_manager_end(&ui);
