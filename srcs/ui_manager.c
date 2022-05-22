@@ -39,15 +39,18 @@ void	ui_manager_setup_opengl(t_ui_manager *ui)
 	glVertexAttribPointer(ui->attrib_uv, 2, GL_FLOAT, GL_FALSE, sizeof(t_ui_vertex), (void *)offsetof(t_ui_vertex, uv));
 	glVertexAttribPointer(ui->attrib_col, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(t_ui_vertex), (void *)offsetof(t_ui_vertex, col));
 
+/*
 	glGenTextures(1, &ui->texture);
 	glBindTexture(GL_TEXTURE_2D, ui->texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glGenerateMipmap(GL_TEXTURE_2D);
 	// TODO : move this to where we update the texture;
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ui->bitmap.width, ui->bitmap.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, ui->bitmap.pixels);
-	glGenerateMipmap(GL_TEXTURE_2D);
+	*/
+	ui->texture = ui_new_texture(ui, &ui->bitmap);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -68,7 +71,6 @@ void	ui_manager_init(t_ui_manager *ui)
 
 	bitmap_new(&ui->bitmap, 1, 1);
 	bitmap_fill(&ui->bitmap, 0xffffffff);
-	ui_manager_setup_opengl(ui);
 	ui->vertices_allocated = 2048;
 	ui->vertices = malloc(sizeof(t_ui_vertex) * ui->vertices_allocated);
 	ui->indices_allocated = 1024;
@@ -83,6 +85,8 @@ void	ui_manager_init(t_ui_manager *ui)
 	ui->all_textures = NULL;
 	ui->textures_generated = 0;
 	ui->textures_in_use = 0;
+
+	ui_manager_setup_opengl(ui);
 }
 
 /*
@@ -93,7 +97,7 @@ void	ui_manager_start(t_ui_manager *ui)
 	ui->vertex_amount = 0;
 	ui->index_amount = 0;
 	ui->element_amount = 0;
-	ui->textures_in_use = 0;
+	ui->textures_in_use = 1; // 0th texture is the default;
 }
 
 /*
@@ -244,6 +248,7 @@ GLuint	ui_new_texture(t_ui_manager *ui, t_bitmap *bmp)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glGenerateMipmap(GL_TEXTURE_2D);
 //	if (new_texture_gened)
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bmp->width, bmp->height, 0,
 			GL_RGBA, GL_UNSIGNED_BYTE, bmp->pixels);
@@ -252,8 +257,8 @@ GLuint	ui_new_texture(t_ui_manager *ui, t_bitmap *bmp)
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, bmp->width, bmp->height,
 			GL_RGBA, GL_UNSIGNED_BYTE, bmp->pixels);
 		*/
-	glGenerateMipmap(GL_TEXTURE_2D);
 	++ui->textures_in_use;
+	glBindTexture(GL_TEXTURE_2D, 0);
 	return (ui->all_textures[ui->textures_in_use - 1]);
 }
 

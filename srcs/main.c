@@ -775,17 +775,17 @@ int	main(void)
 
 		ui_manager_start(&ui);
 		{
-
 			ft_printf("Render text\n");
-			t_bitmap *bmp = fm_render_text(&ui.font_manager, 0, "Hello World", 0xff0000ff, 0x00000000);
+			t_bitmap *bmp = fm_render_text(&ui.font_manager, 0, "Hello World", 0x000000ff, 0xffffffff);
 			ft_printf("bmp->w : %d, h : %d\n", bmp->width, bmp->height);
 			ui_draw_bitmap(&ui, (float []){120, 10, bmp->width, bmp->height}, bmp);
 			bitmap_free(bmp);
 
 			t_bitmap bmp2;
 			bitmap_new(&bmp2, 100, 100);
-			bitmap_fill(&bmp2, 0x0000ffff);
+			bitmap_fill(&bmp2, 0xff00ffff);
 			ui_draw_bitmap(&ui, (float []){10, 340, bmp2.width, bmp2.height}, &bmp2);
+			bitmap_free(&bmp2);
 
 			ui_draw_rect(&ui, (float []){10, 10, 100, 100}, (Uint8 []){255, 0, 0, 255});
 			ui_draw_filled_rect(&ui, (float []){10, 120, 100, 100}, (Uint8 []){0, 255, 0, 255});

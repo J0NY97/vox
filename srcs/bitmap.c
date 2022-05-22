@@ -18,11 +18,16 @@ void	bitmap_free(t_bitmap *bmp)
 
 void	bitmap_fill(t_bitmap *bmp, Uint32 col)
 {
+	Uint32	rgba;
 	Uint32	*pix;
 
+	rgba = ((col & 0xFF000000) >> 24) |
+		((col & 0x00FF0000) >> 8) |
+		((col & 0x0000FF00) << 8) |
+		((col & 0x000000FF) << 24);
 	pix = (Uint32 *)bmp->pixels;
 	for (int i = 0; i < bmp->pixel_amount; i++)
-		pix[i] = col;
+		pix[i] = rgba;
 }
 
 void	bitmap_print(t_bitmap *bmp)
