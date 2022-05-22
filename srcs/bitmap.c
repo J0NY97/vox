@@ -32,8 +32,6 @@ void	bitmap_fill(t_bitmap *bmp, Uint32 col)
 
 void	bitmap_set_pixel(t_bitmap *bmp, int x, int y, Uint32 col)
 {
-	int pos = y * bmp->width + x;
-	ft_printf("pos : %d\n", pos);
 	((Uint32 *)bmp->pixels)[y * bmp->width + x] = col;
 }
 

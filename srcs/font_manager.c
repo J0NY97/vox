@@ -40,8 +40,8 @@ void	open_font(FT_Library library, FT_Face *face, const char *font_path)
 		LG_ERROR("Font was opened and read, but its format is unsupported.");
 	else if (error)
 		LG_ERROR("Couldn\'t open/read/load font.");
-	// Default font size of 12;
-	set_font_size(*face, 12);
+	// Default font size;
+	set_font_size(*face, 24);
 }
 
 /*
@@ -52,11 +52,11 @@ void	cpy_bitmap(t_bitmap *dst, FT_Bitmap *bitmap, int top_left_x, int top_left_y
 {
 	Uint32	*dst_pixels;
 	Uint8	*src_pixels;
-	Uint32	col = 0xff111111; // abgr;
+	Uint32	col = 0xff000000; // abgr;
 
 	dst_pixels = (Uint32 *)dst->pixels;
 	src_pixels = bitmap->buffer;
-	ft_printf("bmp : %d %d\n", bitmap->rows, bitmap->width);
+//	ft_printf("bmp : %d %d, bpp : %d\n", bitmap->rows, bitmap->width, (int)ceil(bitmap->width / (float)bitmap->pitch));
 	for (int row = 0; row < bitmap->rows; row++)
 	{
 		for (int p = 0; p < bitmap->width; p++)
@@ -69,8 +69,9 @@ void	cpy_bitmap(t_bitmap *dst, FT_Bitmap *bitmap, int top_left_x, int top_left_y
 			ft_printf("(%d %d) %d %d, %d\n",top_left_x + p, top_left_y + row, x,y,dst_ind);
 			ft_printf("total bytes : %d\n", dst->bpp * dst->pixel_amount);
 			*/
-//			col = (col & 0x00ffffff) | (src_pixels[src_ind] << 24);
-			ft_printf("0x%08x\n", col);
+			col = (col & 0x00ffffff) | (src_pixels[src_ind] << 24);
+//			col = (col & 0xff000000) | (src_pixels[src_ind]);
+//			ft_printf("0x%08x\n", col);
 			dst_pixels[dst_ind] = col;
 		}
 	//	ft_printf("Didnt crash.\n");
@@ -91,6 +92,7 @@ t_bitmap	*fm_render_text(t_font_manager *fm, int font_index, char *str, Uint32 t
 	FT_Face			face;
 	FT_GlyphSlot	slot;
 	FT_UInt			glyph_index;
+	FT_Bitmap		bitmap;
 	Uint32			str_len;
 	int				error;
 	int				curr_x;
@@ -121,11 +123,15 @@ t_bitmap	*fm_render_text(t_font_manager *fm, int font_index, char *str, Uint32 t
 			ft_printf("[FT_Render_Glyph](%s).", FT_Error_String(error));
 			continue ;
 		}
+//		FT_Bitmap_Convert(fm->library, &slot->bitmap, &bitmap, 4);
+
 		cpy_bitmap(bmp, &slot->bitmap, curr_x + slot->bitmap_left, curr_y - slot->bitmap_top);
 
 		curr_x += slot->advance.x >> 6;
 	//	curr_y += slot->advance.y >> 6;
 	}
+
+//	FT_Bitmap_Done(fm->library, &bitmap);
 	return (bmp);
 }
 
