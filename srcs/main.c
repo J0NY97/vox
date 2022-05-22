@@ -784,6 +784,12 @@ int	main(void)
 			t_bitmap bmp2;
 			bitmap_new(&bmp2, 100, 100);
 			bitmap_fill(&bmp2, 0xff00ffff);
+			ft_printf("bmp2 : %d %d\n", bmp2.width, bmp2.height);
+			bitmap_set_pixel(&bmp2, 0, 0, 0xff0000ff);
+			bitmap_set_pixel(&bmp2, 10, 10, 0xff0000ff);
+			bitmap_set_pixel(&bmp2, 11, 10, 0xff0000ff);
+			bitmap_set_pixel(&bmp2, 10, 11, 0xff0000ff);
+			bitmap_set_pixel(&bmp2, 11, 11, 0xff0000ff);
 			ui_draw_bitmap(&ui, (float []){10, 340, bmp2.width, bmp2.height}, &bmp2);
 			bitmap_free(&bmp2);
 

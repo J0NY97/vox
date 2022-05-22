@@ -50,38 +50,38 @@ void	open_font(FT_Library library, FT_Face *face, const char *font_path)
 */
 void	cpy_bitmap(t_bitmap *dst, FT_Bitmap *bitmap, int top_left_x, int top_left_y)
 {
-	Uint8	*dst_pixels;
+	Uint32	*dst_pixels;
 	Uint8	*src_pixels;
+	Uint32	col = 0xff111111; // abgr;
 
-	dst_pixels = (Uint8 *)dst->pixels;
-	src_pixels = (Uint8 *)bitmap->buffer;
-
-	int	start_x = top_left_x * dst->bpp;
+	dst_pixels = (Uint32 *)dst->pixels;
+	src_pixels = bitmap->buffer;
+	ft_printf("bmp : %d %d\n", bitmap->rows, bitmap->width);
 	for (int row = 0; row < bitmap->rows; row++)
 	{
 		for (int p = 0; p < bitmap->width; p++)
 		{
-			int	y = ((top_left_y + row) * dst->pitch);
-			int	x = p * dst->bpp;
-			if (y < 0 || y >= dst->height) // break if y is not on dst bitmap;
-				break ;
-			if (start_x + x >= dst->width) // break if x is past the width of the dst bitmap;
-				break ;
-			if (start_x + x < 0) // but continue if it has not yet come to the left side on the x, since it can come there another iteration in the loop;
-				continue ;
-			Uint8	dst_ind = y + start_x + x; 
-			Uint8	src_ind = row * bitmap->pitch + p;
-			dst_pixels[dst_ind] = src_pixels[src_ind];
+			int y = ((row + top_left_y) * dst->width);
+			int x = top_left_x + p;
+			int dst_ind = y + x;
+			int src_ind = row * bitmap->width + p;
+			/*
+			ft_printf("(%d %d) %d %d, %d\n",top_left_x + p, top_left_y + row, x,y,dst_ind);
+			ft_printf("total bytes : %d\n", dst->bpp * dst->pixel_amount);
+			*/
+//			col = (col & 0x00ffffff) | (src_pixels[src_ind] << 24);
+			ft_printf("0x%08x\n", col);
+			dst_pixels[dst_ind] = col;
 		}
+	//	ft_printf("Didnt crash.\n");
 	}
 }
 
 /*
- * TODO : Add support for multiple charsets;
- * charset : any of the enum FT_Encoding; FT_Select_Charmap();
- * TODO : Add support for multiple pixel bit modes (24bit & 32bit (more?));
+ * TODO : Add support for multiple charsets; charset : any of the enum FT_Encoding; FT_Select_Charmap();
+ * TODO : Add support for multiple pixel bit modes (24bit & 32bit (more?)); for t_bitmap;
  * TODO : check that font_index is inside the array;
- * TODO : Load all glyphs first, not loading duplicates. Then copy to bitmap;
+ * TODO : Load all glyphs first, not loading duplicates. Then copy to bitmap; This way you can get the bounding box for the text also;
  * 
  * You get 'font_index' by calling 'font_manager_get_font()';
 */
@@ -101,7 +101,7 @@ t_bitmap	*fm_render_text(t_font_manager *fm, int font_index, char *str, Uint32 t
 	slot = face->glyph;
 	str_len = ft_strlen(str);
 	bitmap_new(bmp, face->size->metrics.max_advance / 64 * str_len, face->size->metrics.height / 64);
-	bitmap_fill(bmp, bg_color);
+//	bitmap_fill(bmp, bg_color);
 	ft_printf("%d %d\n", bmp->width, bmp->height);
 	ft_printf("strlen : %d\n", str_len);
 	curr_x = 0;
@@ -112,24 +112,20 @@ t_bitmap	*fm_render_text(t_font_manager *fm, int font_index, char *str, Uint32 t
 		error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
 		if (error)
 		{
-			ft_printf("error(1)(%s).", FT_Error_String(error));
+			ft_printf("[FT_Load_Glyph](%s).", FT_Error_String(error));
 			continue ;
 		}
-		ft_printf("we have glyph_index %d\n", glyph_index);
-		//error = FT_Render_Glyph(slot, FT_RENDER_MODE_NORMAL);
+		error = FT_Render_Glyph(slot, FT_RENDER_MODE_MONO);
 		if (error)
 		{
-			ft_printf("error(1)(%s).", FT_Error_String(error));
+			ft_printf("[FT_Render_Glyph](%s).", FT_Error_String(error));
 			continue ;
 		}
-	ft_printf("slot advance : %d, index : %d, bmp : %d %d\n", slot->advance.x >> 6, slot->glyph_index, slot->bitmap_left, slot->bitmap_top);
 		cpy_bitmap(bmp, &slot->bitmap, curr_x + slot->bitmap_left, curr_y - slot->bitmap_top);
 
 		curr_x += slot->advance.x >> 6;
-	ft_printf("slot advance : %d\n", slot->advance.x >> 6);
 	//	curr_y += slot->advance.y >> 6;
 	}
-	ft_printf("curr_x %d\n", curr_x);
 	return (bmp);
 }
 

@@ -318,9 +318,9 @@ void	ui_draw_bitmap(t_ui_manager *ui, float *pos, t_bitmap *bmp)
 {
 	Uint8 col[] = {255, 255, 255, 255};
 	int v1 = ui_manager_new_vertex(ui, (float []){pos[0], pos[1]}, (float []){0, 0}, col);
-	int v2 = ui_manager_new_vertex(ui, (float []){pos[0], pos[1] + pos[3]}, (float []){0, 0}, col);
-	int v3 = ui_manager_new_vertex(ui, (float []){pos[0] + pos[2], pos[1] + pos[3]}, (float []){0, 0}, col);
-	int v4 = ui_manager_new_vertex(ui, (float []){pos[0] + pos[2], pos[1]}, (float []){0, 0}, col);
+	int v2 = ui_manager_new_vertex(ui, (float []){pos[0], pos[1] + pos[3]}, (float []){0, 1}, col);
+	int v3 = ui_manager_new_vertex(ui, (float []){pos[0] + pos[2], pos[1] + pos[3]}, (float []){1, 1}, col);
+	int v4 = ui_manager_new_vertex(ui, (float []){pos[0] + pos[2], pos[1]}, (float []){1, 0}, col);
 
 	int start = ui_manager_new_index(ui, v1);
 	ui_manager_new_index(ui, v2);

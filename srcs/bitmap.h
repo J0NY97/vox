@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/18 13:13:20 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/05/21 12:46:51 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/05/22 11:31:51 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ typedef struct	s_bitmap
 void	bitmap_new(t_bitmap *bmp, int w, int h);
 void	bitmap_free(t_bitmap *bmp);
 void	bitmap_fill(t_bitmap *bmp, Uint32 col);
+void	bitmap_set_pixel(t_bitmap *bmp, int x, int y, Uint32 col);
 
 void	bitmap_print(t_bitmap *bmp);
 
