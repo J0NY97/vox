@@ -57,24 +57,27 @@ int	glyph_bit(FT_Bitmap *bitmap, int x, int y)
 
  * NOTE: FT_PIXEL_MODE_MONO stores 1 bit per pixel;
 */
-void	cpy_bitmap_mono(t_bitmap *dst, FT_Bitmap *bitmap, int top_left_x, int top_left_y)
+void	cpy_bitmap_mono(t_bitmap *dst, FT_Bitmap *bitmap, int top_left_x, int top_left_y, Uint32 fg_color, Uint32 bg_color)
 {
 	Uint32	*dst_pixels;
 	Uint8	*src_pixels;
-	Uint32	col = 0xff000000; // abgr;
 
 	dst_pixels = (Uint32 *)dst->pixels;
 	for (int y = 0; y < bitmap->rows; y++)
 	{
 		int y_ind = ((top_left_y + y) * dst->width);
+		if (top_left_y + y < 0 || top_left_y + y >= dst->height)
+			continue ;
 		for (int x = 0; x < bitmap->width; x++)
 		{
 			int x_ind = top_left_x + x;
+			if (x_ind < 0 || x_ind >= dst->width)
+				continue ;
 			int dst_ind = y_ind + x_ind;
 			if (glyph_bit(bitmap, x, y))
-				dst_pixels[dst_ind] = 0xff000000;
+				dst_pixels[dst_ind] = fg_color;
 			else
-				dst_pixels[dst_ind] = 0x00000000;
+				dst_pixels[dst_ind] = bg_color;
 		}
 	}
 }
@@ -87,7 +90,7 @@ void	cpy_bitmap_mono(t_bitmap *dst, FT_Bitmap *bitmap, int top_left_x, int top_l
  * 
  * You get 'font_index' by calling 'font_manager_get_font()';
 */
-t_bitmap	*fm_render_text(t_font_manager *fm, int font_index, char *str, Uint32 text_color, Uint32 bg_color)
+t_bitmap	*fm_render_text(t_font_manager *fm, int font_index, char *str, Uint32 fg_color, Uint32 bg_color)
 {
 	t_bitmap		*bmp;
 	FT_Face			face;
@@ -103,14 +106,26 @@ t_bitmap	*fm_render_text(t_font_manager *fm, int font_index, char *str, Uint32 t
 	bmp = malloc(sizeof(t_bitmap));
 	slot = face->glyph;
 	str_len = ft_strlen(str);
-	bitmap_new(bmp, face->size->metrics.max_advance / 64 * str_len, face->size->metrics.height / 64);
-//	bitmap_fill(bmp, bg_color);
-/*
-	ft_printf("%d %d\n", bmp->width, bmp->height);
-	ft_printf("strlen : %d\n", str_len);
-	*/
-	curr_x = 10;
-	curr_y = bmp->height;
+	int	total_width = 0;
+
+	// Get size of the wanted bitmap;
+	for (Uint32 i = 0; i < str_len; i++)
+	{
+		glyph_index = FT_Get_Char_Index(face, str[i]);
+		error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+		if (error)
+			continue ;
+		total_width += (slot->advance.x >> 6);
+	}
+	bitmap_new(bmp, total_width, (face->size->metrics.ascender - face->size->metrics.descender) / 64);
+	bitmap_fill(bmp, bg_color);
+	ft_printf("bmp->w %d, h : %d\n", bmp->width, bmp->height);
+
+	curr_x = 0;
+	curr_y = bmp->height + (face->size->metrics.descender / 64);
+	ft_printf("curr_x : %d, curr_y : %d\n", curr_x, curr_y);
+
+	// Render glyphs on bitmap;
 	for (Uint32 i = 0; i < str_len; i++)
 	{
 		glyph_index = FT_Get_Char_Index(face, str[i]);
@@ -126,11 +141,12 @@ t_bitmap	*fm_render_text(t_font_manager *fm, int font_index, char *str, Uint32 t
 			ft_printf("[FT_Render_Glyph](%s).", FT_Error_String(error));
 			continue ;
 		}
-		cpy_bitmap_mono(bmp, &slot->bitmap, curr_x + slot->bitmap_left, curr_y - slot->bitmap_top);
+		cpy_bitmap_mono(bmp, &slot->bitmap, curr_x + slot->bitmap_left, (curr_y - slot->bitmap_top), fg_color, bg_color);
 
 		curr_x += slot->advance.x >> 6;
 	//	curr_y += slot->advance.y >> 6;
 	}
+//	ft_printf("curr_x : %d\n", curr_x);
 	return (bmp);
 }
 

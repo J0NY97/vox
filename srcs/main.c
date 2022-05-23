@@ -775,16 +775,13 @@ int	main(void)
 
 		ui_manager_start(&ui);
 		{
-			ft_printf("Render text\n");
-			t_bitmap *bmp = fm_render_text(&ui.font_manager, 0, "Hello World", 0x000000ff, 0xffffffff);
-			ft_printf("bmp->w : %d, h : %d\n", bmp->width, bmp->height);
+			t_bitmap *bmp = fm_render_text(&ui.font_manager, 0, "lorem ipsum dolor sit amet i dont know the words of this text but i just want to have, can you have longer text", 0xff0000ff, 0xffffffff);
 			ui_draw_bitmap(&ui, (float []){120, 10, bmp->width, bmp->height}, bmp);
 			bitmap_free(bmp);
 
 			t_bitmap bmp2;
 			bitmap_new(&bmp2, 100, 100);
 			bitmap_fill(&bmp2, 0xff00ffff);
-			ft_printf("bmp2 : %d %d\n", bmp2.width, bmp2.height);
 			bitmap_set_pixel(&bmp2, 10, 10, 0xff000000);
 			bitmap_set_pixel(&bmp2, 11, 10, 0xff000000);
 			bitmap_set_pixel(&bmp2, 10, 11, 0xff000000);
