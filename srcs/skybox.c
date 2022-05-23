@@ -83,6 +83,11 @@ void	render_skybox(t_skybox *skybox, t_camera *camera)
 {
 	float	view[MAT4_SIZE];
 	float	temp[MAT3_SIZE];
+	int		error;
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("before (%d)", error);
 
 	if (!skybox || !camera)
 	{
@@ -108,11 +113,16 @@ void	render_skybox(t_skybox *skybox, t_camera *camera)
 	glBindTexture(GL_TEXTURE_CUBE_MAP, skybox->texture);
 
 	glBindBuffer(GL_ARRAY_BUFFER, skybox->vbo_position);
+
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	glBindVertexArray(0);
 	glUseProgram(0);
 	glDepthFunc(GL_LESS);
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("(%d)", error);
 }
 
 t_skybox	*new_skybox(t_skybox *skybox, char (*faces)[6])

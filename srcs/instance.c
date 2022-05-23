@@ -1019,10 +1019,6 @@ void	render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinat
 	glActiveTexture(GL_TEXTURE0 + 0);
 	glBindTexture(GL_TEXTURE_2D, mesh->texture);
 
-	error = glGetError();
-	if (error)
-		LG_ERROR("(%d)", error);
-
 	if (mesh->indices_amount[mesh_type] > 0)
 	{
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo[mesh_type]);
@@ -1031,10 +1027,6 @@ void	render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinat
 	}
 	else
 		LG_WARN("We can\'t render mesh with no indices.");
-
-	error = glGetError();
-	if (error)
-		LG_ERROR("(%d)", error);
 
 	glUseProgram(0);
 	glBindVertexArray(0);

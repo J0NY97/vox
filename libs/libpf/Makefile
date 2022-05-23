@@ -1,14 +1,3 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    Makefile                                           :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: nneronin <nneronin@student.hive.fi>        +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2020/09/23 13:48:12 by nneronin          #+#    #+#              #
-#    Updated: 2021/12/09 13:40:52 by nneronin         ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
 
 RED		:= "\e[0;31m"
 GREEN	:= "\e[0;32m"
@@ -19,6 +8,10 @@ CYAN	:= "\e[0;36m"
 RESET	:= "\e[0m"
 
 RAW =	pf_printf.c\
+		pf_dprintf.c\
+		pf_fprintf.c\
+		pf_sprintf.c\
+		pf_asprintf.c\
 	   	pf_format.c\
 	   	pf_formats1.c\
 	   	pf_formats2.c\
@@ -38,6 +31,7 @@ RAW =	pf_printf.c\
 	   	pf_nbr_inf.c\
 	   	pf_reset.c\
 		pf_specials.c\
+		pf_init.c\
 		error_msg.c
 
 NAME = libpf.a
@@ -48,8 +42,8 @@ SRCS = $(addprefix $(CDIR)/, $(RAW))
 OBJS = $(addprefix $(ODIR)/, $(RAW:.c=.o))
 CFLAGS = -Wall -Wextra -Werror -MMD -O3
 
-all: $(NAME)
-	@printf $(GREEN)"\e[J[INFO] $(NAME) ready!\n"$(RESET)
+all: $(ODIR) $(NAME)
+	@printf ${GREEN}"\e[J> $(NAME) ready!\n"${RESET}
 
 $(ODIR):
 	@mkdir -p $(ODIR)
@@ -58,16 +52,15 @@ $(ODIR)/%.o: $(CDIR)/%.c
 	@printf $(YELLOW)"\e[JCompiling $<\n\e[F"$(RESET)
 	@gcc -c $< -o $@ $(CFLAGS) $(IDIR)
 
-$(NAME): $(ODIR) $(OBJS)
+$(NAME): $(OBJS)
 	@ar rc $(NAME) $(OBJS)
 	@ranlib $(NAME)
 
 clean: 
-	@printf $(CYAN)"[INFO] $(NAME) cleaned!\n"$(RESET)
+	@printf ${CYAN}"[INFO] Removing objs.\n"${RESET}
 	@rm -rf $(ODIR)
 
 fclean: clean
-	
 	@rm $(NAME)
 
 re: fclean all

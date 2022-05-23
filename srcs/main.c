@@ -142,16 +142,6 @@ int	main(void)
 	t_skybox	skybox;
 	new_skybox(&skybox, g_mc_skybox);
 
-////////////////////////////////////////
-	// UI TESTING
-////////////////////////////////////////
-	t_ui_manager	ui;
-
-	ui_manager_init(&ui);
-////////////////////////////////////////
-	// END UI TESTING
-///////////////////////////////////////
-
 //////////////////////////////
 	// Instance testing
 //////////////////////////////
@@ -209,10 +199,23 @@ int	main(void)
 		new_chunk(&chunks[nth_chunk], &chunk_info, nth_chunk);
 		chunks[nth_chunk].meshes.texture = chunk_info.texture;
 	}
+	ft_putstr("asdf");
 	ft_printf("Total Chunks created : %d\n", nth_chunk);
 //////////////////////////////
 	// END Instance testing
 //////////////////////////////
+
+////////////////////////////////////////
+	// UI TESTING
+////////////////////////////////////////
+	t_ui_manager	ui;
+	t_bitmap		*bmp_block_textures;
+
+	ui_manager_init(&ui);
+//	bmp_block_textures = bitmap_duplicate();
+////////////////////////////////////////
+	// END UI TESTING
+///////////////////////////////////////
 
 	int error = glGetError();
 	if (error)
@@ -715,12 +718,18 @@ int	main(void)
 			}
 		}
 		/* END OF COLLISION */
+error = glGetError();
+if (error)
+	LG_ERROR("before skybox things. (%d)", error);
 
 		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_BLEND);
 		render_skybox(&skybox, &player.camera);
 
+error = glGetError();
+if (error)
+	LG_ERROR("before solid things. (%d)", error);
 		// Render solid meshes;
 		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_BLEND);
@@ -732,6 +741,9 @@ int	main(void)
 				render_chunk_mesh_v2(&chunks[render_index].meshes, BLOCK_MESH, chunks[render_index].world_coordinate, &player.camera, cube_shader_v2);
 		}
 
+error = glGetError();
+if (error)
+	LG_ERROR("before solid alpha things. (%d)", error);
 		// Render solid alpha meshes;
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
@@ -743,6 +755,9 @@ int	main(void)
 				render_chunk_mesh_v2(&chunks[render_index].meshes, BLOCK_ALPHA_MESH, chunks[render_index].world_coordinate, &player.camera, cube_shader_v2);
 		}
 
+error = glGetError();
+if (error)
+	LG_ERROR("before flora things. (%d)", error);
 		// Render flora meshes;
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
@@ -753,6 +768,9 @@ int	main(void)
 			if (chunks[render_index].blocks_flora_amount > 0)
 				render_chunk_mesh_v2(&chunks[render_index].meshes, FLORA_MESH, chunks[render_index].world_coordinate, &player.camera, cube_shader_v2);
 		}
+error = glGetError();
+if (error)
+	LG_ERROR("before fluid things. (%d)", error);
 
 		// Render fluid meshes;
 		glEnable(GL_DEPTH_TEST);
@@ -768,6 +786,9 @@ int	main(void)
 /////////////////
 		// END Chunk things
 /////////////////
+error = glGetError();
+if (error)
+	LG_ERROR("Afetr chunk things. (%d)", error);
 		glDisable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
@@ -775,8 +796,34 @@ int	main(void)
 
 		ui_manager_start(&ui);
 		{
-			t_bitmap *bmp = fm_render_text(&ui.font_manager, 0, "lorem ipsum dolor sit amet i dont know the words of this text but i just want to have, can you have longer text", 0xff0000ff, 0xffffffff);
+			char		buffer[256];
+			char		buffer2[256];
+			t_bitmap	*bmp;
+
+			// Player Position
+			/*
+			ft_snprintf(buffer, 256, "Position : %.2f / %.2f / %.2f", player.camera.pos[0], player.camera.pos[1], player.camera.pos[2]);
+			bmp = fm_render_text(&ui.font_manager, 0, buffer, 0xff0000ff, 0xffffffff);
 			ui_draw_bitmap(&ui, (float []){120, 10, bmp->width, bmp->height}, bmp);
+			bitmap_free(bmp);
+			*/
+
+			// Player Rotation
+			strcpy(buffer, "Rotation : ");
+			ft_b_ftoa(player.camera.front[0], 2, buffer + ft_strlen(buffer));
+			strcpy(buffer + ft_strlen(buffer), " / ");
+			ft_b_ftoa(player.camera.front[1], 2, buffer + ft_strlen(buffer));
+			strcpy(buffer + ft_strlen(buffer), " / ");
+			ft_b_ftoa(player.camera.front[2], 2, buffer + ft_strlen(buffer));
+			int i = ft_snprintf(buffer2, 256, "Rotation : %.2f / %.2f / %.2f", player.camera.front[0], player.camera.front[1], player.camera.front[2]);
+			/*
+			if (!ft_strequ(buffer, buffer2))
+				ft_printf("[%s] : [%s]\n", buffer, buffer2);
+				*/
+			//int i = ft_snprintf(buffer, 256, "testing");
+			ft_printf("%s %s\n", buffer, buffer2);
+			bmp = fm_render_text(&ui.font_manager, 0, buffer, 0xff0000ff, 0xffffffff);
+			ui_draw_bitmap(&ui, (float []){120, 40, bmp->width, bmp->height}, bmp);
 			bitmap_free(bmp);
 
 			t_bitmap bmp2;

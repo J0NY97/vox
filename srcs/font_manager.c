@@ -119,11 +119,11 @@ t_bitmap	*fm_render_text(t_font_manager *fm, int font_index, char *str, Uint32 f
 	}
 	bitmap_new(bmp, total_width, (face->size->metrics.ascender - face->size->metrics.descender) / 64);
 	bitmap_fill(bmp, bg_color);
-	ft_printf("bmp->w %d, h : %d\n", bmp->width, bmp->height);
+//	ft_printf("bmp->w %d, h : %d\n", bmp->width, bmp->height);
 
 	curr_x = 0;
 	curr_y = bmp->height + (face->size->metrics.descender / 64);
-	ft_printf("curr_x : %d, curr_y : %d\n", curr_x, curr_y);
+//	ft_printf("curr_x : %d, curr_y : %d\n", curr_x, curr_y);
 
 	// Render glyphs on bitmap;
 	for (Uint32 i = 0; i < str_len; i++)

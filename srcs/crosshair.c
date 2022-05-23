@@ -34,12 +34,21 @@ void	new_crosshair_shader(GLuint *shader)
 void	render_crosshair(void)
 {
 	GLint	viewport[4];
+	int		error;
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("Before (%d)", error);
 
 	glGetIntegerv(GL_VIEWPORT, viewport);
 	float	len = 0.009;
 	float	h_len = (viewport[2] * len) / viewport[3];
 	render_2d_line((float []){-len, 0, 0}, (float []){len, 0, 0}, (float []){1, 1, 1});
 	render_2d_line((float []){0, -h_len, 0}, (float []){0, h_len, 0}, (float []){1, 1, 1});
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("(%d)", error);
 }
 
 typedef struct s_render_line

@@ -35,6 +35,31 @@ void	bitmap_set_pixel(t_bitmap *bmp, int x, int y, Uint32 col)
 	((Uint32 *)bmp->pixels)[y * bmp->width + x] = col;
 }
 
+t_bitmap	*bitmap_duplicate(void *pixels, int w, int h)
+{
+	t_bitmap	*bmp;
+
+	bmp = malloc(sizeof(t_bitmap));
+	bitmap_new(bmp, w, h);
+	bitmap_copy(bmp, pixels);
+	return (bmp);
+}
+
+/*
+ * The 'bmp' should already be created with 'bitmap_new()';
+ * So width / height / bpp should all be the same for 'bmp' and 'pixels';
+*/
+void	bitmap_copy(t_bitmap *bmp, void *pixels)
+{
+	Uint32	*dst;
+	Uint32	*src;
+
+	dst = (Uint32 *)bmp->pixels;
+	src = (Uint32 *)pixels;
+	for (int i = 0; i < bmp->pixel_amount; i++)
+		dst[i] = src[i];
+}
+
 void	bitmap_print(t_bitmap *bmp)
 {
 	Uint32	*pixels;
