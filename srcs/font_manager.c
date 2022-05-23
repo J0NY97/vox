@@ -44,37 +44,38 @@ void	open_font(FT_Library library, FT_Face *face, const char *font_path)
 	set_font_size(*face, 24);
 }
 
+int	glyph_bit(FT_Bitmap *bitmap, int x, int y)
+{
+	int	pitch = abs(bitmap->pitch);
+	Uint8 *row = bitmap->buffer + (pitch * y);
+	char value = row[x >> 3];
+	return ((value & (128 >> (x & 7))) != 0);
+}
+
 /*
- * TODO : instead of having those 3 'if' in the loop, just create in the beginning new coordinates that 100% are inside the bitmap dimensions;
- * Takes 'src' and places pixels on 'dst' starting at 'x', 'y';
+ * TODO : check that 'top_left_x / _y' is in the 'dst' bitmap;
+
+ * NOTE: FT_PIXEL_MODE_MONO stores 1 bit per pixel;
 */
-void	cpy_bitmap(t_bitmap *dst, FT_Bitmap *bitmap, int top_left_x, int top_left_y)
+void	cpy_bitmap_mono(t_bitmap *dst, FT_Bitmap *bitmap, int top_left_x, int top_left_y)
 {
 	Uint32	*dst_pixels;
 	Uint8	*src_pixels;
 	Uint32	col = 0xff000000; // abgr;
 
 	dst_pixels = (Uint32 *)dst->pixels;
-	src_pixels = bitmap->buffer;
-//	ft_printf("bmp : %d %d, bpp : %d\n", bitmap->rows, bitmap->width, (int)ceil(bitmap->width / (float)bitmap->pitch));
-	for (int row = 0; row < bitmap->rows; row++)
+	for (int y = 0; y < bitmap->rows; y++)
 	{
-		for (int p = 0; p < bitmap->width; p++)
+		int y_ind = ((top_left_y + y) * dst->width);
+		for (int x = 0; x < bitmap->width; x++)
 		{
-			int y = ((row + top_left_y) * dst->width);
-			int x = top_left_x + p;
-			int dst_ind = y + x;
-			int src_ind = row * bitmap->width + p;
-			/*
-			ft_printf("(%d %d) %d %d, %d\n",top_left_x + p, top_left_y + row, x,y,dst_ind);
-			ft_printf("total bytes : %d\n", dst->bpp * dst->pixel_amount);
-			*/
-			col = (col & 0x00ffffff) | (src_pixels[src_ind] << 24);
-//			col = (col & 0xff000000) | (src_pixels[src_ind]);
-//			ft_printf("0x%08x\n", col);
-			dst_pixels[dst_ind] = col;
+			int x_ind = top_left_x + x;
+			int dst_ind = y_ind + x_ind;
+			if (glyph_bit(bitmap, x, y))
+				dst_pixels[dst_ind] = 0xff000000;
+			else
+				dst_pixels[dst_ind] = 0x00000000;
 		}
-	//	ft_printf("Didnt crash.\n");
 	}
 }
 
@@ -104,9 +105,11 @@ t_bitmap	*fm_render_text(t_font_manager *fm, int font_index, char *str, Uint32 t
 	str_len = ft_strlen(str);
 	bitmap_new(bmp, face->size->metrics.max_advance / 64 * str_len, face->size->metrics.height / 64);
 //	bitmap_fill(bmp, bg_color);
+/*
 	ft_printf("%d %d\n", bmp->width, bmp->height);
 	ft_printf("strlen : %d\n", str_len);
-	curr_x = 0;
+	*/
+	curr_x = 10;
 	curr_y = bmp->height;
 	for (Uint32 i = 0; i < str_len; i++)
 	{
@@ -123,15 +126,11 @@ t_bitmap	*fm_render_text(t_font_manager *fm, int font_index, char *str, Uint32 t
 			ft_printf("[FT_Render_Glyph](%s).", FT_Error_String(error));
 			continue ;
 		}
-//		FT_Bitmap_Convert(fm->library, &slot->bitmap, &bitmap, 4);
-
-		cpy_bitmap(bmp, &slot->bitmap, curr_x + slot->bitmap_left, curr_y - slot->bitmap_top);
+		cpy_bitmap_mono(bmp, &slot->bitmap, curr_x + slot->bitmap_left, curr_y - slot->bitmap_top);
 
 		curr_x += slot->advance.x >> 6;
 	//	curr_y += slot->advance.y >> 6;
 	}
-
-//	FT_Bitmap_Done(fm->library, &bitmap);
 	return (bmp);
 }
 
