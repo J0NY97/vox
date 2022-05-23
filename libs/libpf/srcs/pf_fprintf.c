@@ -2,7 +2,7 @@
  * https://github.com/Epicurius/Doom-Not-Doom
  * 
  * Created: 2022/01/07 14:51:06 nneronin
- * Updated: 2022/01/07 14:54:47 nneronin
+ * Updated: 2022/05/23 2:24:49 Epicurius
  */
 
 #include "libpf.h"
@@ -15,8 +15,6 @@ int	ft_vfprintf(FILE *fp, const char *restrict format, va_list ap)
 	if (!format)
 		return (-1);
 	pf_init(&p, fp, buff, PF_BUFF_SIZE);
-//	ft_memcpy(p.ap, ap, sizeof(va_list));
-//	p.ap = ap;
 	va_copy(p.ap, ap);
 	pf_read_format((char *)format, &p);
 	fwrite(p.buffer, p.chars, 1, p.fp);

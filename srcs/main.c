@@ -797,7 +797,7 @@ if (error)
 		ui_manager_start(&ui);
 		{
 			char		buffer[256];
-			char		buffer2[256];
+			memset(buffer, 0, 256);
 			t_bitmap	*bmp;
 
 			// Player Position
@@ -810,18 +810,11 @@ if (error)
 
 			// Player Rotation
 			strcpy(buffer, "Rotation : ");
-			ft_b_ftoa(player.camera.front[0], 2, buffer + ft_strlen(buffer));
-			strcpy(buffer + ft_strlen(buffer), " / ");
-			ft_b_ftoa(player.camera.front[1], 2, buffer + ft_strlen(buffer));
-			strcpy(buffer + ft_strlen(buffer), " / ");
-			ft_b_ftoa(player.camera.front[2], 2, buffer + ft_strlen(buffer));
-			int i = ft_snprintf(buffer2, 256, "Rotation : %.2f / %.2f / %.2f", player.camera.front[0], player.camera.front[1], player.camera.front[2]);
-			/*
-			if (!ft_strequ(buffer, buffer2))
-				ft_printf("[%s] : [%s]\n", buffer, buffer2);
-				*/
-			//int i = ft_snprintf(buffer, 256, "testing");
-			ft_printf("%s %s\n", buffer, buffer2);
+			ft_b_ftoa(player.camera.front[0], 2, buffer + strlen(buffer));
+			strcpy(buffer + strlen(buffer), " / ");
+			ft_b_ftoa(player.camera.front[1], 2, buffer + strlen(buffer));
+			strcpy(buffer + strlen(buffer), " / ");
+			ft_b_ftoa(player.camera.front[2], 2, buffer + strlen(buffer));
 			bmp = fm_render_text(&ui.font_manager, 0, buffer, 0xff0000ff, 0xffffffff);
 			ui_draw_bitmap(&ui, (float []){120, 40, bmp->width, bmp->height}, bmp);
 			bitmap_free(bmp);
