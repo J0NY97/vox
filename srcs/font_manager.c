@@ -90,9 +90,8 @@ void	cpy_bitmap_mono(t_bitmap *dst, FT_Bitmap *bitmap, int top_left_x, int top_l
  * 
  * You get 'font_index' by calling 'font_manager_get_font()';
 */
-t_bitmap	*fm_render_text(t_font_manager *fm, int font_index, char *str, Uint32 fg_color, Uint32 bg_color)
+void fm_render_text(t_bitmap *bmp, t_font_manager *fm, int font_index, char *str, Uint32 fg_color, Uint32 bg_color)
 {
-	t_bitmap		*bmp;
 	FT_Face			face;
 	FT_GlyphSlot	slot;
 	FT_UInt			glyph_index;
@@ -103,7 +102,6 @@ t_bitmap	*fm_render_text(t_font_manager *fm, int font_index, char *str, Uint32 f
 	int				curr_y;
 
 	face = fm->font_faces[font_index];
-	bmp = malloc(sizeof(t_bitmap));
 	slot = face->glyph;
 	str_len = ft_strlen(str);
 	int	total_width = 0;
@@ -147,7 +145,6 @@ t_bitmap	*fm_render_text(t_font_manager *fm, int font_index, char *str, Uint32 f
 	//	curr_y += slot->advance.y >> 6;
 	}
 //	ft_printf("curr_x : %d\n", curr_x);
-	return (bmp);
 }
 
 void	print_face(FT_Face face)

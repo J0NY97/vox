@@ -39,6 +39,7 @@
 # define ROOT_PATH "./"
 # define MODEL_PATH ROOT_PATH"models/"
 # define SHADER_PATH ROOT_PATH"shaders/"
+# define TEXTURE_PATH ROOT_PATH"textures/"
 
 # define ARRAY_SIZE(a) sizeof(a) / sizeof(a[0])
 

@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/18 12:55:43 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/05/21 12:40:51 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/05/24 12:52:26 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,6 @@ int		font_manager_get_font(t_font_manager *fm, char *font_path, int font_size);
 //	OTHER
 /////////////////////////////////
 
-t_bitmap	*fm_render_text(t_font_manager *fm, int font_index, char *str, Uint32 text_color, Uint32 bg_color);
+void	fm_render_text(t_bitmap *bmp, t_font_manager *fm, int font_index, char *str, Uint32 text_color, Uint32 bg_color);
 
 #endif

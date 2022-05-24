@@ -33,6 +33,7 @@ CFILES = \
 	font_manager.c \
 	ui_manager.c \
 	bitmap.c \
+	ui.c \
 	bimgf/bimgf_bmp.c \
 	bimgf/bimgf_help.c \
 	bimgf/bimgf_jpg.c \

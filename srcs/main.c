@@ -1,6 +1,7 @@
 #include "shaderpixel.h"
 #include "ui_manager.h"
 #include "shader.h"
+#include "ui.h"
 
 void	init(t_shaderpixel *sp)
 {
@@ -208,11 +209,18 @@ int	main(void)
 ////////////////////////////////////////
 	// UI TESTING
 ////////////////////////////////////////
+	t_ui			gui;
 	t_ui_manager	ui;
-	t_bitmap		*bmp_block_textures;
-
+	t_bitmap		bmp_block_textures;
+	t_bimgf			block_textures;
+	
 	ui_manager_init(&ui);
-//	bmp_block_textures = bitmap_duplicate();
+	bimgf_load(&block_textures, MODEL_PATH"cube/version_3_texture_alpha.bmp");
+	bitmap_duplicate(&bmp_block_textures, block_textures.pixels, block_textures.w, block_textures.h);
+	bimgf_free(&block_textures);
+
+	ui_init(&gui);
+	gui.manager = &ui;
 ////////////////////////////////////////
 	// END UI TESTING
 ///////////////////////////////////////
@@ -407,6 +415,7 @@ int	main(void)
 		{
 			if (keys[i].state == BUTTON_PRESS)
 			{
+				gui.selected_hotbar = i - GLFW_KEY_0 - 1;
 				if (is_type_solid(player_info.equipped_block) ||
 					is_type_fluid(player_info.equipped_block) ||
 					is_type_solid_alpha(player_info.equipped_block))
@@ -797,53 +806,18 @@ if (error)
 		ui_manager_start(&ui);
 		{
 			char		buffer[256];
-			t_bitmap	*bmp;
+			t_bitmap	bmp;
 
 			// Player Position
-			/*
-			ft_snprintf(buffer, 256, "Position : %.2f / %.2f / %.2f", player.camera.pos[0], player.camera.pos[1], player.camera.pos[2]);
-			bmp = fm_render_text(&ui.font_manager, 0, buffer, 0xff0000ff, 0xffffffff);
-			ui_draw_bitmap(&ui, (float []){120, 10, bmp->width, bmp->height}, bmp);
-			bitmap_free(bmp);
-			*/
-			ft_putstr("\n");
-			ft_b_ftoa(-1.123, 2, buffer);
-			ft_putstr(buffer);
-			ft_putstr("\n");
-			ft_b_ftoa(1.123, 2, buffer);
-			ft_putstr(buffer);
-			ft_putstr("\n");
-
-			ft_b_ftoa(-0.123, 2, buffer);
-			ft_putstr(buffer);
-			ft_putstr("\n");
-			ft_b_ftoa(0.123, 2, buffer);
-			ft_putstr(buffer);
-			ft_putstr("\n");
-
-
-
-			ft_b_itoa(12312, buffer);
-			ft_putstr(buffer);
-			ft_putstr("\n");
-			ft_b_itoa(-12312, buffer);
-			ft_putstr(buffer);
-			ft_putstr("\n");
-
-			ft_b_ftoa(player.camera.front[0], 2, buffer);
-			ft_putstr(buffer);
-			ft_putstr("\n");
-
-			ft_putstr("PRINTF\n");
-			printf("%.2f\n", -1.123);
-			printf("%.2f\n", 1.123);
-			printf("%.2f\n", -0.123);
-			printf("%.2f\n", 0.123);
-			printf("%d\n", 12312);
-			printf("%d\n", -12312);
-			printf("%.2f\n", player.camera.front[0]);
-
-			ft_putstr("\n");
+			strcpy(buffer, "Position : ");
+			ft_b_ftoa(player.camera.pos[0], 2, buffer + strlen(buffer));
+			strcpy(buffer + strlen(buffer), " / ");
+			ft_b_ftoa(player.camera.pos[1], 2, buffer + strlen(buffer));
+			strcpy(buffer + strlen(buffer), " / ");
+			ft_b_ftoa(player.camera.pos[2], 2, buffer + strlen(buffer));
+			fm_render_text(&bmp, &ui.font_manager, 0, buffer, 0xff0000ff, 0xffffffff);
+			ui_draw_bitmap(&ui, (float []){120, 10, bmp.width, bmp.height}, &bmp);
+			bitmap_free(&bmp);
 
 			// Player Rotation
 			strcpy(buffer, "Rotation : ");
@@ -852,23 +826,23 @@ if (error)
 			ft_b_ftoa(player.camera.front[1], 2, buffer + strlen(buffer));
 			strcpy(buffer + strlen(buffer), " / ");
 			ft_b_ftoa(player.camera.front[2], 2, buffer + strlen(buffer));
-			bmp = fm_render_text(&ui.font_manager, 0, buffer, 0xff0000ff, 0xffffffff);
-			ui_draw_bitmap(&ui, (float []){120, 40, bmp->width, bmp->height}, bmp);
-			bitmap_free(bmp);
+			fm_render_text(&bmp, &ui.font_manager, 0, buffer, 0xff0000ff, 0xffffffff);
+			ui_draw_bitmap(&ui, (float []){120, 40, bmp.width, bmp.height}, &bmp);
+			bitmap_free(&bmp);
 
-			t_bitmap bmp2;
-			bitmap_new(&bmp2, 100, 100);
-			bitmap_fill(&bmp2, 0xff00ffff);
-			bitmap_set_pixel(&bmp2, 10, 10, 0xff000000);
-			bitmap_set_pixel(&bmp2, 11, 10, 0xff000000);
-			bitmap_set_pixel(&bmp2, 10, 11, 0xff000000);
-			bitmap_set_pixel(&bmp2, 11, 11, 0xff000000);
-			ui_draw_bitmap(&ui, (float []){10, 340, bmp2.width, bmp2.height}, &bmp2);
-			bitmap_free(&bmp2);
+			bitmap_new(&bmp, 100, 100);
+			bitmap_fill(&bmp, 0xff00ffff);
+			ui_draw_bitmap(&ui, (float []){10, 340, bmp.width, bmp.height}, &bmp);
+			bitmap_free(&bmp);
+
+			ui_draw_bitmap(&ui, (float []){10, 450, bmp_block_textures.width, bmp_block_textures.height}, &bmp_block_textures);
 
 			ui_draw_rect(&ui, (float []){10, 10, 100, 100}, (Uint8 []){255, 0, 0, 255});
 			ui_draw_filled_rect(&ui, (float []){10, 120, 100, 100}, (Uint8 []){0, 255, 0, 255});
 			ui_draw_filled_rect(&ui, (float []){10, 230, 100, 100}, (Uint8 []){255, 255, 255, 125});
+
+
+			ui_draw(&gui);
 		}
 		ui_manager_render(&ui, sp.win_w, sp.win_h);
 		ui_manager_end(&ui);
