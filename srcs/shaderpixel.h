@@ -361,6 +361,7 @@ typedef struct s_chunk_info
 	int			fancy_graphics;
 	int			generate_structures;
 	int			light_calculation;
+	int			toggle_ui;
 
 	t_chunk		*chunks; // you should not store the chunks here mainly; its just here so you can acces from places you need, without having to pass them in the function as argumnet;
 	GLuint		texture; // the texture is stored here so we dont load a texture per chunk_mesh;

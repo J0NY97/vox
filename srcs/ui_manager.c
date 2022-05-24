@@ -246,8 +246,8 @@ GLuint	ui_new_texture(t_ui_manager *ui, t_bitmap *bmp)
 	glBindTexture(GL_TEXTURE_2D, ui->all_textures[ui->textures_in_use]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glGenerateMipmap(GL_TEXTURE_2D);
 //	if (new_texture_gened)
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bmp->width, bmp->height, 0,
@@ -296,6 +296,29 @@ void	ui_draw_filled_rect(t_ui_manager *ui, float *pos, Uint8 *color)
 	int v2 = ui_manager_new_vertex(ui, (float []){pos[0], pos[1] + pos[3]}, (float []){0, 0}, color);
 	int v3 = ui_manager_new_vertex(ui, (float []){pos[0] + pos[2], pos[1] + pos[3]}, (float []){0, 0}, color);
 	int v4 = ui_manager_new_vertex(ui, (float []){pos[0] + pos[2], pos[1]}, (float []){0, 0}, color);
+
+	int start = ui_manager_new_index(ui, v1);
+	ui_manager_new_index(ui, v2);
+	ui_manager_new_index(ui, v3);
+
+	ui_manager_new_index(ui, v1);
+	ui_manager_new_index(ui, v3);
+	int end = ui_manager_new_index(ui, v4);
+
+	int elem_index = ui_new_element(ui);
+	ui->elements[elem_index].index_start = start;
+	ui->elements[elem_index].index_amount = end - start + 1; 
+	ui->elements[elem_index].draw_type = GL_TRIANGLES; 
+}
+
+void	ui_draw_filled_rect_multi_color(t_ui_manager *ui, float *pos, Uint32 *color)
+{
+	// TODO: check for some edge cases, like if w / h is <= 0 then we dont add rect, osv...;
+
+	int v1 = ui_manager_new_vertex(ui, (float []){pos[0], pos[1]}, (float []){0, 0}, (Uint8 []){255, 255, 0, 255});
+	int v2 = ui_manager_new_vertex(ui, (float []){pos[0], pos[1] + pos[3]}, (float []){0, 0}, (Uint8 []){255, 0, 0, 255});
+	int v3 = ui_manager_new_vertex(ui, (float []){pos[0] + pos[2], pos[1] + pos[3]}, (float []){0, 0}, (Uint8 []){0, 0, 255, 255});
+	int v4 = ui_manager_new_vertex(ui, (float []){pos[0] + pos[2], pos[1]}, (float []){0, 0}, (Uint8 []){0, 255, 0, 255});
 
 	int start = ui_manager_new_index(ui, v1);
 	ui_manager_new_index(ui, v2);

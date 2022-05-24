@@ -169,6 +169,7 @@ int	main(void)
 	chunk_info.fancy_graphics = 0;
 	chunk_info.generate_structures = 1;
 	chunk_info.light_calculation = 0;
+	chunk_info.toggle_ui = 0;
 
 	// Creation of hashtable
 	/*
@@ -388,6 +389,16 @@ int	main(void)
 				LG_INFO("Light Calculation => ON.");
 			else
 				LG_INFO("Light Calculation => OFF.");
+		}
+
+		// Toggle UI;
+		if (keys[GLFW_KEY_U].state == BUTTON_PRESS)
+		{
+			chunk_info.toggle_ui = chunk_info.toggle_ui != 1;
+			if (chunk_info.toggle_ui)
+				LG_INFO("UI => ON.");
+			else
+				LG_INFO("UI => OFF.");
 		}
 
 // Select equipped block;
@@ -803,49 +814,53 @@ if (error)
 		glDisable(GL_DEPTH_TEST);
 		render_crosshair();
 
-		ui_manager_start(&ui);
+		if (chunk_info.toggle_ui)
 		{
-			char		buffer[256];
-			t_bitmap	bmp;
+			ui_manager_start(&ui);
+			{
+				char		buffer[256];
+				t_bitmap	bmp;
 
-			// Player Position
-			strcpy(buffer, "Position : ");
-			ft_b_ftoa(player.camera.pos[0], 2, buffer + strlen(buffer));
-			strcpy(buffer + strlen(buffer), " / ");
-			ft_b_ftoa(player.camera.pos[1], 2, buffer + strlen(buffer));
-			strcpy(buffer + strlen(buffer), " / ");
-			ft_b_ftoa(player.camera.pos[2], 2, buffer + strlen(buffer));
-			fm_render_text(&bmp, &ui.font_manager, 0, buffer, 0xff0000ff, 0xffffffff);
-			ui_draw_bitmap(&ui, (float []){120, 10, bmp.width, bmp.height}, &bmp);
-			bitmap_free(&bmp);
+				// Player Position
+				strcpy(buffer, "Position : ");
+				ft_b_ftoa(player.camera.pos[0], 2, buffer + strlen(buffer));
+				strcpy(buffer + strlen(buffer), " / ");
+				ft_b_ftoa(player.camera.pos[1], 2, buffer + strlen(buffer));
+				strcpy(buffer + strlen(buffer), " / ");
+				ft_b_ftoa(player.camera.pos[2], 2, buffer + strlen(buffer));
+				fm_render_text(&bmp, &ui.font_manager, 0, buffer, 0xff0000ff, 0xffffffff);
+				ui_draw_bitmap(&ui, (float []){120, 10, bmp.width, bmp.height}, &bmp);
+				bitmap_free(&bmp);
 
-			// Player Rotation
-			strcpy(buffer, "Rotation : ");
-			ft_b_ftoa(player.camera.front[0], 2, buffer + strlen(buffer));
-			strcpy(buffer + strlen(buffer), " / ");
-			ft_b_ftoa(player.camera.front[1], 2, buffer + strlen(buffer));
-			strcpy(buffer + strlen(buffer), " / ");
-			ft_b_ftoa(player.camera.front[2], 2, buffer + strlen(buffer));
-			fm_render_text(&bmp, &ui.font_manager, 0, buffer, 0xff0000ff, 0xffffffff);
-			ui_draw_bitmap(&ui, (float []){120, 40, bmp.width, bmp.height}, &bmp);
-			bitmap_free(&bmp);
+				// Player Rotation
+				strcpy(buffer, "Rotation : ");
+				ft_b_ftoa(player.camera.front[0], 2, buffer + strlen(buffer));
+				strcpy(buffer + strlen(buffer), " / ");
+				ft_b_ftoa(player.camera.front[1], 2, buffer + strlen(buffer));
+				strcpy(buffer + strlen(buffer), " / ");
+				ft_b_ftoa(player.camera.front[2], 2, buffer + strlen(buffer));
+				fm_render_text(&bmp, &ui.font_manager, 0, buffer, 0xff0000ff, 0xffffffff);
+				ui_draw_bitmap(&ui, (float []){120, 40, bmp.width, bmp.height}, &bmp);
+				bitmap_free(&bmp);
 
-			bitmap_new(&bmp, 100, 100);
-			bitmap_fill(&bmp, 0xff00ffff);
-			ui_draw_bitmap(&ui, (float []){10, 340, bmp.width, bmp.height}, &bmp);
-			bitmap_free(&bmp);
+				bitmap_new(&bmp, 100, 100);
+				bitmap_fill(&bmp, 0xff00ffff);
+				ui_draw_bitmap(&ui, (float []){10, 340, bmp.width, bmp.height}, &bmp);
+				bitmap_free(&bmp);
 
-			ui_draw_bitmap(&ui, (float []){10, 450, bmp_block_textures.width, bmp_block_textures.height}, &bmp_block_textures);
+				ui_draw_bitmap(&ui, (float []){10, 450, bmp_block_textures.width, bmp_block_textures.height}, &bmp_block_textures);
 
-			ui_draw_rect(&ui, (float []){10, 10, 100, 100}, (Uint8 []){255, 0, 0, 255});
-			ui_draw_filled_rect(&ui, (float []){10, 120, 100, 100}, (Uint8 []){0, 255, 0, 255});
-			ui_draw_filled_rect(&ui, (float []){10, 230, 100, 100}, (Uint8 []){255, 255, 255, 125});
+				ui_draw_rect(&ui, (float []){10, 10, 100, 100}, (Uint8 []){255, 0, 0, 255});
+				ui_draw_filled_rect(&ui, (float []){10, 120, 100, 100}, (Uint8 []){0, 255, 0, 255});
+				ui_draw_filled_rect(&ui, (float []){10, 230, 100, 100}, (Uint8 []){255, 255, 255, 125});
+				ui_draw_filled_rect_multi_color(&ui, (float []){120, 120, 100, 100}, (Uint32 []){0xffffff00, 0xff0000ff, 0xff00ff00, 0xffff0000});
 
 
-			ui_draw(&gui);
+				ui_draw(&gui);
+			}
+			ui_manager_render(&ui, sp.win_w, sp.win_h);
+			ui_manager_end(&ui);
 		}
-		ui_manager_render(&ui, sp.win_w, sp.win_h);
-		ui_manager_end(&ui);
 
 		glfwSwapBuffers(sp.win);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);

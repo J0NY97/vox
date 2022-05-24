@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/18 13:10:15 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/05/22 10:22:41 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/05/24 14:03:10 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,6 +77,7 @@ void	ui_manager_render(t_ui_manager *ui, int width, int height);
 GLuint	ui_new_texture(t_ui_manager *ui, t_bitmap *bmp);
 
 // Shapes
+void	ui_draw_filled_rect_multi_color(t_ui_manager *ui, float *pos, Uint32 *color);
 void	ui_draw_filled_rect(t_ui_manager *ui, float *pos, Uint8 *color);
 void	ui_draw_rect(t_ui_manager *ui, float *pos, Uint8 *color);
 void	ui_draw_bitmap(t_ui_manager *ui, float *pos, t_bitmap *bmp);
