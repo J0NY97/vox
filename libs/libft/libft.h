@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   libft.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jsalmi <jsalmi@student.42.fr>              +#+  +:+       +#+        */
+/*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/18 11:56:18 by nneronin          #+#    #+#             */
-/*   Updated: 2022/02/27 09:22:00 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/05/24 10:22:45 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,6 @@ int					ft_compile_string(char *name, char *code);
 t_list				*ft_dellstnode(t_list **lst, t_list *del);
 char				*ft_fdtostr(int fd, int i);
 char				*ft_filetostr(char *file);
-char				*special_itoa(int nbr, int n);
 char				*ft_ftoa(double d, int precision);
 int					ft_isalnum(int c);
 int					ft_isalpha(int c);

@@ -3,70 +3,61 @@
 /*                                                        :::      ::::::::   */
 /*   ft_b_itoa.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nneronin <nneronin@stuent.hive.fi>         +#+  +:+       +#+        */
+/*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/22 13:18:53 by nneronin          #+#    #+#             */
-/*   Updated: 2021/05/08 14:27:23 by nneronin         ###   ########.fr       */
+/*   Updated: 2022/05/24 12:07:17 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-static int	ft_get_size(int nbr)
+/*
+ * NOTE : only positive numbers;
+*/
+static char	*nbr_to_str(char *buffer, int nbr)
 {
-	int	size;
+	int	i;
 
-	size = 0;
-	if (nbr <= 0)
-		size++;
+	i = 0;
+	if (nbr == 0)
+		buffer[i++] = '0';
 	while (nbr != 0)
 	{
+		buffer[i++] = nbr % 10 + '0';
 		nbr = nbr / 10;
-		size++;
 	}
-	return (size);
-}
-
-static char	*ft_fillstr(int size, int i, int nbr, char *str)
-{
-	str[size] = '\0';
-	while (size > i)
-	{
-		str[size - 1] = nbr % 10 + '0';
-		nbr = nbr / 10;
-		size--;
-	}
-	return (str);
+	buffer[i] = 0;
+	return (buffer);
 }
 
 /*
- * char	*buffer;	is already malloced in the stack.
+ * NOTE : we assume the 'nbr' will fit in the 'buffer';
  *
- * Returns the actual buffer (not a copy);
+ * 'nbr' : number you want to stringify;
+ * 'buffer' : should already be allocated;
+ *
+ * Return : 'buffer';
 */
 char	*ft_b_itoa(int nbr, char *buffer)
 {
 	int		i;
-	int		size;
+	char	temp[16];
 
-	i = 0;
-	size = 0;
-	size = ft_get_size(nbr);
-	if (!buffer)
-		return (buffer);
 	if (nbr == -2147483648)
 	{
-		buffer[0] = '-';
-		buffer[1] = '2';
-		nbr = 147483648;
-		i = 2;
+		ft_strncpy(buffer, "-2147483648", 11);
+		return (buffer);
 	}
+	i = 0;
 	if (nbr < 0)
 	{
 		buffer[0] = '-';
 		i = 1;
 		nbr = -nbr;
 	}
-	buffer = ft_fillstr(size, i, nbr, buffer);
+	nbr_to_str(temp, nbr);
+	ft_b_reverse(temp);
+	ft_strcpy(buffer + i, temp);
 	return (buffer);
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ft_reverse.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nneronin <nneronin@stuent.hive.fi>         +#+  +:+       +#+        */
+/*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/24 16:14:11 by nneronin          #+#    #+#             */
-/*   Updated: 2021/05/08 14:28:03 by nneronin         ###   ########.fr       */
+/*   Updated: 2022/05/24 12:06:44 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,11 +43,11 @@ char	*ft_b_reverse(char *s)
 
 	front = -1;
 	back = ft_strlen(s) - 1;
-	while (++front < back)
+	while (++front < back - front)
 	{
 		temp = s[front];
 		s[front] = s[back - front];
-		s[back] = temp;
+		s[back - front] = temp;
 	}
 	return (s);
 }

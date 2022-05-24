@@ -797,7 +797,6 @@ if (error)
 		ui_manager_start(&ui);
 		{
 			char		buffer[256];
-			memset(buffer, 0, 256);
 			t_bitmap	*bmp;
 
 			// Player Position
@@ -807,6 +806,44 @@ if (error)
 			ui_draw_bitmap(&ui, (float []){120, 10, bmp->width, bmp->height}, bmp);
 			bitmap_free(bmp);
 			*/
+			ft_putstr("\n");
+			ft_b_ftoa(-1.123, 2, buffer);
+			ft_putstr(buffer);
+			ft_putstr("\n");
+			ft_b_ftoa(1.123, 2, buffer);
+			ft_putstr(buffer);
+			ft_putstr("\n");
+
+			ft_b_ftoa(-0.123, 2, buffer);
+			ft_putstr(buffer);
+			ft_putstr("\n");
+			ft_b_ftoa(0.123, 2, buffer);
+			ft_putstr(buffer);
+			ft_putstr("\n");
+
+
+
+			ft_b_itoa(12312, buffer);
+			ft_putstr(buffer);
+			ft_putstr("\n");
+			ft_b_itoa(-12312, buffer);
+			ft_putstr(buffer);
+			ft_putstr("\n");
+
+			ft_b_ftoa(player.camera.front[0], 2, buffer);
+			ft_putstr(buffer);
+			ft_putstr("\n");
+
+			ft_putstr("PRINTF\n");
+			printf("%.2f\n", -1.123);
+			printf("%.2f\n", 1.123);
+			printf("%.2f\n", -0.123);
+			printf("%.2f\n", 0.123);
+			printf("%d\n", 12312);
+			printf("%d\n", -12312);
+			printf("%.2f\n", player.camera.front[0]);
+
+			ft_putstr("\n");
 
 			// Player Rotation
 			strcpy(buffer, "Rotation : ");
