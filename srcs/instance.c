@@ -1632,7 +1632,7 @@ void	flora_placer(t_chunk_info *info, int type, float *world_pos)
 // We have to check that the block we are placing on is dirt block;
 	block_type = get_block_type_at_world_pos(info,
 		(float []){world_pos[0], world_pos[1] - 1, world_pos[2]});
-	if (block_type != BLOCK_DIRT)
+	if (block_type != BLOCK_DIRT && block_type != BLOCK_DIRT_GRASS)
 		return ;
 // And check that the block isnt already occupied by another block;
 	block_type = get_block_type_at_world_pos(info,

@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/18 13:13:20 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/05/24 12:49:10 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/05/24 14:58:56 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,8 @@ void	bitmap_set_pixel(t_bitmap *bmp, int x, int y, Uint32 col);
 
 void	bitmap_duplicate(t_bitmap *bmp, void *pixels, int w, int h);
 void	bitmap_copy(t_bitmap *bmp, void *pixels);
+
+void	bitmap_duplicate_rect(t_bitmap *dst, t_bitmap *src, int *rect);
 
 void	bitmap_print(t_bitmap *bmp);
 

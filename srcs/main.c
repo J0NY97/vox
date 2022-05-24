@@ -158,6 +158,15 @@ int	main(void)
 
 	player_info.reach = 5;
 	player_info.equipped_block = BLOCK_STONE;
+	player_info.hotbar_item_ids[0] = g_block_data[BLOCK_DIRT].type;
+	player_info.hotbar_item_ids[1] = g_block_data[BLOCK_STONE].type;
+	player_info.hotbar_item_ids[2] = g_block_data[BLOCK_SAND].type;
+	player_info.hotbar_item_ids[3] = g_block_data[BLOCK_OAK_LOG].type;
+	player_info.hotbar_item_ids[4] = g_block_data[BLOCK_OAK_PLANK].type;
+	player_info.hotbar_item_ids[5] = g_block_data[BLOCK_ALPHA_OAK_LEAF].type;
+	player_info.hotbar_item_ids[6] = g_block_data[BLOCK_ALPHA_CACTUS].type;
+	player_info.hotbar_item_ids[7] = g_block_data[BLOCK_TNT].type;
+	player_info.hotbar_item_ids[8] = g_block_data[FLUID_WATER].type;
 
 	t_chunk_info	chunk_info;
 
@@ -167,9 +176,10 @@ int	main(void)
 	chunk_info.block_collision_enabled = 0;
 	chunk_info.player_collision_enabled = 0;
 	chunk_info.fancy_graphics = 0;
-	chunk_info.generate_structures = 1;
+	chunk_info.generate_structures = 0;
 	chunk_info.light_calculation = 0;
 	chunk_info.toggle_ui = 0;
+	chunk_info.toggle_event = 0;
 
 	// Creation of hashtable
 	/*
@@ -212,16 +222,11 @@ int	main(void)
 ////////////////////////////////////////
 	t_ui			gui;
 	t_ui_manager	ui;
-	t_bitmap		bmp_block_textures;
-	t_bimgf			block_textures;
 	
 	ui_manager_init(&ui);
-	bimgf_load(&block_textures, MODEL_PATH"cube/version_3_texture_alpha.bmp");
-	bitmap_duplicate(&bmp_block_textures, block_textures.pixels, block_textures.w, block_textures.h);
-	bimgf_free(&block_textures);
-
 	ui_init(&gui);
 	gui.manager = &ui;
+	gui.hotbar_item_id = player_info.hotbar_item_ids;
 ////////////////////////////////////////
 	// END UI TESTING
 ///////////////////////////////////////
@@ -401,6 +406,16 @@ int	main(void)
 				LG_INFO("UI => OFF.");
 		}
 
+		// Toggle event;
+		if (keys[GLFW_KEY_I].state == BUTTON_PRESS)
+		{
+			chunk_info.toggle_event = chunk_info.toggle_event != 1;
+			if (chunk_info.toggle_event)
+				LG_INFO("Event => ON.");
+			else
+				LG_INFO("Event => OFF.");
+		}
+
 // Select equipped block;
 		if (keys[GLFW_KEY_1].state == BUTTON_PRESS)
 			player_info.equipped_block = BLOCK_DIRT;
@@ -549,7 +564,8 @@ int	main(void)
 				chunks[ent].update_structures = 0;
 			}
 
-			event_chunk(&chunks[ent]);
+			if (chunk_info.toggle_event)
+				event_chunk(&chunks[ent]);
 
 			if (chunks[ent].needs_to_update)
 			{
@@ -848,7 +864,7 @@ if (error)
 				ui_draw_bitmap(&ui, (float []){10, 340, bmp.width, bmp.height}, &bmp);
 				bitmap_free(&bmp);
 
-				ui_draw_bitmap(&ui, (float []){10, 450, bmp_block_textures.width, bmp_block_textures.height}, &bmp_block_textures);
+				ui_draw_bitmap(&ui, (float []){10, 450, gui.block_texture_bmp.width, gui.block_texture_bmp.height}, &gui.block_texture_bmp);
 
 				ui_draw_rect(&ui, (float []){10, 10, 100, 100}, (Uint8 []){255, 0, 0, 255});
 				ui_draw_filled_rect(&ui, (float []){10, 120, 100, 100}, (Uint8 []){0, 255, 0, 255});
