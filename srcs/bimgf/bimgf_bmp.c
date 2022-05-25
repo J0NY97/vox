@@ -91,7 +91,7 @@ void	get_info_header(t_bmp_info_header *info, FILE *fd)
 /*
  * Returns 1/0 if the loading was successful;
 */
-int	bimgf_load_bmp(t_bimgf *image, const char *file_path)
+int	bimgf_load_bmp(t_bimgf *image, const char *file_path, t_bimgf_settings settings)
 {
 	FILE				*fd;
 	t_bmp_file_header	header;
@@ -137,11 +137,9 @@ int	bimgf_load_bmp(t_bimgf *image, const char *file_path)
 		image->format = BIMGF_RGBA;
 	else
 		image->format = BIMGF_RGB;
-	image->flip = 0;
-	image->rgb = 1;
 
 	int	y;
-	if (image->flip == 0)
+	if (settings.flip == 0)
 	{
 		y = -1;
 		while (++y < image->h)
@@ -151,7 +149,7 @@ int	bimgf_load_bmp(t_bimgf *image, const char *file_path)
 				fread(&tmp, 1, skip_bytes, fd);
 		}
 	}
-	else if (image->flip == 1)
+	else if (settings.flip == 1)
 	{
 		y = image->h;
 		while (--y >= 0)
@@ -162,7 +160,7 @@ int	bimgf_load_bmp(t_bimgf *image, const char *file_path)
 		}
 	}
 
-	if (image->rgb) // convert to RGB // or RGBA
+	if (settings.rgb) // convert to RGB // or RGBA
 	{
 //		image->format = 1;
 		char			temp;

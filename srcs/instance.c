@@ -753,10 +753,8 @@ void	update_chunk(t_chunk *chunk)
 	update_chunk_block_palette(chunk);
 	update_chunk_visible_blocks(chunk);
 	update_chunk_event_blocks(chunk);
-	/*
-	if (chunk->has_blocks)
+	if (chunk->info->light_calculation)
 		update_chunk_light(chunk);
-		*/
 	chunk->was_updated = 1;
 	chunk->needs_to_update = 0;
 	chunk->secondary_update = 1;

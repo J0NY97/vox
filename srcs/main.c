@@ -158,15 +158,15 @@ int	main(void)
 
 	player_info.reach = 5;
 	player_info.equipped_block = BLOCK_STONE;
-	player_info.hotbar_item_ids[0] = g_block_data[BLOCK_DIRT].type;
-	player_info.hotbar_item_ids[1] = g_block_data[BLOCK_STONE].type;
-	player_info.hotbar_item_ids[2] = g_block_data[BLOCK_SAND].type;
-	player_info.hotbar_item_ids[3] = g_block_data[BLOCK_OAK_LOG].type;
-	player_info.hotbar_item_ids[4] = g_block_data[BLOCK_OAK_PLANK].type;
-	player_info.hotbar_item_ids[5] = g_block_data[BLOCK_ALPHA_OAK_LEAF].type;
-	player_info.hotbar_item_ids[6] = g_block_data[BLOCK_ALPHA_CACTUS].type;
-	player_info.hotbar_item_ids[7] = g_block_data[BLOCK_TNT].type;
-	player_info.hotbar_item_ids[8] = g_block_data[FLUID_WATER].type;
+	player_info.hotbar_item_ids[0] = BLOCK_DIRT;
+	player_info.hotbar_item_ids[1] = BLOCK_STONE;
+	player_info.hotbar_item_ids[2] = BLOCK_SAND;
+	player_info.hotbar_item_ids[3] = BLOCK_OAK_LOG;
+	player_info.hotbar_item_ids[4] = BLOCK_OAK_PLANK;
+	player_info.hotbar_item_ids[5] = BLOCK_ALPHA_OAK_LEAF;
+	player_info.hotbar_item_ids[6] = BLOCK_ALPHA_CACTUS;
+	player_info.hotbar_item_ids[7] = BLOCK_TNT;
+	player_info.hotbar_item_ids[8] = FLUID_WATER;
 
 	t_chunk_info	chunk_info;
 
