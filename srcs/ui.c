@@ -63,7 +63,8 @@ void	draw_hotbar(t_ui *ui)
 
 	// Selected block name;
 	fm_render_text(&bmp, &ui->manager->font_manager, 0,
-		g_block_data[ui->hotbar_item_id[ui->selected_hotbar]].name, 0xffffffff, 0x00);
+		g_block_data[ui->hotbar_item_id[ui->selected_hotbar]].readable_name,
+		0xffffffff, 0x00);
 	orig_ratio = ((float)bmp.height / (float)bmp.width);
 	name_pos[3] = 25;
 	name_pos[2] = name_pos[3] / orig_ratio;
