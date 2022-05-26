@@ -260,7 +260,8 @@ void				render_entity(t_entity *entity, t_camera *camera, t_model *model, GLuint
 typedef struct s_player_info
 {
 	float	reach; // how far away player can reach from player position;
-	int		equipped_block; // one from 'e_block_type';
+	int		equipped_block;
+	int		equipped_hotbar; // 0 - 8; one of 'hotbar_item_ids' indices;
 	int		hotbar_item_ids[9];
 }	t_player_info;
 

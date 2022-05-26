@@ -157,7 +157,7 @@ int	main(void)
 	t_player_info	player_info;
 
 	player_info.reach = 5;
-	player_info.equipped_block = BLOCK_STONE;
+	player_info.equipped_hotbar = 1;
 	player_info.hotbar_item_ids[0] = BLOCK_DIRT;
 	player_info.hotbar_item_ids[1] = BLOCK_STONE;
 	player_info.hotbar_item_ids[2] = BLOCK_SAND;
@@ -167,6 +167,7 @@ int	main(void)
 	player_info.hotbar_item_ids[6] = BLOCK_ALPHA_CACTUS;
 	player_info.hotbar_item_ids[7] = BLOCK_TNT;
 	player_info.hotbar_item_ids[8] = FLUID_WATER;
+	player_info.equipped_block = player_info.hotbar_item_ids[player_info.equipped_hotbar];
 
 	t_chunk_info	chunk_info;
 
@@ -211,7 +212,6 @@ int	main(void)
 		new_chunk(&chunks[nth_chunk], &chunk_info, nth_chunk);
 		chunks[nth_chunk].meshes.texture = chunk_info.texture;
 	}
-	ft_putstr("asdf");
 	ft_printf("Total Chunks created : %d\n", nth_chunk);
 //////////////////////////////
 	// END Instance testing
@@ -227,6 +227,7 @@ int	main(void)
 	ui_init(&gui);
 	gui.manager = &ui;
 	gui.hotbar_item_id = player_info.hotbar_item_ids;
+	gui.selected_hotbar = player_info.equipped_hotbar;
 ////////////////////////////////////////
 	// END UI TESTING
 ///////////////////////////////////////
@@ -282,10 +283,7 @@ int	main(void)
 		}
 
 		if (keys[GLFW_KEY_P].state == BUTTON_PRESS)
-		{
 			player_print(&player);
-//			entity_print(selected_entity);
-		}
 
 		if (keys[GLFW_KEY_R].state == BUTTON_PRESS)
 			vec3_new(player.camera.pos, 0, 100, 0);
@@ -417,31 +415,13 @@ int	main(void)
 		}
 
 // Select equipped block;
-		if (keys[GLFW_KEY_1].state == BUTTON_PRESS)
-			player_info.equipped_block = BLOCK_DIRT;
-		if (keys[GLFW_KEY_2].state == BUTTON_PRESS)
-			player_info.equipped_block = BLOCK_STONE;
-		if (keys[GLFW_KEY_3].state == BUTTON_PRESS)
-			player_info.equipped_block = BLOCK_SAND;
-		if (keys[GLFW_KEY_4].state == BUTTON_PRESS)
-			player_info.equipped_block = BLOCK_OAK_LOG;
-		if (keys[GLFW_KEY_5].state == BUTTON_PRESS)
-			player_info.equipped_block = BLOCK_OAK_PLANK;
-		if (keys[GLFW_KEY_6].state == BUTTON_PRESS)
-			player_info.equipped_block = BLOCK_ALPHA_OAK_LEAF;
-		if (keys[GLFW_KEY_7].state == BUTTON_PRESS)
-			player_info.equipped_block = BLOCK_ALPHA_CACTUS;
-		if (keys[GLFW_KEY_8].state == BUTTON_PRESS)
-			player_info.equipped_block = BLOCK_TNT;
-		if (keys[GLFW_KEY_9].state == BUTTON_PRESS)
-			player_info.equipped_block = FLUID_WATER;
-		if (keys[GLFW_KEY_0].state == BUTTON_PRESS)
-			player_info.equipped_block = ITEM_TREE_PLACER;
-		for (int i = GLFW_KEY_0; i <= GLFW_KEY_9; i++)
+		for (int i = GLFW_KEY_1; i <= GLFW_KEY_9; i++)
 		{
 			if (keys[i].state == BUTTON_PRESS)
 			{
-				gui.selected_hotbar = i - GLFW_KEY_0 - 1;
+				player_info.equipped_hotbar = i - GLFW_KEY_1;
+				player_info.equipped_block = player_info.hotbar_item_ids[player_info.equipped_hotbar];
+				gui.selected_hotbar = player_info.equipped_hotbar;
 				if (is_type_solid(player_info.equipped_block) ||
 					is_type_fluid(player_info.equipped_block) ||
 					is_type_solid_alpha(player_info.equipped_block))
