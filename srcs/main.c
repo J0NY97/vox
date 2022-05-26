@@ -434,7 +434,7 @@ int	main(void)
 		if (keys[GLFW_KEY_8].state == BUTTON_PRESS)
 			player_info.equipped_block = BLOCK_TNT;
 		if (keys[GLFW_KEY_9].state == BUTTON_PRESS)
-			player_info.equipped_block = ITEM_WATER_PLACER;
+			player_info.equipped_block = FLUID_WATER;
 		if (keys[GLFW_KEY_0].state == BUTTON_PRESS)
 			player_info.equipped_block = ITEM_TREE_PLACER;
 		for (int i = GLFW_KEY_0; i <= GLFW_KEY_9; i++)
@@ -728,20 +728,13 @@ int	main(void)
 					vec3_add(block_world, block_pos, (float *)g_card_dir[face]);
 					// Check if block or item equipped;
 					LG_INFO("Place Item at %f %f %f", block_world[0], block_world[1], block_world[2]);
-					if (!is_type_fluid(player_info.equipped_block) &&
-						!is_type_item(player_info.equipped_block))
+					if (!is_type_item(player_info.equipped_block))
 						set_block_at_world_pos(&chunk_info, block_world, player_info.equipped_block);
 					else if (is_type_item(player_info.equipped_block))
 					{
 						ft_printf("Using : %s\n", g_item_data[player_info.equipped_block - ITEM_FIRST - 1].name);
 						if (player_info.equipped_block == ITEM_TREE_PLACER)
 							tree_placer(&chunk_info, block_world);
-						else if (player_info.equipped_block == ITEM_WATER_PLACER)
-						{
-							set_block_at_world_pos(&chunk_info, block_world, FLUID_WATER);
-							get_chunk_from_world_pos(&chunk_info, block_world)->update_water = 1;
-//							water_placer_v2(&chunk_info, block_world, 0);
-						}
 					}
 					else
 						LG_WARN("We dont allow the placing of that type of block.");

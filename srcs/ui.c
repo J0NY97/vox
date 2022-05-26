@@ -19,6 +19,7 @@ void	draw_hotbar(t_ui *ui)
 	GLint		viewport[4];
 	float		hotbar_pos[4];	// xywh
 	float		slot_dim[2];	// wh
+	float		item_dim[2];	// wh
 	float		name_pos[4];
 	float		orig_ratio;
 
@@ -38,23 +39,26 @@ void	draw_hotbar(t_ui *ui)
 
 	// ITEMS
 	int	texture_amount_w = 24;
-	int	texture_amount_h = 16;
+	int	texture_amount_h = 15;
 	int	total_textures = texture_amount_w * texture_amount_h;
+	item_dim[0] = slot_dim[0] * 0.50f;
+	item_dim[1] = slot_dim[1] * 0.50f;
+	float w = (slot_dim[0] - item_dim[0]) / 2;
+	float h = (slot_dim[1] - item_dim[1]) / 2;
 	for (int i = 0; i < 9; i++)
 	{
 		if (ui->hotbar_item_id[i] == -1)
 			continue ;
-		int	tex_id = total_textures - g_block_data[ui->hotbar_item_id[i]].texture[4];
-		int x = tex_id / texture_amount_w;
-		int y = tex_id % texture_amount_w;
-	//	ft_printf("%d %d\n", x, y);
+		int	tex_id = g_block_data[ui->hotbar_item_id[i]].texture[4];
+		int x = /*texture_amount_w -*/ (tex_id % texture_amount_w);
+		int y = texture_amount_h - (tex_id / texture_amount_w);
 		if (x >= texture_amount_w || y >= texture_amount_h)
 			continue ;
 		bitmap_duplicate_rect(&bmp, &ui->block_texture_bmp,
 			(int []){x * 16, y * 16, 16, 16});
 		ui_draw_bitmap(ui->manager,
-			(float []){hotbar_pos[0] + (i * slot_dim[0]), hotbar_pos[1],
-				slot_dim[0], slot_dim[1]}, &bmp);
+			(float []){hotbar_pos[0] + (i * slot_dim[0]) + w, hotbar_pos[1] + h,
+				item_dim[0], item_dim[1]}, &bmp);
 		bitmap_free(&bmp);
 	}
 
@@ -66,10 +70,10 @@ void	draw_hotbar(t_ui *ui)
 		g_block_data[ui->hotbar_item_id[ui->selected_hotbar]].readable_name,
 		0xffffffff, 0x00);
 	orig_ratio = ((float)bmp.height / (float)bmp.width);
-	name_pos[3] = 25;
+	name_pos[3] = hotbar_pos[3] * 0.5f;
 	name_pos[2] = name_pos[3] / orig_ratio;
 	name_pos[0] = hotbar_pos[0] + hotbar_pos[2] / 2 - name_pos[2] / 2;
-	name_pos[1] = hotbar_pos[1] - bmp.height - viewport[3] / 64;
+	name_pos[1] = hotbar_pos[1] - bmp.height - (name_pos[3] * 0.5f);
 	ui_draw_bitmap(ui->manager, name_pos, &bmp);
 	bitmap_free(&bmp);
 	// SELECTED

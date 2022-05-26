@@ -270,7 +270,7 @@ static const t_block_data	g_block_data[] = {
 	{
 		FLUID_WATER, "FLUID_WATER",
 		"Water",
-		{362, 0, 0, 0, 0, 0},
+		{362, 362, 362, 362, 362, 362},
 		-3, 100.0f,
 		(float **)g_faces
 	},
