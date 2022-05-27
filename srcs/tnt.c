@@ -1,4 +1,5 @@
 #include "shaderpixel.h"
+#include "chunk.h"
 
 void	explode(t_chunk_info *info, float pos[3], float intensity)
 {

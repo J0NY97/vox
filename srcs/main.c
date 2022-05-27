@@ -1,4 +1,5 @@
 #include "shaderpixel.h"
+#include "chunk.h"
 #include "ui_manager.h"
 #include "shader.h"
 #include "ui.h"
@@ -24,7 +25,7 @@ void	init(t_shaderpixel *sp)
 
 	sp->win_w = 1280;
 	sp->win_h = 720;
-	sp->win = glfwCreateWindow(sp->win_w, sp->win_h, "Shader Pixel", NULL, NULL);
+	sp->win = glfwCreateWindow(sp->win_w, sp->win_h, "MyPixel", NULL, NULL);
 
 	char *buffer;
 	if (!sp->win)
@@ -66,37 +67,25 @@ float *nth(float *res, unsigned int *indices, float *vertices, int face_index, i
 	return (res);
 }
 
-int	main(void)
+void	scop_stuff(t_shaderpixel *sp)
 {
-	t_shaderpixel	sp;
-	init(&sp);
-	t_scene	scene;
-	create_scene(&scene);
-	t_key	keys[GLFW_KEY_LAST];
-	t_key	mouse[GLFW_MOUSE_BUTTON_LAST];
-	t_fps	fps;
-	new_fps(&fps);
-
 	t_player	player;
 	new_player(&player);
 	new_vec3(player.camera.pos, 5, 85, 5);
 //	new_vec3(player.camera.pos, 16384, 80, 16384);
 	player.camera.pitch = 0;
 	player.camera.yaw = -90;
-	player.camera.viewport_w = sp.win_w;
-	player.camera.viewport_h = sp.win_h;
+	player.camera.viewport_w = sp->win_w;
+	player.camera.viewport_h = sp->win_h;
 
 	player.gravity = 0;
 
-	GLuint	crosshair_shader;
-	new_crosshair_shader(&crosshair_shader);
-
+	t_scene	scene;
+	create_scene(&scene);
 	GLuint	shader1;
 	new_shader(&shader1, SHADER_PATH"simple.vs", SHADER_PATH"simple.fs");
-
 	t_obj		retrotv_obj;
 	obj_load(&retrotv_obj, MODEL_PATH"retrotv/retrotv.obj");
-
 	t_entity	*retrotv = malloc(sizeof(t_entity));
 	new_entity(retrotv);
 	new_model(&retrotv->model, &retrotv_obj);
@@ -134,6 +123,75 @@ int	main(void)
 	display->rot_x_angle = 0;
 	display->rot_y_angle = 90;
 	display->rot_z_angle = 0;
+
+	float		rot_amount = 1;
+	int			toggle_rot_x = 0;
+	int			toggle_rot_y = 0;
+	int			toggle_rot_z = 0;
+
+	if (0)
+	{
+		size_t	entities_collisioned = 0;
+		for (size_t i = 0; i < scene.entities_allocated && entities_collisioned < scene.entity_amount; i++)
+		{
+			if (scene.entities[i] && scene.entities[i]->collision_detection_enabled)
+			{
+				// creates model thingthong
+				aabb_create(&scene.entities[i]->aabb,
+					scene.entities[i]->model.info->mesh.vertices,
+					scene.entities[i]->model.info->mesh.vertex_amount);
+				// create vertices of them
+				aabb_vertify(&scene.entities[i]->aabb);
+				// transform all the vertices
+				aabb_transform_new(&scene.entities[i]->aabb,
+					scene.entities[i]->model_mat);
+
+				aabb_create(&scene.entities[i]->aabb,
+					scene.entities[i]->aabb.vertices, 8);
+
+				if (scene.entities[i]->collision_use_precise)
+					player_entity_mesh_collision(&player, scene.entities[i]);
+				else
+					player_entity_collision(&player, scene.entities[i]);
+				entities_collisioned += 1;
+			}
+		}
+
+		glEnable(GL_DEPTH_TEST);
+		size_t	entities_rendered = 0;
+		for (size_t i = 0; i < scene.entities_allocated && entities_rendered < scene.entity_amount; i++)
+		{
+			if (scene.entities[i])
+			{
+				render_entity(scene.entities[i], &player.camera, &scene.entities[i]->model, shader1);
+				entities_rendered += 1;
+			}
+		}
+	}
+}
+
+int	main(void)
+{
+	t_shaderpixel	sp;
+	init(&sp);
+	t_key	keys[GLFW_KEY_LAST];
+	t_key	mouse[GLFW_MOUSE_BUTTON_LAST];
+	t_fps	fps;
+	new_fps(&fps);
+
+	t_player	player;
+	new_player(&player);
+	new_vec3(player.camera.pos, 5, 85, 5);
+//	new_vec3(player.camera.pos, 16384, 80, 16384);
+	player.camera.pitch = 0;
+	player.camera.yaw = -90;
+	player.camera.viewport_w = sp.win_w;
+	player.camera.viewport_h = sp.win_h;
+
+	player.gravity = 0;
+
+	GLuint	crosshair_shader;
+	new_crosshair_shader(&crosshair_shader);
 
 	GLuint	mandelbrot_shader;
 	new_shader(&mandelbrot_shader, SHADER_PATH"mandelbrot.vs", SHADER_PATH"mandelbrot.fs");
@@ -177,7 +235,7 @@ int	main(void)
 	chunk_info.block_collision_enabled = 0;
 	chunk_info.player_collision_enabled = 0;
 	chunk_info.fancy_graphics = 0;
-	chunk_info.generate_structures = 0;
+	chunk_info.generate_structures = 1;
 	chunk_info.light_calculation = 0;
 	chunk_info.toggle_ui = 0;
 	chunk_info.toggle_event = 0;
@@ -200,8 +258,11 @@ int	main(void)
 	chunks = malloc(sizeof(t_chunk) * CHUNKS_LOADED);
 
 	chunk_info.chunks = chunks;
+	chunk_info.chunk_columns = malloc(sizeof(t_chunk_col) * (RENDER_DISTANCE * RENDER_DISTANCE));
 
 	int		nth_chunk = 0;
+	int		nth_col = -1;
+	int		nth_col_chunk = 0;
 	int		player_chunk[VEC3_SIZE];
 	
 	get_chunk_pos_from_world_pos(player_chunk, player.camera.pos);
@@ -211,6 +272,20 @@ int	main(void)
 	{
 		new_chunk(&chunks[nth_chunk], &chunk_info, nth_chunk);
 		chunks[nth_chunk].meshes.texture = chunk_info.texture;
+		if (nth_chunk % CHUNKS_PER_COLUMN == 0)
+		{
+			nth_col_chunk = 0;
+			++nth_col;
+			chunk_info.chunk_columns[nth_col].chunks = malloc(sizeof(t_chunk *) * CHUNKS_PER_COLUMN);
+
+			chunk_info.chunk_columns[nth_col].coordinate[0] = chunks[nth_chunk].coordinate[0];
+			chunk_info.chunk_columns[nth_col].coordinate[1] = chunks[nth_chunk].coordinate[2];
+			chunk_info.chunk_columns[nth_col].world_coordinate[0] = chunks[nth_chunk].world_coordinate[0];
+			chunk_info.chunk_columns[nth_col].world_coordinate[1] = chunks[nth_chunk].world_coordinate[2];
+			chunk_info.chunk_columns[nth_col].update_structures = 0;
+		}
+		chunk_info.chunk_columns[nth_col].chunks[nth_col_chunk] = &chunks[nth_chunk];
+		++nth_col_chunk;
 	}
 	ft_printf("Total Chunks created : %d\n", nth_chunk);
 //////////////////////////////
@@ -235,11 +310,6 @@ int	main(void)
 	int error = glGetError();
 	if (error)
 		LG_ERROR("gl errors before while : %d", error);
-
-	float		rot_amount = 1;
-	int			toggle_rot_x = 0;
-	int			toggle_rot_y = 0;
-	int			toggle_rot_z = 0;
 
 	glfwSwapInterval(0);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -442,46 +512,6 @@ int	main(void)
 		if (player.enabled_mouse)
 			player_looking(&player, sp.win, fps);
 
-		if (0)
-		{
-		size_t	entities_collisioned = 0;
-		for (size_t i = 0; i < scene.entities_allocated && entities_collisioned < scene.entity_amount; i++)
-		{
-			if (scene.entities[i] && scene.entities[i]->collision_detection_enabled)
-			{
-				// creates model thingthong
-				aabb_create(&scene.entities[i]->aabb,
-					scene.entities[i]->model.info->mesh.vertices,
-					scene.entities[i]->model.info->mesh.vertex_amount);
-				// create vertices of them
-				aabb_vertify(&scene.entities[i]->aabb);
-				// transform all the vertices
-				aabb_transform_new(&scene.entities[i]->aabb,
-					scene.entities[i]->model_mat);
-
-				aabb_create(&scene.entities[i]->aabb,
-					scene.entities[i]->aabb.vertices, 8);
-
-				if (scene.entities[i]->collision_use_precise)
-					player_entity_mesh_collision(&player, scene.entities[i]);
-				else
-					player_entity_collision(&player, scene.entities[i]);
-				entities_collisioned += 1;
-			}
-		}
-
-		glEnable(GL_DEPTH_TEST);
-		size_t	entities_rendered = 0;
-		for (size_t i = 0; i < scene.entities_allocated && entities_rendered < scene.entity_amount; i++)
-		{
-			if (scene.entities[i])
-			{
-				render_entity(scene.entities[i], &player.camera, &scene.entities[i]->model, shader1);
-				entities_rendered += 1;
-			}
-		}
-		}
-
 /////////////////
 		// Chunk things
 /////////////////
@@ -492,73 +522,66 @@ int	main(void)
 		if (regen_chunks)
 		{
 			int	max_get = 1;
-			int	reload_these_chunks[max_get * CHUNKS_PER_COLUMN];	// '* CHUNKS_PER_COLUMN' because we regenerate one chunk column at a time;
-			int	into_these_coords[max_get][2];
-			int	start_coord[3];
-
-			tobegen = get_chunks_to_reload_v2(reload_these_chunks, into_these_coords, start_coord, &chunk_info, player_chunk, max_get);
-			if (tobegen)
+			int	col_indices[max_get];
+			int	col_coords[max_get][2];
+			int	start_coord[2];
+			tobegen = get_chunk_column_to_regen(chunk_info.chunk_columns, player_chunk, col_indices, col_coords, max_get);
+			for (int i = 0; i < tobegen; i++)
 			{
-				for (int i = 0; i * CHUNKS_PER_COLUMN < tobegen; i++)
-					regenerate_chunks(reload_these_chunks + (i * CHUNKS_PER_COLUMN), into_these_coords[i], &chunk_info);
+				regenerate_chunk_column(&chunk_info.chunk_columns[col_indices[i]], col_coords[i]);
 			}
 		}
 
 		thread_manager_check_threadiness(&tm);
 
-		t_chunk *highest;
-		t_chunk	*neighbors[DIR_AMOUNT];
-		int		neighbors_found;
-		float	total_time = 0.0f;
+		t_chunk		*neighbors[DIR_AMOUNT];
+		t_chunk		**col_chunks;
+		t_chunk_col	*column;
+		int			neighbors_found;
 
-		for (int ent = 0; ent < CHUNKS_LOADED; ++ent)
+		for (int col = 0; col < CHUNK_COLUMNS; col++)
 		{
-			neighbors_found = 0;
-			highest = NULL;
+			column = &chunk_info.chunk_columns[col];
+			col_chunks = column->chunks;
 
-			// We only need to update the chunks if a chunk has been regenerated
-			if ((chunks[ent].needs_to_update ||
-				(chunk_info.generate_structures && chunks[ent].update_structures)))
+			if (chunk_info.generate_structures && column->update_structures)
 			{
-				// Get all neighbors for this chunk;
-				for (int dir = DIR_NORTH, i = 0; dir < DIR_AMOUNT; ++dir, ++i)
-				{
-					neighbors[i] = get_adjacent_chunk(&chunk_info, &chunks[ent], (float *)g_card_dir[dir]);
-					++neighbors_found;
-				}
+				tree_gen(&chunk_info, column);
+				column->update_structures = 0;
 			}
-
-			// Only generate trees if we have all the surrdounding neighbors,
-			// 	so that we wont have trees cut in half; (doesnt work)
-			if ((chunk_info.generate_structures && neighbors_found >= 10 &&
-				chunks[ent].update_structures) || chunk_info.light_calculation)
-				highest = get_highest_chunk(&chunk_info, chunks[ent].coordinate[0], chunks[ent].coordinate[2]);
-			if (chunk_info.generate_structures && neighbors_found >= 10 &&
-				chunks[ent].update_structures)
+			for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
 			{
-				if (highest == &chunks[ent])
+				neighbors_found = 0;
+
+				// We only need to update the chunks if a chunk has been regenerated
+				if ((col_chunks[ent]->needs_to_update ||
+					(chunk_info.generate_structures && column->update_structures)))
 				{
-					tree_gen(&chunks[ent]);
-					chunks[ent].needs_to_update = 1;
+					// Get all neighbors for this chunk;
+					for (int dir = DIR_NORTH, i = 0; dir < DIR_AMOUNT; ++dir, ++i)
+					{
+						neighbors[i] = get_adjacent_chunk(&chunk_info, col_chunks[ent], (float *)g_card_dir[dir]);
+						++neighbors_found;
+					}
 				}
-				chunks[ent].update_structures = 0;
-			}
 
-			if (chunk_info.toggle_event)
-				event_chunk(&chunks[ent]);
+				if (chunk_info.toggle_event)
+					event_chunk(col_chunks[ent]);
 
-			if (chunks[ent].needs_to_update)
-			{
-				update_chunk(&chunks[ent]);
+				if (col_chunks[ent]->needs_to_update)
+				{
+					update_chunk(col_chunks[ent]);
 
-				chunks[ent].update_water = 1;
+					chunks[ent].update_water = 1;
 
-				// Set needs to update to all 6 neighbors of the chunk;
-				for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
-					if (neighbors[i])
-						neighbors[i]->secondary_update = 1;
+					// Set needs to update to all 6 neighbors of the chunk;
+					for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
+						if (neighbors[i])
+							neighbors[i]->secondary_update = 1;
+				}
 			}
 		}
+
 		// Secondary updater;
 		// We dont want to immediately update the chunks that other chunks want
 		//	updated, because they might update themselves;

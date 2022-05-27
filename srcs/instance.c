@@ -1,4 +1,5 @@
 #include "shaderpixel.h"
+#include "chunk.h"
 
 // Basically everything needed for minecraft : https://www.redblobgames.com/maps/terrain-from-noise/
 void	new_chunk(t_chunk *chunk, t_chunk_info *info, int nth)
@@ -198,12 +199,18 @@ t_chunk	*get_adjacent_chunk(t_chunk_info *info, t_chunk *from, float *dir)
 	from_coord[0] = from->coordinate[0] + (int)dir[0];
 	from_coord[1] = from->coordinate[1] + (int)dir[1];
 	from_coord[2] = from->coordinate[2] + (int)dir[2];
-	for (int i = 0; i < CHUNKS_LOADED; i++)
+	for (int i = 0; i < CHUNK_COLUMNS; i++)
 	{
-		if (info->chunks[i].coordinate[0] == from_coord[0] &&
-			info->chunks[i].coordinate[1] == from_coord[1] &&
-			info->chunks[i].coordinate[2] == from_coord[2])
-			return (&info->chunks[i]);
+		if (info->chunk_columns[i].coordinate[0] == from_coord[0] && 
+			info->chunk_columns[i].coordinate[1] == from_coord[2])
+		{
+			for (int j = CHUNKS_PER_COLUMN - 1; j >= 0; j--)
+			{
+				if (info->chunk_columns[i].chunks[j]->coordinate[1] == from_coord[1])
+					return (info->chunk_columns[i].chunks[j]);
+			}
+			return (NULL);
+		}
 	}
 	return (NULL);
 }
@@ -463,32 +470,54 @@ void	update_chunk_border_visible_blocks(t_chunk *chunk)
 	// Get all neighbors of current chunk;
 	t_chunk *neighbors[6];
 	for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
+	{
 		neighbors[i] = get_adjacent_chunk(chunk->info, chunk, (float *)g_card_dir[dir]);
+		if (!chunk_has_non_solid(neighbors[i]))
+			neighbors[i] = NULL;
+	}
 
 	for (int y = 0; y <= CHUNK_HEIGHT - 1; y++)
 	{
 		// front && back
 		for (int x = 0; x <= CHUNK_WIDTH - 1; x++)
 		{
-			helper_pelper(chunk, neighbors, (int []){x, y, 0});
-			helper_pelper(chunk, neighbors, (int []){x, y, CHUNK_BREADTH - 1});
+			if (neighbors[DIR_NORTH])
+				helper_pelper(chunk, neighbors, (int []){x, y, 0});
+			else
+				chunk->blocks[get_block_index(chunk->info, x, y, 0)].visible_faces &= ~g_visible_faces[DIR_NORTH];
+			if (neighbors[DIR_SOUTH])
+				helper_pelper(chunk, neighbors, (int []){x, y, CHUNK_BREADTH - 1});
+			else
+				chunk->blocks[get_block_index(chunk->info, x, y, CHUNK_BREADTH - 1)].visible_faces &= ~g_visible_faces[DIR_SOUTH];
 		}
 		// left && right
 		// skip corners that above loop has already checked;
 		for (int z = 1; z <= CHUNK_BREADTH - 2; z++)
 		{
-			helper_pelper(chunk, neighbors, (int []){0, y, z});
-			helper_pelper(chunk, neighbors, (int []){CHUNK_WIDTH - 1, y, z});
+			if (neighbors[DIR_WEST])
+				helper_pelper(chunk, neighbors, (int []){0, y, z});
+			else
+				chunk->blocks[get_block_index(chunk->info, 0, y, z)].visible_faces &= ~g_visible_faces[DIR_WEST];
+			if (neighbors[DIR_EAST])
+				helper_pelper(chunk, neighbors, (int []){CHUNK_WIDTH - 1, y, z});
+			else
+				chunk->blocks[get_block_index(chunk->info, CHUNK_WIDTH - 1, y, z)].visible_faces &= ~g_visible_faces[DIR_EAST];
 		}
 	}
-	// top && down
+	// down && up
 	// skip the corners, which have already been checked by the loops above;
 	for (int x = 1; x <= CHUNK_WIDTH - 2; x++)
 	{
 		for (int z = 1; z <= CHUNK_BREADTH - 2; z++)
 		{
-			helper_pelper(chunk, neighbors, (int []){x, 0, z});
-			helper_pelper(chunk, neighbors, (int []){x, CHUNK_HEIGHT - 1, z});
+			if (neighbors[DIR_DOWN])
+				helper_pelper(chunk, neighbors, (int []){x, 0, z});
+			else
+				chunk->blocks[get_block_index(chunk->info, x, 0, z)].visible_faces &= ~g_visible_faces[DIR_DOWN];
+			if (neighbors[DIR_UP])
+				helper_pelper(chunk, neighbors, (int []){x, CHUNK_HEIGHT - 1, z});
+			else
+				chunk->blocks[get_block_index(chunk->info, x, CHUNK_HEIGHT - 1, z)].visible_faces &= ~g_visible_faces[DIR_UP];
 		}
 	}
 }
@@ -523,7 +552,6 @@ void	generate_chunk(t_chunk *chunk, int *coord, int *noise_map)
 
 	chunk->event_block_amount = 0;
 
-	chunk->update_structures = 1;
 	chunk->needs_to_update = 1;
 
 	chunk->update_water = 0;
@@ -554,28 +582,53 @@ int	get_surrounding_coords(int *res, int x, int z, int r)
 }
 
 /*
- * Check which chunks are not going to be in the next iteration of
- *	loaded chunks, save those to 'reload_these_chunks' and when starting
- *	to update the new chunks that are going to be loaded, and put the
- *	new chunk info into those 'chunks' indices;
- * Takes 0.000000 seconds;
+ * 'player_chunk' : [3](xyz);
 */
-int	get_chunks_to_reload(int *chunks, int *start_coord, t_chunk_info *info, int *player_chunk_v3)
+int	get_chunk_column_to_regen(t_chunk_col *chunk_cols, int *player_chunk, int *out_col_indices, int (*out_col_coords)[2], int max_get)
 {
+	int	start_coord[2];
 	int	reload_amount = 0;
-	int	found = 0;
+	int	chunk_amount = 0;
+	int	found;
 
-	start_coord[0] = player_chunk_v3[0] - (RENDER_DISTANCE / 2);
-	start_coord[1] = 0;
-	start_coord[2] = player_chunk_v3[2] - (RENDER_DISTANCE / 2);
-	for (int i = 0; i < CHUNKS_LOADED; i++)
+	start_coord[0] = player_chunk[0] - (RENDER_DISTANCE / 2);
+	start_coord[1] = player_chunk[2] - (RENDER_DISTANCE / 2);
+	for (int x = start_coord[0], x_amount = 0; x_amount < RENDER_DISTANCE; x++, x_amount++)
 	{
-		found = 0;
+		for (int z = start_coord[1], z_amount = 0; z_amount < RENDER_DISTANCE; z++, z_amount++)
+		{
+			found = 0;
+			for (int i = 0; i < RENDER_DISTANCE * RENDER_DISTANCE; i++)
+			{
+				if (chunk_cols[i].coordinate[0] == x &&
+					chunk_cols[i].coordinate[1] == z)
+				{
+					found = 1;
+					break ;
+				}
+			}
+			if (!found)
+			{
+				out_col_coords[reload_amount][0] = x;
+				out_col_coords[reload_amount][1] = z;
+				++reload_amount;
+			}
+			if (reload_amount >= max_get)
+				break;
+		}
+		if (reload_amount >= max_get)
+			break;
+	}
+
+	for (int i = 0; i < RENDER_DISTANCE * RENDER_DISTANCE; i++)
+	{
 		for (int x = start_coord[0], x_amount = 0; x_amount < RENDER_DISTANCE; x++, x_amount++)
 		{
-			for (int z = start_coord[2], z_amount = 0; z_amount < RENDER_DISTANCE; z++, z_amount++)
+			for (int z = start_coord[1], z_amount = 0; z_amount < RENDER_DISTANCE; z++, z_amount++)
 			{
-				if (info->chunks[i].coordinate[0] == x && info->chunks[i].coordinate[2] == z)
+				found = 0;
+				if (chunk_cols[i].coordinate[0] == x &&
+					chunk_cols[i].coordinate[1] == z)
 				{
 					found = 1;
 					break ;
@@ -586,14 +639,22 @@ int	get_chunks_to_reload(int *chunks, int *start_coord, t_chunk_info *info, int 
 		}
 		if (!found)
 		{
-			chunks[reload_amount] = i;
-			reload_amount++;
+			out_col_indices[chunk_amount] = i;
+			++chunk_amount;
 		}
+		if (chunk_amount >= max_get)
+			break;
 	}
 	return (reload_amount);
 }
 
 /*
+ * Check which chunks are not going to be in the next iteration of
+ *	loaded chunks, save those to 'reload_these_chunks' and when starting
+ *	to update the new chunks that are going to be loaded, and put the
+ *	new chunk info into those 'chunks' indices;
+ * Takes 0.000000 seconds;
+ * 
  * Figures out which chunks will be loaded into which chunks;
 */
 int	get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, t_chunk_info *info, int *player_chunk_v3, int max_get)
@@ -845,6 +906,22 @@ int	regenerate_chunks(int *these, int coord[2], t_chunk_info *info)
 		nth_chunk++;
 	}
 	return (nth_chunk);
+}
+
+void	regenerate_chunk_column(t_chunk_col *column, int coord[2])
+{
+	int	noise_map[CHUNK_WIDTH * CHUNK_BREADTH];
+
+	create_noise_map(noise_map, CHUNK_WIDTH, CHUNK_BREADTH, coord[0], coord[1]);
+//	ft_printf("Gen this : %d, %d\n", column->coordinate[0], column->coordinate[1]);
+	for (int i = 0; i < CHUNKS_PER_COLUMN; i++)
+		generate_chunk(column->chunks[i], (int []){coord[0], i, coord[1]}, noise_map);
+	column->coordinate[0] = column->chunks[0]->coordinate[0];
+	column->coordinate[1] = column->chunks[0]->coordinate[2];
+	column->world_coordinate[0] = column->chunks[0]->world_coordinate[0];
+	column->world_coordinate[1] = column->chunks[0]->world_coordinate[2];
+	column->update_structures = 1;
+	//ft_printf("is now : %d, %d\n", column->coordinate[0], column->coordinate[1]);
 }
 
 void	show_chunk_borders(t_chunk *chunk, t_camera *camera, float *col)
@@ -1647,53 +1724,59 @@ void	flora_placer(t_chunk_info *info, int type, float *world_pos)
 */
 t_chunk *get_highest_chunk(t_chunk_info *info, int x, int z)
 {
-	int	highest = -1;
-	int	highest_index = -1;
-
-	for (int i = 0; i < CHUNKS_LOADED; i++)
+	for (int i = 0; i < CHUNK_COLUMNS; i++)
 	{
-		if (info->chunks[i].coordinate[0] == x &&
-			info->chunks[i].coordinate[2] == z &&
-			info->chunks[i].has_blocks &&
-			info->chunks[i].coordinate[1] > highest)
+		if (info->chunk_columns[i].coordinate[0] == x &&
+			info->chunk_columns[i].coordinate[1] == z)
 		{
-			highest = info->chunks[i].coordinate[1];
-			highest_index = i;
+			for (int j = CHUNKS_PER_COLUMN - 1; j >= 0; j--)
+				if (info->chunk_columns[i].chunks[j]->has_blocks)
+					return (info->chunk_columns[i].chunks[j]);
 		}
 	}
-	if (highest_index >= 0 && highest_index < CHUNKS_LOADED)
-		return (&info->chunks[highest_index]);
 	return (NULL);
 }
 
 /*
- * Returns highest point in world at x, z (world_position);
+ * Returns highest chunk at world coordinate  world_x / world_z;
+ * Places the highest block into 'out_block' and the block's world y coordinate
+ * 	into 'out_world_y';
 */
-float	get_highest_point(t_chunk_info *info, float x, float z)
+t_chunk *get_highest_chunk_with_block(t_chunk_info *info, t_block **out_block, float *out_world_y, float world_x, float world_z)
 {
-	int		chunk_pos[3];
-	float	curr_highest = -1;
-	t_chunk	*highest_chunk;
+	int		chunk_local[3];
+	int		block_local[3];
+	float	block_world[3];
 
-	get_chunk_pos_from_world_pos(chunk_pos, (float []){x, 0, z});
-	highest_chunk = get_highest_chunk(info, chunk_pos[0], chunk_pos[2]);
-	if (highest_chunk == NULL)
-		return (-1); // error;
-	for (int i = 0; i < CHUNK_BLOCK_AMOUNT; i++)
+	get_chunk_pos_from_world_pos(chunk_local, (float []){world_x, 0, world_z});
+	// first find the highets chunk with blocks;
+	for (int i = 0; i < CHUNK_COLUMNS; i++)
 	{
-		if (highest_chunk->blocks[i].type != GAS_AIR)
+		if (info->chunk_columns[i].coordinate[0] == chunk_local[0] &&
+			info->chunk_columns[i].coordinate[1] == chunk_local[2])
 		{
-			int		local[3];
-			float	world[3];
-
-			get_block_local_pos_from_index(local, i);
-			get_block_world_pos(world, highest_chunk->world_coordinate, local);
-			if (world[0] == x && world[2] == z)
-				if (world[1] > curr_highest)
-					curr_highest = world[1];
+			for (int j = CHUNKS_PER_COLUMN - 1; j >= 0; j--)
+			{
+				if (!info->chunk_columns[i].chunks[j]->has_blocks)
+					continue ;
+				// Then loop from highest y to lowest y and double check if it has a world_x / world_z a block;
+				get_block_local_pos_from_world_pos(block_local, (float []){world_x, 0, world_z});
+				for (int y = 15; y >= 0; y--)
+				{
+					int ind = get_block_index(info, block_local[0], y, block_local[2]);
+					if (!is_type_gas(info->chunk_columns[i].chunks[j]->blocks[ind].type))
+					{
+						get_block_world_pos(block_world, info->chunk_columns[i].chunks[j]->world_coordinate, (int []){block_local[0], y, block_local[2]});
+						*out_block = &info->chunk_columns[i].chunks[j]->blocks[ind];
+						*out_world_y = block_world[1];
+						return (info->chunk_columns[i].chunks[j]);
+					}
+				}
+			}
+			return (NULL);
 		}
 	}
-	return (curr_highest);
+	return (NULL);
 }
 
 /*
@@ -1702,46 +1785,25 @@ float	get_highest_point(t_chunk_info *info, float x, float z)
 */
 float	get_highest_block(t_chunk_info *info, t_block **out_block, float x, float z)
 {
-	int		chunk_pos[3];
-	float	curr_highest = -1;
+	float	block_y;
 	t_chunk	*highest_chunk;
 	t_block	*curr_block;
 
-	get_chunk_pos_from_world_pos(chunk_pos, (float []){x, 0, z});
-	highest_chunk = get_highest_chunk(info, chunk_pos[0], chunk_pos[2]);
-	if (highest_chunk == NULL)
+	block_y = -1;
+	curr_block = NULL;
+	highest_chunk = get_highest_chunk_with_block(info, &curr_block, &block_y, x, z);
+	if (!highest_chunk || !curr_block || block_y == -1)
 	{
-		ft_printf("cant find highest chunk");
 		*out_block = NULL;
 		return (-1); // error;
 	}
-	curr_block = NULL;
-	for (int i = 0; i < CHUNK_BLOCK_AMOUNT; i++)
-	{
-		if (highest_chunk->blocks[i].type != GAS_AIR)
-		{
-			int		local[3];
-			float	world[3];
-
-			get_block_local_pos_from_index(local, i);
-			get_block_world_pos(world, highest_chunk->world_coordinate, local);
-			if (world[0] == x && world[2] == z)
-			{
-				if (world[1] > curr_highest)
-				{
-					curr_highest = world[1];
-					curr_block = &highest_chunk->blocks[i];
-				}
-			}
-		}
-	}
-
 	*out_block = curr_block;
-	return (curr_highest);
+	return (block_y);
 }
 
 /*
- * Get highets point in the world at x/z coordinate of block type 'type';
+ * NOTE : TODO : if you want to use this , first rewrite (im not deleting this
+ *		so you can take example);
 */
 float	get_highest_point_of_type(t_chunk_info *info, float x, float z, int type)
 {
@@ -1783,7 +1845,7 @@ void	flora_decider(t_chunk_info *info, float chance, float *world_pos)
 		flora_placer(info, FLORA_GRASS, world_pos);
 }
 
-void	tree_gen(t_chunk *chunk)
+void	tree_gen(t_chunk_info *info, t_chunk_col *column)
 {
 	float	freq = 0.99f;
 	float	pers = 0.5;
@@ -1792,11 +1854,11 @@ void	tree_gen(t_chunk *chunk)
 
 	for (int x = 0; x < CHUNK_WIDTH; x++)
 	{
-		float	block_world_x = fabs(chunk->world_coordinate[0] + x);
+		float	block_world_x = fabs(column->world_coordinate[0] + x);
 		float	to_use_x = block_world_x * freq;
 		for (int z = 0; z < CHUNK_BREADTH; z++)
 		{
-			float	block_world_z = fabs(chunk->world_coordinate[2] + z);
+			float	block_world_z = fabs(column->world_coordinate[2] + z);
 			float	to_use_z = block_world_z * freq;
 			float	perper =
 				octave_perlin(to_use_x, to_use_x / to_use_z, to_use_z, 1, pers) +
@@ -1807,9 +1869,9 @@ void	tree_gen(t_chunk *chunk)
 			highest = -1;
 			if (perper < 1.5f)
 			{
-				float	world_x_pos = chunk->world_coordinate[0] + (float)x;
-				float	world_z_pos = chunk->world_coordinate[2] + (float)z;
-				highest = get_highest_block(chunk->info, &highest_block, world_x_pos, world_z_pos);
+				float	world_x_pos = column->world_coordinate[0] + (float)x;
+				float	world_z_pos = column->world_coordinate[1] + (float)z;
+				highest = get_highest_block(info, &highest_block, world_x_pos, world_z_pos);
 				if (highest == -1 || highest_block == NULL)
 					continue ;
 				if (highest_block->type == BLOCK_DIRT ||
@@ -1817,10 +1879,10 @@ void	tree_gen(t_chunk *chunk)
 					highest_block->type == BLOCK_SAND)
 				{
 					if (perper < 1.25f)
-						tree_placer(chunk->info,
+						tree_placer(info,
 							(float []){world_x_pos, highest + 1, world_z_pos});
 					else if (perper < 1.5f)
-						flora_decider(chunk->info, perper,
+						flora_decider(info, perper,
 							(float []){world_x_pos, highest + 1, world_z_pos});
 
 				}

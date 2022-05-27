@@ -1,4 +1,5 @@
 #include "shaderpixel.h"
+#include "chunk.h"
 
 // Is BLOCK
 
@@ -73,6 +74,22 @@ t_block_data	get_block_data_from_type(int type)
 t_block_data	get_block_data(t_block *block)
 {
 	return (get_block_data_from_type(block->type));
+}
+
+/*
+ *  Returns 1 if chunk has non solid blocks;
+*/
+int	chunk_has_non_solid(t_chunk *chunk)
+{
+	if (!chunk)
+		return (0);
+	if (chunk->block_palette[GAS_AIR] > 0)
+		return (1);
+	if (chunk->blocks_flora_amount > 0)
+		return (1);
+	if (chunk->blocks_fluid_amount > 0)
+		return (1);
+	return (0);
 }
 
 /*
