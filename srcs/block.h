@@ -126,6 +126,20 @@ static const float g_card_dir[DIR_AMOUNT][3] = {
 	{-1, 0, 1}
 };
 
+// Same as g_card_dir, but type casted to int already;
+static const int g_card_dir_int[DIR_AMOUNT][3] = {
+	{(int)g_card_dir[0][0], (int)g_card_dir[0][1], (int)g_card_dir[0][2]},
+	{(int)g_card_dir[1][0], (int)g_card_dir[1][1], (int)g_card_dir[1][2]},
+	{(int)g_card_dir[2][0], (int)g_card_dir[2][1], (int)g_card_dir[2][2]},
+	{(int)g_card_dir[3][0], (int)g_card_dir[3][1], (int)g_card_dir[3][2]},
+	{(int)g_card_dir[4][0], (int)g_card_dir[4][1], (int)g_card_dir[4][2]},
+	{(int)g_card_dir[5][0], (int)g_card_dir[5][1], (int)g_card_dir[5][2]},
+	{(int)g_card_dir[6][0], (int)g_card_dir[6][1], (int)g_card_dir[6][2]},
+	{(int)g_card_dir[7][0], (int)g_card_dir[7][1], (int)g_card_dir[7][2]},
+	{(int)g_card_dir[8][0], (int)g_card_dir[8][1], (int)g_card_dir[8][2]},
+	{(int)g_card_dir[9][0], (int)g_card_dir[9][1], (int)g_card_dir[9][2]}
+};
+
 /*
  * Vegetation faces;
 */

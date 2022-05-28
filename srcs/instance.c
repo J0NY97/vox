@@ -127,13 +127,13 @@ void	get_chunk_world_pos_from_local_pos(float *res, int *local_pos)
 	res[2] = local_pos[2] * (float)CHUNK_BREADTH;
 }
 
-int	create_noise_map(int *map, int size_x, int size_z, int coord_x, int coord_z)
+int	create_noise_map(int *map, int size_x, int size_z, int coord_x, int coord_z, int seed)
 {
 	int		start_y = 64;
 	float	freq = 0.005f;
 	float	pers = 0.5f;
 	int		i = 0;
-	float	seed = (896868766 % 512) * freq;
+	float	final_seed = (seed % 512) * freq;
 	float	chunk_world[3];
 
 	get_chunk_world_pos_from_local_pos(chunk_world, (int []){coord_x, 0, coord_z});
@@ -146,10 +146,10 @@ int	create_noise_map(int *map, int size_x, int size_z, int coord_x, int coord_z)
 			float	block_world_z = fabs(chunk_world[2] + z);
 			float	to_use_z = block_world_z * freq;
 			float	perper =
-				octave_perlin(to_use_x, seed, to_use_z, 1, pers) +
-				octave_perlin(to_use_x, seed, to_use_z, 2, pers) +
-				octave_perlin(to_use_x, seed, to_use_z, 4, pers) +
-				octave_perlin(to_use_x, seed, to_use_z, 8, pers);
+				octave_perlin(to_use_x, final_seed, to_use_z, 1, pers) +
+				octave_perlin(to_use_x, final_seed, to_use_z, 2, pers) +
+				octave_perlin(to_use_x, final_seed, to_use_z, 4, pers) +
+				octave_perlin(to_use_x, final_seed, to_use_z, 8, pers);
 			float	e = pers * 3;
 			int		wanted_y = (start_y * (perper / e));
 			map[i] = wanted_y;
@@ -323,11 +323,11 @@ t_block	*get_block_faster(t_chunk *chunk, t_chunk *chunk2, int *coords)
 
 t_block	*get_block_in_dir(t_chunk *chunk, t_chunk *neighbor, int *local_pos, int dir)
 {
-	int				coords[3];
+	int	coords[3];
 
-	coords[0] = local_pos[0] + g_card_dir[dir][0];
-	coords[1] = local_pos[1] + g_card_dir[dir][1];
-	coords[2] = local_pos[2] + g_card_dir[dir][2];
+	coords[0] = local_pos[0] + g_card_dir_int[dir][0];
+	coords[1] = local_pos[1] + g_card_dir_int[dir][1];
+	coords[2] = local_pos[2] + g_card_dir_int[dir][2];
 	return (get_block_faster(chunk, neighbor, coords));
 }
 
@@ -375,14 +375,18 @@ void	add_block_to_correct_mesh(t_chunk *chunk, t_block *block, t_block *adjacent
 	}
 }
 
-void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *pos)
+/*
+ * 'dirs' : array of e_card_dir, only check the faces in the direction of these; last should be -1;
+*/
+void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos)
 {
-	int index;
+	int		index;
+	t_block	*adj;
 	
 	index = get_block_index(chunk->info, pos[0], pos[1], pos[2]);
-	if (chunk->blocks[index].type == GAS_AIR) // <-- very important, im not sure what happens if we are trying to render an air block;
+	if (is_gas(&chunk->blocks[index])) // <-- very important, im not sure what happens if we are trying to render an air block;
 		return ;
-
+	adj = NULL;
 	if (is_flora(&chunk->blocks[index]))
 	{
 		if (!(chunk->blocks[index].visible_faces & g_visible_faces[6]))
@@ -396,22 +400,21 @@ void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *pos)
 	}
 	else // these are the solid blocks;
 	{
-		t_block	*adj = NULL;
-		for (int dir = 0; dir <= DIR_DOWN; dir++)
+		for (int dir = 0; dirs[dir] != -1; dir++)
 		{
-			adj = get_block_in_dir(chunk, neighbors[dir], pos, dir);
+			adj = get_block_in_dir(chunk, neighbors[dirs[dir]], pos, dirs[dir]);
 			if (adj && !is_solid(adj)) // add to mesh if adjacent block isnt solid;
 			{
 				// Dont add to mesh if face already in it;
-				if (!(chunk->blocks[index].visible_faces & g_visible_faces[dir]))
+				if (!(chunk->blocks[index].visible_faces & g_visible_faces[dirs[dir]]))
 				{
-					chunk->blocks[index].visible_faces |= g_visible_faces[dir];
-					add_block_to_correct_mesh(chunk, &chunk->blocks[index], adj, pos, dir);
+					chunk->blocks[index].visible_faces |= g_visible_faces[dirs[dir]];
+					add_block_to_correct_mesh(chunk, &chunk->blocks[index], adj, pos, dirs[dir]);
 					chunk->has_visible_blocks = 1;
 				}
 			}
 			else
-				chunk->blocks[index].visible_faces &= ~g_visible_faces[dir];
+				chunk->blocks[index].visible_faces &= ~g_visible_faces[dirs[dir]];
 		}
 	}
 }
@@ -434,23 +437,26 @@ void	get_blocks_visible(t_chunk *chunk)
 	if (!chunk->has_blocks)
 		return ;
 
-	// Get all neighbors of current chunk;
+	// TODO: figure out a way to remove this;
 	t_chunk *neighbors[6];
 	for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
-		neighbors[i] = get_adjacent_chunk(chunk->info, chunk, (float *)g_card_dir[dir]);
+		neighbors[i] = NULL;
 
 	// TODO: remove this, try to integrate it to the loop under this;
 	// Reset visible faces;
 	for (int i = 0; i < chunk->block_amount; i++)
 		chunk->blocks[i].visible_faces = 0;
+	
+	int	all_dirs[] = {DIR_NORTH, DIR_EAST, DIR_SOUTH, DIR_WEST, DIR_UP, DIR_DOWN, -1};
 
-	for (int y = 1; y < CHUNK_HEIGHT - 1; y++)
+	// First check all the blocks inside the chunk, all face directions;
+	for (int y = 0; y < CHUNK_HEIGHT; y++)
 	{
-		for (int x = 1; x < CHUNK_WIDTH - 1; x++)
+		for (int x = 0; x < CHUNK_WIDTH; x++)
 		{
-			for (int z = 1; z < CHUNK_BREADTH - 1; z++)
+			for (int z = 0; z < CHUNK_BREADTH; z++)
 			{
-				helper_pelper(chunk, neighbors, (int []){x, y, z});
+				helper_pelper(chunk, neighbors, all_dirs, (int []){x, y, z});
 			}
 		}
 	}
@@ -476,48 +482,34 @@ void	update_chunk_border_visible_blocks(t_chunk *chunk)
 			neighbors[i] = NULL;
 	}
 
-	for (int y = 0; y <= CHUNK_HEIGHT - 1; y++)
+	for (int y = 0; y < CHUNK_HEIGHT; y++)
 	{
 		// front && back
-		for (int x = 0; x <= CHUNK_WIDTH - 1; x++)
+		for (int x = 0; x < CHUNK_WIDTH; x++)
 		{
 			if (neighbors[DIR_NORTH])
-				helper_pelper(chunk, neighbors, (int []){x, y, 0});
-			else
-				chunk->blocks[get_block_index(chunk->info, x, y, 0)].visible_faces &= ~g_visible_faces[DIR_NORTH];
+				helper_pelper(chunk, neighbors, (int []){DIR_NORTH, -1}, (int []){x, y, 0});
 			if (neighbors[DIR_SOUTH])
-				helper_pelper(chunk, neighbors, (int []){x, y, CHUNK_BREADTH - 1});
-			else
-				chunk->blocks[get_block_index(chunk->info, x, y, CHUNK_BREADTH - 1)].visible_faces &= ~g_visible_faces[DIR_SOUTH];
+				helper_pelper(chunk, neighbors, (int []){DIR_SOUTH, -1}, (int []){x, y, CHUNK_BREADTH - 1});
 		}
 		// left && right
-		// skip corners that above loop has already checked;
-		for (int z = 1; z <= CHUNK_BREADTH - 2; z++)
+		for (int z = 0; z < CHUNK_BREADTH; z++)
 		{
 			if (neighbors[DIR_WEST])
-				helper_pelper(chunk, neighbors, (int []){0, y, z});
-			else
-				chunk->blocks[get_block_index(chunk->info, 0, y, z)].visible_faces &= ~g_visible_faces[DIR_WEST];
+				helper_pelper(chunk, neighbors, (int []){DIR_WEST, -1}, (int []){0, y, z});
 			if (neighbors[DIR_EAST])
-				helper_pelper(chunk, neighbors, (int []){CHUNK_WIDTH - 1, y, z});
-			else
-				chunk->blocks[get_block_index(chunk->info, CHUNK_WIDTH - 1, y, z)].visible_faces &= ~g_visible_faces[DIR_EAST];
+				helper_pelper(chunk, neighbors, (int []){DIR_EAST, -1}, (int []){CHUNK_WIDTH - 1, y, z});
 		}
 	}
 	// down && up
-	// skip the corners, which have already been checked by the loops above;
-	for (int x = 1; x <= CHUNK_WIDTH - 2; x++)
+	for (int x = 0; x < CHUNK_WIDTH; x++)
 	{
-		for (int z = 1; z <= CHUNK_BREADTH - 2; z++)
+		for (int z = 0; z < CHUNK_BREADTH; z++)
 		{
 			if (neighbors[DIR_DOWN])
-				helper_pelper(chunk, neighbors, (int []){x, 0, z});
-			else
-				chunk->blocks[get_block_index(chunk->info, x, 0, z)].visible_faces &= ~g_visible_faces[DIR_DOWN];
+				helper_pelper(chunk, neighbors, (int []){DIR_DOWN, -1}, (int []){x, 0, z});
 			if (neighbors[DIR_UP])
-				helper_pelper(chunk, neighbors, (int []){x, CHUNK_HEIGHT - 1, z});
-			else
-				chunk->blocks[get_block_index(chunk->info, x, CHUNK_HEIGHT - 1, z)].visible_faces &= ~g_visible_faces[DIR_UP];
+				helper_pelper(chunk, neighbors, (int []){DIR_UP, -1}, (int []){x, CHUNK_HEIGHT - 1, z});
 		}
 	}
 }
@@ -847,73 +839,11 @@ void	event_chunk(t_chunk *chunk)
 	}
 }
 
-void	*chunk_thread_func(void *args)
-{
-	t_chunk_args	*info;
-
-	info = args;
-	generate_chunk(info->chunk, info->coords, info->noise_map);
-	update_chunk_visible_blocks(info->chunk);
-	chunk_aabb_update(info->chunk);
-	return (NULL);
-}
-
-int	regenerate_chunks_threading(int *these, int coord[2], t_chunk_info *info)
-{
-	int				ind;
-	int				nth_chunk = 0;
-	int				noise_map[CHUNK_WIDTH * CHUNK_BREADTH];
-	t_chunk_args	args[CHUNKS_PER_COLUMN];
-	pthread_t		threads[CHUNKS_PER_COLUMN];
-
-	create_noise_map(noise_map, CHUNK_WIDTH, CHUNK_BREADTH, coord[0], coord[1]);
-	for (int y = 0; y < CHUNK_HEIGHT; y++)
-	{
-		if (nth_chunk >= CHUNKS_PER_COLUMN || nth_chunk >= CHUNKS_LOADED) 
-			break ;
-		ind = these[nth_chunk];
-		args[nth_chunk].chunk = &info->chunks[ind];
-		args[nth_chunk].coords[0] = coord[0];
-		args[nth_chunk].coords[1] = y;
-		args[nth_chunk].coords[2] = coord[1];
-		args[nth_chunk].noise_map = noise_map;
-		pthread_create(&threads[nth_chunk], NULL, chunk_thread_func, &args[nth_chunk]);
-		nth_chunk++;
-	}
-	for (int i = 0; i < nth_chunk; i++)
-		pthread_join(threads[i], NULL);
-	for (int i = 0; i < nth_chunk; i++)
-		update_chunk_mesh(&info->chunks[these[i]].meshes);
-	return (nth_chunk);
-}
-
-/*
- * Returns amount of chunks that still need to get generated;
-*/
-int	regenerate_chunks(int *these, int coord[2], t_chunk_info *info)
-{
-	int				ind;
-	int				nth_chunk = 0;
-	int				noise_map[CHUNK_WIDTH * CHUNK_BREADTH];
-
-	create_noise_map(noise_map, CHUNK_WIDTH, CHUNK_BREADTH, coord[0], coord[1]);
-	for (int y = 0; y < CHUNKS_PER_COLUMN; y++)
-	{
-		if (nth_chunk >= CHUNKS_PER_COLUMN || nth_chunk >= CHUNKS_LOADED) 
-			break ;
-		ind = these[nth_chunk];
-		generate_chunk(&info->chunks[ind], (int []){coord[0], y, coord[1]}, noise_map);
-		nth_chunk++;
-	}
-	return (nth_chunk);
-}
-
-void	regenerate_chunk_column(t_chunk_col *column, int coord[2])
+void	regenerate_chunk_column(t_chunk_col *column, int coord[2], int seed)
 {
 	int	noise_map[CHUNK_WIDTH * CHUNK_BREADTH];
 
-	create_noise_map(noise_map, CHUNK_WIDTH, CHUNK_BREADTH, coord[0], coord[1]);
-//	ft_printf("Gen this : %d, %d\n", column->coordinate[0], column->coordinate[1]);
+	create_noise_map(noise_map, CHUNK_WIDTH, CHUNK_BREADTH, coord[0], coord[1], seed);
 	for (int i = 0; i < CHUNKS_PER_COLUMN; i++)
 		generate_chunk(column->chunks[i], (int []){coord[0], i, coord[1]}, noise_map);
 	column->coordinate[0] = column->chunks[0]->coordinate[0];
@@ -921,7 +851,6 @@ void	regenerate_chunk_column(t_chunk_col *column, int coord[2])
 	column->world_coordinate[0] = column->chunks[0]->world_coordinate[0];
 	column->world_coordinate[1] = column->chunks[0]->world_coordinate[2];
 	column->update_structures = 1;
-	//ft_printf("is now : %d, %d\n", column->coordinate[0], column->coordinate[1]);
 }
 
 void	show_chunk_borders(t_chunk *chunk, t_camera *camera, float *col)

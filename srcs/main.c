@@ -528,7 +528,7 @@ int	main(void)
 			tobegen = get_chunk_column_to_regen(chunk_info.chunk_columns, player_chunk, col_indices, col_coords, max_get);
 			for (int i = 0; i < tobegen; i++)
 			{
-				regenerate_chunk_column(&chunk_info.chunk_columns[col_indices[i]], col_coords[i]);
+				regenerate_chunk_column(&chunk_info.chunk_columns[col_indices[i]], col_coords[i], chunk_info.seed);
 			}
 		}
 

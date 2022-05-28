@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 10:06:36 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/05/27 14:01:47 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/05/28 11:37:50 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -261,7 +261,7 @@ typedef struct s_regen_args
 void		*regen_thread_func(void *args);
 int			regenerate_chunks(int *these, int coord[2], t_chunk_info *info);
 int			regenerate_chunks_threading(int *these, int coord[2], t_chunk_info *info);
-void		regenerate_chunk_column(t_chunk_col *column, int coord[2]);
+void		regenerate_chunk_column(t_chunk_col *column, int coord[2], int seed);
 
 void		update_chunk(t_chunk *chunk);
 
