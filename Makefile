@@ -34,6 +34,7 @@ CFILES = \
 	ui_manager.c \
 	bitmap.c \
 	ui.c \
+	save.c \
 	bimgf/bimgf_bmp.c \
 	bimgf/bimgf_help.c \
 	bimgf/bimgf_jpg.c \
@@ -47,8 +48,6 @@ CFILES = \
 	
 CDIR = srcs
 ODIR = obj
-#SRCS = $(call rwildcard, $(CDIR), *.c)
-#OBJ = $(patsubst $(CDIR)/%.c, $(ODIR)/%.o, $(SRCS))
 OBJ = $(addprefix $(ODIR)/, $(CFILES:.c=.o))
 JOHNNY = $(OBJ:.o=.d)
 

@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 10:06:36 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/05/28 11:37:50 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/05/30 11:08:43 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -237,6 +237,7 @@ int			*get_block_local_pos_from_index(int *res, int index);
 t_block		*get_block(t_chunk_info *info, float *coords);
 int			get_block_index(t_chunk_info *info, int x, int y, int z);
 t_chunk		*get_highest_chunk(t_chunk_info *info, int x, int z);
+float		get_highest_block_in_chunk(t_chunk *chunk, t_block **out_block, float x, float z);
 float		get_highest_point(t_chunk_info *info, float x, float z);
 float		get_highest_point_of_type(t_chunk_info *info, float x, float z, int type);
 int			get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, t_chunk_info *info, int *player_chunk_v3, int max_get);

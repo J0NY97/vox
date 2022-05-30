@@ -746,6 +746,10 @@ int	main(void)
 				{
 					block_print(hovered_block);
 					vec3_string("Coordinates : ", block_pos);
+					t_chunk *temp_chunk = get_chunk_from_world_pos(&chunk_info, block_pos);	
+					vec3i_string("Chunk Coordinates : ", temp_chunk->coordinate);
+					vec3_string("Chunk World Coordinates : ", temp_chunk->world_coordinate);
+					
 				}
 			}
 		}

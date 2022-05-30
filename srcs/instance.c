@@ -740,12 +740,13 @@ void	update_chunk_block_palette(t_chunk *chunk)
 	{
 		++chunk->block_palette[chunk->blocks[i].type];
 	}
+}
 
-	// DEBUG
-	/*
+// DEBUG
+void print_block_palette(t_chunk *chunk)
+{
 	for (int i = 0; i < BLOCK_TYPE_AMOUNT; i++)
 		ft_printf("%2d : %5d [%s]\n", i, chunk->block_palette[i], get_block_data_from_type(i).name);
-		*/
 }
 
 void	update_chunk_event_blocks(t_chunk *chunk)
@@ -1687,12 +1688,13 @@ t_chunk *get_highest_chunk_with_block(t_chunk_info *info, t_block **out_block, f
 			for (int j = CHUNKS_PER_COLUMN - 1; j >= 0; j--)
 			{
 				if (!info->chunk_columns[i].chunks[j]->has_blocks)
-					continue ;
+					continue ;	
 				// Then loop from highest y to lowest y and double check if it has a world_x / world_z a block;
 				get_block_local_pos_from_world_pos(block_local, (float []){world_x, 0, world_z});
-				for (int y = 15; y >= 0; y--)
+				for (int y = CHUNK_HEIGHT - 1; y >= 0; y--)
 				{
 					int ind = get_block_index(info, block_local[0], y, block_local[2]);
+					get_block_world_pos(block_world, info->chunk_columns[i].chunks[j]->world_coordinate, (int []){block_local[0], y, block_local[2]});
 					if (!is_type_gas(info->chunk_columns[i].chunks[j]->blocks[ind].type))
 					{
 						get_block_world_pos(block_world, info->chunk_columns[i].chunks[j]->world_coordinate, (int []){block_local[0], y, block_local[2]});
@@ -1714,20 +1716,41 @@ t_chunk *get_highest_chunk_with_block(t_chunk_info *info, t_block **out_block, f
 */
 float	get_highest_block(t_chunk_info *info, t_block **out_block, float x, float z)
 {
+	static int count = 0;
 	float	block_y;
 	t_chunk	*highest_chunk;
-	t_block	*curr_block;
 
 	block_y = -1;
-	curr_block = NULL;
-	highest_chunk = get_highest_chunk_with_block(info, &curr_block, &block_y, x, z);
-	if (!highest_chunk || !curr_block || block_y == -1)
+	highest_chunk = get_highest_chunk_with_block(info, out_block, &block_y, x, z);
+	if (!highest_chunk || block_y == -1)
 	{
 		*out_block = NULL;
 		return (-1); // error;
 	}
-	*out_block = curr_block;
 	return (block_y);
+}
+
+/*
+ * Returns highest y coordinate;
+*/
+float	get_highest_block_in_chunk(t_chunk *chunk, t_block **out_block, float x, float z)
+{
+	int		local_pos[3];
+	int		index;
+
+	for (int y = CHUNK_HEIGHT - 1; y >= 0; y--)
+	{
+		get_block_local_pos_from_world_pos(local_pos,
+			(float []){x, y + chunk->world_coordinate[1], z});
+		index = get_block_index(chunk->info, local_pos[0], local_pos[1], local_pos[2]);
+		if (!is_type_gas(chunk->blocks[index].type))
+		{
+			*out_block = &chunk->blocks[index];
+			return (y + chunk->world_coordinate[1]);
+		}
+	}
+	*out_block = NULL;
+	return (-1);
 }
 
 /*
@@ -1763,9 +1786,9 @@ float	get_highest_point_of_type(t_chunk_info *info, float x, float z, int type)
 
 void	flora_decider(t_chunk_info *info, float chance, float *world_pos)
 {
-	if (chance < 1.4f)
+	if (chance < 1.25f)
 	{
-		if (chance < 1.3f)
+		if (chance < 1.125f)
 			flora_placer(info, FLORA_FLOWER_YELLOW, world_pos);
 		else
 			flora_placer(info, FLORA_FLOWER_RED, world_pos);
@@ -1776,10 +1799,10 @@ void	flora_decider(t_chunk_info *info, float chance, float *world_pos)
 
 void	tree_gen(t_chunk_info *info, t_chunk_col *column)
 {
-	float	freq = 0.99f;
+	float	freq = 0.75f; //0.99f;
 	float	pers = 0.5;
 	t_block	*highest_block;
-	float	highest;
+	t_chunk	*highest_chunk;
 
 	for (int x = 0; x < CHUNK_WIDTH; x++)
 	{
@@ -1787,34 +1810,27 @@ void	tree_gen(t_chunk_info *info, t_chunk_col *column)
 		float	to_use_x = block_world_x * freq;
 		for (int z = 0; z < CHUNK_BREADTH; z++)
 		{
-			float	block_world_z = fabs(column->world_coordinate[2] + z);
+			float	block_world_z = fabs(column->world_coordinate[1] + z);
 			float	to_use_z = block_world_z * freq;
-			float	perper =
-				octave_perlin(to_use_x, to_use_x / to_use_z, to_use_z, 1, pers) +
-				octave_perlin(to_use_x, to_use_x / to_use_z, to_use_z, 2, pers) +
-				octave_perlin(to_use_x, to_use_x / to_use_z, to_use_z, 4, pers) +
-				octave_perlin(to_use_x, to_use_x / to_use_z, to_use_z, 8, pers);
+
 			highest_block = NULL;
-			highest = -1;
+			float block_world_y = get_highest_block(info, &highest_block, block_world_x, block_world_z);
+			if (block_world_y == -1)
+				continue ;
+			float to_use_y = block_world_y * freq;
+			float perper =
+				octave_perlin(to_use_x, to_use_y, to_use_z, 1, pers) +
+				octave_perlin(to_use_x, to_use_y, to_use_z, 2, pers) +
+				octave_perlin(to_use_x, to_use_y, to_use_z, 4, pers) +
+				octave_perlin(to_use_x, to_use_y, to_use_z, 8, pers);
 			if (perper < 1.5f)
 			{
-				float	world_x_pos = column->world_coordinate[0] + (float)x;
-				float	world_z_pos = column->world_coordinate[1] + (float)z;
-				highest = get_highest_block(info, &highest_block, world_x_pos, world_z_pos);
-				if (highest == -1 || highest_block == NULL)
-					continue ;
-				if (highest_block->type == BLOCK_DIRT ||
-					highest_block->type == BLOCK_DIRT_GRASS ||
-					highest_block->type == BLOCK_SAND)
-				{
-					if (perper < 1.25f)
-						tree_placer(info,
-							(float []){world_x_pos, highest + 1, world_z_pos});
-					else if (perper < 1.5f)
-						flora_decider(info, perper,
-							(float []){world_x_pos, highest + 1, world_z_pos});
-
-				}
+				if (perper < 1.0f)
+					tree_placer(info,
+						(float []){block_world_x, block_world_y + 1, block_world_z});
+				else
+					flora_decider(info, perper,
+						(float []){block_world_x, block_world_y + 1, block_world_z});
 			}
 		}
 	}
