@@ -181,7 +181,7 @@ int	main(void)
 
 	t_player	player;
 	new_player(&player);
-	new_vec3(player.camera.pos, 5, 85, 5);
+	new_vec3(player.camera.pos, 10000, 100, 10000);
 //	new_vec3(player.camera.pos, 16384, 80, 16384);
 	player.camera.pitch = 0;
 	player.camera.yaw = -90;
@@ -248,7 +248,7 @@ int	main(void)
 	*/
 
 	// Creation of rendering lists;
-	chunk_info.meshes_render_indices = malloc(sizeof(int *) * CHUNKS_LOADED);
+	chunk_info.meshes_render_indices = malloc(sizeof(int) * CHUNKS_LOADED);
 	chunk_info.meshes_render_amount = 0;
 
 	glGenTextures(1, &chunk_info.texture);
@@ -258,7 +258,7 @@ int	main(void)
 	chunks = malloc(sizeof(t_chunk) * CHUNKS_LOADED);
 
 	chunk_info.chunks = chunks;
-	chunk_info.chunk_columns = malloc(sizeof(t_chunk_col) * (RENDER_DISTANCE * RENDER_DISTANCE));
+	chunk_info.chunk_columns = malloc(sizeof(t_chunk_col) * CHUNK_COLUMNS);
 
 	int		nth_chunk = 0;
 	int		nth_col = -1;
@@ -303,6 +303,7 @@ int	main(void)
 	gui.manager = &ui;
 	gui.hotbar_item_id = player_info.hotbar_item_ids;
 	gui.selected_hotbar = player_info.equipped_hotbar;
+	LG_INFO("UI init done.");
 ////////////////////////////////////////
 	// END UI TESTING
 ///////////////////////////////////////
@@ -538,11 +539,13 @@ int	main(void)
 		t_chunk		**col_chunks;
 		t_chunk_col	*column;
 		int			neighbors_found;
+		int			column_chunk_needed_update;
 
 		for (int col = 0; col < CHUNK_COLUMNS; col++)
 		{
 			column = &chunk_info.chunk_columns[col];
 			col_chunks = column->chunks;
+			column_chunk_needed_update = 0;
 
 			if (chunk_info.generate_structures && column->update_structures)
 			{
@@ -570,6 +573,7 @@ int	main(void)
 
 				if (col_chunks[ent]->needs_to_update)
 				{
+					column_chunk_needed_update = 1;
 					update_chunk(col_chunks[ent]);
 
 					chunks[ent].update_water = 1;
@@ -580,6 +584,9 @@ int	main(void)
 							neighbors[i]->secondary_update = 1;
 				}
 			}
+		
+			if (chunk_info.light_calculation && column_chunk_needed_update)
+				update_chunk_column_light(column);
 		}
 
 		// Secondary updater;

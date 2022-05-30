@@ -178,7 +178,7 @@ typedef struct s_skybox
 	size_t		vertices_size;
 }	t_skybox;
 
-static const	char	*g_realistic_skybox[6] = {
+static const char	*g_realistic_skybox[6] = {
 	ROOT_PATH"skybox/realistic/land-3.bmp",
 	ROOT_PATH"skybox/realistic/land-1.bmp",
 	ROOT_PATH"skybox/realistic/land-5.bmp",
@@ -187,7 +187,7 @@ static const	char	*g_realistic_skybox[6] = {
 	ROOT_PATH"skybox/realistic/land-4.bmp"
 };
 
-static const	char	*g_mc_skybox[6] = {
+static const char	*g_mc_skybox[6] = {
 	ROOT_PATH"skybox/mc/side.bmp",
 	ROOT_PATH"skybox/mc/side.bmp",
 	ROOT_PATH"skybox/mc/bot.bmp",
@@ -197,7 +197,7 @@ static const	char	*g_mc_skybox[6] = {
 };
 
 unsigned int	load_cube_map(char **paths, int paths_size);
-t_skybox		*new_skybox(t_skybox *skybox, char (*faces)[6]);
+t_skybox		*new_skybox(t_skybox *skybox, const char **faces);
 float			*skybox_vertices(float *res, size_t *size);
 void			render_skybox(t_skybox *skybox, t_camera *camera);
 

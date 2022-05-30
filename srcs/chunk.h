@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 10:06:36 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/05/30 11:08:43 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/05/30 13:48:22 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ static const float g_chunk_block_amount = CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_BRE
 #define CHUNK_SIZE_Y g_chunk_size_y
 #define CHUNK_SIZE_Z g_chunk_size_z
 static const int g_render_distance = 320 / CHUNK_WIDTH;
-#define RENDER_DISTANCE 7 /*g_render_distance*/
+#define RENDER_DISTANCE 9 /*g_render_distance*/
 static const int g_chunks_loaded = CHUNKS_PER_COLUMN * RENDER_DISTANCE * RENDER_DISTANCE;
 #define CHUNKS_LOADED g_chunks_loaded
 static const int g_chunk_columns = RENDER_DISTANCE * RENDER_DISTANCE;
@@ -248,7 +248,7 @@ int			get_block_type_at_world_pos(t_chunk_info *info, float *world_pos);
 t_block_data	get_block_data(t_block *block);
 t_block_data	get_block_data_from_type(int type);
 
-void		update_chunk_light(t_chunk *chunk);
+void		update_chunk_column_light(t_chunk_col *column);
 
 unsigned long int	get_chunk_hash_key(int *coords);
 

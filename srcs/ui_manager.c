@@ -39,17 +39,6 @@ void	ui_manager_setup_opengl(t_ui_manager *ui)
 	glVertexAttribPointer(ui->attrib_uv, 2, GL_FLOAT, GL_FALSE, sizeof(t_ui_vertex), (void *)offsetof(t_ui_vertex, uv));
 	glVertexAttribPointer(ui->attrib_col, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(t_ui_vertex), (void *)offsetof(t_ui_vertex, col));
 
-/*
-	glGenTextures(1, &ui->texture);
-	glBindTexture(GL_TEXTURE_2D, ui->texture);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glGenerateMipmap(GL_TEXTURE_2D);
-	// TODO : move this to where we update the texture;
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ui->bitmap.width, ui->bitmap.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, ui->bitmap.pixels);
-	*/
 	ui->texture = ui_new_texture(ui, &ui->bitmap);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -60,6 +49,8 @@ void	ui_manager_setup_opengl(t_ui_manager *ui)
 	error = glGetError();
 	if (error)
 		LG_ERROR("(%d)", error);
+	
+	LG_INFO("Done.");
 }
 
 void	ui_manager_init(t_ui_manager *ui)

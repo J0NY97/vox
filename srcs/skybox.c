@@ -125,7 +125,7 @@ void	render_skybox(t_skybox *skybox, t_camera *camera)
 		LG_ERROR("(%d)", error);
 }
 
-t_skybox	*new_skybox(t_skybox *skybox, char (*faces)[6])
+t_skybox	*new_skybox(t_skybox *skybox, const char **faces)
 {
 	int	error = glGetError();
 

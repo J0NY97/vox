@@ -807,8 +807,6 @@ void	update_chunk(t_chunk *chunk)
 	update_chunk_block_palette(chunk);
 	update_chunk_visible_blocks(chunk);
 	update_chunk_event_blocks(chunk);
-	if (chunk->info->light_calculation)
-		update_chunk_light(chunk);
 	chunk->was_updated = 1;
 	chunk->needs_to_update = 0;
 	chunk->secondary_update = 1;
@@ -1926,10 +1924,16 @@ void	update_chunk_light_1(t_chunk *chunk)
  * We only want to do this once per column of chunks;
  *	Give into this only the highest chunk in the column, that has blocks;
 */
-void	update_chunk_light(t_chunk *chunk)
+void	update_chunk_column_light(t_chunk_col *column)
 {
-	update_chunk_light_0(chunk);
-	update_chunk_light_1(chunk);
+	t_chunk	*highest_chunk;
+
+	for (int i = CHUNKS_PER_COLUMN - 1; i >= 0; i--)
+	{
+		highest_chunk = column->chunks[i];
+		update_chunk_light_0(highest_chunk);
+		update_chunk_light_1(highest_chunk);
+	}
 }
 
 void	block_print(t_block *block)
