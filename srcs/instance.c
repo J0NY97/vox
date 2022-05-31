@@ -347,7 +347,7 @@ void	add_block_to_correct_mesh(t_chunk *chunk, t_block *block, t_block *adjacent
 	if (adjacent)
 	{
 		data = get_block_data(block);
-		light = (100 / 15) * ft_clamp(block->light_lvl, 0, 15);//(int)g_face_light[face];
+		light = (int)(ft_pow(0.9f, 15 - ft_clamp(block->light_lvl, 0, 15)) * 100.0f);
 		if (is_fluid(block) && !is_solid(adjacent) &&
 			!(is_fluid(block) && is_fluid(adjacent)))
 		{
@@ -1834,32 +1834,46 @@ void	tree_gen(t_chunk_info *info, t_chunk_col *column)
 	}
 }
 
-void	update_chunk_light_0(t_chunk *chunk)
+/*
+ * Make the highest air block, in the column's highest chunk, emit light;
+ * Make all other blocks not emit light and light_lvl to 0;
+*/
+void	update_chunk_light_0(t_chunk *chunk, t_chunk *up_chunk)
 {
-	t_block			*down_block;
 	t_block			*block;
-	t_block_data	data;
-	int				found;
+	t_block			*up_block;
+	t_block_data	up_block_data;
 
 	// Get highest block in the column, make it emit light;
 	for (int x = 0; x < CHUNK_WIDTH; x++)
 	{
 		for (int z = 0; z < CHUNK_BREADTH; z++)
 		{
-			found = 0;
-			for (int y = CHUNK_HEIGHT - 1; y >= 0; y--)
+			// Means this is the highest chunk;
+			if (!up_chunk)
+			{
+				block = &chunk->blocks[get_block_index(chunk->info, x, CHUNK_HEIGHT - 1, z)];
+				if (is_gas(block))
+				{
+					block->is_emit = 1;
+					block->light_lvl = 15;
+				}
+			}
+			else
+			{
+				block = &chunk->blocks[get_block_index(chunk->info, x, CHUNK_HEIGHT - 1, z)];
+				up_block = &up_chunk->blocks[get_block_index(chunk->info, x, 0, z)];
+				up_block_data = get_block_data(up_block);
+				block->is_emit = 0;
+				block->light_lvl = ft_clamp(up_block->light_lvl + up_block_data.light_emit, 0, 15);
+			}
+			for (int y = CHUNK_HEIGHT - 2; y >= 0; y--)
 			{
 				block = &chunk->blocks[get_block_index(chunk->info, x, y, z)];
+				up_block = &chunk->blocks[get_block_index(chunk->info, x, y + 1, z)];
+				up_block_data = get_block_data(up_block);
 				block->is_emit = 0;
-				block->light_lvl = 0;
-				if (is_gas(block) && !found)
-					block->is_emit = 1;
-				if (y - 1 >= 0)
-				{
-					down_block = &chunk->blocks[get_block_index(chunk->info, x, y - 1, z)];
-					if (down_block && !is_gas(down_block))
-						found = 1;
-				}
+				block->light_lvl = ft_clamp(up_block->light_lvl + up_block_data.light_emit, 0, 15);
 			}
 		}
 	}
@@ -1926,13 +1940,13 @@ void	update_chunk_light_1(t_chunk *chunk)
 */
 void	update_chunk_column_light(t_chunk_col *column)
 {
-	t_chunk	*highest_chunk;
-
-	for (int i = CHUNKS_PER_COLUMN - 1; i >= 0; i--)
+	// First highest chunk;
+	update_chunk_light_0(column->chunks[CHUNKS_PER_COLUMN - 1], NULL);
+	// Then the rest;
+	for (int i = CHUNKS_PER_COLUMN - 2; i >= 0; i--)
 	{
-		highest_chunk = column->chunks[i];
-		update_chunk_light_0(highest_chunk);
-		update_chunk_light_1(highest_chunk);
+		update_chunk_light_0(column->chunks[i], column->chunks[i + 1]);
+		//update_chunk_light_1(column->chunks[i]);
 	}
 }
 
