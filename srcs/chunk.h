@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 10:06:36 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/05/30 13:48:22 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/05/31 13:38:51 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,6 +137,10 @@ typedef struct s_chunk_info
 	int			light_calculation;
 	int			toggle_ui;
 	int			toggle_event;
+
+	int			sky_light_lvl;
+	int			sky_light_lvl_prev; // previous frame light lvl; (used to decide if the sky light has changed or not);
+	int			sky_light_changed; // if the light has changed this frame;
 
 	t_chunk		*chunks; // you should not store the chunks here mainly; its just here so you can acces from places you need, without having to pass them in the function as argumnet;
 	t_chunk_col	*chunk_columns; // render_distance

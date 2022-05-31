@@ -387,6 +387,7 @@ void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos)
 	if (is_gas(&chunk->blocks[index])) // <-- very important, im not sure what happens if we are trying to render an air block;
 		return ;
 	adj = NULL;
+	// TODO : this needs to be moved to the 'add_block_to_correct_mesh()';
 	if (is_flora(&chunk->blocks[index]))
 	{
 		if (!(chunk->blocks[index].visible_faces & g_visible_faces[6]))
@@ -1856,7 +1857,7 @@ void	update_chunk_light_0(t_chunk *chunk, t_chunk *up_chunk)
 				if (is_gas(block))
 				{
 					block->is_emit = 1;
-					block->light_lvl = 15;
+					block->light_lvl = chunk->info->sky_light_lvl;//15; // sky light level;
 				}
 			}
 			else
@@ -1882,19 +1883,33 @@ void	update_chunk_light_0(t_chunk *chunk, t_chunk *up_chunk)
 /*
  *
 */
-void	emit_sky_light(t_chunk *chunk, int *coord, int light)
+void	emit_sky_light(t_chunk_col *column, int chunk_index, int *coord, int light)
 {
+	t_chunk			*chunk;
 	t_block			*block;
 	t_block_data	data;
 
 	if (light <= 0 ||
-		coord[0] < 0 || coord[0] > CHUNK_WIDTH - 1 ||
-		coord[1] < 0 || coord[1] > CHUNK_HEIGHT - 1 ||
-		coord[2] < 0 || coord[2] > CHUNK_BREADTH - 1)
+		coord[0] < 0 || coord[0] >= CHUNK_WIDTH ||
+		coord[2] < 0 || coord[2] >= CHUNK_BREADTH)
 		return ;
+	if (coord[1] < 0)
+	{
+		coord[1] = CHUNK_HEIGHT - 1;
+		chunk_index--;
+	}
+	else if (coord[1] >= CHUNK_HEIGHT)
+	{
+		coord[1] = 0;
+		chunk_index++;
+	}
+	if (chunk_index < 0 || chunk_index >= CHUNKS_PER_COLUMN)
+		return ;
+	chunk = column->chunks[chunk_index];
+	chunk->needs_to_update = 1;
 	block = &chunk->blocks[get_block_index(chunk->info, coord[0], coord[1], coord[2])];
 	data = get_block_data(block);
-	if (light > block->light_lvl)
+	if (light >= block->light_lvl)
 		block->light_lvl = light;
 	else // if block doesnt want more light, we can assume other blocks in that direction doesnt either;
 		return ;
@@ -1902,32 +1917,41 @@ void	emit_sky_light(t_chunk *chunk, int *coord, int light)
 		return ;
 /*
 */
-	emit_sky_light(chunk, (int []){coord[0], coord[1] + 1, coord[2]}, block->light_lvl + data.light_emit - 1);
-	emit_sky_light(chunk, (int []){coord[0], coord[1] - 1, coord[2]}, block->light_lvl + data.light_emit);
-	emit_sky_light(chunk, (int []){coord[0] + 1, coord[1], coord[2]}, block->light_lvl + data.light_emit - 1);
-	emit_sky_light(chunk, (int []){coord[0] - 1, coord[1], coord[2]}, block->light_lvl + data.light_emit - 1);
-	emit_sky_light(chunk, (int []){coord[0], coord[1], coord[2] + 1}, block->light_lvl + data.light_emit - 1);
-	emit_sky_light(chunk, (int []){coord[0], coord[1], coord[2] - 1}, block->light_lvl + data.light_emit - 1);
+//	emit_sky_light(column, chunk_index, (int []){coord[0], coord[1] + 1, coord[2]}, block->light_lvl + data.light_emit - 1);
+	emit_sky_light(column, chunk_index, (int []){coord[0], coord[1] - 1, coord[2]}, block->light_lvl + data.light_emit);
+	emit_sky_light(column, chunk_index, (int []){coord[0] + 1, coord[1], coord[2]}, block->light_lvl + data.light_emit - 1);
+	emit_sky_light(column, chunk_index, (int []){coord[0] - 1, coord[1], coord[2]}, block->light_lvl + data.light_emit - 1);
+	emit_sky_light(column, chunk_index, (int []){coord[0], coord[1], coord[2] + 1}, block->light_lvl + data.light_emit - 1);
+	emit_sky_light(column, chunk_index, (int []){coord[0], coord[1], coord[2] - 1}, block->light_lvl + data.light_emit - 1);
 /*
 */
 }
 
-void	update_chunk_light_1(t_chunk *chunk)
+void	update_chunk_light_1(t_chunk_col *column)
 {
 	t_block	*block;
+	t_chunk	*chunk;
 
 	// for all emitters in the column of blocks, flood fill light around;
-	for (int x = 0; x < CHUNK_WIDTH; x++)
+	for (int i = CHUNKS_PER_COLUMN - 1; i >= 0; i--)
 	{
-		for (int z = 0; z < CHUNK_WIDTH; z++)
+		chunk = column->chunks[i];
+		for (int x = 0; x < CHUNK_WIDTH; x++)
 		{
-			for (int y = CHUNK_HEIGHT - 1; y >= 0; y--)
+			for (int z = 0; z < CHUNK_BREADTH; z++)
 			{
-				block = &chunk->blocks[get_block_index(chunk->info, x, y, z)];
-				if (block->is_emit)
+				for (int y = CHUNK_HEIGHT - 1; y >= 0; y--)
 				{
-					emit_sky_light(chunk, (int []){x, y, z}, 15);
-					break ;
+					block = &chunk->blocks[get_block_index(chunk->info, x, y, z)];
+					if (block->is_emit)
+					{
+						if (is_gas(block))
+							emit_sky_light(column, i, (int []){x, y, z}, block->light_lvl);
+							/*
+						else
+							emit_torch_light(column, i, (int []){x, y, z}, block->light_lvl);
+							*/
+					}
 				}
 			}
 		}
@@ -1944,10 +1968,8 @@ void	update_chunk_column_light(t_chunk_col *column)
 	update_chunk_light_0(column->chunks[CHUNKS_PER_COLUMN - 1], NULL);
 	// Then the rest;
 	for (int i = CHUNKS_PER_COLUMN - 2; i >= 0; i--)
-	{
 		update_chunk_light_0(column->chunks[i], column->chunks[i + 1]);
-		//update_chunk_light_1(column->chunks[i]);
-	}
+	update_chunk_light_1(column);
 }
 
 void	block_print(t_block *block)

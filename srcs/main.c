@@ -240,6 +240,9 @@ int	main(void)
 	chunk_info.toggle_ui = 0;
 	chunk_info.toggle_event = 0;
 
+	chunk_info.sky_light_lvl = 15;
+	chunk_info.sky_light_lvl_prev = chunk_info.sky_light_lvl;
+
 	// Creation of hashtable
 	/*
 	chunk_info.hash_table_size = (int)(chunk_info.chunks_loaded * 3);
@@ -502,6 +505,17 @@ int	main(void)
 			}
 		}
 
+		// Change sky light level, Debug only;
+		if (keys[GLFW_KEY_KP_SUBTRACT].state == BUTTON_PRESS)
+		{
+			chunk_info.sky_light_lvl = ft_clamp(chunk_info.sky_light_lvl - 1, 0, 15);
+			LG_INFO("Sky Light Level : %d", chunk_info.sky_light_lvl);
+		}
+		if (keys[GLFW_KEY_KP_ADD].state == BUTTON_PRESS)
+		{
+			chunk_info.sky_light_lvl = ft_clamp(chunk_info.sky_light_lvl + 1, 0, 15);
+			LG_INFO("Sky Light Level : %d", chunk_info.sky_light_lvl);
+		}
 
 		update_fps(&fps);
 		player_events(&player, keys, sp.win);
@@ -535,6 +549,15 @@ int	main(void)
 
 		thread_manager_check_threadiness(&tm);
 
+		// Decide if the sky light level has changed;
+		if (chunk_info.sky_light_lvl != chunk_info.sky_light_lvl_prev)
+		{
+			chunk_info.sky_light_lvl_prev = chunk_info.sky_light_lvl;
+			chunk_info.sky_light_changed = 1;
+		}
+		else
+			chunk_info.sky_light_changed = 0;
+
 		t_chunk		*neighbors[DIR_AMOUNT];
 		t_chunk		**col_chunks;
 		t_chunk_col	*column;
@@ -555,7 +578,8 @@ int	main(void)
 			for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
 				if (col_chunks[ent]->needs_to_update)
 					column_chunk_needed_update = 1;
-			if (chunk_info.light_calculation && column_chunk_needed_update)
+			if (chunk_info.light_calculation &&
+				(column_chunk_needed_update || chunk_info.sky_light_changed))
 				update_chunk_column_light(column);
 			for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
 			{
