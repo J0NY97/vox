@@ -274,12 +274,14 @@ int	main(void)
 	for (; nth_chunk < CHUNKS_LOADED; ++nth_chunk)
 	{
 		new_chunk(&chunks[nth_chunk], &chunk_info, nth_chunk);
+		init_chunk_mesh_v2(&chunks[nth_chunk].meshes, cube_shader_v2, MESH_TYPE_AMOUNT);
 		chunks[nth_chunk].meshes.texture = chunk_info.texture;
 		if (nth_chunk % CHUNKS_PER_COLUMN == 0)
 		{
 			nth_col_chunk = 0;
 			++nth_col;
 			chunk_info.chunk_columns[nth_col].chunks = malloc(sizeof(t_chunk *) * CHUNKS_PER_COLUMN);
+			chunk_info.chunk_columns[nth_col].lights = malloc(sizeof(t_light *) * CHUNK_COLUMN_LIGHT_AMOUNT);
 
 			chunk_info.chunk_columns[nth_col].coordinate[0] = chunks[nth_chunk].coordinate[0];
 			chunk_info.chunk_columns[nth_col].coordinate[1] = chunks[nth_chunk].coordinate[2];
@@ -806,7 +808,7 @@ if (error)
 		{
 			int render_index = chunk_info.meshes_render_indices[r];
 			if (chunks[render_index].blocks_solid_amount > 0)
-				render_chunk_mesh_v2(&chunks[render_index].meshes, BLOCK_MESH, chunks[render_index].world_coordinate, &player.camera, cube_shader_v2);
+				render_chunk_mesh_v2(&chunks[render_index].meshes, BLOCK_MESH, chunks[render_index].world_coordinate, &player.camera);
 		}
 
 error = glGetError();
@@ -820,7 +822,7 @@ if (error)
 		{
 			int render_index = chunk_info.meshes_render_indices[r];
 			if (chunks[render_index].blocks_solid_alpha_amount > 0)
-				render_chunk_mesh_v2(&chunks[render_index].meshes, BLOCK_ALPHA_MESH, chunks[render_index].world_coordinate, &player.camera, cube_shader_v2);
+				render_chunk_mesh_v2(&chunks[render_index].meshes, BLOCK_ALPHA_MESH, chunks[render_index].world_coordinate, &player.camera);
 		}
 
 error = glGetError();
@@ -834,7 +836,7 @@ if (error)
 		{
 			int render_index = chunk_info.meshes_render_indices[r];
 			if (chunks[render_index].blocks_flora_amount > 0)
-				render_chunk_mesh_v2(&chunks[render_index].meshes, FLORA_MESH, chunks[render_index].world_coordinate, &player.camera, cube_shader_v2);
+				render_chunk_mesh_v2(&chunks[render_index].meshes, FLORA_MESH, chunks[render_index].world_coordinate, &player.camera);
 		}
 error = glGetError();
 if (error)
@@ -848,7 +850,7 @@ if (error)
 		{
 			int render_index = chunk_info.meshes_render_indices[r];
 			if (chunks[render_index].blocks_fluid_amount > 0)
-				render_chunk_mesh_v2(&chunks[render_index].meshes, FLUID_MESH, chunks[render_index].world_coordinate, &player.camera, cube_shader_v2);
+				render_chunk_mesh_v2(&chunks[render_index].meshes, FLUID_MESH, chunks[render_index].world_coordinate, &player.camera);
 		}
 
 /////////////////

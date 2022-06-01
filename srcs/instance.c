@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   instance.c                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/06/01 14:11:42 by jsalmi            #+#    #+#             */
+/*   Updated: 2022/06/01 14:12:48 by jsalmi           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "shaderpixel.h"
 #include "chunk.h"
 
@@ -36,8 +48,6 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, int nth)
 	if (!hash_item_insert(info->hash_table, info->hash_table_size, key, nth))
 		LG_WARN("Chunk data couldnt be inserted.");
 		*/
-
-	init_chunk_mesh_v2(&chunk->meshes, MESH_TYPE_AMOUNT);
 
 	error = glGetError();
 	if (error)
@@ -238,7 +248,7 @@ t_chunk	*get_chunk_from_world_pos(t_chunk_info *info, float *pos)
 /*
  * From local chunk block pos to the index in the 'chunk->blocks' array;
 */
-int	get_block_index(t_chunk_info *info, int x, int y, int z)
+int	get_block_index(int x, int y, int z)
 {
 	return ((x * CHUNK_WIDTH * CHUNK_BREADTH) + (z * CHUNK_HEIGHT) + y);
 }
@@ -293,7 +303,7 @@ t_block	*get_block(t_chunk_info *info, float *coords)
 	{
 		int	local_pos[3];
 		get_block_local_pos_from_world_pos(local_pos, coords);
-		int index = get_block_index(info, local_pos[0], local_pos[1], local_pos[2]);
+		int index = get_block_index(local_pos[0], local_pos[1], local_pos[2]);
 		return (&chunk->blocks[index]);
 	}
 	return (NULL);
@@ -314,9 +324,9 @@ t_block	*get_block_faster(t_chunk *chunk, t_chunk *chunk2, int *coords)
 	if (coords[0] >= 0 && coords[0] < CHUNK_WIDTH &&
 		coords[1] >= 0 && coords[1] < CHUNK_HEIGHT &&
 		coords[2] >= 0 && coords[2] < CHUNK_BREADTH)
-		adj = &chunk->blocks[get_block_index(chunk->info, coords[0], coords[1], coords[2])];
+		adj = &chunk->blocks[get_block_index(coords[0], coords[1], coords[2])];
 	else if (chunk2) // then check the neighbor; (the neighbor should already be the correct one)
-		adj = &chunk2->blocks[get_block_index(chunk->info,
+		adj = &chunk2->blocks[get_block_index(
 			mod(coords[0], CHUNK_WIDTH), mod(coords[1], CHUNK_HEIGHT), mod(coords[2], CHUNK_BREADTH))];
 	return (adj);
 }
@@ -383,7 +393,7 @@ void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos)
 	int		index;
 	t_block	*adj;
 	
-	index = get_block_index(chunk->info, pos[0], pos[1], pos[2]);
+	index = get_block_index(pos[0], pos[1], pos[2]);
 	if (is_gas(&chunk->blocks[index])) // <-- very important, im not sure what happens if we are trying to render an air block;
 		return ;
 	adj = NULL;
@@ -544,6 +554,7 @@ void	generate_chunk(t_chunk *chunk, int *coord, int *noise_map)
 	chunk->block_amount = chunk_gen(chunk, noise_map); // should always return max amount of blocks in a chunk;
 
 	chunk->event_block_amount = 0;
+	chunk->light_emitters = 0;
 
 	chunk->needs_to_update = 1;
 
@@ -750,6 +761,33 @@ void print_block_palette(t_chunk *chunk)
 		ft_printf("%2d : %5d [%s]\n", i, chunk->block_palette[i], get_block_data_from_type(i).name);
 }
 
+/*
+int	get_chunk_skylight_amount(t_chunk *chunk)
+{
+	int		skylights;
+	int		index;
+	int		top_chunk_pos[3];
+	t_chunk	*top_chunk;
+	
+	top_chunk = get_chunk(chunk->info,
+		vec3i_add(top_chunk_pos, chunk->coordinate, g_card_dir_int[DIR_UP]));
+	// TODO : For now, just return if not the top most chunk, we have to look into this later;
+	if (top_chunk)
+		return (0);
+	skylights = 0;
+	for (int x = 0; x < CHUNK_WIDTH; x++)
+	{
+		for (int z = 0; z < CHUNK_WIDTH; z++)
+		{
+			index = get_block_index(x, CHUNK_HEIGHT - 1, z);
+			if (is_gas(&chunk->blocks[index]))
+				++skylights;
+		}
+	}
+	return (skylights);
+}
+*/
+
 void	update_chunk_event_blocks(t_chunk *chunk)
 {
 	t_block			*block;
@@ -763,6 +801,10 @@ void	update_chunk_event_blocks(t_chunk *chunk)
 	// Figure out how many event blocks we want;
 	chunk->event_blocks_wanted = get_chunk_water_amount(chunk);
 	chunk->event_blocks_wanted += chunk->block_palette[BLOCK_TNT];
+	/*
+	chunk->event_blocks_wanted += get_chunk_skylight_amount(chunk);;
+	chunk->event_blocks_wanted += chunk->block_palette[BLOCK_TORCH];
+	*/
 
 	// No need doing anything if we dont have any event blocks for this chunk;
 	if (chunk->event_blocks_wanted <= 0)
@@ -941,14 +983,14 @@ void	reset_chunk_mesh_v2(t_chunk_mesh_v2 *mesh)
 /*
  * Creates all the opengl stuff that needs to be created only once;
 */
-void	init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount)
+void	init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, GLuint shader, int amount)
 {
 	GLuint	vbo[2];
 	int		error;
 	error = glGetError();
 	if (error)
 		LG_ERROR("BEFORE (%d)", error);
-
+	
 	mesh->vertices_allocated = 162576;
 	mesh->vertices = malloc(sizeof(float) * mesh->vertices_allocated);
 	mesh->vertices_amount = 0;
@@ -993,6 +1035,13 @@ void	init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount)
 	mesh->ebo = malloc(sizeof(unsigned int) * mesh->amount);
 	glGenBuffers(mesh->amount, mesh->ebo);
 
+	mesh->shader = shader;
+	// Get uniforms
+	mesh->uniform_chunk_pos = glGetUniformLocation(mesh->shader, "chunkPos");
+	mesh->uniform_view = glGetUniformLocation(mesh->shader, "view");
+	mesh->uniform_proj = glGetUniformLocation(mesh->shader, "projection");
+	mesh->uniform_color_tint = glGetUniformLocation(mesh->shader, "colorTint");
+
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -1005,18 +1054,22 @@ void	init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount)
 /*
  * 'coordinate' world coordinate of the chunk;
 */
-void	render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinate, t_camera *camera, GLuint shader)
+void	render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinate, t_camera *camera)
 {
 	int	error;
 	error = glGetError();
 	if (error)
 		LG_ERROR("BEFORE (%d)", error);
 	
-	glUseProgram(shader);
-	glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, GL_FALSE, &camera->view[0]);
-	glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, GL_FALSE, &camera->projection[0]);
+	glUseProgram(mesh->shader);
+	glUniformMatrix4fv(mesh->uniform_view, 1, GL_FALSE, &camera->view[0]);
+	glUniformMatrix4fv(mesh->uniform_proj, 1, GL_FALSE, &camera->projection[0]);
 
-	glUniform3fv(glGetUniformLocation(shader, "chunkPos"), 1, &coordinate[0]);
+	glUniform3fv(mesh->uniform_chunk_pos, 1, &coordinate[0]);
+	// Night tint 
+//	glUniform3fv(mesh->uniform_color_tint, 1, (float []){0.2, 0.40, 0.6});
+	// day tint
+	glUniform3fv(mesh->uniform_color_tint, 1, (float []){1, 1, 1});
 
 	glBindVertexArray(mesh->vao);
 
@@ -1481,7 +1534,7 @@ t_block	*set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_
 	if (!chunk)
 		return (NULL);
 	get_block_local_pos_from_world_pos(block_local, world_pos);
-	index = get_block_index(info, block_local[0], block_local[1], block_local[2]);
+	index = get_block_index(block_local[0], block_local[1], block_local[2]);
 	if (chunk->blocks[index].type == block_type)
 		return (NULL);
 	chunk->blocks[index].type = block_type;
@@ -1503,7 +1556,7 @@ void	set_block_at_world_pos_if_empty(t_chunk_info *info, float *world_pos, int b
 	if (!chunk)
 		return ;
 	get_block_local_pos_from_world_pos(block_local, world_pos);
-	index = get_block_index(info, block_local[0], block_local[1], block_local[2]);
+	index = get_block_index(block_local[0], block_local[1], block_local[2]);
 	if (!is_gas(&chunk->blocks[index]))
 		return ;
 	chunk->blocks[index].type = block_type;
@@ -1525,7 +1578,7 @@ int	get_block_type_at_world_pos(t_chunk_info *info, float *world_pos)
 	if (!chunk)
 		return (-1);
 	get_block_local_pos_from_world_pos(block_local, under_block);
-	index = get_block_index(info, block_local[0], block_local[1], block_local[2]);
+	index = get_block_index(block_local[0], block_local[1], block_local[2]);
 	return (chunk->blocks[index].type);
 }
 
@@ -1692,7 +1745,7 @@ t_chunk *get_highest_chunk_with_block(t_chunk_info *info, t_block **out_block, f
 				get_block_local_pos_from_world_pos(block_local, (float []){world_x, 0, world_z});
 				for (int y = CHUNK_HEIGHT - 1; y >= 0; y--)
 				{
-					int ind = get_block_index(info, block_local[0], y, block_local[2]);
+					int ind = get_block_index(block_local[0], y, block_local[2]);
 					get_block_world_pos(block_world, info->chunk_columns[i].chunks[j]->world_coordinate, (int []){block_local[0], y, block_local[2]});
 					if (!is_type_gas(info->chunk_columns[i].chunks[j]->blocks[ind].type))
 					{
@@ -1741,7 +1794,7 @@ float	get_highest_block_in_chunk(t_chunk *chunk, t_block **out_block, float x, f
 	{
 		get_block_local_pos_from_world_pos(local_pos,
 			(float []){x, y + chunk->world_coordinate[1], z});
-		index = get_block_index(chunk->info, local_pos[0], local_pos[1], local_pos[2]);
+		index = get_block_index(local_pos[0], local_pos[1], local_pos[2]);
 		if (!is_type_gas(chunk->blocks[index].type))
 		{
 			*out_block = &chunk->blocks[index];
@@ -1844,6 +1897,7 @@ void	update_chunk_light_0(t_chunk *chunk, t_chunk *up_chunk)
 	t_block			*block;
 	t_block			*up_block;
 	t_block_data	up_block_data;
+	int				found = 0;
 
 	// Get highest block in the column, make it emit light;
 	for (int x = 0; x < CHUNK_WIDTH; x++)
@@ -1853,28 +1907,27 @@ void	update_chunk_light_0(t_chunk *chunk, t_chunk *up_chunk)
 			// Means this is the highest chunk;
 			if (!up_chunk)
 			{
-				block = &chunk->blocks[get_block_index(chunk->info, x, CHUNK_HEIGHT - 1, z)];
+				block = &chunk->blocks[get_block_index(x, CHUNK_HEIGHT - 1, z)];
+				block->is_emit = 0;
+				block->light_lvl = 0;
 				if (is_gas(block))
-				{
 					block->is_emit = 1;
-					block->light_lvl = chunk->info->sky_light_lvl;//15; // sky light level;
-				}
 			}
 			else
 			{
-				block = &chunk->blocks[get_block_index(chunk->info, x, CHUNK_HEIGHT - 1, z)];
-				up_block = &up_chunk->blocks[get_block_index(chunk->info, x, 0, z)];
+				block = &chunk->blocks[get_block_index(x, CHUNK_HEIGHT - 1, z)];
+				up_block = &up_chunk->blocks[get_block_index(x, 0, z)];
 				up_block_data = get_block_data(up_block);
 				block->is_emit = 0;
-				block->light_lvl = ft_clamp(up_block->light_lvl + up_block_data.light_emit, 0, 15);
+				block->light_lvl = 0;//ft_clamp(up_block->light_lvl + up_block_data.light_emit, 0, 15);
 			}
 			for (int y = CHUNK_HEIGHT - 2; y >= 0; y--)
 			{
-				block = &chunk->blocks[get_block_index(chunk->info, x, y, z)];
-				up_block = &chunk->blocks[get_block_index(chunk->info, x, y + 1, z)];
+				block = &chunk->blocks[get_block_index(x, y, z)];
+				up_block = &chunk->blocks[get_block_index(x, y + 1, z)];
 				up_block_data = get_block_data(up_block);
 				block->is_emit = 0;
-				block->light_lvl = ft_clamp(up_block->light_lvl + up_block_data.light_emit, 0, 15);
+				block->light_lvl = 0;//ft_clamp(up_block->light_lvl + up_block_data.light_emit, 0, 15);
 			}
 		}
 	}
@@ -1887,8 +1940,13 @@ void	emit_sky_light(t_chunk_col *column, int chunk_index, int *coord, int light)
 {
 	t_chunk			*chunk;
 	t_block			*block;
+	t_block			*next_block;
 	t_block_data	data;
+	static int count = 0;
 
+	++count;
+	if (count % 100 == 0)
+		ft_printf("count : %d\n", count);
 	if (light <= 0 ||
 		coord[0] < 0 || coord[0] >= CHUNK_WIDTH ||
 		coord[2] < 0 || coord[2] >= CHUNK_BREADTH)
@@ -1906,23 +1964,25 @@ void	emit_sky_light(t_chunk_col *column, int chunk_index, int *coord, int light)
 	if (chunk_index < 0 || chunk_index >= CHUNKS_PER_COLUMN)
 		return ;
 	chunk = column->chunks[chunk_index];
-	chunk->needs_to_update = 1;
-	block = &chunk->blocks[get_block_index(chunk->info, coord[0], coord[1], coord[2])];
+	block = &chunk->blocks[get_block_index(coord[0], coord[1], coord[2])];
 	data = get_block_data(block);
-	if (light >= block->light_lvl)
+	if (light > block->light_lvl)
 		block->light_lvl = light;
 	else // if block doesnt want more light, we can assume other blocks in that direction doesnt either;
 		return ;
-	if (block->light_lvl == 0)
+	chunk->needs_to_update = 1;
+	if (block->light_lvl == 1)
 		return ;
 /*
 */
-//	emit_sky_light(column, chunk_index, (int []){coord[0], coord[1] + 1, coord[2]}, block->light_lvl + data.light_emit - 1);
+	//emit_sky_light(column, chunk_index, (int []){coord[0] + 1, coord[1], coord[2]}, block->light_lvl + data.light_emit - 1);
 	emit_sky_light(column, chunk_index, (int []){coord[0], coord[1] - 1, coord[2]}, block->light_lvl + data.light_emit);
-	emit_sky_light(column, chunk_index, (int []){coord[0] + 1, coord[1], coord[2]}, block->light_lvl + data.light_emit - 1);
+	/*
 	emit_sky_light(column, chunk_index, (int []){coord[0] - 1, coord[1], coord[2]}, block->light_lvl + data.light_emit - 1);
 	emit_sky_light(column, chunk_index, (int []){coord[0], coord[1], coord[2] + 1}, block->light_lvl + data.light_emit - 1);
 	emit_sky_light(column, chunk_index, (int []){coord[0], coord[1], coord[2] - 1}, block->light_lvl + data.light_emit - 1);
+	emit_sky_light(column, chunk_index, (int []){coord[0], coord[1] + 1, coord[2]}, block->light_lvl + data.light_emit - 1);
+	*/
 /*
 */
 }
@@ -1931,6 +1991,7 @@ void	update_chunk_light_1(t_chunk_col *column)
 {
 	t_block	*block;
 	t_chunk	*chunk;
+	static int count = 0;
 
 	// for all emitters in the column of blocks, flood fill light around;
 	for (int i = CHUNKS_PER_COLUMN - 1; i >= 0; i--)
@@ -1942,11 +2003,11 @@ void	update_chunk_light_1(t_chunk_col *column)
 			{
 				for (int y = CHUNK_HEIGHT - 1; y >= 0; y--)
 				{
-					block = &chunk->blocks[get_block_index(chunk->info, x, y, z)];
+					block = &chunk->blocks[get_block_index(x, y, z)];
 					if (block->is_emit)
 					{
 						if (is_gas(block))
-							emit_sky_light(column, i, (int []){x, y, z}, block->light_lvl);
+							emit_sky_light(column, i, (int []){x, y, z}, column->chunks[0]->info->sky_light_lvl);
 							/*
 						else
 							emit_torch_light(column, i, (int []){x, y, z}, block->light_lvl);
@@ -1956,6 +2017,65 @@ void	update_chunk_light_1(t_chunk_col *column)
 			}
 		}
 	}
+	ft_printf("update light 1 : %d\n", count++);
+}
+
+// Find height map for sky light emitters;
+void	update_chunk_column_light_0(t_chunk_col *column)
+{
+	int	light_index;
+	int	curr_chunk_index;
+
+	ft_printf("Getting light heightmaps\n");
+	for (int x = 0; x < CHUNK_WIDTH; x++)	
+	{
+		for (int z = 0; z < CHUNK_BREADTH; z++)	
+		{
+			light_index = x * CHUNK_WIDTH + z;
+			column->lights[light_index].chunk_index = -1;
+			vec3i_new(column->lights[light_index].local, x, -1, z);
+			for (int i = CHUNKS_PER_COLUMN - 1; i >= 0; i--)
+			{
+				if (column->lights[light_index].chunk_index != -1)
+					continue ;
+				for (int y = CHUNK_HEIGHT - 1; y >= 0; y--)
+				{
+					if (!is_gas(&column->chunks[i]->blocks[get_block_index(x, y, z)]))
+					{
+						if (y + 1 < CHUNK_HEIGHT)
+						{
+							column->lights[light_index].chunk_index = i;
+							column->lights[light_index].local[1] = y + 1;
+						}
+						else
+						{
+							column->lights[light_index].chunk_index = i + 1;
+							column->lights[light_index].local[1] = 0;
+						}
+						break ;
+					}
+				}
+			}
+		}
+	}
+	ft_printf("we are done here.\n");
+}
+
+void	update_chunk_column_light_1(t_chunk_col *column)
+{
+	int	skylight;
+	float world[3];
+	static int count = 0;
+	ft_printf("start emitting from the emitters\n");
+	skylight = column->chunks[0]->info->sky_light_lvl;
+	for (int i = 0; i < CHUNK_COLUMN_LIGHT_AMOUNT; i++)
+	{
+		emit_sky_light(column, column->lights[i].chunk_index, column->lights[i].local, skylight);
+//		column->chunks[column->lights[i].chunk_index]->blocks[get_block_index(column->lights[i].local[0], column->lights[i].local[1], column->lights[i].local[2])].type = BLOCK_BEDROCK;
+//		column->chunks[column->lights[i].chunk_index]->needs_to_update = 1;
+//		column->chunks[column->lights[i].chunk_index]->has_blocks = 1;
+	}
+	ft_printf("emitting done \n");
 }
 
 /*
@@ -1964,12 +2084,16 @@ void	update_chunk_light_1(t_chunk_col *column)
 */
 void	update_chunk_column_light(t_chunk_col *column)
 {
+	/*
+	update_chunk_column_light_0(column);
+	update_chunk_column_light_1(column);
 	// First highest chunk;
 	update_chunk_light_0(column->chunks[CHUNKS_PER_COLUMN - 1], NULL);
 	// Then the rest;
 	for (int i = CHUNKS_PER_COLUMN - 2; i >= 0; i--)
 		update_chunk_light_0(column->chunks[i], column->chunks[i + 1]);
 	update_chunk_light_1(column);
+	*/
 }
 
 void	block_print(t_block *block)

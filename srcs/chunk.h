@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 10:06:36 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/05/31 13:38:51 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/01 14:05:48 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,11 +40,13 @@ static const float g_chunk_block_amount = CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_BRE
 #define CHUNK_SIZE_Y g_chunk_size_y
 #define CHUNK_SIZE_Z g_chunk_size_z
 static const int g_render_distance = 320 / CHUNK_WIDTH;
-#define RENDER_DISTANCE 9 /*g_render_distance*/
+#define RENDER_DISTANCE 1 /*g_render_distance*/
 static const int g_chunks_loaded = CHUNKS_PER_COLUMN * RENDER_DISTANCE * RENDER_DISTANCE;
 #define CHUNKS_LOADED g_chunks_loaded
 static const int g_chunk_columns = RENDER_DISTANCE * RENDER_DISTANCE;
 #define CHUNK_COLUMNS g_chunk_columns
+static const int g_chunk_column_light_amount = CHUNK_WIDTH * CHUNK_BREADTH;
+#define CHUNK_COLUMN_LIGHT_AMOUNT g_chunk_column_light_amount
 
 typedef struct s_chunk		t_chunk;
 
@@ -83,6 +85,13 @@ typedef struct s_chunk_mesh_v2
 	size_t			*indices_amount; // how many values in the array; (one face has 6 indices);
 
 	size_t			index_amount; // how many indices we have; (one face has 4 indices);
+
+	GLuint			shader;
+
+	GLuint			uniform_chunk_pos;
+	GLuint			uniform_view;
+	GLuint			uniform_proj;
+	GLuint			uniform_color_tint;
 }	t_chunk_mesh_v2;
 
 /*
@@ -102,6 +111,7 @@ void		block_print(t_block *block);
 typedef struct s_block_event
 {
 	t_block	*block; // pointer to the actual block;
+	int		local[3];
 	float	pos[3]; // world position of the block;
 
 	// WATER
@@ -110,7 +120,16 @@ typedef struct s_block_event
 	int		statique;		// if we are done event handling this block;	(can be changed to 'char');
 
 	// TNT
+
+	// Light Emitter
+	int		light_emit_lvl; // sky 15, torch 4...;
 }	t_block_event;
+
+typedef struct s_light
+{
+	int		chunk_index;
+	int		local[3];
+}	t_light;
 
 /*
  * One column of chunks at local chunk 'coordinate';
@@ -124,6 +143,8 @@ typedef struct s_chunk_col
 	float	world_coordinate[2];
 	t_chunk	**chunks;
 	int		update_structures;
+
+	t_light	*lights; // def CHUNK_COLUMN_LIGHT_AMOUNT; (this is only skylights);
 }	t_chunk_col;
 
 typedef struct s_chunk_info
@@ -195,6 +216,8 @@ struct	s_chunk
 	int				event_blocks_allocated;
 	t_block_event	*event_blocks; // 
 
+	int				light_emitters; // NOT USED YET
+
 	int				has_blocks; // 1/0 whether the chunk has other than air blocks;
 	int				has_visible_blocks; // 1 / 0 whether chunk has visible blocks;
 	int				update_water;
@@ -239,7 +262,7 @@ t_chunk		*get_adjacent_chunk(t_chunk_info *info, t_chunk *from, float *dir);
 int			*get_block_local_pos_from_world_pos(int *res, float *world);
 int			*get_block_local_pos_from_index(int *res, int index);
 t_block		*get_block(t_chunk_info *info, float *coords);
-int			get_block_index(t_chunk_info *info, int x, int y, int z);
+int			get_block_index(int x, int y, int z);
 t_chunk		*get_highest_chunk(t_chunk_info *info, int x, int z);
 float		get_highest_block_in_chunk(t_chunk *chunk, t_block **out_block, float x, float z);
 float		get_highest_point(t_chunk_info *info, float x, float z);
@@ -270,11 +293,11 @@ void		regenerate_chunk_column(t_chunk_col *column, int coord[2], int seed);
 
 void		update_chunk(t_chunk *chunk);
 
-void		init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int amount);
+void		init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, GLuint shader, int amount);
 void		reset_chunk_mesh_v2(t_chunk_mesh_v2 *mesh);
 void		add_to_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, int *coord, float *face_vertices, int texture_id, int light);
 void		update_chunk_mesh(t_chunk_mesh_v2 *mesh);
-void		render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinate, t_camera *camera, GLuint shader);
+void		render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinate, t_camera *camera);
 int			chunk_mesh_collision_v2(float *orig, float *dir, t_chunk_mesh_v2 *mesh, int mesh_type, float *world_coords, float reach, float intersect_point[16][3]);
 
 // This is used in the terrain collision; rename when you come it better;

@@ -8,6 +8,14 @@ int	*vec3i_new(int *res, int x, int y, int z)
 	return (res);
 }
 
+int	*vec3i_add(int *res, int *v0, int *v1)
+{
+	res[0] = v0[0] + v1[0];
+	res[1] = v0[1] + v1[1];
+	res[2] = v0[2] + v1[2];
+	return (res);
+}
+
 int	vec3i_dist(int *v0, int *v1)
 {
 	int	a;
