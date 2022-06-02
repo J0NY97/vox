@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 10:06:36 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/02 13:17:37 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/02 14:46:32 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -249,6 +249,7 @@ void		new_chunk(t_chunk *chunk, t_chunk_info *info, int nth);
 int			chunk_gen(t_chunk *chunk, int *noise_map);
 void		generate_chunk(t_chunk *chunk, int *coord, int *noise_map);
 void		update_chunk_visible_blocks(t_chunk *chunk);
+void		update_chunk_event_blocks(t_chunk *chunk);
 void		update_chunk_border_visible_blocks(t_chunk *chunk);
 void		chunk_aabb_update(t_chunk *chunk);
 void		show_chunk_borders(t_chunk *chunk, t_camera *camera, float *col);
