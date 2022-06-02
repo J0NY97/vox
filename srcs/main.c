@@ -236,7 +236,7 @@ int	main(void)
 	chunk_info.player_collision_enabled = 0;
 	chunk_info.fancy_graphics = 0;
 	chunk_info.generate_structures = 1;
-	chunk_info.light_calculation = 1;
+	chunk_info.light_calculation = 0;
 	chunk_info.toggle_ui = 0;
 	chunk_info.toggle_event = 0;
 
@@ -577,12 +577,15 @@ int	main(void)
 				tree_gen(&chunk_info, column);
 				column->update_structures = 0;
 			}
+			// Check if a chunk in the column needs an update;
 			for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
 				if (col_chunks[ent]->needs_to_update)
 					column_chunk_needed_update = 1;
+			// Light calculation;
 			if (chunk_info.light_calculation &&
 				(column_chunk_needed_update || chunk_info.sky_light_changed))
 				update_chunk_column_light(column);
+			// Other Chunk updates;
 			for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
 			{
 				neighbors_found = 0;

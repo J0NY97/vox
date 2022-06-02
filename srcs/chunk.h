@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 10:06:36 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/01 14:05:48 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/02 13:17:37 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ static const int g_chunks_per_column = 256 / CHUNK_HEIGHT;
 static const float g_chunk_size_x = CHUNK_WIDTH * BLOCK_SIZE;
 static const float g_chunk_size_y = CHUNK_HEIGHT * BLOCK_SIZE;
 static const float g_chunk_size_z = CHUNK_BREADTH * BLOCK_SIZE;
-static const float g_chunk_block_amount = CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_BREADTH;
+static const int g_chunk_block_amount = CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_BREADTH;
 #define CHUNK_BLOCK_AMOUNT g_chunk_block_amount
 #define CHUNK_SIZE_X g_chunk_size_x
 #define CHUNK_SIZE_Y g_chunk_size_y

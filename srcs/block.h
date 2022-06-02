@@ -110,7 +110,7 @@ static const float g_faces_cactus[6][12] = {
 };
 
 static const int g_face_light[6] = {
-	65, 90, 85, 65, 85, 65
+	80, 80, 60, 60, 100, 50
 };
 
 static const float g_card_dir[DIR_AMOUNT][3] = {
