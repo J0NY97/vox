@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/11 14:27:43 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/01 14:14:02 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/03 12:58:37 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,8 +29,6 @@
 # include "collision.h"
 # include "thread.h"
 # include "hashtable.h"
-# include "block.h"
-# include "item.h"
 
 # define DEBUG 0
 

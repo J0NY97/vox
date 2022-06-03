@@ -27,6 +27,7 @@ enum e_solid_alpha_type
 	BLOCK_ALPHA_FIRST = BLOCK_LAST - 1,
 	BLOCK_ALPHA_OAK_LEAF,
 	BLOCK_ALPHA_CACTUS,
+	BLOCK_ALPHA_TORCH,
 	BLOCK_ALPHA_LAST
 };
 
@@ -107,6 +108,15 @@ static const float g_faces_cactus[6][12] = {
 /* LEFT  */	{-0.85, 1, -1,	-0.85, -1, -1,	-0.85, -1, 1,	-0.85, 1, 1},
 /* TOP   */	{-1, 1, -1,		-1, 1, 1,		1, 1, 1,		1, 1, -1},
 /* BOT   */	{-1, -1, -1,	1, -1, -1,		1, -1, 1,		-1, -1, 1}
+};
+
+static const float g_faces_torch[6][12] = {
+/* NORTH */ {1, 1, -0.125,	1, -1, -0.125,	-1, -1, -0.125,	-1, 1, -0.125},
+/* RIGHT */	{0.125, 1, 1,  	0.125, -1, 1,		0.125, -1, -1,	0.125, 1, -1},
+/* SOUTH */	{-1, 1, 0.125,	-1, -1, 0.125,	1, -1, 0.125,		1, 1, 0.125},
+/* LEFT  */	{-0.125, 1, -1,	-0.125, -1, -1,	-0.125, -1, 1,	-0.125, 1, 1},
+/* TOP   */	{-1, 0.25, -1,	-1, 0.25, 1,		1, 0.25, 1,		1, 0.25, -1},
+/* BOT   */	{-1, -1, -1,	1, -1, -1,	1, -1, 1,		-1, -1, 1}
 };
 
 static const int g_face_light[6] = {
@@ -254,6 +264,14 @@ static const t_block_data	g_block_data[] = {
 		{342, 342, 342, 342, 318, 366},
 		-1, 0.4f,
 		(float **)g_faces_cactus
+	},
+	{
+		BLOCK_ALPHA_TORCH, 
+		"BLOCK_ALPHA_TORCH",
+		"Torch",
+		{141, 141, 141, 141, 42, 141},
+		14, 0.4f,
+		(float **)g_faces_torch
 	},
 // FLORA
 	{

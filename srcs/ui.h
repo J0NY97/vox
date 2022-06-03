@@ -6,16 +6,17 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/24 13:14:06 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/05/24 15:24:06 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/03 13:00:05 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef UI_H
 # define UI_H
 
-#include "shaderpixel.h"
-#include "bitmap.h"
-#include "ui_manager.h"
+# include "shaderpixel.h"
+# include "bitmap.h"
+# include "ui_manager.h"
+# include "block.h"
 
 typedef struct s_ui
 {

@@ -218,7 +218,7 @@ int	main(void)
 	player_info.equipped_hotbar = 1;
 	player_info.hotbar_item_ids[0] = BLOCK_DIRT;
 	player_info.hotbar_item_ids[1] = BLOCK_STONE;
-	player_info.hotbar_item_ids[2] = BLOCK_SAND;
+	player_info.hotbar_item_ids[2] = BLOCK_ALPHA_TORCH;
 	player_info.hotbar_item_ids[3] = BLOCK_OAK_LOG;
 	player_info.hotbar_item_ids[4] = BLOCK_OAK_PLANK;
 	player_info.hotbar_item_ids[5] = BLOCK_ALPHA_OAK_LEAF;
@@ -281,7 +281,7 @@ int	main(void)
 			nth_col_chunk = 0;
 			++nth_col;
 			chunk_info.chunk_columns[nth_col].chunks = malloc(sizeof(t_chunk *) * CHUNKS_PER_COLUMN);
-			chunk_info.chunk_columns[nth_col].lights = malloc(sizeof(t_light *) * CHUNK_COLUMN_LIGHT_AMOUNT);
+			chunk_info.chunk_columns[nth_col].lights = malloc(sizeof(t_light) * CHUNK_COLUMN_LIGHT_AMOUNT);
 
 			chunk_info.chunk_columns[nth_col].coordinate[0] = chunks[nth_chunk].coordinate[0];
 			chunk_info.chunk_columns[nth_col].coordinate[1] = chunks[nth_chunk].coordinate[2];
@@ -579,8 +579,18 @@ int	main(void)
 			}
 			// Check if a chunk in the column needs an update;
 			for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
+			{
+				/*
+				if (col_chunks[ent]->update_water)
+					col_chunks[ent]->needs_to_update = 1;
+					*/
 				if (col_chunks[ent]->needs_to_update)
+				{
+					update_chunk_block_palette(col_chunks[ent]);
+					col_chunks[ent]->update_water = 1;
 					column_chunk_needed_update = 1;
+				}
+			}
 			// Light calculation;
 			if (chunk_info.light_calculation &&
 				(column_chunk_needed_update || chunk_info.sky_light_changed))
@@ -607,9 +617,6 @@ int	main(void)
 				if (col_chunks[ent]->needs_to_update)
 				{
 					update_chunk(col_chunks[ent]);
-
-					chunks[ent].update_water = 1;
-
 					// Set needs to update to all 6 neighbors of the chunk;
 					for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
 						if (neighbors[i])
@@ -731,6 +738,7 @@ int	main(void)
 		// Save the closest point, of a maximum 16 points
 		//	gotten from chunk_mesh_collision, in the closest_point var;
 		// Also the index of which chunk the collision is in;
+		int		block_local[3];
 		float	block_pos[3]; // get_block_from_chunk(); stores the pos of the block we are hovering over;
 		float	closest_point[3];
 		int		closest_index = -1; // the index of the chunk that has the closest collision;
@@ -759,6 +767,7 @@ int	main(void)
 				mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS ||
 				mouse[GLFW_MOUSE_BUTTON_MIDDLE].state == BUTTON_PRESS))
 			{
+				get_block_local_pos_from_world_pos(block_local, block_pos);
 				if (mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS)
 					set_block_at_world_pos(&chunk_info, block_pos, GAS_AIR);
 				else if (mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS)
@@ -781,7 +790,8 @@ int	main(void)
 				else if (mouse[GLFW_MOUSE_BUTTON_MIDDLE].state == BUTTON_PRESS)
 				{
 					block_print(hovered_block);
-					vec3_string("Coordinates : ", block_pos);
+					vec3i_string("Local Coordinates : ", block_local);
+					vec3_string("World Coordinates : ", block_pos);
 					t_chunk *temp_chunk = get_chunk_from_world_pos(&chunk_info, block_pos);	
 					vec3i_string("Chunk Coordinates : ", temp_chunk->coordinate);
 					vec3_string("Chunk World Coordinates : ", temp_chunk->world_coordinate);

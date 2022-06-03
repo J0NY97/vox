@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/01 14:13:30 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/01 14:13:31 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/03 14:42:56 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -292,7 +292,6 @@ void	water_flow(t_chunk_info *info, t_block_event *water)
 		return ;
 	}
 	
-
 	// For all directions, get neighboring blocks;
 	for (int d = DIR_NORTH, i = 0; d <= DIR_DOWN; d++, i++)
 	{

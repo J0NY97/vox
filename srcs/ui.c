@@ -49,7 +49,7 @@ void	draw_hotbar(t_ui *ui)
 	{
 		if (ui->hotbar_item_id[i] == -1)
 			continue ;
-		int	tex_id = g_block_data[ui->hotbar_item_id[i]].texture[4];
+		int	tex_id = g_block_data[ui->hotbar_item_id[i]].texture[0];
 		int x = /*texture_amount_w -*/ (tex_id % texture_amount_w);
 		int y = texture_amount_h - (tex_id / texture_amount_w);
 		if (x >= texture_amount_w || y >= texture_amount_h)

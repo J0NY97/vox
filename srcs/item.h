@@ -1,7 +1,7 @@
 #ifndef ITEM_H
 # define ITEM_H
 
-#include "shaderpixel.h"
+# include "block.h"
 
 typedef struct s_item_data
 {
