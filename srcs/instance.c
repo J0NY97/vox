@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/03 14:49:05 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/03 15:05:10 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/03 15:24:54 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -413,7 +413,7 @@ void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos)
 		for (int dir = 0; dirs[dir] != -1; dir++)
 		{
 			adj = get_block_in_dir(chunk, neighbors[dirs[dir]], pos, dirs[dir]);
-			if (adj && !is_solid(adj)) // add to mesh if adjacent block isnt solid;
+			if (adj && (!is_solid(adj) || is_solid_alpha(&chunk->blocks[index]))) // add to mesh if adjacent block isnt solid;
 			{
 				// Dont add to mesh if face already in it;
 				if (!(chunk->blocks[index].visible_faces & g_visible_faces[dirs[dir]]))
@@ -1151,9 +1151,6 @@ void	update_chunk_mesh(t_chunk_mesh_v2 *mesh)
 */
 void	add_to_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, int *coord, float *face_vertices, int texture_id, int light)
 {
-	// @Modulate (aka make modular)
-	float	block_scale = 0.5f;
-
 	// Vertices and Texture
 	if (mesh->vertices_allocated < mesh->vertices_amount + 12)
 	{
@@ -1174,9 +1171,9 @@ void	add_to_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, int *coord, floa
 	for (int i = 0; i < 4; i++)
 	{
 		ind = 3 * i;
-		mesh->vertices[mesh->vertices_amount + ind + 0] = (face_vertices[ind + 0] * block_scale) + coord[0];
-		mesh->vertices[mesh->vertices_amount + ind + 1] = (face_vertices[ind + 1] * block_scale) + coord[1];
-		mesh->vertices[mesh->vertices_amount + ind + 2] = (face_vertices[ind + 2] * block_scale) + coord[2];
+		mesh->vertices[mesh->vertices_amount + ind + 0] = (face_vertices[ind + 0] * BLOCK_SCALE) + coord[0];
+		mesh->vertices[mesh->vertices_amount + ind + 1] = (face_vertices[ind + 1] * BLOCK_SCALE) + coord[1];
+		mesh->vertices[mesh->vertices_amount + ind + 2] = (face_vertices[ind + 2] * BLOCK_SCALE) + coord[2];
 
 		tex = texture_id | (i << 16) | (light << 20);
 		mesh->texture_ids[mesh->texture_id_amount + i] = tex;
@@ -1933,7 +1930,7 @@ void	emit_sky_light(t_chunk_col *column, int chunk_index, int *coord, int light)
 /*
 */
 	int	new_light = ft_max(ft_clamp(block->light_lvl + data.light_emit, 0, 15) - 1, 0);
-//	emit_sky_light(column, chunk_index, (int []){coord[0], coord[1] + 1, coord[2]}, new_light);
+	emit_sky_light(column, chunk_index, (int []){coord[0], coord[1] + 1, coord[2]}, new_light);
 	emit_sky_light(column, chunk_index, (int []){coord[0], coord[1] - 1, coord[2]}, new_light);
 	emit_sky_light(column, chunk_index, (int []){coord[0] + 1, coord[1], coord[2]}, new_light);
 	emit_sky_light(column, chunk_index, (int []){coord[0] - 1, coord[1], coord[2]}, new_light);
