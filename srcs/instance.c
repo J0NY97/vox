@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/03 14:49:05 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/03 14:49:18 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/03 15:05:10 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -795,15 +795,11 @@ void	update_chunk_event_blocks(t_chunk *chunk)
 	float			pos[3];
 
 	chunk->event_block_amount = 0;
-	chunk->update_water = 0;
+	chunk->update_water = 1;
 
 	// Figure out how many event blocks we want;
 	chunk->event_blocks_wanted = get_chunk_water_amount(chunk);
 	chunk->event_blocks_wanted += chunk->block_palette[BLOCK_TNT];
-	/*
-	chunk->event_blocks_wanted += get_chunk_skylight_amount(chunk);;
-	chunk->event_blocks_wanted += chunk->block_palette[BLOCK_TORCH];
-	*/
 
 	// No need doing anything if we dont have any event blocks for this chunk;
 	if (chunk->event_blocks_wanted <= 0)
@@ -822,7 +818,7 @@ void	update_chunk_event_blocks(t_chunk *chunk)
 	{
 		event_block = NULL;
 		block = &chunk->blocks[i];
-		if (is_water(block) || block->type == BLOCK_TNT)
+		if ((is_water(block) && block->visible_faces) || block->type == BLOCK_TNT)
 		{
 			get_block_local_pos_from_index(local_pos, i);
 			get_block_world_pos(pos, chunk->world_coordinate, local_pos);
@@ -849,6 +845,8 @@ void	update_chunk(t_chunk *chunk)
 	update_chunk_block_palette(chunk);
 	update_chunk_visible_blocks(chunk);
 	update_chunk_event_blocks(chunk);
+	if (chunk->event_block_amount > 0)
+		ft_printf("event : blocks(%d) / wanted(%d) / allocated(%d)\n", chunk->event_block_amount, chunk->event_blocks_wanted, chunk->event_blocks_allocated);
 	chunk->was_updated = 1;
 	chunk->needs_to_update = 0;
 	chunk->secondary_update = 1;

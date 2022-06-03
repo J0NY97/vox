@@ -238,7 +238,7 @@ int	main(void)
 	chunk_info.generate_structures = 1;
 	chunk_info.light_calculation = 1;
 	chunk_info.toggle_ui = 0;
-	chunk_info.toggle_event = 0;
+	chunk_info.toggle_event = 1;
 
 	chunk_info.sky_light_lvl = 15;
 	chunk_info.sky_light_lvl_prev = chunk_info.sky_light_lvl;
@@ -580,10 +580,6 @@ int	main(void)
 			// Check if a chunk in the column needs an update;
 			for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
 			{
-				/*
-				if (col_chunks[ent]->update_water)
-					col_chunks[ent]->needs_to_update = 1;
-					*/
 				if (col_chunks[ent]->needs_to_update)
 				{
 					update_chunk_block_palette(col_chunks[ent]);
@@ -612,8 +608,6 @@ int	main(void)
 					}
 				}
 
-				if (chunk_info.toggle_event)
-					event_chunk(col_chunks[ent]);
 				if (col_chunks[ent]->needs_to_update)
 				{
 					update_chunk(col_chunks[ent]);
@@ -622,6 +616,9 @@ int	main(void)
 						if (neighbors[i])
 							neighbors[i]->secondary_update = 1;
 				}
+
+				if (chunk_info.toggle_event)
+					event_chunk(col_chunks[ent]);
 			}
 		}
 
