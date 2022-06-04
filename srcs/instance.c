@@ -77,6 +77,7 @@ int	chunk_gen(t_chunk *chunk, int *noise_map)
 				float	perper = 100.0f;
 				i++;
 				/* Cave Gen
+				*/
 				if (whatchumacallit > 0)
 				{
 					float	pers = 0.5f;
@@ -86,7 +87,6 @@ int	chunk_gen(t_chunk *chunk, int *noise_map)
 						octave_perlin(block_world_x * freq, block_world_y * freq, block_world_z * freq, 4, pers) +
 						octave_perlin(block_world_x * freq, block_world_y * freq, block_world_z * freq, 8, pers);
 				}
-				*/
 				chunk->blocks[i].visible_faces = 0;
 				chunk->blocks[i].light_lvl = 15;
 				chunk->blocks[i].type = GAS_AIR; // Default to air;
