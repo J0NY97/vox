@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/03 14:49:05 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/03 15:24:54 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/04 10:51:12 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1970,8 +1970,11 @@ void	update_chunk_column_light_0(t_chunk_col *column)
 					//	and the block we are currently looking at, is not a gas block,
 					//	we will add the previous up block to the emitter, because that is most
 					//	likely the gas block we want skylight to get emitted from;
+					//
+					// NOTE : might break if the highest chunk has a non light heightmap
+					//		triggering block at the top most y coordinate;
 					if (column->lights[light_index].chunk_index == -1 &&
-						!is_gas(&column->chunks[i]->blocks[block_index]))
+						data.trigger_light_heightmap)
 					{
 						if (y + 1 < CHUNK_HEIGHT)
 						{

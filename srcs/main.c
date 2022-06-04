@@ -257,10 +257,7 @@ int	main(void)
 	glGenTextures(1, &chunk_info.texture);
 	new_texture(&chunk_info.texture, MODEL_PATH"cube/version_3_texture_alpha.bmp");
 
-	t_chunk	*chunks;
-	chunks = malloc(sizeof(t_chunk) * CHUNKS_LOADED);
-
-	chunk_info.chunks = chunks;
+	chunk_info.chunks = malloc(sizeof(t_chunk) * CHUNKS_LOADED);
 	chunk_info.chunk_columns = malloc(sizeof(t_chunk_col) * CHUNK_COLUMNS);
 
 	int		nth_chunk = 0;
@@ -273,9 +270,9 @@ int	main(void)
 	LG_INFO("Inits done, lets create some chunks (%d wanted)\n", CHUNKS_LOADED);
 	for (; nth_chunk < CHUNKS_LOADED; ++nth_chunk)
 	{
-		new_chunk(&chunks[nth_chunk], &chunk_info, nth_chunk);
-		init_chunk_mesh_v2(&chunks[nth_chunk].meshes, cube_shader_v2, MESH_TYPE_AMOUNT);
-		chunks[nth_chunk].meshes.texture = chunk_info.texture;
+		new_chunk(&chunk_info.chunks[nth_chunk], &chunk_info, nth_chunk);
+		init_chunk_mesh_v2(&chunk_info.chunks[nth_chunk].meshes, cube_shader_v2, MESH_TYPE_AMOUNT);
+		chunk_info.chunks[nth_chunk].meshes.texture = chunk_info.texture;
 		if (nth_chunk % CHUNKS_PER_COLUMN == 0)
 		{
 			nth_col_chunk = 0;
@@ -283,13 +280,13 @@ int	main(void)
 			chunk_info.chunk_columns[nth_col].chunks = malloc(sizeof(t_chunk *) * CHUNKS_PER_COLUMN);
 			chunk_info.chunk_columns[nth_col].lights = malloc(sizeof(t_light) * CHUNK_COLUMN_LIGHT_AMOUNT);
 
-			chunk_info.chunk_columns[nth_col].coordinate[0] = chunks[nth_chunk].coordinate[0];
-			chunk_info.chunk_columns[nth_col].coordinate[1] = chunks[nth_chunk].coordinate[2];
-			chunk_info.chunk_columns[nth_col].world_coordinate[0] = chunks[nth_chunk].world_coordinate[0];
-			chunk_info.chunk_columns[nth_col].world_coordinate[1] = chunks[nth_chunk].world_coordinate[2];
+			chunk_info.chunk_columns[nth_col].coordinate[0] = chunk_info.chunks[nth_chunk].coordinate[0];
+			chunk_info.chunk_columns[nth_col].coordinate[1] = chunk_info.chunks[nth_chunk].coordinate[2];
+			chunk_info.chunk_columns[nth_col].world_coordinate[0] = chunk_info.chunks[nth_chunk].world_coordinate[0];
+			chunk_info.chunk_columns[nth_col].world_coordinate[1] = chunk_info.chunks[nth_chunk].world_coordinate[2];
 			chunk_info.chunk_columns[nth_col].update_structures = 0;
 		}
-		chunk_info.chunk_columns[nth_col].chunks[nth_col_chunk] = &chunks[nth_chunk];
+		chunk_info.chunk_columns[nth_col].chunks[nth_col_chunk] = &chunk_info.chunks[nth_chunk];
 		++nth_col_chunk;
 	}
 	ft_printf("Total Chunks created : %d\n", nth_chunk);
@@ -418,13 +415,13 @@ int	main(void)
 			int	most_indices = 0;
 			for (int j = 0; j < CHUNKS_LOADED; j++)
 			{
-				if (chunks[j].meshes.vertices_allocated > most_vertices)
-					most_vertices = chunks[j].meshes.vertices_allocated;
-				if (chunks[j].meshes.texture_ids_allocated > most_textures)
-					most_textures = chunks[j].meshes.texture_ids_allocated;
-				for (int m = 0; m < chunks[j].meshes.amount; m++)
-					if (chunks[j].meshes.indices_allocated[m] > most_indices)
-						most_indices = chunks[j].meshes.indices_allocated[m];
+				if (chunk_info.chunks[j].meshes.vertices_allocated > most_vertices)
+					most_vertices = chunk_info.chunks[j].meshes.vertices_allocated;
+				if (chunk_info.chunks[j].meshes.texture_ids_allocated > most_textures)
+					most_textures = chunk_info.chunks[j].meshes.texture_ids_allocated;
+				for (int m = 0; m < chunk_info.chunks[j].meshes.amount; m++)
+					if (chunk_info.chunks[j].meshes.indices_allocated[m] > most_indices)
+						most_indices = chunk_info.chunks[j].meshes.indices_allocated[m];
 			}
 			LG_INFO("Most vertices : %d", most_vertices);
 			LG_INFO("Most texture ids : %d", most_textures);
@@ -437,7 +434,7 @@ int	main(void)
 		{
 			LG_INFO("Force updating all chunks. (Chunks Loaded : %d)", CHUNKS_LOADED);
 			for (int i = 0; i < CHUNKS_LOADED; i++)
-				chunks[i].needs_to_update = 1;
+				chunk_info.chunks[i].needs_to_update = 1;
 		}
 
 		// Toggle fancy graphics
@@ -532,6 +529,9 @@ int	main(void)
 /////////////////
 		// Chunk things
 /////////////////
+		chunk_info.game_tick = 0;
+		if ((int)(fps.curr_time * 100) % 33 == 0)
+			chunk_info.game_tick = 1;
 
 		get_chunk_pos_from_world_pos(player_chunk, player.camera.pos);
 
@@ -564,13 +564,14 @@ int	main(void)
 		t_chunk		**col_chunks;
 		t_chunk_col	*column;
 		int			neighbors_found;
-		int			column_chunk_needed_update;
 
 		for (int col = 0; col < CHUNK_COLUMNS; col++)
 		{
 			column = &chunk_info.chunk_columns[col];
 			col_chunks = column->chunks;
-			column_chunk_needed_update = 0;
+			
+			column->chunk_needed_update = column->chunk_needs_update;
+			column->chunk_needs_update = 0;
 
 			if (chunk_info.generate_structures && column->update_structures)
 			{
@@ -584,12 +585,12 @@ int	main(void)
 				{
 					update_chunk_block_palette(col_chunks[ent]);
 					col_chunks[ent]->update_water = 1;
-					column_chunk_needed_update = 1;
+					column->chunk_needs_update = 1;
 				}
 			}
 			// Light calculation;
 			if (chunk_info.light_calculation &&
-				(column_chunk_needed_update || chunk_info.sky_light_changed))
+				(column->chunk_needs_update || chunk_info.sky_light_changed))
 				update_chunk_column_light(column);
 			// Other Chunk updates;
 			for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
@@ -617,7 +618,7 @@ int	main(void)
 							neighbors[i]->secondary_update = 1;
 				}
 
-				if (chunk_info.toggle_event)
+				if (chunk_info.toggle_event && chunk_info.game_tick)
 					event_chunk(col_chunks[ent]);
 			}
 		}
@@ -631,18 +632,18 @@ int	main(void)
 		{
 			for (int ent = 0; ent < CHUNKS_LOADED; ++ent)
 			{
-				if (chunks[ent].secondary_update)
+				if (chunk_info.chunks[ent].secondary_update)
 				{
-					chunks[ent].secondary_update = 0;
+					chunk_info.chunks[ent].secondary_update = 0;
 			//		chunks[ent].needs_to_update = 0; // this was effing stuff up the next frame... dont remember why i had this in the first place, looks to work fine when commented out;
-					chunks[ent].was_updated = 1;
-					update_chunk_border_visible_blocks(&chunks[ent]);
+					chunk_info.chunks[ent].was_updated = 1;
+					update_chunk_border_visible_blocks(&chunk_info.chunks[ent]);
 				}
-				if (chunks[ent].was_updated) // Only send mesh info to gpu, if the chunk actually was changed;
+				if (chunk_info.chunks[ent].was_updated) // Only send mesh info to gpu, if the chunk actually was changed;
 				{
-					chunks[ent].was_updated = 0;
-					if (chunks[ent].has_visible_blocks)
-						update_chunk_mesh(&chunks[ent].meshes);
+					chunk_info.chunks[ent].was_updated = 0;
+					if (chunk_info.chunks[ent].has_visible_blocks)
+						update_chunk_mesh(&chunk_info.chunks[ent].meshes);
 				}
 			}
 
@@ -674,17 +675,17 @@ int	main(void)
 
 		for (; nth_chunk < CHUNKS_LOADED; ++nth_chunk)
 		{
-			if (!chunks[nth_chunk].has_visible_blocks)
+			if (!chunk_info.chunks[nth_chunk].has_visible_blocks)
 				continue ;
 
 			// Decide if we want to render the chunk or not;
 			// Dont render chunk if the chunk is further away than the farplane of the camear;
 			// Dont render if the chunk is outside the view fustrum;
 			// Dont render if has been sent to gpu yet;
-			if (chunks[nth_chunk].was_updated == 0 &&
-				vec3_dist(player.camera.pos, chunks[nth_chunk].world_coordinate) <
+			if (chunk_info.chunks[nth_chunk].was_updated == 0 &&
+				vec3_dist(player.camera.pos, chunk_info.chunks[nth_chunk].world_coordinate) <
 				player.camera.far_plane + CHUNK_SIZE_X &&
-				aabb_in_frustum(&chunks[nth_chunk].aabb, &player.camera.frustum))
+				aabb_in_frustum(&chunk_info.chunks[nth_chunk].aabb, &player.camera.frustum))
 			{
 				chunk_info.meshes_render_indices[chunk_info.meshes_render_amount] = nth_chunk;
 				++chunk_info.meshes_render_amount;
@@ -694,34 +695,34 @@ int	main(void)
 			if (chunk_info.block_collision_enabled)
 			{
 //				if (vec3i_dist_sqrd(player_chunk, chunks[nth_chunk].coordinate) <= 2)
-				if (point_aabb_center_distance(player.camera.pos, &chunks[nth_chunk].aabb) <= (CHUNK_WIDTH * CHUNK_WIDTH))
+				if (point_aabb_center_distance(player.camera.pos, &chunk_info.chunks[nth_chunk].aabb) <= (CHUNK_WIDTH * CHUNK_WIDTH))
 				{
-					show_chunk_borders(&chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
+					show_chunk_borders(&chunk_info.chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
 					// Place Blocking and Removing;
 					// Go through all chunks and check for collision on blocks,
 					// store intersections and indices of the chunk the intersection
 					// is in;
 
 					// Collision on solid mesh;
-					if (chunks[nth_chunk].blocks_solid_amount > 0)
+					if (chunk_info.chunks[nth_chunk].blocks_solid_amount > 0)
 					{
-						int collisions_on_chunk = chunk_mesh_collision_v2(player.camera.pos, player.camera.front, &chunks[nth_chunk].meshes, BLOCK_MESH, chunks[nth_chunk].world_coordinate, player_info.reach, intersect_point + collision_result);
+						int collisions_on_chunk = chunk_mesh_collision_v2(player.camera.pos, player.camera.front, &chunk_info.chunks[nth_chunk].meshes, BLOCK_MESH, chunk_info.chunks[nth_chunk].world_coordinate, player_info.reach, intersect_point + collision_result);
 						for (int i = 0; i < collisions_on_chunk; i++)
 							intersect_chunk_index[collision_result + i] = nth_chunk;
 						collision_result += collisions_on_chunk;
 					}
 					// Collision on flora mesh;
-					if (chunks[nth_chunk].blocks_flora_amount > 0)
+					if (chunk_info.chunks[nth_chunk].blocks_flora_amount > 0)
 					{
-						int collisions_on_chunk = chunk_mesh_collision_v2(player.camera.pos, player.camera.front, &chunks[nth_chunk].meshes, FLORA_MESH, chunks[nth_chunk].world_coordinate, player_info.reach, intersect_point + collision_result);
+						int collisions_on_chunk = chunk_mesh_collision_v2(player.camera.pos, player.camera.front, &chunk_info.chunks[nth_chunk].meshes, FLORA_MESH, chunk_info.chunks[nth_chunk].world_coordinate, player_info.reach, intersect_point + collision_result);
 						for (int i = 0; i < collisions_on_chunk; i++)
 							intersect_chunk_index[collision_result + i] = nth_chunk;
 						collision_result += collisions_on_chunk;
 					}
 					// Collision on solid alpha mesh;
-					if (chunks[nth_chunk].blocks_solid_alpha_amount > 0)
+					if (chunk_info.chunks[nth_chunk].blocks_solid_alpha_amount > 0)
 					{
-						int collisions_on_chunk = chunk_mesh_collision_v2(player.camera.pos, player.camera.front, &chunks[nth_chunk].meshes, BLOCK_ALPHA_MESH, chunks[nth_chunk].world_coordinate, player_info.reach, intersect_point + collision_result);
+						int collisions_on_chunk = chunk_mesh_collision_v2(player.camera.pos, player.camera.front, &chunk_info.chunks[nth_chunk].meshes, BLOCK_ALPHA_MESH, chunk_info.chunks[nth_chunk].world_coordinate, player_info.reach, intersect_point + collision_result);
 						for (int i = 0; i < collisions_on_chunk; i++)
 							intersect_chunk_index[collision_result + i] = nth_chunk;
 						collision_result += collisions_on_chunk;
@@ -756,7 +757,7 @@ int	main(void)
 			}
 
 			t_block *hovered_block = NULL;
-			hovered_block = get_block_from_chunk(&chunks[closest_index], closest_point, block_pos, &face);
+			hovered_block = get_block_from_chunk(&chunk_info.chunks[closest_index], closest_point, block_pos, &face);
 			if (hovered_block)
 				render_block_outline(block_pos, (float []){0, 0, 0}, player.camera.view, player.camera.projection);
 			if (hovered_block &&
@@ -816,8 +817,8 @@ if (error)
 		for (int r = 0; r < chunk_info.meshes_render_amount; r++)
 		{
 			int render_index = chunk_info.meshes_render_indices[r];
-			if (chunks[render_index].blocks_solid_amount > 0)
-				render_chunk_mesh_v2(&chunks[render_index].meshes, BLOCK_MESH, chunks[render_index].world_coordinate, &player.camera);
+			if (chunk_info.chunks[render_index].blocks_solid_amount > 0)
+				render_chunk_mesh_v2(&chunk_info.chunks[render_index].meshes, BLOCK_MESH, chunk_info.chunks[render_index].world_coordinate, &player.camera);
 		}
 
 error = glGetError();
@@ -830,8 +831,8 @@ if (error)
 		for (int r = 0; r < chunk_info.meshes_render_amount; r++)
 		{
 			int render_index = chunk_info.meshes_render_indices[r];
-			if (chunks[render_index].blocks_solid_alpha_amount > 0)
-				render_chunk_mesh_v2(&chunks[render_index].meshes, BLOCK_ALPHA_MESH, chunks[render_index].world_coordinate, &player.camera);
+			if (chunk_info.chunks[render_index].blocks_solid_alpha_amount > 0)
+				render_chunk_mesh_v2(&chunk_info.chunks[render_index].meshes, BLOCK_ALPHA_MESH, chunk_info.chunks[render_index].world_coordinate, &player.camera);
 		}
 
 error = glGetError();
@@ -844,8 +845,8 @@ if (error)
 		for (int r = 0; r < chunk_info.meshes_render_amount; r++)
 		{
 			int render_index = chunk_info.meshes_render_indices[r];
-			if (chunks[render_index].blocks_flora_amount > 0)
-				render_chunk_mesh_v2(&chunks[render_index].meshes, FLORA_MESH, chunks[render_index].world_coordinate, &player.camera);
+			if (chunk_info.chunks[render_index].blocks_flora_amount > 0)
+				render_chunk_mesh_v2(&chunk_info.chunks[render_index].meshes, FLORA_MESH, chunk_info.chunks[render_index].world_coordinate, &player.camera);
 		}
 error = glGetError();
 if (error)
@@ -858,8 +859,8 @@ if (error)
 		for (int r = 0; r < chunk_info.meshes_render_amount; r++)
 		{
 			int render_index = chunk_info.meshes_render_indices[r];
-			if (chunks[render_index].blocks_fluid_amount > 0)
-				render_chunk_mesh_v2(&chunks[render_index].meshes, FLUID_MESH, chunks[render_index].world_coordinate, &player.camera);
+			if (chunk_info.chunks[render_index].blocks_fluid_amount > 0)
+				render_chunk_mesh_v2(&chunk_info.chunks[render_index].meshes, FLUID_MESH, chunk_info.chunks[render_index].world_coordinate, &player.camera);
 		}
 
 /////////////////

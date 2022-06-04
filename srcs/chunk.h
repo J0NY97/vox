@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 10:06:36 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/03 14:18:50 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/04 11:47:49 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,9 +24,6 @@ typedef struct s_player_info
 	int		hotbar_item_ids[9];
 }	t_player_info;
 
-/*
- * All dimensions should be '320 % x == 0'
-*/
 #define CHUNK_WIDTH 32
 #define CHUNK_HEIGHT 32
 #define CHUNK_BREADTH 32
@@ -122,9 +119,6 @@ typedef struct s_block_event
 	int		statique;		// if we are done event handling this block;	(can be changed to 'char');
 
 	// TNT
-
-	// Light Emitter
-	int		light_emit_lvl; // sky 15, torch 4...;
 }	t_block_event;
 
 typedef struct s_light
@@ -144,7 +138,11 @@ typedef struct s_chunk_col
 	int		coordinate[2];
 	float	world_coordinate[2];
 	t_chunk	**chunks;
-	int		update_structures;
+
+	// Some bools
+	char	update_structures;
+	char	chunk_needs_update; // if a chunk in this column needs and update this frame; set / reset every frame
+	char	chunk_needed_update; // if a chunk a has needed update, last frame;
 
 	t_light	*lights; // def CHUNK_COLUMN_LIGHT_AMOUNT; (this is only skylights);
 }	t_chunk_col;
@@ -152,6 +150,8 @@ typedef struct s_chunk_col
 typedef struct s_chunk_info
 {
 	unsigned int	seed;
+
+	char		game_tick; // every time new game tick, set to 1 the frame the tick happened;
 
 	int			block_collision_enabled;
 	int			player_collision_enabled;
@@ -166,7 +166,7 @@ typedef struct s_chunk_info
 	int			sky_light_changed; // if the light has changed this frame;
 
 	t_chunk		*chunks; // you should not store the chunks here mainly; its just here so you can acces from places you need, without having to pass them in the function as argumnet;
-	t_chunk_col	*chunk_columns; // render_distance
+	t_chunk_col	*chunk_columns; // render_distance * render_distance;
 	GLuint		texture; // the texture is stored here so we dont load a texture per chunk_mesh;
 
 	t_hash_item	*hash_table;
