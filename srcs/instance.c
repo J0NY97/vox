@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/03 14:49:05 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/04 10:51:12 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/05 15:13:31 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -2031,14 +2031,86 @@ void	update_chunk_column_light_1(t_chunk_col *column)
 	}
 }
 
+void	update_chunk_column_light_2(t_chunk_col *column)
+{
+	t_block	*blocks;
+	t_chunk	*chunk;
+
+	for (int i = 0; i < CHUNKS_PER_COLUMN; i++)
+	{
+		chunk = column->chunks[i];
+		if (!chunk->has_blocks)
+			return ;
+
+		t_chunk *neighbors[4];
+		for (int dir = DIR_NORTH, i = 0; dir <= DIR_WEST; ++dir, ++i)
+			neighbors[i] = get_adjacent_chunk(chunk->info, chunk, (float *)g_card_dir[dir]);
+		
+		t_block	*block;
+		t_block	*adj_block;
+
+		for (int y = 0; y < CHUNK_HEIGHT; y++)
+		{
+			// front && back
+			for (int x = 0; x < CHUNK_WIDTH; x++)
+			{
+				if (neighbors[DIR_NORTH])
+				{
+					block = &chunk->blocks[get_block_index(x, y, 0)];
+					adj_block = &neighbors[DIR_NORTH]->blocks[get_block_index(x, y, CHUNK_BREADTH - 1)];
+					if (block->light_lvl < adj_block->light_lvl)
+						block->light_lvl = adj_block->light_lvl;
+					else if (adj_block->light_lvl < block->light_lvl)
+						adj_block->light_lvl = block->light_lvl;
+				}
+				if (neighbors[DIR_SOUTH])
+				{
+					block = &chunk->blocks[get_block_index(x, y, CHUNK_BREADTH - 1)];
+					adj_block = &neighbors[DIR_SOUTH]->blocks[get_block_index(x, y, 0)];
+					if (block->light_lvl < adj_block->light_lvl)
+						block->light_lvl = adj_block->light_lvl;
+					else if (adj_block->light_lvl < block->light_lvl)
+						adj_block->light_lvl = block->light_lvl;
+				}
+			}
+			// left && right
+			for (int z = 0; z < CHUNK_BREADTH; z++)
+			{
+				if (neighbors[DIR_WEST])
+				{
+					block = &chunk->blocks[get_block_index(0, y, z)];
+					adj_block = &neighbors[DIR_WEST]->blocks[get_block_index(CHUNK_WIDTH - 1, y, z)];
+					if (block->light_lvl < adj_block->light_lvl)
+						block->light_lvl = adj_block->light_lvl;
+					else if (adj_block->light_lvl < block->light_lvl)
+						adj_block->light_lvl = block->light_lvl;
+				}
+				if (neighbors[DIR_EAST])
+				{
+					block = &chunk->blocks[get_block_index(CHUNK_WIDTH - 1, y, z)];
+					adj_block = &neighbors[DIR_EAST]->blocks[get_block_index(0, y, z)];
+					if (block->light_lvl < adj_block->light_lvl)
+						block->light_lvl = adj_block->light_lvl;
+					else if (adj_block->light_lvl < block->light_lvl)
+						adj_block->light_lvl = block->light_lvl;
+				}
+			}
+		}
+	}
+}
+
 /*
  * We only want to do this once per column of chunks;
- *	Give into this only the highest chunk in the column, that has blocks;
 */
 void	update_chunk_column_light(t_chunk_col *column)
 {
 	update_chunk_column_light_0(column);
 	update_chunk_column_light_1(column);
+}
+
+void	update_chunk_column_border_light(t_chunk_col *column)
+{
+	update_chunk_column_light_2(column);
 }
 
 void	block_print(t_block *block)

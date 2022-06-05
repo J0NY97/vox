@@ -173,10 +173,11 @@ void	scop_stuff(t_shaderpixel *sp)
 int	main(void)
 {
 	t_shaderpixel	sp;
+	t_key			keys[GLFW_KEY_LAST];
+	t_key			mouse[GLFW_MOUSE_BUTTON_LAST];
+	t_fps			fps;
+
 	init(&sp);
-	t_key	keys[GLFW_KEY_LAST];
-	t_key	mouse[GLFW_MOUSE_BUTTON_LAST];
-	t_fps	fps;
 	new_fps(&fps);
 
 	t_player	player;
@@ -241,7 +242,6 @@ int	main(void)
 	chunk_info.toggle_event = 1;
 
 	chunk_info.sky_light_lvl = 15;
-	chunk_info.sky_light_lvl_prev = chunk_info.sky_light_lvl;
 
 	// Creation of hashtable
 	/*
@@ -338,6 +338,9 @@ int	main(void)
 			ft_b_itoa(fps.fps, fps_str);
 			glfwSetWindowTitle(sp.win, fps_str);
 		}
+
+		// CHUNK STUFF
+		chunk_info.sky_light_lvl_prev = chunk_info.sky_light_lvl;
 
 		update_all_keys(keys, mouse, sp.win);
 		glfwPollEvents();
@@ -551,14 +554,6 @@ int	main(void)
 
 		thread_manager_check_threadiness(&tm);
 
-		// Decide if the sky light level has changed;
-		if (chunk_info.sky_light_lvl != chunk_info.sky_light_lvl_prev)
-		{
-			chunk_info.sky_light_lvl_prev = chunk_info.sky_light_lvl;
-			chunk_info.sky_light_changed = 1;
-		}
-		else
-			chunk_info.sky_light_changed = 0;
 
 		t_chunk		*neighbors[DIR_AMOUNT];
 		t_chunk		**col_chunks;
@@ -590,7 +585,8 @@ int	main(void)
 			}
 			// Light calculation;
 			if (chunk_info.light_calculation &&
-				(column->chunk_needs_update || chunk_info.sky_light_changed))
+				(column->chunk_needs_update ||
+				chunk_info.sky_light_lvl != chunk_info.sky_light_lvl_prev))
 				update_chunk_column_light(column);
 			// Other Chunk updates;
 			for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
@@ -630,23 +626,33 @@ int	main(void)
 		// 	the chunks once, we update them here;
 		if (tobegen == 0)
 		{
-			for (int ent = 0; ent < CHUNKS_LOADED; ++ent)
+			int	column_redo_light;
+			for (int col = 0; col < CHUNK_COLUMNS; col++)
 			{
-				if (chunk_info.chunks[ent].secondary_update)
+				column = &chunk_info.chunk_columns[col];
+				col_chunks = column->chunks;
+
+				for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
 				{
-					chunk_info.chunks[ent].secondary_update = 0;
-			//		chunks[ent].needs_to_update = 0; // this was effing stuff up the next frame... dont remember why i had this in the first place, looks to work fine when commented out;
-					chunk_info.chunks[ent].was_updated = 1;
-					update_chunk_border_visible_blocks(&chunk_info.chunks[ent]);
+					if (col_chunks[ent]->secondary_update)
+					{
+						col_chunks[ent]->secondary_update = 0;
+						col_chunks[ent]->was_updated = 1;
+						update_chunk_border_visible_blocks(col_chunks[ent]);
+					}
 				}
-				if (chunk_info.chunks[ent].was_updated) // Only send mesh info to gpu, if the chunk actually was changed;
+
+				// Send chunk mesh to GPU if it was updated;
+				for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
 				{
-					chunk_info.chunks[ent].was_updated = 0;
-					if (chunk_info.chunks[ent].has_visible_blocks)
-						update_chunk_mesh(&chunk_info.chunks[ent].meshes);
+					if (col_chunks[ent]->was_updated) // Only send mesh info to gpu, if the chunk actually was changed;
+					{
+						col_chunks[ent]->was_updated = 0;
+						if (col_chunks[ent]->has_visible_blocks)
+							update_chunk_mesh(&col_chunks[ent]->meshes);
+					}
 				}
 			}
-
 			// REMOVE DEBUG
 			//exit(0);
 		}
