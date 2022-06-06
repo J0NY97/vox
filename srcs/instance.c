@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/03 14:49:05 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/06 13:06:36 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/06 14:10:49 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,6 @@ int	chunk_gen(t_chunk *chunk, int *noise_map)
 	int i = -1;
 	float	cave_chance = 1.41f;
 
-	chunk->has_blocks = 0;
 	for (int x = 0; x < CHUNK_WIDTH; x++)
 	{
 		float	block_world_x = fabs(chunk->world_coordinate[0] + x);
@@ -86,7 +85,6 @@ int	chunk_gen(t_chunk *chunk, int *noise_map)
 				if (block_world_y == 0)
 				{
 					chunk->blocks[i].type = BLOCK_BEDROCK;
-					chunk->has_blocks = 1;
 					continue ;
 				}
 
@@ -115,25 +113,47 @@ int	chunk_gen(t_chunk *chunk, int *noise_map)
 						chunk->blocks[i].type = BLOCK_STONE;
 					else if (y < whatchumacallit)
 						chunk->blocks[i].type = BLOCK_DIRT;
-					chunk->has_blocks = 1;
 				}
 				else // everything that is over the noise_map value;
 				{
 					if (y >= whatchumacallit + 3 && block_world_y <= 62)
-					{
 						chunk->blocks[i].type = FLUID_WATER;
-						chunk->has_blocks = 1;
-					}
 					else if (y >= whatchumacallit + 1 && y < whatchumacallit + 3 && block_world_y <= 65)
-					{
 						chunk->blocks[i].type = BLOCK_SAND;
-						chunk->has_blocks = 1;
-					}
 				}
 			}
 		}
 	}
 	return (i);
+}
+
+/*
+ * Returns block type at world coordinates 'x' / 'y' / 'z';
+ *
+ * block type one from enum e_block / e_block_alpha / e_block_fluid ...; block.h
+*/
+int	get_block_type(float x, float y, float z)
+{
+	return (rand() ? BLOCK_STONE : GAS_AIR);
+}
+
+int	chunk_gen_v2(t_chunk *chunk, int *height_map)
+{
+	float	block_world[3];	
+	int		block_index;
+
+	for (int x = 0; x < CHUNK_WIDTH; x++)
+	{
+		for (int z = 0; z < CHUNK_BREADTH; z++)
+		{
+			for (int y = 0; y < CHUNK_WIDTH; y++)
+			{
+				block_index = get_block_index(x, y, z);
+				vec3_add(block_world, (float []){x, y, z}, chunk->world_coordinate);
+				chunk->blocks[block_index].type = get_block_type(block_world[0], block_world[1], block_world[2]);
+			}
+		}
+	}
 }
 
 void	get_chunk_world_pos_from_local_pos(float *res, int *local_pos)
@@ -761,6 +781,13 @@ void	update_chunk_block_palette(t_chunk *chunk)
 	{
 		++chunk->block_palette[chunk->blocks[i].type];
 	}
+	
+	// Check if we have less than maximum blocks of air blocks,
+	//	this means some of the blocks are not air blocks,
+	//	this means we have blocks in this chunk;
+	chunk->has_blocks = 0;
+	if (chunk->block_palette[GAS_AIR] < CHUNK_BLOCK_AMOUNT)
+		chunk->has_blocks = 1;
 }
 
 // DEBUG
@@ -1543,8 +1570,6 @@ t_block	*set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_
 		return (NULL);
 	chunk->blocks[index].type = block_type;
 	chunk->needs_to_update = 1;
-	if (!is_type_gas(block_type))
-		chunk->has_blocks = 1;
 	return (&chunk->blocks[index]);
 }
 
@@ -1565,7 +1590,6 @@ void	set_block_at_world_pos_if_empty(t_chunk_info *info, float *world_pos, int b
 		return ;
 	chunk->blocks[index].type = block_type;
 	chunk->needs_to_update = 1;
-	chunk->has_blocks = 1;
 }
 
 int	get_block_type_at_world_pos(t_chunk_info *info, float *world_pos)
