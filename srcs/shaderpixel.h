@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/11 14:27:43 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/03 12:58:37 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/06 15:08:57 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -261,6 +261,9 @@ float		perlin(float x, float y, unsigned int seed);
 float		perlin3(float x, float y, float z, unsigned int seed);
 float		perlin_v2(float x, float y, float z);
 float		octave_perlin(float x, float y, float z, int octaves, float persistence);
+
+float		noise2d(float x, float y);
+float		noise3d(float x, float y, float z);
 
 ///////////////////
 //	PLAYER

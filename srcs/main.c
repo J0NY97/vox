@@ -182,7 +182,7 @@ int	main(void)
 
 	t_player	player;
 	new_player(&player);
-	new_vec3(player.camera.pos, 10000, 100, 10000);
+	new_vec3(player.camera.pos, 10000, 150, 10000);
 //	new_vec3(player.camera.pos, 16384, 80, 16384);
 	player.camera.pitch = 0;
 	player.camera.yaw = -90;
@@ -239,7 +239,7 @@ int	main(void)
 	chunk_info.generate_structures = 1;
 	chunk_info.light_calculation = 1;
 	chunk_info.toggle_ui = 0;
-	chunk_info.toggle_event = 1;
+	chunk_info.toggle_event = 0;
 
 	chunk_info.sky_light_lvl = 15;
 

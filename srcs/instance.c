@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/03 14:49:05 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/06 14:10:49 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/06 14:27:54y jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,10 +134,35 @@ int	chunk_gen(t_chunk *chunk, int *noise_map)
 */
 int	get_block_type(float x, float y, float z)
 {
-	return (rand() ? BLOCK_STONE : GAS_AIR);
+	/*
+	float	frequency = 0.1f;
+	int		amplitude = 10;
+
+	float	xOffset = sin(x * frequency) * amplitude;
+	float	zOffset = sin(z * frequency) * amplitude;
+
+	int	surface_y = 100 + xOffset + zOffset;
+	int	sea_y = 102;
+
+	if (y < surface_y)
+		return (BLOCK_STONE);
+	else if (y < sea_y)
+		return (FLUID_WATER);
+	return (GAS_AIR);
+	*/
+	float	surface_y = 100.0f + perlin_v2(x - EPSILON, z - EPSILON, 239872349.1243f) * 20;
+/*
+	ft_printf("%f\n", perlin_v2(0.0f, 0.0f, 0.0f));
+	ft_printf("%f\n", perlin_v2(1337.0f, 420.0f, 42.0f));
+	ft_printf("%f\n", perlin_v2(100.0f, 3.1415f, 35.0f));
+	exit(0);
+
+	*/
+	ft_printf("surface_y : %f\n", surface_y);
+	return (y < surface_y ? BLOCK_STONE : GAS_AIR);
 }
 
-int	chunk_gen_v2(t_chunk *chunk, int *height_map)
+int	chunk_gen_v2(t_chunk *chunk)
 {
 	float	block_world[3];	
 	int		block_index;
@@ -146,10 +171,10 @@ int	chunk_gen_v2(t_chunk *chunk, int *height_map)
 	{
 		for (int z = 0; z < CHUNK_BREADTH; z++)
 		{
-			for (int y = 0; y < CHUNK_WIDTH; y++)
+			for (int y = 0; y < CHUNK_HEIGHT; y++)
 			{
 				block_index = get_block_index(x, y, z);
-				vec3_add(block_world, (float []){x, y, z}, chunk->world_coordinate);
+				get_block_world_pos(block_world, chunk->world_coordinate, (int []){x, y, z});
 				chunk->blocks[block_index].type = get_block_type(block_world[0], block_world[1], block_world[2]);
 			}
 		}
@@ -518,8 +543,10 @@ void	update_chunk_border_visible_blocks(t_chunk *chunk)
 	for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
 	{
 		neighbors[i] = get_adjacent_chunk(chunk->info, chunk, (float *)g_card_dir[dir]);
+		/* TODO : Look into this, maybe re-enabling this is faster, dont remember why it was added!
 		if (!chunk_has_non_solid(neighbors[i]))
 			neighbors[i] = NULL;
+			*/
 	}
 
 	for (int y = 0; y < CHUNK_HEIGHT; y++)
@@ -580,7 +607,9 @@ void	generate_chunk(t_chunk *chunk, int *coord, int *noise_map)
 	chunk_aabb_update(chunk);
 
 	// Generate Chunks	
-	chunk->block_amount = chunk_gen(chunk, noise_map); // should always return max amount of blocks in a chunk;
+	chunk->block_amount = CHUNK_BLOCK_AMOUNT;
+//	chunk_gen(chunk, noise_map);
+	chunk_gen_v2(chunk);
 
 	chunk->event_block_amount = 0;
 	chunk->light_emitters = 0;

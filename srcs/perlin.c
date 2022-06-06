@@ -1,145 +1,11 @@
 #include "shaderpixel.h"
 
-/* Function to linearly interpolate between a0 and a1
- * Weight w should be in the range [0.0, 1.0]
- */
-float interpolate(float a0, float a1, float w) {
-    /* // You may want clamping by inserting:
-     * if (0.0 > w) return a0;
-     * if (1.0 < w) return a1;
-     */
-	return (a1 - a0) * w + a0;
-    /* // Use this cubic interpolation [[Smoothstep]] instead, for a smooth appearance:
-	 */
-	//return (a1 - a0) * (3.0 - w * 2.0) * w * w + a0;
-	/*
-     *
-     * // Use [[Smootherstep]] for an even smoother result with a second derivative equal to zero on boundaries:
-     */
-	//return (a1 - a0) * ((w * (w * 6.0 - 15.0) + 10.0) * w * w * w) + a0;
-}
-
-/* Create pseudorandom direction vector
- */
-float	*randomGradient(float *res_v2, int ix, int iy, unsigned int seed)
-{
-	// No precomputed gradients mean this works for any number of grid coordinates
-	const unsigned int	w = 8 * sizeof(unsigned);
-	const unsigned int	s = w / 2; // rotation width
-
-	unsigned int	a = ix;
-	unsigned int	b = iy;
-	//a *= 3284157443;
-	//b *= 1911520717;
-	//a *= 2048419325;
-	a *= seed;
-	b ^= (a << s) | (a >> (w - s));
-	b *= seed;
-	a ^= (b << s) | (b >> (w - s));
-	a *= seed;
-
-	float	q = 3.14159265 / ~(~0u >> 1);
-	float	random = a * q; // in [0, 2*Pi] <--- slow af
-
-	float	v[VEC2_SIZE];
-	v[0] = cos(random);
-	v[1] = sin(random);
-
-	res_v2[0] = v[0];
-	res_v2[1] = v[1];
-	return (res_v2);
-}
-
-// Computes the dot product of the distance and gradient vectors.
-float	dotGridGradient(int ix, int iy, float x, float y, unsigned int seed)
-{
-	// Get gradient from integer coordinates
-	float	gradient[VEC2_SIZE];
-	randomGradient(gradient, ix, iy, seed);
-
-	// Compute the distance vector
-	float dx = x - (float)ix;
-	float dy = y - (float)iy;
-
-	// Compute the dot-product
-	return (dx * gradient[0] + dy * gradient[1]);
-}
-
 int fasterfloor(float x)
 {
 	return x < 0 ? (int) x == x ? (int) x : (int) x - 1 : (int) x;
 }
 
-// Compute Perlin noise at coordinates x, y
-float perlin(float x, float y, unsigned int seed)
-{
-    // Determine grid cell coordinates
-	/*
-    int x0 = floor(x);
-    int y0 = floor(y);
-	*/
-    int x0 = fasterfloor(x);
-    int y0 = fasterfloor(y);
-    int x1 = x0 + 1;
-    int y1 = y0 + 1;
-
-    // Determine interpolation weights
-    // Could also use higher order polynomial/s-curve here
-    float sx = x - (float)x0;
-    float sy = y - (float)y0;
-
-    // Interpolate between grid point gradients
-    float n0, n1, ix0, ix1, value;
-
-    n0 = dotGridGradient(x0, y0, x, y, seed);
-    n1 = dotGridGradient(x1, y0, x, y, seed);
-    ix0 = interpolate(n0, n1, sx);
-
-    n0 = dotGridGradient(x0, y1, x, y, seed);
-    n1 = dotGridGradient(x1, y1, x, y, seed);
-    ix1 = interpolate(n0, n1, sx);
-
-    value = interpolate(ix0, ix1, sy);
-    return (value);
-}
-
-/////////////////////
-// 3D
-/////////////////////
-
-float	perlin3(float x, float y, float z, unsigned int seed)
-{ 
-	float	ab = perlin(x, y, seed);
-	float	bc = perlin(y, z, seed);
-	float	ac = perlin(x, z, seed);
-
-	float	ba = perlin(y, x, seed);
-	float	cb = perlin(z, y, seed);
-	float	ca = perlin(z, x, seed);
-
-	float	abc = ab + bc + ac + ba + cb + ca;
-	return (abc / 6.0f);
-}
-
-//////////////////////
-// Volume 2
-//////////////////////
-
-int	permutation[] = { 151,160,137,91,90,15,
-    131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
-    190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
-    88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,
-    77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,
-    102,143,54, 65,25,63,161, 1,216,80,73,209,76,132,187,208, 89,18,169,200,196,
-    135,130,116,188,159,86,164,100,109,198,173,186, 3,64,52,217,226,250,124,123,
-    5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,
-    223,183,170,213,119,248,152, 2,44,154,163, 70,221,153,101,155,167, 43,172,9,
-    129,22,39,253, 19,98,108,110,79,113,224,232,178,185, 112,104,218,246,97,228,
-    251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,249,14,239,107,
-    49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,
-    138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180 };
-
-int	p[] = {
+int	g_p[] = {
 	151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140,
 	36, 103, 30, 69, 142, 8, 99, 37, 240, 21, 10, 23, 190, 6, 148, 247, 120,
 	234, 75, 0, 26, 197, 62, 94, 252, 219, 203, 117, 35, 11, 32, 57, 177, 33,
@@ -174,16 +40,6 @@ int	p[] = {
 	180
 };
 
-void	create_p(void)
-{
-	int	p[512];
-
-	for(int i = 0; i < 512; i++)
-		p[i] = permutation[i % 256];
-	for (int i = 0; i < 512; i++)
-		ft_printf("%d, ", p[i]);
-}
-
 float	fade(float t)
 {
 	return (t * t * t * (t * (t * 6 - 15) + 10));
@@ -192,16 +48,21 @@ float	fade(float t)
 float	grad(int hash, float x, float y, float z)
 {
     int h = hash & 15;
-    double u = h < 8 /* 0b1000 */ ? x : y;
+    double u = h < 8 ? x : y;
     double v;
 
-    if (h < 4 /* 0b0100 */)
+    if (h < 4)
         v = y;
-    else if (h == 12 /* 0b1100 */ || h == 14 /* 0b1110*/)
+    else if (h == 12 || h == 14)
         v = x;
     else
         v = z;
     return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
+}
+
+float	grad2d(int hash, float x, float y)
+{
+	return ((hash & 1) ? x : -x) + ((hash & 2) ? y : -y);
 }
 
 float lerp(float a, float b, float x)
@@ -223,14 +84,14 @@ float	perlin_v2(float x, float y, float z)
     double w = fade(zf);
 
 	int aaa, aba, aab, abb, baa, bba, bab, bbb;
-    aaa = p[p[p[    xi ]+    yi ]+    zi ];
-    aba = p[p[p[    xi ]+ yi + 1]+    zi ];
-    aab = p[p[p[    xi ]+    yi ]+ zi + 1];
-    abb = p[p[p[    xi ]+ yi + 1]+ zi + 1];
-    baa = p[p[p[ xi + 1]+    yi ]+    zi ];
-    bba = p[p[p[ xi + 1]+ yi + 1]+    zi ];
-    bab = p[p[p[ xi + 1]+    yi ]+ zi + 1];
-    bbb = p[p[p[ xi + 1]+ yi + 1]+ zi + 1];
+    aaa = g_p[g_p[g_p[    xi ]+    yi ]+    zi ];
+    aba = g_p[g_p[g_p[    xi ]+ yi + 1]+    zi ];
+    aab = g_p[g_p[g_p[    xi ]+    yi ]+ zi + 1];
+    abb = g_p[g_p[g_p[    xi ]+ yi + 1]+ zi + 1];
+    baa = g_p[g_p[g_p[ xi + 1]+    yi ]+    zi ];
+    bba = g_p[g_p[g_p[ xi + 1]+ yi + 1]+    zi ];
+    bab = g_p[g_p[g_p[ xi + 1]+    yi ]+ zi + 1];
+    bbb = g_p[g_p[g_p[ xi + 1]+ yi + 1]+ zi + 1];
 
 	float x1, x2, y1, y2;
     x1 = lerp(grad(aaa, xf, yf, zf), grad(baa, xf - 1, yf, zf), u);
@@ -260,3 +121,68 @@ float	octave_perlin(float x, float y, float z, int octaves, float persistence)
 	}
 	return (total / maxValue);
 }
+
+// YOINKKELI KOINKKEL
+float	noise2d(float x, float y)
+{
+	int xi = (int)floor(x) & 255;
+	int yi = (int)floor(y) & 255;
+	int g1 = g_p[g_p[xi] + yi];
+	int g2 = g_p[g_p[xi + 1] + yi];
+	int g3 = g_p[g_p[xi] + yi + 1];
+	int g4 = g_p[g_p[xi + 1] + yi + 1];
+
+	float xf = x - (int)floor(x);
+	float yf = y - (int)floor(y);
+
+	float d1 = grad2d(g1, xf, yf);
+	float d2 = grad2d(g2, xf - 1, yf);
+	float d3 = grad2d(g3, xf, yf - 1);
+	float d4 = grad2d(g4, xf - 1, yf - 1);
+
+	float u = fade(xf);
+	float v = fade(yf);
+
+	float x1Inter = lerp(u, d1, d2);
+	float x2Inter = lerp(u, d3, d4);
+	float yInter = lerp(v, x1Inter, x2Inter);
+
+	return (yInter);
+}
+ 
+float noise3d(float x, float y, float z)
+{
+	int	fx = fasterfloor(x);
+	int	fy = fasterfloor(y);
+	int	fz = fasterfloor(z);
+
+	int	X = fx & 255;
+	int Y = fy & 255;
+	int Z = fz & 255;
+
+	x -= fx;
+	y -= fy;
+	z -= fz;
+
+	float	u = fade(x);
+	float	v = fade(y);
+	float	w = fade(z);
+
+	int	A = g_p[X] + Y;
+	int	AA = g_p[A] + Z;
+	int AB = g_p[A + 1] + Z;
+
+	int	B = g_p[X + 1] + Y;
+	int BA = g_p[B] + Z;
+	int BB = g_p[B + 1] + Z;
+
+	return lerp(w, lerp(v, lerp(u, grad(g_p[AA  ], x  , y  , z   ), 
+									grad(g_p[BA  ], x-1, y  , z   )),
+							lerp(u, grad(g_p[AB  ], x  , y-1, z   ), 
+									grad(g_p[BB  ], x-1, y-1, z   ))),
+					lerp(v, lerp(u, grad(g_p[AA+1], x  , y  , z-1 ), 
+									grad(g_p[BA+1], x-1, y  , z-1 )), 
+							lerp(u, grad(g_p[AB+1], x  , y-1, z-1 ),
+									grad(g_p[BB+1], x-1, y-1, z-1 ))));
+}
+ 
