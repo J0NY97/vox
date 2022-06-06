@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/03 14:49:05 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/05 15:13:31 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/06 13:06:36 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,6 +60,7 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, int nth)
 int	chunk_gen(t_chunk *chunk, int *noise_map)
 {
 	int i = -1;
+	float	cave_chance = 1.41f;
 
 	chunk->has_blocks = 0;
 	for (int x = 0; x < CHUNK_WIDTH; x++)
@@ -74,23 +75,39 @@ int	chunk_gen(t_chunk *chunk, int *noise_map)
 			for (int y = 0; y < CHUNK_HEIGHT; y++)
 			{
 				float	block_world_y = chunk->world_coordinate[1] + y;
-				float	perper = 100.0f;
+				float	perper = cave_chance;
 				i++;
+
+				// Default block settings;
+				chunk->blocks[i].visible_faces = 0;
+				chunk->blocks[i].light_lvl = 15;
+				chunk->blocks[i].type = GAS_AIR;
+
+				if (block_world_y == 0)
+				{
+					chunk->blocks[i].type = BLOCK_BEDROCK;
+					chunk->has_blocks = 1;
+					continue ;
+				}
+
 				/* Cave Gen
 				*/
 				if (whatchumacallit > 0)
 				{
 					float	pers = 0.5f;
 					float	freq = 0.040f;
-					perper = octave_perlin(block_world_x * freq, block_world_y * freq, block_world_z * freq, 1, pers) +
-						octave_perlin(block_world_x * freq, block_world_y * freq, block_world_z * freq, 2, pers)* +
-						octave_perlin(block_world_x * freq, block_world_y * freq, block_world_z * freq, 4, pers) +
-						octave_perlin(block_world_x * freq, block_world_y * freq, block_world_z * freq, 8, pers);
+					int		q = 1;	
+					perper = 0.0f;
+					while (q <= 8)
+					{
+						perper += octave_perlin(block_world_x * freq, block_world_y * freq, block_world_z * freq, q, pers);
+						if (perper >= cave_chance)
+							break ;
+						q *= 2;
+					}
 				}
-				chunk->blocks[i].visible_faces = 0;
-				chunk->blocks[i].light_lvl = 15;
-				chunk->blocks[i].type = GAS_AIR; // Default to air;
-				if (perper > 0.9f && y <= whatchumacallit)
+
+				if (perper >= cave_chance && y <= whatchumacallit)
 				{
 					if (y == whatchumacallit)
 						chunk->blocks[i].type = BLOCK_DIRT_GRASS;
@@ -98,13 +115,6 @@ int	chunk_gen(t_chunk *chunk, int *noise_map)
 						chunk->blocks[i].type = BLOCK_STONE;
 					else if (y < whatchumacallit)
 						chunk->blocks[i].type = BLOCK_DIRT;
-					else
-					{
-						if (block_world_y < 2)
-							chunk->blocks[i].type = BLOCK_BEDROCK;
-						else
-							continue ;
-					}
 					chunk->has_blocks = 1;
 				}
 				else // everything that is over the noise_map value;
