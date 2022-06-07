@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/11 14:27:43 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/07 12:52:51 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/07 13:22:07 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -251,20 +251,6 @@ void				new_entity(t_entity *entity);
 void				entity_print(t_entity *entity);
 void				update_entity(t_entity *entity);
 void				render_entity(t_entity *entity, t_camera *camera, t_model *model, GLuint shader);
-
-
-///////////////////
-//	NOISE
-///////////////////
-
-float		perlin(float x, float y, unsigned int seed);
-float		perlin3(float x, float y, float z, unsigned int seed);
-float		perlin_v2(float x, float y, float z);
-float		octave_perlin(float x, float y, float z, int octaves, float persistence);
-
-float		noise2d(float x, float y);
-float		noise3d(float x, float y, float z);
-float		noise3d_octave(float x, float y, float z, float amplitude, float frequency, int octaves, float persistence, float lacunarity);
 
 ///////////////////
 //	PLAYER

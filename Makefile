@@ -35,6 +35,7 @@ CFILES = \
 	bitmap.c \
 	ui.c \
 	save.c \
+	noise.c \
 	bimgf/bimgf_bmp.c \
 	bimgf/bimgf_help.c \
 	bimgf/bimgf_jpg.c \

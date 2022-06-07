@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 10:06:36 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/07 12:13:03 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/07 13:24:20 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 # include "block.h"
 # include "item.h"
+# include "noise.h"
 
 typedef struct s_player_info
 {
@@ -248,7 +249,7 @@ struct	s_chunk
 
 void		new_chunk(t_chunk *chunk, t_chunk_info *info, int nth);
 int			chunk_gen(t_chunk *chunk, int *noise_map);
-void		generate_chunk(t_chunk *chunk, int *coord, int *noise_map);
+void		generate_chunk(t_chunk *chunk, int *coord, t_noise *noise);
 void		update_chunk_visible_blocks(t_chunk *chunk);
 void		update_chunk_event_blocks(t_chunk *chunk);
 void		update_chunk_border_visible_blocks(t_chunk *chunk);

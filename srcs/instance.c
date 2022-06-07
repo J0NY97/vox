@@ -132,25 +132,21 @@ int	chunk_gen(t_chunk *chunk, int *noise_map)
  *
  * block type one from enum e_block / e_block_alpha / e_block_fluid ...; block.h
 */
-int	get_block_type(float x, float y, float z)
+int	get_block_type(int x, int y, int z, t_noise *noise)
 {
 	int		base_terrain_height = 64;
 	int		base_sea_height = 63;
-	float	frequency = 0.01f; // mc uses '0.01f' in perlin.sample2d();
-	int		octaves = 4;
-	float	amplitude = 20.0f;
-	float	persistence = 0.5f;
-	float	lacunarity = 2.0f;
-	// TODO : change this to noise2d
-	float	noise = noise3d_octave(x, y, z, amplitude, frequency, octaves, persistence, lacunarity);
-	int		surface_y = base_terrain_height + noise;
-
+	float	noise_value = noise_get_value(noise, x, z);
+	int		surface_y = base_terrain_height + noise_value;
+	
 	if (y < surface_y) // solid blocks
 	{
 		if (y == surface_y - 1)
 			return (BLOCK_DIRT_GRASS);
 		else if (y > surface_y - 3)
 			return (BLOCK_DIRT);
+		else if (y == 0)
+			return (BLOCK_BEDROCK);
 		return (BLOCK_STONE);
 	}
 	else if (y < base_sea_height)
@@ -162,9 +158,8 @@ int	get_block_type(float x, float y, float z)
 	return (GAS_AIR);
 }
 
-int	chunk_gen_v2(t_chunk *chunk)
+int	chunk_gen_v2(t_chunk *chunk, t_noise *noise)
 {
-	float	block_world[3];	
 	int		block_index;
 
 	for (int x = 0; x < CHUNK_WIDTH; x++)
@@ -174,8 +169,8 @@ int	chunk_gen_v2(t_chunk *chunk)
 			for (int y = 0; y < CHUNK_HEIGHT; y++)
 			{
 				block_index = get_block_index(x, y, z);
-				get_block_world_pos(block_world, chunk->world_coordinate, (int []){x, y, z});
-				chunk->blocks[block_index].type = get_block_type(block_world[0], block_world[1], block_world[2]);
+				chunk->blocks[block_index].type =
+					get_block_type(x, y + chunk->world_coordinate[1], z, noise);
 			}
 		}
 	}
@@ -595,7 +590,7 @@ unsigned long int	get_chunk_hash_key(int *coords)
 	return (hash);
 }
 
-void	generate_chunk(t_chunk *chunk, int *coord, int *noise_map)
+void	generate_chunk(t_chunk *chunk, int *coord, t_noise *noise)
 {
 	for (int i = 0; i < 3; i++)
 		chunk->coordinate[i] = coord[i];
@@ -609,7 +604,7 @@ void	generate_chunk(t_chunk *chunk, int *coord, int *noise_map)
 	// Generate Chunks	
 	chunk->block_amount = CHUNK_BLOCK_AMOUNT;
 //	chunk_gen(chunk, noise_map);
-	chunk_gen_v2(chunk);
+	chunk_gen_v2(chunk, noise);
 
 	chunk->event_block_amount = 0;
 	chunk->light_emitters = 0;
@@ -826,33 +821,6 @@ void print_block_palette(t_chunk *chunk)
 		ft_printf("%2d : %5d [%s]\n", i, chunk->block_palette[i], get_block_data_from_type(i).name);
 }
 
-/*
-int	get_chunk_skylight_amount(t_chunk *chunk)
-{
-	int		skylights;
-	int		index;
-	int		top_chunk_pos[3];
-	t_chunk	*top_chunk;
-	
-	top_chunk = get_chunk(chunk->info,
-		vec3i_add(top_chunk_pos, chunk->coordinate, g_card_dir_int[DIR_UP]));
-	// TODO : For now, just return if not the top most chunk, we have to look into this later;
-	if (top_chunk)
-		return (0);
-	skylights = 0;
-	for (int x = 0; x < CHUNK_WIDTH; x++)
-	{
-		for (int z = 0; z < CHUNK_WIDTH; z++)
-		{
-			index = get_block_index(x, CHUNK_HEIGHT - 1, z);
-			if (is_gas(&chunk->blocks[index]))
-				++skylights;
-		}
-	}
-	return (skylights);
-}
-*/
-
 void	update_chunk_event_blocks(t_chunk *chunk)
 {
 	t_block			*block;
@@ -946,11 +914,13 @@ void	event_chunk(t_chunk *chunk)
 
 void	regenerate_chunk_column(t_chunk_col *column, int coord[2], int seed)
 {
-	int	noise_map[CHUNK_WIDTH * CHUNK_BREADTH];
+	t_noise	noise;
 
-	create_noise_map(noise_map, CHUNK_WIDTH, CHUNK_BREADTH, coord[0], coord[1], seed);
+	noise_create(&noise, CHUNK_WIDTH, CHUNK_HEIGHT,
+		coord[0] * CHUNK_SIZE_X, coord[1] * CHUNK_SIZE_Z, seed);
 	for (int i = 0; i < CHUNKS_PER_COLUMN; i++)
-		generate_chunk(column->chunks[i], (int []){coord[0], i, coord[1]}, noise_map);
+		generate_chunk(column->chunks[i], (int []){coord[0], i, coord[1]}, &noise);
+	noise_free(&noise);
 	column->coordinate[0] = column->chunks[0]->coordinate[0];
 	column->coordinate[1] = column->chunks[0]->coordinate[2];
 	column->world_coordinate[0] = column->chunks[0]->world_coordinate[0];
@@ -1893,53 +1863,40 @@ float	get_highest_point_of_type(t_chunk_info *info, float x, float z, int type)
 	return (curr_highest);
 }
 
-void	flora_decider(t_chunk_info *info, float chance, float *world_pos)
-{
-	if (chance < 1.25f)
-	{
-		if (chance < 1.125f)
-			flora_placer(info, FLORA_FLOWER_YELLOW, world_pos);
-		else
-			flora_placer(info, FLORA_FLOWER_RED, world_pos);
-	}
-	else
-		flora_placer(info, FLORA_GRASS, world_pos);
-}
-
 void	tree_gen(t_chunk_info *info, t_chunk_col *column)
 {
-	float	freq = 0.75f; //0.99f;
-	float	pers = 0.5;
+	float	amp = 1.0f;
+	float	freq = 0.05f;
+	int		oct = 8;
+	float	pers = 0.01f;
+	float	lac = 2.0f;
 	t_block	*highest_block;
 	t_chunk	*highest_chunk;
+	float	block_pos[3];
 
 	for (int x = 0; x < CHUNK_WIDTH; x++)
 	{
-		float	block_world_x = fabs(column->world_coordinate[0] + x);
-		float	to_use_x = block_world_x * freq;
+		block_pos[0] = fabs(column->world_coordinate[0] + x);
 		for (int z = 0; z < CHUNK_BREADTH; z++)
 		{
-			float	block_world_z = fabs(column->world_coordinate[1] + z);
-			float	to_use_z = block_world_z * freq;
-
 			highest_block = NULL;
-			float block_world_y = get_highest_block(info, &highest_block, block_world_x, block_world_z);
-			if (block_world_y == -1)
+			block_pos[2] = fabs(column->world_coordinate[1] + z);
+			block_pos[1] = get_highest_block(info, &highest_block, block_pos[0], block_pos[2]);
+			if (block_pos[1] == -1)
 				continue ;
-			float to_use_y = block_world_y * freq;
-			float perper =
-				octave_perlin(to_use_x, to_use_y, to_use_z, 1, pers) +
-				octave_perlin(to_use_x, to_use_y, to_use_z, 2, pers) +
-				octave_perlin(to_use_x, to_use_y, to_use_z, 4, pers) +
-				octave_perlin(to_use_x, to_use_y, to_use_z, 8, pers);
-			if (perper < 1.5f)
+			float perper = noise3d_octave(block_pos[0], block_pos[1], block_pos[2],
+				amp, freq, oct, pers, lac);
+			if (perper > -0.75f)
 			{
-				if (perper < 1.0f)
-					tree_placer(info,
-						(float []){block_world_x, block_world_y + 1, block_world_z});
+				block_pos[1] += 1;
+				if (perper > 0.0f)
+					tree_placer(info, block_pos);
+				else if (perper > -0.25f)
+					flora_placer(info, FLORA_FLOWER_YELLOW, block_pos);
+				else if (perper > -0.50f)
+					flora_placer(info, FLORA_FLOWER_RED, block_pos);
 				else
-					flora_decider(info, perper,
-						(float []){block_world_x, block_world_y + 1, block_world_z});
+					flora_placer(info, FLORA_GRASS, block_pos);
 			}
 		}
 	}

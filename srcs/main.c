@@ -573,6 +573,7 @@ int	main(void)
 				tree_gen(&chunk_info, column);
 				column->update_structures = 0;
 			}
+
 			// Check if a chunk in the column needs an update;
 			for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
 			{
@@ -583,6 +584,7 @@ int	main(void)
 					column->chunk_needs_update = 1;
 				}
 			}
+
 			// Light calculation;
 			if (chunk_info.light_calculation &&
 				(column->chunk_needs_update ||
