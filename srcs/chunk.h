@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   chunk.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
+/*   By: jsalmi <jsalmi@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 10:06:36 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/07 13:24:20 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/07 17:17:09 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,18 +74,18 @@ typedef struct s_chunk_mesh_v2
 	int				amount; // amount of meshes in this mesh;
 
 	float			*vertices;
-	size_t			vertices_amount;
-	size_t			vertices_allocated;
+	int				vertices_amount;
+	int				vertices_allocated;
 
 	int				*texture_ids;
-	size_t			texture_id_amount;
-	size_t			texture_ids_allocated;
+	int				texture_id_amount;
+	int				texture_ids_allocated;
 
 	unsigned int	**indices; // 'amount' amount of pointers;
-	size_t			*indices_allocated; // how many indices allocated;
-	size_t			*indices_amount; // how many values in the array; (one face has 6 indices);
+	int				*indices_allocated; // how many indices allocated;
+	int				*indices_amount; // how many values in the array; (one face has 6 indices);
 
-	size_t			index_amount; // how many indices we have; (one face has 4 indices);
+	int				index_amount; // how many indices we have; (one face has 4 indices);
 
 	GLuint			shader;
 
@@ -130,7 +130,7 @@ typedef struct s_light
 
 /*
  * One column of chunks at local chunk 'coordinate';
- * 
+ *
  * 'coordinate' : [0](x), [1](z);
  * 'chunks' : amount of 'CHUNKS_PER_COLUMN'; pointer to the chunk_info->chunks[x];
 */
@@ -216,7 +216,7 @@ struct	s_chunk
 	int				event_blocks_wanted;
 	int				event_block_amount;
 	int				event_blocks_allocated;
-	t_block_event	*event_blocks; // 
+	t_block_event	*event_blocks; //
 
 	int				light_emitters; // NOT USED YET
 

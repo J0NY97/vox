@@ -32,9 +32,7 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, int nth)
 
 	chunk->block_palette = malloc(sizeof(int) * BLOCK_TYPE_AMOUNT);
 
-	int	max_blocks = CHUNK_WIDTH * CHUNK_BREADTH * CHUNK_HEIGHT;
-
-	chunk->blocks = malloc(sizeof(t_block) * (max_blocks));
+	chunk->blocks = malloc(sizeof(t_block) * CHUNK_BLOCK_AMOUNT);
 
 	// Set INT_MAX to coordinates, so that the chunk regenerator knows to regenerate these chunks;
 	for (int i = 0; i < 3; i++)
@@ -94,7 +92,7 @@ int	chunk_gen(t_chunk *chunk, int *noise_map)
 				{
 					float	pers = 0.5f;
 					float	freq = 0.040f;
-					int		q = 1;	
+					int		q = 1;
 					perper = 0.0f;
 					while (q <= 8)
 					{
@@ -138,7 +136,7 @@ int	get_block_type(int x, int y, int z, t_noise *noise)
 	int		base_sea_height = 63;
 	float	noise_value = noise_get_value(noise, x, z);
 	int		surface_y = base_terrain_height + noise_value;
-	
+
 	if (y < surface_y) // solid blocks
 	{
 		if (y == surface_y - 1)
@@ -216,7 +214,7 @@ int	create_noise_map(int *map, int size_x, int size_z, int coord_x, int coord_z,
 }
 
 /*
- * Give any world position to 'world_coords' and this calculates the 
+ * Give any world position to 'world_coords' and this calculates the
  *	chunk coordinate that you're in;
 */
 int	*get_chunk_pos_from_world_pos(int *res, float *world_coords)
@@ -243,7 +241,7 @@ void	chunk_aabb_update(t_chunk *chunk)
 /*
  * Returns pointer to chunk if we can find the correct one;
  * 	else NULL;
- * 
+ *
  * 'from' is the chunk we want to look in a direction from,
  * 'chunks' is all the loaded chunks,
  * 'dir' is the direction you want to look for the chunk in; (v3)
@@ -257,7 +255,7 @@ t_chunk	*get_adjacent_chunk(t_chunk_info *info, t_chunk *from, float *dir)
 	from_coord[2] = from->coordinate[2] + (int)dir[2];
 	for (int i = 0; i < CHUNK_COLUMNS; i++)
 	{
-		if (info->chunk_columns[i].coordinate[0] == from_coord[0] && 
+		if (info->chunk_columns[i].coordinate[0] == from_coord[0] &&
 			info->chunk_columns[i].coordinate[1] == from_coord[2])
 		{
 			for (int j = CHUNKS_PER_COLUMN - 1; j >= 0; j--)
@@ -275,8 +273,8 @@ t_chunk	*get_chunk(t_chunk_info	*info, int *pos)
 {
 	for (int i = 0; i < CHUNKS_LOADED; i++)
 	{
-		if (info->chunks[i].coordinate[0] == pos[0] && 
-			info->chunks[i].coordinate[1] == pos[1] && 
+		if (info->chunks[i].coordinate[0] == pos[0] &&
+			info->chunks[i].coordinate[1] == pos[1] &&
 			info->chunks[i].coordinate[2] == pos[2])
 			return (&info->chunks[i]);
 	}
@@ -440,7 +438,7 @@ void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos)
 {
 	int		index;
 	t_block	*adj;
-	
+
 	index = get_block_index(pos[0], pos[1], pos[2]);
 	if (is_gas(&chunk->blocks[index])) // <-- very important, im not sure what happens if we are trying to render an air block;
 		return ;
@@ -506,7 +504,7 @@ void	get_blocks_visible(t_chunk *chunk)
 	// Reset visible faces;
 	for (int i = 0; i < chunk->block_amount; i++)
 		chunk->blocks[i].visible_faces = 0;
-	
+
 	int	all_dirs[] = {DIR_NORTH, DIR_EAST, DIR_SOUTH, DIR_WEST, DIR_UP, DIR_DOWN, -1};
 
 	// First check all the blocks inside the chunk, all face directions;
@@ -601,7 +599,7 @@ void	generate_chunk(t_chunk *chunk, int *coord, t_noise *noise)
 
 	chunk_aabb_update(chunk);
 
-	// Generate Chunks	
+	// Generate Chunks
 	chunk->block_amount = CHUNK_BLOCK_AMOUNT;
 //	chunk_gen(chunk, noise_map);
 	chunk_gen_v2(chunk, noise);
@@ -617,7 +615,7 @@ void	generate_chunk(t_chunk *chunk, int *coord, t_noise *noise)
 /*
  * Get all coordinates in a radius around start coords;
  * On a 2d plane;
- * 
+ *
  * Returns res amount;
 */
 int	get_surrounding_coords(int *res, int x, int z, int r)
@@ -711,7 +709,7 @@ int	get_chunk_column_to_regen(t_chunk_col *chunk_cols, int *player_chunk, int *o
  *	to update the new chunks that are going to be loaded, and put the
  *	new chunk info into those 'chunks' indices;
  * Takes 0.000000 seconds;
- * 
+ *
  * Figures out which chunks will be loaded into which chunks;
 */
 int	get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, t_chunk_info *info, int *player_chunk_v3, int max_get)
@@ -765,7 +763,7 @@ int	get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, 
 				}
 			}
 			if (!found)
-			{	
+			{
 				into_these[coord_amount][0] = x;
 				into_these[coord_amount][1] = z;
 				coord_amount++;
@@ -803,9 +801,9 @@ void	update_chunk_block_palette(t_chunk *chunk)
 	memset(chunk->block_palette, 0, sizeof(int) * BLOCK_TYPE_AMOUNT);
 	for (int i = 0; i < chunk->block_amount; i++)
 	{
-		++chunk->block_palette[chunk->blocks[i].type];
+		chunk->block_palette[chunk->blocks[i].type] += 1;
 	}
-	
+
 	// Check if we have less than maximum blocks of air blocks,
 	//	this means some of the blocks are not air blocks,
 	//	this means we have blocks in this chunk;
@@ -991,7 +989,7 @@ void	render_aabb(t_aabb *a, t_camera *camera, float *col)
 
 /*
  * I think this has to be called after all the chunk creation since we need all the adjacent
- *	chunks to already exist, and if the update_chunk is multithreaded we might not have 
+ *	chunks to already exist, and if the update_chunk is multithreaded we might not have
  *	created the needed chunks yet;
 */
 void	update_chunk_visible_blocks(t_chunk *chunk)
@@ -1023,12 +1021,12 @@ void	init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, GLuint shader, int amount)
 	error = glGetError();
 	if (error)
 		LG_ERROR("BEFORE (%d)", error);
-	
+
 	mesh->vertices_allocated = 162576;
 	mesh->vertices = malloc(sizeof(float) * mesh->vertices_allocated);
 	mesh->vertices_amount = 0;
 
-	mesh->texture_ids_allocated = 54536; 
+	mesh->texture_ids_allocated = 54536;
 	mesh->texture_ids = malloc(sizeof(int) * mesh->texture_ids_allocated);
 	mesh->texture_id_amount = 0;
 
@@ -1093,13 +1091,13 @@ void	render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinat
 	error = glGetError();
 	if (error)
 		LG_ERROR("BEFORE (%d)", error);
-	
+
 	glUseProgram(mesh->shader);
 	glUniformMatrix4fv(mesh->uniform_view, 1, GL_FALSE, &camera->view[0]);
 	glUniformMatrix4fv(mesh->uniform_proj, 1, GL_FALSE, &camera->projection[0]);
 
 	glUniform3fv(mesh->uniform_chunk_pos, 1, &coordinate[0]);
-	// Night tint 
+	// Night tint
 //	glUniform3fv(mesh->uniform_color_tint, 1, (float []){0.2, 0.40, 0.6});
 	// day tint
 	glUniform3fv(mesh->uniform_color_tint, 1, (float []){1, 1, 1});
@@ -1166,7 +1164,7 @@ void	update_chunk_mesh(t_chunk_mesh_v2 *mesh)
 			mesh->indices_amount[i] * sizeof(unsigned int),
 			&mesh->indices[i][0], GL_STATIC_DRAW);
 	}
-	
+
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -1182,7 +1180,7 @@ void	update_chunk_mesh(t_chunk_mesh_v2 *mesh)
  *
  * You give in the mesh you want to add the face to;
  * Otherwise same as the old version;
- * 
+ *
  * You give either solid mesh or liquid mesh to this;
 */
 void	add_to_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, int *coord, float *face_vertices, int texture_id, int light)
@@ -1340,7 +1338,7 @@ t_block	*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, in
 /*
  * Returns amount of collisions;
  * Result of intersection points are stored in 'intersect_point';
- * 
+ *
  * TODO: This should probably returns either an array of points being hit,
  * 	or just the closest one....?
 */
@@ -1369,7 +1367,7 @@ int	chunk_mesh_collision_v2(float *orig, float *dir, t_chunk_mesh_v2 *mesh, int 
 		vec3_new(p1, vertices[k0 + 0], vertices[k0 + 1], vertices[k0 + 2]);
 		vec3_new(p2, vertices[k1 + 0], vertices[k1 + 1], vertices[k1 + 2]);
 		vec3_new(p3, vertices[k2 + 0], vertices[k2 + 1], vertices[k2 + 2]);
-		
+
 		// We are adding chunk woorld coordinate to points, to get the world point coordinate;
 		vec3_add(p1, p1, world_coords);
 		vec3_add(p2, p2, world_coords);
@@ -1414,8 +1412,8 @@ int	chunk_mesh_collision_v56(float *orig, float *dir, t_chunk *chunk, float reac
 			vertices[indices[k + 2] * 3 + 0],
 			vertices[indices[k + 2] * 3 + 1],
 			vertices[indices[k + 2] * 3 + 2]);
-		
-		// We have to add the chunk position to the chunk mesh, since that is 
+
+		// We have to add the chunk position to the chunk mesh, since that is
 		//		what we are doing in the shader;
 		vec3_add(p1, p1, chunk->world_coordinate);
 		vec3_add(p2, p2, chunk->world_coordinate);
@@ -1517,7 +1515,7 @@ void	player_terrain_collision(float *res, float *pos, float *velocity, t_chunk_i
 		{
 			if (!(info->chunks[i].blocks_solid_amount > 0 &&
 				vec3i_dist(player_chunk, info->chunks[i].coordinate) < 2))
-				continue ;	
+				continue ;
 			int colls = chunk_mesh_collision_v56(pos, normed_velocity, &info->chunks[i], velocity_dist, player_intersect_point + player_collision_amount, player_intersect_normal + player_collision_amount);
 			player_collision_amount += colls;
 		}
@@ -1530,7 +1528,7 @@ void	player_terrain_collision(float *res, float *pos, float *velocity, t_chunk_i
 			vec3_add(destination, pos, final);
 
 			float	distance = EPSILON;
-			distance = vec3_dist(player_intersect_point[i], destination);	
+			distance = vec3_dist(player_intersect_point[i], destination);
 			distance = ft_fmax(EPSILON, distance);
 
 			float	new_destination[3];
@@ -1712,7 +1710,7 @@ void	tree_placer(t_chunk_info *info, float *world_pos)
 void	flora_placer(t_chunk_info *info, int type, float *world_pos)
 {
 	int	block_type;
-	
+
 // We have to check that the block we are placing on is dirt block;
 	block_type = get_block_type_at_world_pos(info,
 		(float []){world_pos[0], world_pos[1] - 1, world_pos[2]});
@@ -1767,7 +1765,7 @@ t_chunk *get_highest_chunk_with_block(t_chunk_info *info, t_block **out_block, f
 			for (int j = CHUNKS_PER_COLUMN - 1; j >= 0; j--)
 			{
 				if (!info->chunk_columns[i].chunks[j]->has_blocks)
-					continue ;	
+					continue ;
 				// Then loop from highest y to lowest y and double check if it has a world_x / world_z a block;
 				get_block_local_pos_from_world_pos(block_local, (float []){world_x, 0, world_z});
 				for (int y = CHUNK_HEIGHT - 1; y >= 0; y--)
@@ -1972,9 +1970,9 @@ void	update_chunk_column_light_0(t_chunk_col *column)
 	int	curr_chunk_index;
 	t_block_data	data;
 
-	for (int x = 0; x < CHUNK_WIDTH; x++)	
+	for (int x = 0; x < CHUNK_WIDTH; x++)
 	{
-		for (int z = 0; z < CHUNK_BREADTH; z++)	
+		for (int z = 0; z < CHUNK_BREADTH; z++)
 		{
 			light_index = x * CHUNK_WIDTH + z;
 			column->lights[light_index].chunk_index = -1;
@@ -2065,7 +2063,7 @@ void	update_chunk_column_light_2(t_chunk_col *column)
 		t_chunk *neighbors[4];
 		for (int dir = DIR_NORTH, i = 0; dir <= DIR_WEST; ++dir, ++i)
 			neighbors[i] = get_adjacent_chunk(chunk->info, chunk, (float *)g_card_dir[dir]);
-		
+
 		t_block	*block;
 		t_block	*adj_block;
 

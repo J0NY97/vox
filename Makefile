@@ -30,10 +30,7 @@ CFILES = \
 	hashtable.c \
 	item.c \
 	tnt.c \
-	font_manager.c \
-	ui_manager.c \
 	bitmap.c \
-	ui.c \
 	save.c \
 	noise.c \
 	bimgf/bimgf_bmp.c \
@@ -46,7 +43,10 @@ CFILES = \
 	bobj/bobj_loader.c \
 	bobj/bobj_print.c \
 	glad/glad.c \
-	
+#	ui.c \
+#	font_manager.c \
+#	ui_manager.c \
+
 CDIR = srcs
 ODIR = obj
 OBJ = $(addprefix $(ODIR)/, $(CFILES:.c=.o))
@@ -66,7 +66,7 @@ INCS = \
 	-I$(CDIR)/glad \
 	-I$(CDIR)/KHR \
 	-I$(LIB_DIR)/GLFW \
-	-I$(LIB_DIR)/freetype/include \
+	#-I$(LIB_DIR)/freetype/include \
 
 LIB_DIRS = \
 	-L$(LIB_DIR)/libft \
@@ -83,7 +83,7 @@ else
 LIBS += -lOpenGl32 -lgdi32
 endif
 
-FLAGS = -Wall -Wextra -Wno-unused-variable -MMD -g
+FLAGS = -Wall -Wextra -Wno-unused-variable -MMD -O3
 
 all: $(ODIR) $(NAME)
 
@@ -101,7 +101,7 @@ $(ODIR)/%.o: $(CDIR)/%.c
 	@printf $(YELLOW)"Compiling $<\n"$(RESET)
 
 $(NAME): $(OBJ)
-	@gcc -o $(NAME) $(OBJ) $(INCS) $(LIB_DIRS) $(LIBS) $(CLFLAGS)
+	@gcc -o $(NAME) $(OBJ) $(INCS) $(LIB_DIRS) $(LIBS) -fsanitize=address
 	@echo "$(NAME) was successfully created."
 
 clean:

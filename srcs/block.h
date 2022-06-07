@@ -138,6 +138,17 @@ static const float g_card_dir[DIR_AMOUNT][3] = {
 
 // Same as g_card_dir, but type casted to int already;
 static const int g_card_dir_int[DIR_AMOUNT][3] = {
+	{0, 0, -1},
+	{1, 0, 0},
+	{0, 0, 1},
+	{-1, 0, 0},
+	{0, 1, 0},
+	{0, -1, 0},
+	{1, 0, -1},
+	{-1, 0, -1},
+	{1, 0, 1},
+	{-1, 0, 1}
+	/*
 	{(int)g_card_dir[0][0], (int)g_card_dir[0][1], (int)g_card_dir[0][2]},
 	{(int)g_card_dir[1][0], (int)g_card_dir[1][1], (int)g_card_dir[1][2]},
 	{(int)g_card_dir[2][0], (int)g_card_dir[2][1], (int)g_card_dir[2][2]},
@@ -148,6 +159,7 @@ static const int g_card_dir_int[DIR_AMOUNT][3] = {
 	{(int)g_card_dir[7][0], (int)g_card_dir[7][1], (int)g_card_dir[7][2]},
 	{(int)g_card_dir[8][0], (int)g_card_dir[8][1], (int)g_card_dir[8][2]},
 	{(int)g_card_dir[9][0], (int)g_card_dir[9][1], (int)g_card_dir[9][2]}
+	*/
 };
 
 /*
@@ -186,7 +198,7 @@ static const t_block_data	g_block_data[] = {
 	},
 // BLOCKS
 	{
-		BLOCK_DIRT_GRASS, 
+		BLOCK_DIRT_GRASS,
 		"BLOCK_DIRT_GRASS",
 		"Dirt",
 		{132, 132, 132, 132, 135, 224},
@@ -194,7 +206,7 @@ static const t_block_data	g_block_data[] = {
 		(float **)g_faces
 	},
 	{
-		BLOCK_DIRT, 
+		BLOCK_DIRT,
 		"BLOCK_DIRT",
 		"Dirt",
 		{224, 224, 224, 224, 224, 224},
@@ -202,7 +214,7 @@ static const t_block_data	g_block_data[] = {
 		(float **)g_faces
 	},
 	{
-		BLOCK_STONE, 
+		BLOCK_STONE,
 		"BLOCK_STONE",
 		"Stone",
 		{164, 164, 164, 164, 164, 164},
@@ -210,7 +222,7 @@ static const t_block_data	g_block_data[] = {
 		(float **)g_faces
 	},
 	{
-		BLOCK_BEDROCK, 
+		BLOCK_BEDROCK,
 		"BLOCK_BEDROCK",
 		"Bedrock",
 		{292, 292, 292, 292, 292, 292},
@@ -218,7 +230,7 @@ static const t_block_data	g_block_data[] = {
 		(float **)g_faces
 	},
 	{
-		BLOCK_SAND, 
+		BLOCK_SAND,
 		"BLOCK_SAND",
 		"Sand",
 		{211, 211, 211, 211, 211, 211},
@@ -226,7 +238,7 @@ static const t_block_data	g_block_data[] = {
 		(float **)g_faces
 	},
 	{
-		BLOCK_OAK_LOG, 
+		BLOCK_OAK_LOG,
 		"BLOCK_OAK_LOG",
 		"Oak Log",
 		{27, 27, 27, 27, 28, 28},
@@ -234,7 +246,7 @@ static const t_block_data	g_block_data[] = {
 		(float **)g_faces
 	},
 	{
-		BLOCK_OAK_PLANK, 
+		BLOCK_OAK_PLANK,
 		"BLOCK_OAK_PLANK",
 		"Oak Plank",
 		{280, 280, 280, 280, 280, 280},
@@ -242,7 +254,7 @@ static const t_block_data	g_block_data[] = {
 		(float **)g_faces
 	},
 	{
-		BLOCK_TNT, 
+		BLOCK_TNT,
 		"BLOCK_TNT",
 		"TNT",
 		{189, 189, 189, 189, 165, 213},
@@ -251,7 +263,7 @@ static const t_block_data	g_block_data[] = {
 	},
 // BLOCK ALPHA
 	{
-		BLOCK_ALPHA_OAK_LEAF, 
+		BLOCK_ALPHA_OAK_LEAF,
 		"BLOCK_ALPHA_OAK_LEAF",
 		"Oak Leaf",
 		{52, 52, 52, 52, 52, 52},
@@ -259,7 +271,7 @@ static const t_block_data	g_block_data[] = {
 		(float **)g_faces
 	},
 	{
-		BLOCK_ALPHA_CACTUS, 
+		BLOCK_ALPHA_CACTUS,
 		"BLOCK_ALPHA_CACTUS",
 		"Cactus",
 		{342, 342, 342, 342, 318, 366},
@@ -267,7 +279,7 @@ static const t_block_data	g_block_data[] = {
 		(float **)g_faces_cactus
 	},
 	{
-		BLOCK_ALPHA_TORCH, 
+		BLOCK_ALPHA_TORCH,
 		"BLOCK_ALPHA_TORCH",
 		"Torch",
 		{141, 141, 141, 141, 42, 141},
@@ -276,7 +288,7 @@ static const t_block_data	g_block_data[] = {
 	},
 // FLORA
 	{
-		FLORA_GRASS, 
+		FLORA_GRASS,
 		"FLORA_GRASS",
 		"Grass",
 		{275, 275, 0, 0, 0, 0},
@@ -284,7 +296,7 @@ static const t_block_data	g_block_data[] = {
 		(float **)g_flora_faces
 	},
 	{
-		FLORA_FLOWER_RED, 
+		FLORA_FLOWER_RED,
 		"FLORA_FLOWER_RED",
 		"Red Flower",
 		{231, 231, 0, 0, 0, 0},
@@ -292,7 +304,7 @@ static const t_block_data	g_block_data[] = {
 		(float **)g_flora_faces
 	},
 	{
-		FLORA_FLOWER_YELLOW, 
+		FLORA_FLOWER_YELLOW,
 		"FLORA_FLOWER_YELLOW",
 		"Yellow Flower",
 		{327, 327, 0, 0, 0, 0},

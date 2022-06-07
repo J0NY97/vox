@@ -6,15 +6,15 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/11 14:27:43 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/07 13:22:07 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/07 15:02:11 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SHADERPIXEL_H
 # define SHADERPIXEL_H
 
-# include <ft2build.h>
-# include FT_FREETYPE_H
+//# include <ft2build.h>
+//# include FT_FREETYPE_H
 
 # include "limits.h"
 # include "pthread.h"

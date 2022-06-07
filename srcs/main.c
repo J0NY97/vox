@@ -1,8 +1,8 @@
 #include "shaderpixel.h"
 #include "chunk.h"
-#include "ui_manager.h"
 #include "shader.h"
-#include "ui.h"
+//#include "ui_manager.h"
+//#include "ui.h"
 
 void	init(t_shaderpixel *sp)
 {
@@ -13,8 +13,8 @@ void	init(t_shaderpixel *sp)
 		LG_ERROR("Couldn\'t init glfw.");
 
 #ifdef __APPLE__
-	glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 2);
+	glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 0);
 	glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #else
@@ -58,7 +58,7 @@ void	uninit(t_shaderpixel *sp)
 */
 float *nth(float *res, unsigned int *indices, float *vertices, int face_index, int vertex_index)
 {
-	int	vert;	
+	int	vert;
 
 	vert = indices[face_index * 3 + vertex_index];
 	res[0] = vertices[vert + 0];
@@ -264,7 +264,7 @@ int	main(void)
 	int		nth_col = -1;
 	int		nth_col_chunk = 0;
 	int		player_chunk[VEC3_SIZE];
-	
+
 	get_chunk_pos_from_world_pos(player_chunk, player.camera.pos);
 
 	LG_INFO("Inits done, lets create some chunks (%d wanted)\n", CHUNKS_LOADED);
@@ -297,15 +297,17 @@ int	main(void)
 ////////////////////////////////////////
 	// UI TESTING
 ////////////////////////////////////////
+/*
 	t_ui			gui;
 	t_ui_manager	ui;
-	
+
 	ui_manager_init(&ui);
 	ui_init(&gui);
 	gui.manager = &ui;
 	gui.hotbar_item_id = player_info.hotbar_item_ids;
 	gui.selected_hotbar = player_info.equipped_hotbar;
 	LG_INFO("UI init done.");
+	*/
 ////////////////////////////////////////
 	// END UI TESTING
 ///////////////////////////////////////
@@ -497,7 +499,7 @@ int	main(void)
 			{
 				player_info.equipped_hotbar = i - GLFW_KEY_1;
 				player_info.equipped_block = player_info.hotbar_item_ids[player_info.equipped_hotbar];
-				gui.selected_hotbar = player_info.equipped_hotbar;
+				//gui.selected_hotbar = player_info.equipped_hotbar;
 				if (is_type_solid(player_info.equipped_block) ||
 					is_type_fluid(player_info.equipped_block) ||
 					is_type_solid_alpha(player_info.equipped_block))
@@ -564,7 +566,7 @@ int	main(void)
 		{
 			column = &chunk_info.chunk_columns[col];
 			col_chunks = column->chunks;
-			
+
 			column->chunk_needed_update = column->chunk_needs_update;
 			column->chunk_needs_update = 0;
 
@@ -671,7 +673,7 @@ int	main(void)
 		float	intersect_point[16][3]; // Make sure the amount of collisions that happen are less than the amount of stack memory in these 2 arrays;
 		int		intersect_chunk_index[16]; // correspond with the index in 'intersect_point';
 		int		collision_result = 0; // will be the amount of collisions that has happened;
-	
+
 		nth_chunk = 0;
 
 		glDisable(GL_BLEND);
@@ -798,10 +800,10 @@ int	main(void)
 					block_print(hovered_block);
 					vec3i_string("Local Coordinates : ", block_local);
 					vec3_string("World Coordinates : ", block_pos);
-					t_chunk *temp_chunk = get_chunk_from_world_pos(&chunk_info, block_pos);	
+					t_chunk *temp_chunk = get_chunk_from_world_pos(&chunk_info, block_pos);
 					vec3i_string("Chunk Coordinates : ", temp_chunk->coordinate);
 					vec3_string("Chunk World Coordinates : ", temp_chunk->world_coordinate);
-					
+
 				}
 			}
 		}
@@ -884,6 +886,7 @@ if (error)
 
 		if (chunk_info.toggle_ui)
 		{
+			/*
 			ui_manager_start(&ui);
 			{
 				char		buffer[256];
@@ -928,6 +931,7 @@ if (error)
 			}
 			ui_manager_render(&ui, sp.win_w, sp.win_h);
 			ui_manager_end(&ui);
+			*/
 		}
 
 		glfwSwapBuffers(sp.win);

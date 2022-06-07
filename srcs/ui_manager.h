@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/18 13:10:15 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/05/24 14:03:10 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/07 15:03:22 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 
 # include "shader.h"
 # include "bitmap.h"
-# include "font_manager.h"
+//# include "font_manager.h"
 
 typedef struct s_ui_vertex
 {
