@@ -47,6 +47,33 @@ float	fade(float t)
 
 float	grad(int hash, float x, float y, float z)
 {
+	int	h = hash & 15;
+	double	u = h < 8 ? x : y;
+	double	v = h < 4 ? y : h == 12 || h == 14 ? x : z;
+	return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
+}
+
+float	grad2d(int hash, float x, float y)
+{
+	return ((hash & 1) ? x : -x) + ((hash & 2) ? y : -y);
+}
+
+float	lerp(float t, float a, float b)
+{
+	return (a + t * (b - a));
+}
+
+// REMOVE THESE WHEN THE NEW STUFF WORKS!!!
+float	fade_old(float t)
+{
+	return (t * t * t * (t * (t * 6 - 15) + 10));
+}
+float	lerp_old(float a, float b, float x)
+{
+	return (a + x * (b - a));
+}
+float	grad_old(int hash, float x, float y, float z)
+{
     int h = hash & 15;
     double u = h < 8 ? x : y;
     double v;
@@ -59,17 +86,6 @@ float	grad(int hash, float x, float y, float z)
         v = z;
     return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
 }
-
-float	grad2d(int hash, float x, float y)
-{
-	return ((hash & 1) ? x : -x) + ((hash & 2) ? y : -y);
-}
-
-float lerp(float a, float b, float x)
-{
-    return (a + x * (b - a));
-} 
-
 float	perlin_v2(float x, float y, float z)
 {
     int xi = (int)x & 255;
@@ -79,9 +95,9 @@ float	perlin_v2(float x, float y, float z)
     float yf = y - (int)y;
     float zf = z - (int)z;
 
-	double u = fade(xf);
-    double v = fade(yf);
-    double w = fade(zf);
+	double u = fade_old(xf);
+    double v = fade_old(yf);
+    double w = fade_old(zf);
 
 	int aaa, aba, aab, abb, baa, bba, bab, bbb;
     aaa = g_p[g_p[g_p[    xi ]+    yi ]+    zi ];
@@ -94,15 +110,15 @@ float	perlin_v2(float x, float y, float z)
     bbb = g_p[g_p[g_p[ xi + 1]+ yi + 1]+ zi + 1];
 
 	float x1, x2, y1, y2;
-    x1 = lerp(grad(aaa, xf, yf, zf), grad(baa, xf - 1, yf, zf), u);
-    x2 = lerp(grad(aba, xf, yf - 1, zf), grad(bba, xf - 1, yf - 1, zf), u);
-    y1 = lerp(x1, x2, v);
+    x1 = lerp_old(grad_old(aaa, xf, yf, zf), grad_old(baa, xf - 1, yf, zf), u);
+    x2 = lerp_old(grad_old(aba, xf, yf - 1, zf), grad_old(bba, xf - 1, yf - 1, zf), u);
+    y1 = lerp_old(x1, x2, v);
 
-    x1 = lerp(grad(aab, xf, yf, zf - 1), grad(bab, xf - 1, yf, zf - 1), u);
-    x2 = lerp(grad(abb, xf, yf - 1, zf - 1), grad(bbb, xf - 1, yf - 1, zf - 1), u);
-    y2 = lerp(x1, x2, v);
+    x1 = lerp_old(grad_old(aab, xf, yf, zf - 1), grad_old(bab, xf - 1, yf, zf - 1), u);
+    x2 = lerp_old(grad_old(abb, xf, yf - 1, zf - 1), grad_old(bbb, xf - 1, yf - 1, zf - 1), u);
+    y2 = lerp_old(x1, x2, v);
 
-    return ((lerp(y1, y2, w) + 1) / 2);
+    return ((lerp_old(y1, y2, w) + 1) / 2);
 }
 
 float	octave_perlin(float x, float y, float z, int octaves, float persistence)
@@ -150,39 +166,51 @@ float	noise2d(float x, float y)
 	return (yInter);
 }
  
-float noise3d(float x, float y, float z)
+float	noise3d(float x, float y, float z)
 {
-	int	fx = fasterfloor(x);
-	int	fy = fasterfloor(y);
-	int	fz = fasterfloor(z);
+	int	X = (int)floor(x) & 255;
+	int	Y = (int)floor(y) & 255;
+	int	Z = (int)floor(z) & 255;
 
-	int	X = fx & 255;
-	int Y = fy & 255;
-	int Z = fz & 255;
-
-	x -= fx;
-	y -= fy;
-	z -= fz;
+	x -= floor(x);                                
+	y -= floor(y);                                
+	z -= floor(z);
 
 	float	u = fade(x);
 	float	v = fade(y);
 	float	w = fade(z);
 
-	int	A = g_p[X] + Y;
-	int	AA = g_p[A] + Z;
-	int AB = g_p[A + 1] + Z;
+	int	A = g_p[X  ]+Y;
+	int	AA = g_p[A]+Z;
+	int	AB = g_p[A+1]+Z;
+	int	B = g_p[X+1]+Y;
+	int	BA = g_p[B]+Z;
+	int	BB = g_p[B+1]+Z;
 
-	int	B = g_p[X + 1] + Y;
-	int BA = g_p[B] + Z;
-	int BB = g_p[B + 1] + Z;
-
-	return lerp(w, lerp(v, lerp(u, grad(g_p[AA  ], x  , y  , z   ), 
-									grad(g_p[BA  ], x-1, y  , z   )),
-							lerp(u, grad(g_p[AB  ], x  , y-1, z   ), 
-									grad(g_p[BB  ], x-1, y-1, z   ))),
-					lerp(v, lerp(u, grad(g_p[AA+1], x  , y  , z-1 ), 
-									grad(g_p[BA+1], x-1, y  , z-1 )), 
-							lerp(u, grad(g_p[AB+1], x  , y-1, z-1 ),
-									grad(g_p[BB+1], x-1, y-1, z-1 ))));
+	return (lerp(w, lerp(v,
+		lerp(u, grad(g_p[AA], x, y, z), grad(g_p[BA], x - 1, y, z)),
+		lerp(u, grad(g_p[AB  ], x, y - 1, z), grad(g_p[BB], x - 1, y - 1, z))),
+		lerp(v,
+			lerp(u, grad(g_p[AA + 1], x, y, z - 1),
+				grad(g_p[BA + 1], x - 1, y, z - 1)), 
+			lerp(u, grad(g_p[AB + 1], x, y - 1, z - 1),
+				grad(g_p[BB + 1], x - 1, y - 1, z - 1)))));
 }
- 
+
+/*
+ * 'persistence' : range 0 - 1, controls how quickly each octave die out;
+ * 'lacucaracha' : > 1, controls how much fine scale each subsequent octave should use;
+*/
+float	noise3d_octave(float x, float y, float z, float amplitude, float frequency, int octaves, float persistence, float lacunarity)
+{
+	float	value;
+
+	value = 0;
+	for (int i = 0; i < octaves; i++)
+	{
+		value += amplitude * noise3d(x * frequency, y * frequency, z * frequency);
+		amplitude *= persistence;
+		frequency *= lacunarity;
+	}
+	return (value);
+}

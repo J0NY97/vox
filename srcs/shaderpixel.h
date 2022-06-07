@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/11 14:27:43 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/06 15:08:57 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/07 12:52:51 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -264,6 +264,7 @@ float		octave_perlin(float x, float y, float z, int octaves, float persistence);
 
 float		noise2d(float x, float y);
 float		noise3d(float x, float y, float z);
+float		noise3d_octave(float x, float y, float z, float amplitude, float frequency, int octaves, float persistence, float lacunarity);
 
 ///////////////////
 //	PLAYER

@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 10:06:36 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/06 14:43:16 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/07 12:13:03 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ static const int g_chunk_block_amount = CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_BREAD
 #define CHUNK_SIZE_Y g_chunk_size_y
 #define CHUNK_SIZE_Z g_chunk_size_z
 static const int g_render_distance = 320 / CHUNK_WIDTH;
-#define RENDER_DISTANCE 9 /*g_render_distance*/
+#define RENDER_DISTANCE 5 /*g_render_distance*/
 static const int g_chunks_loaded = CHUNKS_PER_COLUMN * RENDER_DISTANCE * RENDER_DISTANCE;
 #define CHUNKS_LOADED g_chunks_loaded
 static const int g_chunk_columns = RENDER_DISTANCE * RENDER_DISTANCE;

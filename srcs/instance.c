@@ -134,32 +134,32 @@ int	chunk_gen(t_chunk *chunk, int *noise_map)
 */
 int	get_block_type(float x, float y, float z)
 {
-	/*
-	float	frequency = 0.1f;
-	int		amplitude = 10;
+	int		base_terrain_height = 64;
+	int		base_sea_height = 63;
+	float	frequency = 0.01f; // mc uses '0.01f' in perlin.sample2d();
+	int		octaves = 4;
+	float	amplitude = 20.0f;
+	float	persistence = 0.5f;
+	float	lacunarity = 2.0f;
+	// TODO : change this to noise2d
+	float	noise = noise3d_octave(x, y, z, amplitude, frequency, octaves, persistence, lacunarity);
+	int		surface_y = base_terrain_height + noise;
 
-	float	xOffset = sin(x * frequency) * amplitude;
-	float	zOffset = sin(z * frequency) * amplitude;
-
-	int	surface_y = 100 + xOffset + zOffset;
-	int	sea_y = 102;
-
-	if (y < surface_y)
+	if (y < surface_y) // solid blocks
+	{
+		if (y == surface_y - 1)
+			return (BLOCK_DIRT_GRASS);
+		else if (y > surface_y - 3)
+			return (BLOCK_DIRT);
 		return (BLOCK_STONE);
-	else if (y < sea_y)
+	}
+	else if (y < base_sea_height)
+	{
+		if (y <= surface_y + 1)
+			return (BLOCK_SAND);
 		return (FLUID_WATER);
+	}
 	return (GAS_AIR);
-	*/
-	float	surface_y = 100.0f + perlin_v2(x - EPSILON, z - EPSILON, 239872349.1243f) * 20;
-/*
-	ft_printf("%f\n", perlin_v2(0.0f, 0.0f, 0.0f));
-	ft_printf("%f\n", perlin_v2(1337.0f, 420.0f, 42.0f));
-	ft_printf("%f\n", perlin_v2(100.0f, 3.1415f, 35.0f));
-	exit(0);
-
-	*/
-	ft_printf("surface_y : %f\n", surface_y);
-	return (y < surface_y ? BLOCK_STONE : GAS_AIR);
 }
 
 int	chunk_gen_v2(t_chunk *chunk)
