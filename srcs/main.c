@@ -239,7 +239,7 @@ int	main(void)
 	chunk_info.generate_structures = 1;
 	chunk_info.light_calculation = 1;
 	chunk_info.toggle_ui = 0;
-	chunk_info.toggle_event = 0;
+	chunk_info.toggle_event = 1;
 
 	chunk_info.sky_light_lvl = 15;
 
@@ -582,7 +582,9 @@ int	main(void)
 				if (col_chunks[ent]->needs_to_update)
 				{
 					update_chunk_block_palette(col_chunks[ent]);
-					col_chunks[ent]->update_water = 1;
+					update_chunk_event_blocks(col_chunks[ent]);
+					if (col_chunks[ent]->event_block_amount > 0)
+						ft_printf("event : blocks(%d) / wanted(%d) / allocated(%d)\n", col_chunks[ent]->event_block_amount, col_chunks[ent]->event_blocks_wanted, col_chunks[ent]->event_blocks_allocated);
 					column->chunk_needs_update = 1;
 				}
 			}
@@ -617,6 +619,8 @@ int	main(void)
 						if (neighbors[i])
 							neighbors[i]->secondary_update = 1;
 				}
+
+				col_chunks[ent]->needs_to_update = 0;
 
 				if (chunk_info.toggle_event && chunk_info.game_tick)
 					event_chunk(col_chunks[ent]);

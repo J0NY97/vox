@@ -855,7 +855,6 @@ void	update_chunk_event_blocks(t_chunk *chunk)
 	float			pos[3];
 
 	chunk->event_block_amount = 0;
-	chunk->update_water = 1;
 
 	// Figure out how many event blocks we want;
 	chunk->event_blocks_wanted = get_chunk_water_amount(chunk);
@@ -878,6 +877,7 @@ void	update_chunk_event_blocks(t_chunk *chunk)
 	{
 		event_block = NULL;
 		block = &chunk->blocks[i];
+		// TODO : visible faces to the side and down, dont count up face;
 		if ((is_water(block) && block->visible_faces) || block->type == BLOCK_TNT)
 		{
 			get_block_local_pos_from_index(local_pos, i);
@@ -885,17 +885,20 @@ void	update_chunk_event_blocks(t_chunk *chunk)
 			event_block = &chunk->event_blocks[chunk->event_block_amount++];
 			event_block->block = block;
 			vec3_assign(event_block->pos, pos);
-		}
-		if (is_water(block) && event_block)
-		{
-			// Here you should add water specific stuff;
-			event_block->flow_dir = -1;
-			event_block->dist_to_down = INT_MAX;
-			event_block->statique = 0;
-		}
-		else if (block->type == BLOCK_TNT && event_block)
-		{
-			// Here you should add tnt specific stuff;
+			if (!event_block)
+				continue ;
+			if (is_water(block))
+			{
+				// Here you should add water specific stuff;
+				event_block->flow_dir = -1;
+				event_block->dist_to_down = INT_MAX;
+				event_block->statique = 0;
+				chunk->update_water = 1;
+			}
+			else if (block->type == BLOCK_TNT)
+			{
+				// Here you should add tnt specific stuff;
+			}
 		}
 	}
 }
@@ -903,11 +906,7 @@ void	update_chunk_event_blocks(t_chunk *chunk)
 void	update_chunk(t_chunk *chunk)
 {
 	update_chunk_visible_blocks(chunk);
-	update_chunk_event_blocks(chunk);
-	if (chunk->event_block_amount > 0)
-		ft_printf("event : blocks(%d) / wanted(%d) / allocated(%d)\n", chunk->event_block_amount, chunk->event_blocks_wanted, chunk->event_blocks_allocated);
 	chunk->was_updated = 1;
-	chunk->needs_to_update = 0;
 	chunk->secondary_update = 1;
 }
 
@@ -918,22 +917,23 @@ void	event_chunk(t_chunk *chunk)
 {
 	if (chunk->event_block_amount <= 0)
 		return ;
-
 	// water_flow() can re-enable update_water, so we are making duplicate variable here;
 	int	should_we_update_water = chunk->update_water;
 
 	chunk->update_water = 0;
 	for (int j = 0; j < chunk->event_block_amount; j++)
 	{
+		if (chunk->event_blocks[j].statique)
+			continue ;
 		// Water block events;
 		if (should_we_update_water && is_water(chunk->event_blocks[j].block))
 		{
 			water_flow(chunk->info, &chunk->event_blocks[j]);
 			water_remove(chunk->info, &chunk->event_blocks[j]);
-			chunk->event_blocks[j].statique = 1;
 		}
 		else if (chunk->event_blocks[j].block->type == BLOCK_TNT)
 			tnt_explosion(chunk->info, chunk, &chunk->event_blocks[j]);
+		chunk->event_blocks[j].statique = 1;
 	}
 }
 
