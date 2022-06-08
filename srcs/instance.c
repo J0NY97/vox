@@ -142,10 +142,10 @@ int	get_block_type(int x, int y, int z, float noise_value)
 			return (BLOCK_BEDROCK);
 		
 		// Cave gen;
-		/*
-		float cave_noise = noise3d_octave(x, y, z, 1.0f, 0.04f, 4, 0.5f, 2.0f);
-		if (cave_noise > 0.5f)
+		float cave_noise = noise3d_octave(x, y, z, 1.0f, 0.07f, 4, 0.5f, 1.0f);
+		if (cave_noise > 0.75f)
 			return (GAS_AIR);
+		/*
 			*/
 		
 		if (y == surface_y - 1)

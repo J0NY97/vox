@@ -237,7 +237,7 @@ int	main(void)
 	chunk_info.player_collision_enabled = 0;
 	chunk_info.fancy_graphics = 0;
 	chunk_info.generate_structures = 1;
-	chunk_info.light_calculation = 0;
+	chunk_info.light_calculation = 1;
 	chunk_info.toggle_ui = 0;
 	chunk_info.toggle_event = 0;
 
