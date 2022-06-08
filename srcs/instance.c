@@ -130,21 +130,28 @@ int	chunk_gen(t_chunk *chunk, int *noise_map)
  *
  * block type one from enum e_block / e_block_alpha / e_block_fluid ...; block.h
 */
-int	get_block_type(int x, int y, int z, t_noise *noise)
+int	get_block_type(int x, int y, int z, float noise_value)
 {
 	int		base_terrain_height = 64;
 	int		base_sea_height = 63;
-	float	noise_value = noise_get_value(noise, x, z);
 	int		surface_y = base_terrain_height + noise_value;
 
 	if (y < surface_y) // solid blocks
 	{
+		if (y == 0)
+			return (BLOCK_BEDROCK);
+		
+		// Cave gen;
+		/*
+		float cave_noise = noise3d_octave(x, y, z, 1.0f, 0.04f, 4, 0.5f, 2.0f);
+		if (cave_noise > 0.5f)
+			return (GAS_AIR);
+			*/
+		
 		if (y == surface_y - 1)
 			return (BLOCK_DIRT_GRASS);
 		else if (y > surface_y - 3)
 			return (BLOCK_DIRT);
-		else if (y == 0)
-			return (BLOCK_BEDROCK);
 		return (BLOCK_STONE);
 	}
 	else if (y < base_sea_height)
@@ -164,11 +171,14 @@ int	chunk_gen_v2(t_chunk *chunk, t_noise *noise)
 	{
 		for (int z = 0; z < CHUNK_BREADTH; z++)
 		{
+			float	noise_value = noise_get_value(noise, x, z);
 			for (int y = 0; y < CHUNK_HEIGHT; y++)
 			{
 				block_index = get_block_index(x, y, z);
 				chunk->blocks[block_index].type =
-					get_block_type(x, y + chunk->world_coordinate[1], z, noise);
+					get_block_type(x + chunk->world_coordinate[0],
+						y + chunk->world_coordinate[1],
+						z + chunk->world_coordinate[2], noise_value);
 			}
 		}
 	}
@@ -438,7 +448,13 @@ void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos)
 {
 	int		index;
 	t_block	*adj;
+	static int count = 0;
 
+/*
+	count++;
+	if (count % 1000 == 0)
+		ft_printf("count : %d\n", count);
+		*/
 	index = get_block_index(pos[0], pos[1], pos[2]);
 	if (is_gas(&chunk->blocks[index])) // <-- very important, im not sure what happens if we are trying to render an air block;
 		return ;
@@ -446,6 +462,7 @@ void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos)
 	// TODO : this needs to be moved to the 'add_block_to_correct_mesh()';
 	if (is_flora(&chunk->blocks[index]))
 	{
+		// Dont add to mesh if face already in it;
 		if (!(chunk->blocks[index].visible_faces & g_visible_faces[6]))
 		{
 			chunk->blocks[index].visible_faces |= g_visible_faces[6];
@@ -492,8 +509,13 @@ void	get_blocks_visible(t_chunk *chunk)
 	chunk->blocks_fluid_amount = 0;
 	chunk->blocks_solid_alpha_amount = 0;
 
-	if (!chunk->has_blocks)
+	static int skips = 0;
+
+	if (!chunk->has_blocks || !chunk->block_palette[GAS_AIR])
+	{
+//		ft_printf("no blocks / no air blocks : %d\n", skips++);
 		return ;
+	}
 
 	// TODO: figure out a way to remove this;
 	t_chunk *neighbors[6];
@@ -601,7 +623,6 @@ void	generate_chunk(t_chunk *chunk, int *coord, t_noise *noise)
 
 	// Generate Chunks
 	chunk->block_amount = CHUNK_BLOCK_AMOUNT;
-//	chunk_gen(chunk, noise_map);
 	chunk_gen_v2(chunk, noise);
 
 	chunk->event_block_amount = 0;
@@ -798,10 +819,17 @@ int	get_chunk_water_amount(t_chunk *chunk)
 */
 void	update_chunk_block_palette(t_chunk *chunk)
 {
+	static int count = 0;
+
+	count++;
+	if (count % 100 == 0)
+		ft_printf("count : %d\n", count);
 	memset(chunk->block_palette, 0, sizeof(int) * BLOCK_TYPE_AMOUNT);
 	for (int i = 0; i < chunk->block_amount; i++)
 	{
 		chunk->block_palette[chunk->blocks[i].type] += 1;
+		// TODO : Remove this when we have a better place for it;
+		chunk->blocks[i].light_lvl = 15;
 	}
 
 	// Check if we have less than maximum blocks of air blocks,
@@ -874,7 +902,6 @@ void	update_chunk_event_blocks(t_chunk *chunk)
 
 void	update_chunk(t_chunk *chunk)
 {
-	update_chunk_block_palette(chunk);
 	update_chunk_visible_blocks(chunk);
 	update_chunk_event_blocks(chunk);
 	if (chunk->event_block_amount > 0)
@@ -912,13 +939,10 @@ void	event_chunk(t_chunk *chunk)
 
 void	regenerate_chunk_column(t_chunk_col *column, int coord[2], int seed)
 {
-	t_noise	noise;
-
-	noise_create(&noise, CHUNK_WIDTH, CHUNK_HEIGHT,
+	noise_create(&column->height_map, CHUNK_WIDTH, CHUNK_HEIGHT,
 		coord[0] * CHUNK_SIZE_X, coord[1] * CHUNK_SIZE_Z, seed);
 	for (int i = 0; i < CHUNKS_PER_COLUMN; i++)
-		generate_chunk(column->chunks[i], (int []){coord[0], i, coord[1]}, &noise);
-	noise_free(&noise);
+		generate_chunk(column->chunks[i], (int []){coord[0], i, coord[1]}, &column->height_map);
 	column->coordinate[0] = column->chunks[0]->coordinate[0];
 	column->coordinate[1] = column->chunks[0]->coordinate[2];
 	column->world_coordinate[0] = column->chunks[0]->world_coordinate[0];
@@ -1788,6 +1812,8 @@ t_chunk *get_highest_chunk_with_block(t_chunk_info *info, t_block **out_block, f
 }
 
 /*
+ * NOTE !!! APPARENTLY BROKEN!!!  DONT USE BEFORE YOU HAVE FIXED IT!!!!
+ *
  * Returns y of the block, saves the block in 'out_block';
  * We dont want the highest air block, since that is not an actual block;
 */
@@ -1861,41 +1887,71 @@ float	get_highest_point_of_type(t_chunk_info *info, float x, float z, int type)
 	return (curr_highest);
 }
 
+/*
+ * Returns the height of the 'out_block' in world coordinates;
+ *
+ * 'x' & 'z' : the world coordinates of the block;
+*/
+float	get_highest_block_in_column(t_chunk_col *column, t_block **out_highest_block, float x, float z)
+{
+	int	local[3];
+	int	index;
+
+	get_block_local_pos_from_world_pos(local, (float []){x, 0, z});
+	for (int i = CHUNKS_PER_COLUMN - 1; i >= 0; i--)
+	{
+		for (int y = CHUNK_HEIGHT - 1; y >= 0; y--)
+		{
+			index = get_block_index(local[0], y, local[2]);
+			if (!is_gas(&column->chunks[i]->blocks[index]))
+			{
+				*out_highest_block = &column->chunks[i]->blocks[index];
+				return (column->chunks[i]->world_coordinate[1] + y);
+			}
+		}
+	}
+	*out_highest_block = NULL;
+	return (-1);
+}
+
 void	tree_gen(t_chunk_info *info, t_chunk_col *column)
 {
 	float	amp = 1.0f;
-	float	freq = 0.05f;
-	int		oct = 8;
+	float	freq = 0.70f;
+	int		oct = 4;
 	float	pers = 0.01f;
 	float	lac = 2.0f;
+	float	noise_value = 0.0f;
+
 	t_block	*highest_block;
 	t_chunk	*highest_chunk;
 	float	block_pos[3];
 
 	for (int x = 0; x < CHUNK_WIDTH; x++)
 	{
-		block_pos[0] = fabs(column->world_coordinate[0] + x);
 		for (int z = 0; z < CHUNK_BREADTH; z++)
 		{
+			block_pos[0] = column->world_coordinate[0] + x;
+			block_pos[2] = column->world_coordinate[1] + z;
+			noise_value = noise3d_octave(block_pos[0], 0, block_pos[2],
+				amp, freq, oct, pers, lac);
+
+			if (noise_value < 0.25)
+				continue ;
+
 			highest_block = NULL;
-			block_pos[2] = fabs(column->world_coordinate[1] + z);
-			block_pos[1] = get_highest_block(info, &highest_block, block_pos[0], block_pos[2]);
+			block_pos[1] = get_highest_block_in_column(column, &highest_block, block_pos[0], block_pos[2]);
 			if (block_pos[1] == -1)
 				continue ;
-			float perper = noise3d_octave(block_pos[0], block_pos[1], block_pos[2],
-				amp, freq, oct, pers, lac);
-			if (perper > -0.75f)
-			{
-				block_pos[1] += 1;
-				if (perper > 0.0f)
-					tree_placer(info, block_pos);
-				else if (perper > -0.25f)
-					flora_placer(info, FLORA_FLOWER_YELLOW, block_pos);
-				else if (perper > -0.50f)
-					flora_placer(info, FLORA_FLOWER_RED, block_pos);
-				else
-					flora_placer(info, FLORA_GRASS, block_pos);
-			}
+			block_pos[1] += 1;
+			if (noise_value > 0.65f)
+				tree_placer(info, block_pos);
+			else if (noise_value > 0.60f)
+				flora_placer(info, FLORA_FLOWER_RED, block_pos);
+			else if (noise_value > 0.55f)
+				flora_placer(info, FLORA_FLOWER_YELLOW, block_pos);
+			else
+				flora_placer(info, FLORA_GRASS, block_pos);
 		}
 	}
 }

@@ -3,6 +3,8 @@
 /*
  * TODO : take in noise settings, for frequency, octaves, amplitude osv....
  * TODO :  seed should be given in the settings aswell;
+ *  
+ * NOTE : make 'noise->map = NULL';
 */
 void	noise_create(t_noise *noise, int w, int h, int x_offset, int y_offset, int seed)
 {
@@ -14,7 +16,8 @@ void	noise_create(t_noise *noise, int w, int h, int x_offset, int y_offset, int 
 
 	noise->width = w;
 	noise->height = h;
-	noise->map = malloc(sizeof(float) * (noise->width * noise->height));
+	if (!noise->map)
+		noise->map = malloc(sizeof(float) * (noise->width * noise->height));
 	for (int x = 0; x < noise->width; x++)
 	{
 		for (int y = 0; y < noise->height; y++)
@@ -28,7 +31,8 @@ void	noise_create(t_noise *noise, int w, int h, int x_offset, int y_offset, int 
 
 void	noise_free(t_noise *noise)
 {
-	free(noise->map);
+	if (noise->map)
+		free(noise->map);
 }
 
 /*

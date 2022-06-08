@@ -71,7 +71,7 @@ void	scop_stuff(t_shaderpixel *sp)
 {
 	t_player	player;
 	new_player(&player);
-	new_vec3(player.camera.pos, 5, 85, 5);
+	new_vec3(player.camera.pos, 5, 70, 5);
 //	new_vec3(player.camera.pos, 16384, 80, 16384);
 	player.camera.pitch = 0;
 	player.camera.yaw = -90;
@@ -182,7 +182,7 @@ int	main(void)
 
 	t_player	player;
 	new_player(&player);
-	new_vec3(player.camera.pos, 10000, 150, 10000);
+	new_vec3(player.camera.pos, 10000, 90, 10000);
 //	new_vec3(player.camera.pos, 16384, 80, 16384);
 	player.camera.pitch = 0;
 	player.camera.yaw = -90;
@@ -237,7 +237,7 @@ int	main(void)
 	chunk_info.player_collision_enabled = 0;
 	chunk_info.fancy_graphics = 0;
 	chunk_info.generate_structures = 1;
-	chunk_info.light_calculation = 1;
+	chunk_info.light_calculation = 0;
 	chunk_info.toggle_ui = 0;
 	chunk_info.toggle_event = 0;
 
@@ -279,6 +279,7 @@ int	main(void)
 			++nth_col;
 			chunk_info.chunk_columns[nth_col].chunks = malloc(sizeof(t_chunk *) * CHUNKS_PER_COLUMN);
 			chunk_info.chunk_columns[nth_col].lights = malloc(sizeof(t_light) * CHUNK_COLUMN_LIGHT_AMOUNT);
+			chunk_info.chunk_columns[nth_col].height_map.map = NULL;
 
 			chunk_info.chunk_columns[nth_col].coordinate[0] = chunk_info.chunks[nth_chunk].coordinate[0];
 			chunk_info.chunk_columns[nth_col].coordinate[1] = chunk_info.chunks[nth_chunk].coordinate[2];
@@ -556,7 +557,6 @@ int	main(void)
 
 		thread_manager_check_threadiness(&tm);
 
-
 		t_chunk		*neighbors[DIR_AMOUNT];
 		t_chunk		**col_chunks;
 		t_chunk_col	*column;
@@ -569,7 +569,7 @@ int	main(void)
 
 			column->chunk_needed_update = column->chunk_needs_update;
 			column->chunk_needs_update = 0;
-
+		
 			if (chunk_info.generate_structures && column->update_structures)
 			{
 				tree_gen(&chunk_info, column);
