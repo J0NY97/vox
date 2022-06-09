@@ -237,7 +237,7 @@ int	main(void)
 	chunk_info.player_collision_enabled = 0;
 	chunk_info.fancy_graphics = 0;
 	chunk_info.generate_structures = 1;
-	chunk_info.light_calculation = 1;
+	chunk_info.light_calculation = 0;
 	chunk_info.toggle_ui = 0;
 	chunk_info.toggle_event = 1;
 
@@ -824,6 +824,7 @@ if (error)
 		// Render solid meshes;
 		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_BLEND);
+//		glEnable(GL_BLEND);
 		glEnable(GL_CULL_FACE);
 		for (int r = 0; r < chunk_info.meshes_render_amount; r++)
 		{
@@ -837,7 +838,7 @@ if (error)
 	LG_ERROR("before solid alpha things. (%d)", error);
 		// Render solid alpha meshes;
 		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_BLEND);
+		glDisable(GL_BLEND);
 		glEnable(GL_CULL_FACE);
 		for (int r = 0; r < chunk_info.meshes_render_amount; r++)
 		{
@@ -851,7 +852,7 @@ if (error)
 	LG_ERROR("before flora things. (%d)", error);
 		// Render flora meshes;
 		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_BLEND);
+		glDisable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
 		for (int r = 0; r < chunk_info.meshes_render_amount; r++)
 		{

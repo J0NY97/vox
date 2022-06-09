@@ -17,6 +17,8 @@ vec2	uvs[4] = vec2[4](
 out vec2 inTex;
 out float light;
 
+out vec3 outPos;
+
 int		texture_in_pack_w = 24;
 int		texture_in_pack_h = 16;
 float	per_tex_w = 1.0f / texture_in_pack_w;
@@ -34,5 +36,8 @@ void	main()
 	inTex =	vec2(uvs[uv_index].x * per_tex_w + (texture_index_x * per_tex_w),
 				uvs[uv_index].y * per_tex_h + (texture_index_y * per_tex_h));
 	light = light_index / 100.0f;
+
+	outPos = vec3(view * vec4(aPos + chunkPos, 1.0f));
+
 	gl_Position = projection * view * vec4(aPos + chunkPos, 1.0);
 }
