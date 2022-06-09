@@ -480,12 +480,16 @@ void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos)
 			adj = get_block_in_dir(chunk, neighbors[dirs[dir]], pos, dirs[dir]);
 			if (adj && (!is_solid(adj) || is_solid_alpha(&chunk->blocks[index]))) // add to mesh if adjacent block isnt solid;
 			{
-				// Dont add to mesh if face already in it;
-				if (!(chunk->blocks[index].visible_faces & g_visible_faces[dirs[dir]]))
+				// Dont add to mesh if both blocks are fluid;
+				if (!(is_fluid(adj) && is_fluid(&chunk->blocks[index])))
 				{
-					chunk->blocks[index].visible_faces |= g_visible_faces[dirs[dir]];
-					add_block_to_correct_mesh(chunk, &chunk->blocks[index], adj, pos, dirs[dir]);
-					chunk->has_visible_blocks = 1;
+					// Dont add to mesh if face already in it;
+					if (!(chunk->blocks[index].visible_faces & g_visible_faces[dirs[dir]]))
+					{
+						chunk->blocks[index].visible_faces |= g_visible_faces[dirs[dir]];
+						add_block_to_correct_mesh(chunk, &chunk->blocks[index], adj, pos, dirs[dir]);
+						chunk->has_visible_blocks = 1;
+					}
 				}
 			}
 			else
@@ -847,6 +851,10 @@ void print_block_palette(t_chunk *chunk)
 		ft_printf("%2d : %5d [%s]\n", i, chunk->block_palette[i], get_block_data_from_type(i).name);
 }
 
+/*
+ * NOTE : Needs to happen after block palette has been gotten;
+ * NOTE : Needs to happen after visible blocks have been gotten;
+*/
 void	update_chunk_event_blocks(t_chunk *chunk)
 {
 	t_block			*block;
@@ -877,8 +885,8 @@ void	update_chunk_event_blocks(t_chunk *chunk)
 	{
 		event_block = NULL;
 		block = &chunk->blocks[i];
-		// TODO : visible faces to the side and down, dont count up face;
-		if ((is_water(block) && block->visible_faces) || block->type == BLOCK_TNT)
+		// (block->visible_faces & 0xf4) : check all sides and down, not up;
+		if ((is_water(block) && (block->visible_faces & 0xf4)) || block->type == BLOCK_TNT)
 		{
 			get_block_local_pos_from_index(local_pos, i);
 			get_block_world_pos(pos, chunk->world_coordinate, local_pos);
@@ -920,6 +928,7 @@ void	event_chunk(t_chunk *chunk)
 	// water_flow() can re-enable update_water, so we are making duplicate variable here;
 	int	should_we_update_water = chunk->update_water;
 
+	int count = 0;
 	chunk->update_water = 0;
 	for (int j = 0; j < chunk->event_block_amount; j++)
 	{
@@ -928,6 +937,7 @@ void	event_chunk(t_chunk *chunk)
 		// Water block events;
 		if (should_we_update_water && is_water(chunk->event_blocks[j].block))
 		{
+			ft_printf("count : %d\n", count++);
 			water_flow(chunk->info, &chunk->event_blocks[j]);
 			water_remove(chunk->info, &chunk->event_blocks[j]);
 		}

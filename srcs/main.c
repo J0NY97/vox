@@ -182,7 +182,7 @@ int	main(void)
 
 	t_player	player;
 	new_player(&player);
-	new_vec3(player.camera.pos, 10000, 90, 10000);
+	new_vec3(player.camera.pos, 5000, 90, 5000);
 //	new_vec3(player.camera.pos, 16384, 80, 16384);
 	player.camera.pitch = 0;
 	player.camera.yaw = -90;
@@ -524,7 +524,7 @@ int	main(void)
 
 		update_fps(&fps);
 		player_events(&player, keys, sp.win);
-//		player_movement(&player, sp.win, fps);
+
 		if (player.gravity == 0)
 			player_movement_creative(&player, sp.win, fps);
 		if (player.gravity != 0)
@@ -582,9 +582,6 @@ int	main(void)
 				if (col_chunks[ent]->needs_to_update)
 				{
 					update_chunk_block_palette(col_chunks[ent]);
-					update_chunk_event_blocks(col_chunks[ent]);
-					if (col_chunks[ent]->event_block_amount > 0)
-						ft_printf("event : blocks(%d) / wanted(%d) / allocated(%d)\n", col_chunks[ent]->event_block_amount, col_chunks[ent]->event_blocks_wanted, col_chunks[ent]->event_blocks_allocated);
 					column->chunk_needs_update = 1;
 				}
 			}
@@ -614,6 +611,7 @@ int	main(void)
 				if (col_chunks[ent]->needs_to_update)
 				{
 					update_chunk(col_chunks[ent]);
+					update_chunk_event_blocks(col_chunks[ent]);
 					// Set needs to update to all 6 neighbors of the chunk;
 					for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
 						if (neighbors[i])
@@ -695,7 +693,7 @@ int	main(void)
 			// Decide if we want to render the chunk or not;
 			// Dont render chunk if the chunk is further away than the farplane of the camear;
 			// Dont render if the chunk is outside the view fustrum;
-			// Dont render if has been sent to gpu yet;
+			// Dont render if hasnt been sent to gpu yet;
 			if (chunk_info.chunks[nth_chunk].was_updated == 0 &&
 				vec3_dist(player.camera.pos, chunk_info.chunks[nth_chunk].world_coordinate) <
 				player.camera.far_plane + CHUNK_SIZE_X &&
@@ -708,7 +706,6 @@ int	main(void)
 			// Collision Detection
 			if (chunk_info.block_collision_enabled)
 			{
-//				if (vec3i_dist_sqrd(player_chunk, chunks[nth_chunk].coordinate) <= 2)
 				if (point_aabb_center_distance(player.camera.pos, &chunk_info.chunks[nth_chunk].aabb) <= (CHUNK_WIDTH * CHUNK_WIDTH))
 				{
 					show_chunk_borders(&chunk_info.chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
