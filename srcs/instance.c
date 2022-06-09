@@ -923,21 +923,22 @@ void	update_chunk(t_chunk *chunk)
 */
 void	event_chunk(t_chunk *chunk)
 {
+	int	events_handled = 0;
+
 	if (chunk->event_block_amount <= 0)
 		return ;
 	// water_flow() can re-enable update_water, so we are making duplicate variable here;
 	int	should_we_update_water = chunk->update_water;
 
-	int count = 0;
 	chunk->update_water = 0;
 	for (int j = 0; j < chunk->event_block_amount; j++)
 	{
 		if (chunk->event_blocks[j].statique)
 			continue ;
+		++events_handled;
 		// Water block events;
 		if (should_we_update_water && is_water(chunk->event_blocks[j].block))
 		{
-			ft_printf("count : %d\n", count++);
 			water_flow(chunk->info, &chunk->event_blocks[j]);
 			water_remove(chunk->info, &chunk->event_blocks[j]);
 		}
@@ -945,6 +946,7 @@ void	event_chunk(t_chunk *chunk)
 			tnt_explosion(chunk->info, chunk, &chunk->event_blocks[j]);
 		chunk->event_blocks[j].statique = 1;
 	}
+	ft_printf("Chunk events handled : %d / %d\n", events_handled, chunk->event_block_amount);
 }
 
 void	regenerate_chunk_column(t_chunk_col *column, int coord[2], int seed)
