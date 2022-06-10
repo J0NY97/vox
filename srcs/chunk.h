@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 10:06:36 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/09 12:26:00 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/10 16:41:20 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,12 +51,26 @@ static const int g_chunk_column_light_amount = CHUNK_WIDTH * CHUNK_BREADTH;
 
 typedef struct s_chunk		t_chunk;
 
+/*
+ * BLOCK_ALPHA_MESH : for solid blocks who's neighboring faces should be
+		rendered; glass is a solid block but all it's neighboring faces should
+		be seen through the glass block, same with ex. leaves, you should see
+		the trunk through it; (the only difference from BLOCK_MESH is that those
+		block's neighbors should never be rendered, this is an easy way of
+		deciding which block's neighbors should be rendered) but it makes other
+		stuff more complicated, like ; one more loop for going through all
+		chunks and rendering the mesh (one extra draw call per chunk), collision
+		detection for removing and adding blocks, player terrain collision...
+		one way to fix this could be to have a bool in the block data for if the
+		neighboring block faces should be rendered even though this is next to
+		it...
+*/
 enum e_mesh_types
 {
 	BLOCK_MESH = 0,		// ex. dirt
 	FLUID_MESH,			// ex. water
 	FLORA_MESH,			// ex. grass
-	BLOCK_ALPHA_MESH,	// ex. cactus
+	BLOCK_ALPHA_MESH,
 	MESH_TYPE_AMOUNT
 };
 
