@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 10:06:36 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/11 11:10:24 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/11 12:24:05 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,7 +71,6 @@ enum e_mesh_types
 	FLUID_MESH,			// ex. water
 	FLORA_MESH,			// ex. grass
 	BLOCK_ALPHA_MESH,
-	COMBINED_MESH, 		// this is combined for block and block_alpha, should replace them both in the future;
 	MESH_TYPE_AMOUNT
 };
 

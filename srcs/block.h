@@ -184,6 +184,8 @@ typedef struct s_block_data
 	float			blast_resistance;
 	char			see_through; // (affects neighbors) if the block is see through and neighboring block face should be added to mesh;
 	char			through_see; // (affects block)		if the block faces should be added to the mesh if the neighboring block is see through;
+	char			player_collision; // TODO, if player will collide with its body;
+	char			hand_collision; // TODO, if you can break the block;
 	float			**faces; // TODO
 }	t_block_data;
 
@@ -197,6 +199,7 @@ static const t_block_data	g_block_data[] = {
 		{0, 0, 0, 0, 0, 0},
 		0, 0, 0.0f,
 		1, 0,
+		0, 0,
 		(float **)g_faces
 	},
 // BLOCKS
@@ -207,6 +210,7 @@ static const t_block_data	g_block_data[] = {
 		{132, 132, 132, 132, 135, 224},
 		-15, 1, 0.5f,
 		0, 1,
+		1, 1,
 		(float **)g_faces
 	},
 	{
@@ -216,6 +220,7 @@ static const t_block_data	g_block_data[] = {
 		{224, 224, 224, 224, 224, 224},
 		-15, 1, 0.5f,
 		0, 1,
+		1, 1,
 		(float **)g_faces
 	},
 	{
@@ -225,6 +230,7 @@ static const t_block_data	g_block_data[] = {
 		{164, 164, 164, 164, 164, 164},
 		-15, 1, 6.0f,
 		0, 1,
+		1, 1,
 		(float **)g_faces
 	},
 	{
@@ -234,6 +240,7 @@ static const t_block_data	g_block_data[] = {
 		{292, 292, 292, 292, 292, 292},
 		-15, 1, 3600000.0f,
 		0, 1,
+		1, 1,
 		(float **)g_faces
 	},
 	{
@@ -243,6 +250,7 @@ static const t_block_data	g_block_data[] = {
 		{211, 211, 211, 211, 211, 211},
 		-15, 1, 0.5f,
 		0, 1,
+		1, 1,
 		(float **)g_faces
 	},
 	{
@@ -252,6 +260,7 @@ static const t_block_data	g_block_data[] = {
 		{27, 27, 27, 27, 28, 28},
 		-15, 1, 2.0f,
 		0, 1,
+		1, 1,
 		(float **)g_faces
 	},
 	{
@@ -261,6 +270,7 @@ static const t_block_data	g_block_data[] = {
 		{280, 280, 280, 280, 280, 280},
 		-15, 1, 3.0f,
 		0, 1,
+		1, 1,
 		(float **)g_faces
 	},
 	{
@@ -270,6 +280,7 @@ static const t_block_data	g_block_data[] = {
 		{189, 189, 189, 189, 165, 213},
 		-15, 1, 0.0f,
 		0, 1,
+		1, 1,
 		(float **)g_faces
 	},
 // BLOCK ALPHA
@@ -280,6 +291,7 @@ static const t_block_data	g_block_data[] = {
 		{52, 52, 52, 52, 52, 52},
 		-1, 1, 0.2f,
 		1, 1,
+		1, 1,
 		(float **)g_faces
 	},
 	{
@@ -289,6 +301,7 @@ static const t_block_data	g_block_data[] = {
 		{342, 342, 342, 342, 318, 366},
 		-1, 1, 0.4f,
 		1, 1,
+		1, 1,
 		(float **)g_faces_cactus
 	},
 	{
@@ -297,6 +310,7 @@ static const t_block_data	g_block_data[] = {
 		"Torch",
 		{141, 141, 141, 141, 42, 141},
 		14, 0, 0.4f,
+		1, 1,
 		1, 1,
 		(float **)g_faces_torch
 	},
@@ -308,6 +322,7 @@ static const t_block_data	g_block_data[] = {
 		{275, 275, 0, 0, 0, 0},
 		0, 0, 0.0f,
 		1, 1,
+		1, 1,
 		(float **)g_flora_faces
 	},
 	{
@@ -316,6 +331,7 @@ static const t_block_data	g_block_data[] = {
 		"Red Flower",
 		{231, 231, 0, 0, 0, 0},
 		0, 0, 0.0f,
+		1, 1,
 		1, 1,
 		(float **)g_flora_faces
 	},
@@ -326,6 +342,7 @@ static const t_block_data	g_block_data[] = {
 		{327, 327, 0, 0, 0, 0},
 		0, 0, 0.0f,
 		1, 1,
+		1, 1,
 		(float **)g_flora_faces
 	},
 // FLUID
@@ -335,6 +352,7 @@ static const t_block_data	g_block_data[] = {
 		{362, 362, 362, 362, 362, 362},
 		-3, 1, 100.0f,
 		1, 0,
+		1, 0,
 		(float **)g_faces
 	},
 	{
@@ -342,6 +360,7 @@ static const t_block_data	g_block_data[] = {
 		"Water",
 		{362, 0, 0, 0, 0, 0},
 		-3, 1, 100.0f,
+		1, 0,
 		1, 0,
 		(float **)g_faces
 	},
@@ -351,6 +370,7 @@ static const t_block_data	g_block_data[] = {
 		{362, 0, 0, 0, 0, 0},
 		-3, 1, 100.0f,
 		1, 0,
+		1, 0,
 		(float **)g_faces
 	},
 	{
@@ -358,6 +378,7 @@ static const t_block_data	g_block_data[] = {
 		"Water",
 		{362, 0, 0, 0, 0, 0},
 		-3, 1, 100.0f,
+		1, 0,
 		1, 0,
 		(float **)g_faces
 	},
@@ -367,6 +388,7 @@ static const t_block_data	g_block_data[] = {
 		{362, 0, 0, 0, 0, 0},
 		-3, 1, 100.0f,
 		1, 0,
+		1, 0,
 		(float **)g_faces
 	},
 	{
@@ -374,6 +396,7 @@ static const t_block_data	g_block_data[] = {
 		"Water",
 		{362, 0, 0, 0, 0, 0},
 		-3, 1, 100.0f,
+		1, 0,
 		1, 0,
 		(float **)g_faces
 	},
@@ -383,6 +406,7 @@ static const t_block_data	g_block_data[] = {
 		{362, 0, 0, 0, 0, 0},
 		-3, 1, 100.0f,
 		1, 0,
+		1, 0,
 		(float **)g_faces
 	},
 	{
@@ -390,6 +414,7 @@ static const t_block_data	g_block_data[] = {
 		"Water",
 		{362, 0, 0, 0, 0, 0},
 		-3, 1, 100.0f,
+		1, 0,
 		1, 0,
 		(float **)g_faces
 	}

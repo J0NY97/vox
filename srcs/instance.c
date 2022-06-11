@@ -53,79 +53,6 @@ void	new_chunk(t_chunk *chunk, t_chunk_info *info, int nth)
 }
 
 /*
- * Create chunk from noise map;
-*/
-int	chunk_gen(t_chunk *chunk, int *noise_map)
-{
-	int i = -1;
-	float	cave_chance = 1.41f;
-
-	for (int x = 0; x < CHUNK_WIDTH; x++)
-	{
-		float	block_world_x = fabs(chunk->world_coordinate[0] + x);
-		for (int z = 0; z < CHUNK_BREADTH; z++)
-		{
-			float	block_world_z = fabs(chunk->world_coordinate[2] + z);
-			// How many blocks there should be on that x/z coordinate; can be more than the chunk_height, which means it spans over multiple chunks;
-			int		whatchumacallit = noise_map[x * CHUNK_HEIGHT + z] - (int)chunk->world_coordinate[1];
-
-			for (int y = 0; y < CHUNK_HEIGHT; y++)
-			{
-				float	block_world_y = chunk->world_coordinate[1] + y;
-				float	perper = cave_chance;
-				i++;
-
-				// Default block settings;
-				chunk->blocks[i].visible_faces = 0;
-				chunk->blocks[i].light_lvl = 15;
-				chunk->blocks[i].type = GAS_AIR;
-
-				if (block_world_y == 0)
-				{
-					chunk->blocks[i].type = BLOCK_BEDROCK;
-					continue ;
-				}
-
-				/* Cave Gen
-				*/
-				if (whatchumacallit > 0)
-				{
-					float	pers = 0.5f;
-					float	freq = 0.040f;
-					int		q = 1;
-					perper = 0.0f;
-					while (q <= 8)
-					{
-						perper += octave_perlin(block_world_x * freq, block_world_y * freq, block_world_z * freq, q, pers);
-						if (perper >= cave_chance)
-							break ;
-						q *= 2;
-					}
-				}
-
-				if (perper >= cave_chance && y <= whatchumacallit)
-				{
-					if (y == whatchumacallit)
-						chunk->blocks[i].type = BLOCK_DIRT_GRASS;
-					else if (y <= whatchumacallit - 3) // if we have 3 dirt block on top we make the rest stone blocks;
-						chunk->blocks[i].type = BLOCK_STONE;
-					else if (y < whatchumacallit)
-						chunk->blocks[i].type = BLOCK_DIRT;
-				}
-				else // everything that is over the noise_map value;
-				{
-					if (y >= whatchumacallit + 3 && block_world_y <= 62)
-						chunk->blocks[i].type = FLUID_WATER;
-					else if (y >= whatchumacallit + 1 && y < whatchumacallit + 3 && block_world_y <= 65)
-						chunk->blocks[i].type = BLOCK_SAND;
-				}
-			}
-		}
-	}
-	return (i);
-}
-
-/*
  * Returns block type at world coordinates 'x' / 'y' / 'z';
  *
  * block type one from enum e_block / e_block_alpha / e_block_fluid ...; block.h
@@ -396,6 +323,40 @@ t_block	*get_block_in_dir(t_chunk *chunk, t_chunk *neighbor, int *local_pos, int
 }
 
 /*
+ * TODO : this functions job shouldnt be to check anything anymore, only to
+ *		no-matter-whatly add the face to the mesh;
+*/
+void	add_block_to_correct_mesh_v2(t_chunk *chunk, t_block *block, t_block *adjacent, int *local_pos, int dir)
+{
+	t_block_data	data;
+	int				light;
+
+	data = get_block_data(block);
+	light = (int)(ft_pow(0.9f, 15 - ft_clamp(block->light_lvl, 0, 15)) * 100.0f) * (g_face_light[dir] / 100.0f);
+
+	for (int i = 0; i < 6; i++)
+		ft_printf("%f \n", data.faces[dir][i]);
+
+
+	// TODO : rework on the fluid vertex creator;
+	if (is_fluid(block))
+	{
+		float	verts[12];
+		float	block_world[3];
+
+		get_block_world_pos(block_world, chunk->world_coordinate, local_pos);
+		flowing_water_verts(verts, dir, block, block_world, chunk->info);
+		add_to_chunk_mesh_v2(&chunk->meshes, FLUID_MESH, local_pos, verts, data.texture[0], light);
+		++chunk->blocks_fluid_amount;
+	}
+	else
+	{
+		add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_MESH, local_pos, (float *)g_faces[dir], data.texture[dir], light);
+		++chunk->blocks_solid_amount;
+	}
+}
+
+/*
  * 'block' : from which block we want to add a face to the mesh;
  * 'chunk' : the chunk in which the block recides; (and mesh);
  * 'adjacent' : the adjacent block in the direction of the face of 'block';
@@ -445,6 +406,10 @@ void	add_block_to_correct_mesh(t_chunk *chunk, t_block *block, t_block *adjacent
 /*
  * NOTE: wherever we are calling this we have to do 'if (helper_pelper_v2(...)) chunk->has_visible_blocks = 1;';
  * Returns if a face was added;
+ * TODO : make return 'chunk->blocks[index].visible_faces';
+ * 
+ * NOTE : for some reason collision is super slow on sand when replacing helper_pelper()
+ * 		with this one;
 */
 int	helper_pelper_v2(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos, int index)
 {
@@ -471,9 +436,12 @@ int	helper_pelper_v2(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos, i
 			continue ;
 		adj_data = get_block_data(adj);
 		block_data = get_block_data(block);
-		if (adj_data.see_through && block_data.through_see)
+		// Always add face if it's next to a gas block;
+		// Otherwise it's up to the block type settings;
+		if (is_gas(adj) || (adj_data.see_through && block_data.through_see))
 		{
-			add_block_to_correct_mesh(chunk, block, adj, pos, dirs[dir]);
+			add_block_to_correct_mesh_v2(chunk, block, adj, pos, dirs[dir]);
+			chunk->blocks[index].visible_faces |= g_visible_faces[dirs[dir]];
 			face_was_added = 1;
 		}
 	}	
@@ -524,6 +492,8 @@ void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos, int
 					}
 				}
 			}
+			else
+				chunk->blocks[index].visible_faces &= ~g_visible_faces[dirs[dir]];
 		}
 	}
 }
@@ -533,6 +503,8 @@ void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos, int
  *	if touching air, add that face to the chunk's mesh.
  *
  * This func resets the mesh before doing anything;
+ * 
+ * NOTE: 'update_chunk_block_palette()' needs to get ran before this;
 */
 void	get_blocks_visible(t_chunk *chunk)
 {
@@ -564,14 +536,19 @@ void	get_blocks_visible(t_chunk *chunk)
 			{
 				index = get_block_index(x, y, z);
 				chunk->blocks[index].visible_faces = 0;
-				helper_pelper(chunk, neighbors, all_dirs, (int []){x, y, z}, index);
+				//helper_pelper(chunk, neighbors, all_dirs, (int []){x, y, z}, index);
+				if (helper_pelper_v2(chunk, neighbors, all_dirs, (int []){x, y, z}, index))
+					chunk->has_visible_blocks = 1;
+				/*
+					*/
 			}
 		}
 	}
 }
 
 /*
- * TODO: only update blocks that have not already been added to the mesh;
+ * Only goes through the blocks on the border of the chunk, and the faces
+ *	that are facing outwards;
 */
 void	update_chunk_border_visible_blocks(t_chunk *chunk)
 {
@@ -584,13 +561,7 @@ void	update_chunk_border_visible_blocks(t_chunk *chunk)
 	// Get all neighbors of current chunk;
 	t_chunk *neighbors[6];
 	for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
-	{
 		neighbors[i] = get_adjacent_chunk(chunk->info, chunk, (float *)g_card_dir[dir]);
-		/* TODO : Look into this, maybe re-enabling this is faster, dont remember why it was added!
-		if (!chunk_has_non_solid(neighbors[i]))
-			neighbors[i] = NULL;
-			*/
-	}
 
 	for (int y = 0; y < CHUNK_HEIGHT; y++)
 	{
@@ -1359,17 +1330,20 @@ t_block	*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, in
 	float	block_world[3];
 	int		blocal[3];
 	int		i;
-	float	**faces;
+	const float	**faces;
 	int		face_amount;
+	t_block_data	data;
 
+	if (!chunk->has_blocks || !chunk->has_visible_blocks)
+		return (NULL);
 	i = 0;
 	for (; i < chunk->block_amount; i++)
 	{
 		if (chunk->blocks[i].visible_faces == 0)
 			continue ;
-
-		// skip if gas or fluid;
-		if (is_gas(&chunk->blocks[i]) || is_fluid(&chunk->blocks[i]))
+		// Continue if the block doesnt have collision;
+		data = get_block_data(&chunk->blocks[i]);
+		if (!data.hand_collision)
 			continue;
 
 		get_block_local_pos_from_index(blocal, i);

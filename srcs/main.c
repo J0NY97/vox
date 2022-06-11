@@ -220,7 +220,7 @@ int	main(void)
 	player_info.hotbar_item_ids[0] = BLOCK_DIRT;
 	player_info.hotbar_item_ids[1] = BLOCK_STONE;
 	player_info.hotbar_item_ids[2] = BLOCK_ALPHA_TORCH;
-	player_info.hotbar_item_ids[3] = BLOCK_OAK_LOG;
+	player_info.hotbar_item_ids[3] = BLOCK_SAND;
 	player_info.hotbar_item_ids[4] = FLORA_GRASS;
 	player_info.hotbar_item_ids[5] = BLOCK_ALPHA_OAK_LEAF;
 	player_info.hotbar_item_ids[6] = BLOCK_ALPHA_CACTUS;
