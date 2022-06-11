@@ -271,7 +271,7 @@ int	main(void)
 	for (; nth_chunk < CHUNKS_LOADED; ++nth_chunk)
 	{
 		new_chunk(&chunk_info.chunks[nth_chunk], &chunk_info, nth_chunk);
-		init_chunk_mesh_v2(&chunk_info.chunks[nth_chunk].meshes, cube_shader_v2, MESH_TYPE_AMOUNT);
+		init_chunk_mesh(&chunk_info.chunks[nth_chunk].meshes, cube_shader_v2, MESH_TYPE_AMOUNT);
 		chunk_info.chunks[nth_chunk].meshes.texture = chunk_info.texture;
 		if (nth_chunk % CHUNKS_PER_COLUMN == 0)
 		{
@@ -722,22 +722,6 @@ int	main(void)
 							intersect_chunk_index[collision_result + i] = nth_chunk;
 						collision_result += collisions_on_chunk;
 					}
-					// Collision on flora mesh;
-					if (chunk_info.chunks[nth_chunk].blocks_flora_amount > 0)
-					{
-						int collisions_on_chunk = chunk_mesh_collision_v2(player.camera.pos, player.camera.front, &chunk_info.chunks[nth_chunk].meshes, FLORA_MESH, chunk_info.chunks[nth_chunk].world_coordinate, player_info.reach, intersect_point + collision_result);
-						for (int i = 0; i < collisions_on_chunk; i++)
-							intersect_chunk_index[collision_result + i] = nth_chunk;
-						collision_result += collisions_on_chunk;
-					}
-					// Collision on solid alpha mesh;
-					if (chunk_info.chunks[nth_chunk].blocks_solid_alpha_amount > 0)
-					{
-						int collisions_on_chunk = chunk_mesh_collision_v2(player.camera.pos, player.camera.front, &chunk_info.chunks[nth_chunk].meshes, BLOCK_ALPHA_MESH, chunk_info.chunks[nth_chunk].world_coordinate, player_info.reach, intersect_point + collision_result);
-						for (int i = 0; i < collisions_on_chunk; i++)
-							intersect_chunk_index[collision_result + i] = nth_chunk;
-						collision_result += collisions_on_chunk;
-					}
 				}
 			}
 
@@ -824,42 +808,14 @@ if (error)
 		// Render solid meshes;
 		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_BLEND);
-//		glEnable(GL_BLEND);
 		glEnable(GL_CULL_FACE);
 		for (int r = 0; r < chunk_info.meshes_render_amount; r++)
 		{
 			int render_index = chunk_info.meshes_render_indices[r];
 			if (chunk_info.chunks[render_index].blocks_solid_amount > 0)
-				render_chunk_mesh_v2(&chunk_info.chunks[render_index].meshes, BLOCK_MESH, chunk_info.chunks[render_index].world_coordinate, &player.camera);
+				render_chunk_mesh(&chunk_info.chunks[render_index].meshes, BLOCK_MESH, chunk_info.chunks[render_index].world_coordinate, &player.camera);
 		}
 
-error = glGetError();
-if (error)
-	LG_ERROR("before solid alpha things. (%d)", error);
-		// Render solid alpha meshes;
-		glEnable(GL_DEPTH_TEST);
-		glDisable(GL_BLEND);
-		glEnable(GL_CULL_FACE);
-		for (int r = 0; r < chunk_info.meshes_render_amount; r++)
-		{
-			int render_index = chunk_info.meshes_render_indices[r];
-			if (chunk_info.chunks[render_index].blocks_solid_alpha_amount > 0)
-				render_chunk_mesh_v2(&chunk_info.chunks[render_index].meshes, BLOCK_ALPHA_MESH, chunk_info.chunks[render_index].world_coordinate, &player.camera);
-		}
-
-error = glGetError();
-if (error)
-	LG_ERROR("before flora things. (%d)", error);
-		// Render flora meshes;
-		glEnable(GL_DEPTH_TEST);
-		glDisable(GL_BLEND);
-		glDisable(GL_CULL_FACE);
-		for (int r = 0; r < chunk_info.meshes_render_amount; r++)
-		{
-			int render_index = chunk_info.meshes_render_indices[r];
-			if (chunk_info.chunks[render_index].blocks_flora_amount > 0)
-				render_chunk_mesh_v2(&chunk_info.chunks[render_index].meshes, FLORA_MESH, chunk_info.chunks[render_index].world_coordinate, &player.camera);
-		}
 error = glGetError();
 if (error)
 	LG_ERROR("before fluid things. (%d)", error);
@@ -872,7 +828,7 @@ if (error)
 		{
 			int render_index = chunk_info.meshes_render_indices[r];
 			if (chunk_info.chunks[render_index].blocks_fluid_amount > 0)
-				render_chunk_mesh_v2(&chunk_info.chunks[render_index].meshes, FLUID_MESH, chunk_info.chunks[render_index].world_coordinate, &player.camera);
+				render_chunk_mesh(&chunk_info.chunks[render_index].meshes, FLUID_MESH, chunk_info.chunks[render_index].world_coordinate, &player.camera);
 		}
 
 /////////////////

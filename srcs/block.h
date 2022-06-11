@@ -54,8 +54,17 @@ enum e_fluid_type
 	FLUID_LAST
 };
 
+
 /* 'FLUID_LAST' should be the last block type */
 #define BLOCK_TYPE_AMOUNT FLUID_LAST
+
+/* EXTRA stuff that shouldnt be added to the g_block_data */
+enum e_item_type
+{
+	ITEM_FIRST = FLUID_LAST - 1,
+	ITEM_TREE_PLACER, // aka sapling...
+	ITEM_LAST
+};
 
 /*
  * Used in 't_block->visible_faces' to 'OR' all face into a char;
@@ -187,6 +196,25 @@ typedef struct s_block_data
 	char			hand_collision; // TODO, if you can break the block;
 	char			face_index; // 'e_face_verts', from g_all_faces, the index of the faces to be used;
 }	t_block_data;
+
+/*
+ * ITEMS
+ *
+ * Keeping these in separate list for now, dont want to convolute the block data
+*/
+static const t_block_data	g_item_data[] = {
+	{
+		ITEM_TREE_PLACER,
+		"ITEM_TREE_PLACER",
+		"Tree Placer (probably sapling at some point)",
+		// The values from here down, dont matter;
+		{},
+		0, 0, 0.0f,
+		0, 0, 0, 0,
+		0, 0,
+		BLOCK_FACES
+	}
+};
 
 
 static const t_block_data	g_block_data[] = {

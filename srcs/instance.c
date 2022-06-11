@@ -90,7 +90,7 @@ int	get_block_type(int x, int y, int z, float noise_value)
 	return (GAS_AIR);
 }
 
-int	chunk_gen_v2(t_chunk *chunk, t_noise *noise)
+int	chunk_gen(t_chunk *chunk, t_noise *noise)
 {
 	int		block_index;
 
@@ -116,38 +116,6 @@ void	get_chunk_world_pos_from_local_pos(float *res, int *local_pos)
 	res[0] = local_pos[0] * (float)CHUNK_WIDTH;
 	res[1] = local_pos[1] * (float)CHUNK_HEIGHT;
 	res[2] = local_pos[2] * (float)CHUNK_BREADTH;
-}
-
-int	create_noise_map(int *map, int size_x, int size_z, int coord_x, int coord_z, int seed)
-{
-	int		start_y = 64;
-	float	freq = 0.005f;
-	float	pers = 0.5f;
-	int		i = 0;
-	float	final_seed = (seed % 512) * freq;
-	float	chunk_world[3];
-
-	get_chunk_world_pos_from_local_pos(chunk_world, (int []){coord_x, 0, coord_z});
-	for (int x = 0; x < size_x; x++)
-	{
-		float	block_world_x = fabs(chunk_world[0] + x);
-		float	to_use_x = block_world_x * freq;
-		for (int z = 0; z < size_z; z++)
-		{
-			float	block_world_z = fabs(chunk_world[2] + z);
-			float	to_use_z = block_world_z * freq;
-			float	perper =
-				octave_perlin(to_use_x, final_seed, to_use_z, 1, pers) +
-				octave_perlin(to_use_x, final_seed, to_use_z, 2, pers) +
-				octave_perlin(to_use_x, final_seed, to_use_z, 4, pers) +
-				octave_perlin(to_use_x, final_seed, to_use_z, 8, pers);
-			float	e = pers * 3;
-			int		wanted_y = (start_y * (perper / e));
-			map[i] = wanted_y;
-			i++;
-		}
-	}
-	return (i);
 }
 
 /*
@@ -323,10 +291,13 @@ t_block	*get_block_in_dir(t_chunk *chunk, t_chunk *neighbor, int *local_pos, int
 }
 
 /*
- * TODO : this functions job shouldnt be to check anything anymore, only to
- *		no-matter-whatly add the face to the mesh;
+ * 'block' : from which block we want to add a face to the mesh;
+ * 'chunk' : the chunk in which the block recides; (and mesh);
+ * 'adjacent' : the adjacent block in the direction of the face of 'block';
+ * 'local_pos' : the local pos of the 'block' in 'chunk';
+ * 'dir' : aka face, of the 'block' we want to add to 'chunk->meshes';
 */
-void	add_block_to_correct_mesh_v2(t_chunk *chunk, t_block *block, t_block *adjacent, int *local_pos, int dir)
+void	add_block_to_correct_mesh(t_chunk *chunk, t_block *block, int *local_pos, int dir)
 {
 	t_block_data	data;
 	int				light;
@@ -342,72 +313,25 @@ void	add_block_to_correct_mesh_v2(t_chunk *chunk, t_block *block, t_block *adjac
 
 		get_block_world_pos(block_world, chunk->world_coordinate, local_pos);
 		flowing_water_verts(verts, dir, block, block_world, chunk->info);
-		add_to_chunk_mesh_v2(&chunk->meshes, FLUID_MESH, local_pos, verts, data.texture[0], light);
+		add_to_chunk_mesh(&chunk->meshes, FLUID_MESH, local_pos, verts, data.texture[0], light);
 		++chunk->blocks_fluid_amount;
 	}
 	else
 	{
-		add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_MESH, local_pos, g_all_faces[data.face_index][dir], data.texture[dir], light);
+		add_to_chunk_mesh(&chunk->meshes, BLOCK_MESH, local_pos, (float *)g_all_faces[data.face_index][dir], data.texture[dir], light);
 		++chunk->blocks_solid_amount;
 	}
 }
 
 /*
- * 'block' : from which block we want to add a face to the mesh;
- * 'chunk' : the chunk in which the block recides; (and mesh);
- * 'adjacent' : the adjacent block in the direction of the face of 'block';
- * 'local_pos' : the local pos of the 'block' in 'chunk';
- * 'dir' : aka face, of the 'block' we want to add to 'chunk->meshes';
-*/
-void	add_block_to_correct_mesh(t_chunk *chunk, t_block *block, t_block *adjacent, int *local_pos, int dir)
-{
-	t_block_data	data;
-	float			block_world[3];
-	int				light;
-
-	if (adjacent)
-	{
-		data = get_block_data(block);
-		// TODO : all block data should have, side_light_diff bool to check if we have different light values for each side of the block;
-		light = (int)(ft_pow(0.9f, 15 - ft_clamp(block->light_lvl, 0, 15)) * 100.0f) * (g_face_light[dir] / 100.0f);
-		if (is_fluid(block) && !is_solid(adjacent) &&
-			!(is_fluid(block) && is_fluid(adjacent)))
-		{
-			// If both blocks are fluid, we dont add face to mesh;
-			float	verts[12];
-
-			get_block_world_pos(block_world, chunk->world_coordinate, local_pos);
-			flowing_water_verts(verts, dir, block, block_world, chunk->info);
-			add_to_chunk_mesh_v2(&chunk->meshes, FLUID_MESH, local_pos, verts, data.texture[0], light);
-			++chunk->blocks_fluid_amount;
-		}
-		else if (is_solid(block) && !is_solid(adjacent))
-		{
-			add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_MESH, local_pos, g_all_faces[BLOCK_FACES][dir], data.texture[dir], light);
-			++chunk->blocks_solid_amount;
-		}
-		else if (is_solid_alpha(block))
-		{
-			if (block->type == BLOCK_ALPHA_OAK_LEAF)
-				add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_ALPHA_MESH, local_pos, g_all_faces[BLOCK_FACES][dir], data.texture[dir], light);
-			else if (block->type == BLOCK_ALPHA_TORCH)
-				add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_ALPHA_MESH, local_pos, g_all_faces[TORCH_FACES][dir], data.texture[dir], light);
-			else
-				add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_ALPHA_MESH, local_pos, g_all_faces[CACTUS_FACES][dir], data.texture[dir], light);
-			++chunk->blocks_solid_alpha_amount;
-		}
-	}
-}
-
-/*
- * NOTE: wherever we are calling this we have to do 'if (helper_pelper_v2(...)) chunk->has_visible_blocks = 1;';
+ * 'dirs' : array of e_card_dir, only check the faces in the direction of these; last should be -1;
+ *
  * Returns if a face was added;
+ *
+ * NOTE: wherever we are calling this we have to do 'if (helper_pelper(...)) chunk->has_visible_blocks = 1;';
  * TODO : make return 'chunk->blocks[index].visible_faces';
- * 
- * NOTE : for some reason collision is super slow on sand when replacing helper_pelper()
- * 		with this one;
 */
-int	helper_pelper_v2(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos, int index)
+int	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos, int index)
 {
 	t_block			*adj;
 	t_block			*block;
@@ -437,62 +361,12 @@ int	helper_pelper_v2(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos, i
 		if (adj_data.force_see_through || block_data.force_through_see ||
 			(adj_data.see_through && block_data.through_see))
 		{
-			add_block_to_correct_mesh_v2(chunk, block, adj, pos, dirs[dir]);
+			add_block_to_correct_mesh(chunk, block, pos, dirs[dir]);
 			chunk->blocks[index].visible_faces |= g_visible_faces[dirs[dir]];
 			face_was_added = 1;
 		}
 	}	
 	return (face_was_added);
-}
-
-/*
- * 'dirs' : array of e_card_dir, only check the faces in the direction of these; last should be -1;
-*/
-void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos, int index)
-{
-	t_block	*adj;
-	static int count = 0;
-
-	if (is_gas(&chunk->blocks[index])) // <-- very important, im not sure what happens if we are trying to render an air block;
-		return ;
-	adj = NULL;
-	// TODO : this needs to be moved to the 'add_block_to_correct_mesh()';
-	if (is_flora(&chunk->blocks[index]))
-	{
-		// Dont add to mesh if face already in it;
-		if (!(chunk->blocks[index].visible_faces & g_visible_faces[6]))
-		{
-			chunk->blocks[index].visible_faces |= g_visible_faces[6];
-			int light = (int)(ft_pow(0.9f, 15 - ft_clamp(chunk->blocks[index].light_lvl, 0, 15)) * 100.0f) * (g_face_light[DIR_UP] / 100.0f);
-			add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, g_all_faces[FLORA_FACES][0], g_block_data[chunk->blocks[index].type].texture[0], light);
-			add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, g_all_faces[FLORA_FACES][1], g_block_data[chunk->blocks[index].type].texture[1], light);
-			++chunk->blocks_flora_amount;
-			chunk->has_visible_blocks = 1;
-		}
-	}
-	else // these are the solid blocks;
-	{
-		for (int dir = 0; dirs[dir] != -1; dir++)
-		{
-			adj = get_block_in_dir(chunk, neighbors[dirs[dir]], pos, dirs[dir]);
-			if (adj && (!is_solid(adj) || is_solid_alpha(&chunk->blocks[index]))) // add to mesh if adjacent block isnt solid;
-			{
-				// Dont add to mesh if both blocks are fluid;
-				if (!(is_fluid(adj) && is_fluid(&chunk->blocks[index])))
-				{
-					// Dont add to mesh if face already in it;
-					if (!(chunk->blocks[index].visible_faces & g_visible_faces[dirs[dir]]))
-					{
-						chunk->blocks[index].visible_faces |= g_visible_faces[dirs[dir]];
-						add_block_to_correct_mesh(chunk, &chunk->blocks[index], adj, pos, dirs[dir]);
-						chunk->has_visible_blocks = 1;
-					}
-				}
-			}
-			else
-				chunk->blocks[index].visible_faces &= ~g_visible_faces[dirs[dir]];
-		}
-	}
 }
 
 /*
@@ -533,11 +407,8 @@ void	get_blocks_visible(t_chunk *chunk)
 			{
 				index = get_block_index(x, y, z);
 				chunk->blocks[index].visible_faces = 0;
-				//helper_pelper(chunk, neighbors, all_dirs, (int []){x, y, z}, index);
-				if (helper_pelper_v2(chunk, neighbors, all_dirs, (int []){x, y, z}, index))
+				if (helper_pelper(chunk, neighbors, all_dirs, (int []){x, y, z}, index))
 					chunk->has_visible_blocks = 1;
-				/*
-					*/
 			}
 		}
 	}
@@ -549,11 +420,8 @@ void	get_blocks_visible(t_chunk *chunk)
 */
 void	update_chunk_border_visible_blocks(t_chunk *chunk)
 {
-	t_block	*blocks;
-
 	if (!chunk->has_blocks)
 		return ;
-	blocks = chunk->blocks;
 
 	// Get all neighbors of current chunk;
 	t_chunk *neighbors[6];
@@ -566,17 +434,22 @@ void	update_chunk_border_visible_blocks(t_chunk *chunk)
 		for (int x = 0; x < CHUNK_WIDTH; x++)
 		{
 			if (neighbors[DIR_NORTH])
-				helper_pelper(chunk, neighbors, (int []){DIR_NORTH, -1}, (int []){x, y, 0}, get_block_index(x, y, 0));
+				if (helper_pelper(chunk, neighbors, (int []){DIR_NORTH, -1}, (int []){x, y, 0}, get_block_index(x, y, 0)))
+					chunk->has_visible_blocks = 1;
 			if (neighbors[DIR_SOUTH])
-				helper_pelper(chunk, neighbors, (int []){DIR_SOUTH, -1}, (int []){x, y, CHUNK_BREADTH - 1}, get_block_index(x, y, CHUNK_BREADTH - 1));
+				if (helper_pelper(chunk, neighbors, (int []){DIR_SOUTH, -1}, (int []){x, y, CHUNK_BREADTH - 1}, get_block_index(x, y, CHUNK_BREADTH - 1)))
+					chunk->has_visible_blocks = 1;
+
 		}
 		// left && right
 		for (int z = 0; z < CHUNK_BREADTH; z++)
 		{
 			if (neighbors[DIR_WEST])
-				helper_pelper(chunk, neighbors, (int []){DIR_WEST, -1}, (int []){0, y, z}, get_block_index(0, y, z));
+				if (helper_pelper(chunk, neighbors, (int []){DIR_WEST, -1}, (int []){0, y, z}, get_block_index(0, y, z)))
+					chunk->has_visible_blocks = 1;
 			if (neighbors[DIR_EAST])
-				helper_pelper(chunk, neighbors, (int []){DIR_EAST, -1}, (int []){CHUNK_WIDTH - 1, y, z}, get_block_index(CHUNK_WIDTH - 1, y, z));
+				if (helper_pelper(chunk, neighbors, (int []){DIR_EAST, -1}, (int []){CHUNK_WIDTH - 1, y, z}, get_block_index(CHUNK_WIDTH - 1, y, z)))
+					chunk->has_visible_blocks = 1;
 		}
 	}
 	// down && up
@@ -585,9 +458,11 @@ void	update_chunk_border_visible_blocks(t_chunk *chunk)
 		for (int z = 0; z < CHUNK_BREADTH; z++)
 		{
 			if (neighbors[DIR_DOWN])
-				helper_pelper(chunk, neighbors, (int []){DIR_DOWN, -1}, (int []){x, 0, z}, get_block_index(x, 0, z));
+				if (helper_pelper(chunk, neighbors, (int []){DIR_DOWN, -1}, (int []){x, 0, z}, get_block_index(x, 0, z)))
+					chunk->has_visible_blocks = 1;
 			if (neighbors[DIR_UP])
-				helper_pelper(chunk, neighbors, (int []){DIR_UP, -1}, (int []){x, CHUNK_HEIGHT - 1, z}, get_block_index(x, CHUNK_HEIGHT - 1, z));
+				if (helper_pelper(chunk, neighbors, (int []){DIR_UP, -1}, (int []){x, CHUNK_HEIGHT - 1, z}, get_block_index(x, CHUNK_HEIGHT - 1, z)))
+					chunk->has_visible_blocks = 1;
 		}
 	}
 }
@@ -619,7 +494,7 @@ void	generate_chunk(t_chunk *chunk, int *coord, t_noise *noise)
 
 	// Generate Chunks
 	chunk->block_amount = CHUNK_BLOCK_AMOUNT;
-	chunk_gen_v2(chunk, noise);
+	chunk_gen(chunk, noise);
 
 	chunk->event_block_amount = 0;
 	chunk->light_emitters = 0;
@@ -1022,7 +897,7 @@ void	render_aabb(t_aabb *a, t_camera *camera, float *col)
 */
 void	update_chunk_visible_blocks(t_chunk *chunk)
 {
-	reset_chunk_mesh_v2(&chunk->meshes);
+	reset_chunk_mesh(&chunk->meshes);
 
 	get_blocks_visible(chunk);
 
@@ -1037,7 +912,7 @@ void	update_chunk_visible_blocks(t_chunk *chunk)
 /*
  * Makes all the values 0, doesnt free anything;
 */
-void	reset_chunk_mesh_v2(t_chunk_mesh_v2 *mesh)
+void	reset_chunk_mesh(t_chunk_mesh *mesh)
 {
 	mesh->vertices_amount = 0;
 	mesh->texture_id_amount = 0;
@@ -1049,7 +924,7 @@ void	reset_chunk_mesh_v2(t_chunk_mesh_v2 *mesh)
 /*
  * Creates all the opengl stuff that needs to be created only once;
 */
-void	init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, GLuint shader, int amount)
+void	init_chunk_mesh(t_chunk_mesh *mesh, GLuint shader, int amount)
 {
 	GLuint	vbo[2];
 	int		error;
@@ -1120,7 +995,7 @@ void	init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, GLuint shader, int amount)
 /*
  * 'coordinate' world coordinate of the chunk;
 */
-void	render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinate, t_camera *camera)
+void	render_chunk_mesh(t_chunk_mesh *mesh, int mesh_type, float *coordinate, t_camera *camera)
 {
 	int	error;
 	error = glGetError();
@@ -1165,7 +1040,7 @@ void	render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinat
  *
  * You have to call this function on the main thread;
 */
-void	update_chunk_mesh(t_chunk_mesh_v2 *mesh)
+void	update_chunk_mesh(t_chunk_mesh *mesh)
 {
 	int error;
 	error = glGetError();
@@ -1218,7 +1093,7 @@ void	update_chunk_mesh(t_chunk_mesh_v2 *mesh)
  *
  * You give either solid mesh or liquid mesh to this;
 */
-void	add_to_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, int *coord, float *face_vertices, int texture_id, int light)
+void	add_to_chunk_mesh(t_chunk_mesh *mesh, int mesh_type, int *coord, float *face_vertices, int texture_id, int light)
 {
 	// Vertices and Texture
 	if (mesh->vertices_allocated < mesh->vertices_amount + 12)
@@ -1360,7 +1235,7 @@ t_block	*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, in
  * TODO: This should probably returns either an array of points being hit,
  * 	or just the closest one....?
 */
-int	chunk_mesh_collision_v2(float *orig, float *dir, t_chunk_mesh_v2 *mesh, int mesh_type, float *world_coords, float reach, float intersect_point[16][3])
+int	chunk_mesh_collision_v2(float *orig, float *dir, t_chunk_mesh *mesh, int mesh_type, float *world_coords, float reach, float intersect_point[16][3])
 {
 	float			*vertices;
 	unsigned int	*indices;

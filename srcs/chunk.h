@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 10:06:36 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/11 12:24:05 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/11 20:39:01 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,6 @@
 # define CHUNK_H
 
 # include "block.h"
-# include "item.h"
 # include "noise.h"
 
 typedef struct s_player_info
@@ -69,15 +68,13 @@ enum e_mesh_types
 {
 	BLOCK_MESH = 0,		// ex. dirt
 	FLUID_MESH,			// ex. water
-	FLORA_MESH,			// ex. grass
-	BLOCK_ALPHA_MESH,
 	MESH_TYPE_AMOUNT
 };
 
 /*
  * All different type of meshes are combined into this one
 */
-typedef struct s_chunk_mesh_v2
+typedef struct s_chunk_mesh
 {
 	GLuint			vao;
 	GLuint			vbo_pos;
@@ -107,7 +104,7 @@ typedef struct s_chunk_mesh_v2
 	GLuint			uniform_view;
 	GLuint			uniform_proj;
 	GLuint			uniform_color_tint;
-}	t_chunk_mesh_v2;
+}	t_chunk_mesh;
 
 /*
  * 'visible_faces' : has 'e_faces' 'OR':ed into it, IF the face has been added
@@ -251,7 +248,7 @@ struct	s_chunk
 	 * 2 : alpha, no collision, hitbox;		(flora)
 	 * 3 : alpha, collision, hitbox;		(solid alpha)
 	*/
-	t_chunk_mesh_v2	meshes; // TODO : rename to mesh;
+	t_chunk_mesh	meshes; // TODO : rename to mesh;
 
 	t_aabb			aabb;
 
@@ -263,7 +260,6 @@ struct	s_chunk
 };
 
 void		new_chunk(t_chunk *chunk, t_chunk_info *info, int nth);
-int			chunk_gen(t_chunk *chunk, int *noise_map);
 void		generate_chunk(t_chunk *chunk, int *coord, t_noise *noise);
 void		update_chunk_visible_blocks(t_chunk *chunk);
 void		update_chunk_event_blocks(t_chunk *chunk);
@@ -311,12 +307,12 @@ void		regenerate_chunk_column(t_chunk_col *column, int coord[2], int seed);
 
 void		update_chunk(t_chunk *chunk);
 
-void		init_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, GLuint shader, int amount);
-void		reset_chunk_mesh_v2(t_chunk_mesh_v2 *mesh);
-void		add_to_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, int *coord, float *face_vertices, int texture_id, int light);
-void		update_chunk_mesh(t_chunk_mesh_v2 *mesh);
-void		render_chunk_mesh_v2(t_chunk_mesh_v2 *mesh, int mesh_type, float *coordinate, t_camera *camera);
-int			chunk_mesh_collision_v2(float *orig, float *dir, t_chunk_mesh_v2 *mesh, int mesh_type, float *world_coords, float reach, float intersect_point[16][3]);
+void		init_chunk_mesh(t_chunk_mesh *mesh, GLuint shader, int amount);
+void		reset_chunk_mesh(t_chunk_mesh *mesh);
+void		add_to_chunk_mesh(t_chunk_mesh *mesh, int mesh_type, int *coord, float *face_vertices, int texture_id, int light);
+void		update_chunk_mesh(t_chunk_mesh *mesh);
+void		render_chunk_mesh(t_chunk_mesh *mesh, int mesh_type, float *coordinate, t_camera *camera);
+int			chunk_mesh_collision_v2(float *orig, float *dir, t_chunk_mesh *mesh, int mesh_type, float *world_coords, float reach, float intersect_point[16][3]);
 
 // This is used in the terrain collision; rename when you come it better;
 int			chunk_mesh_collision_v56(float *orig, float *dir, t_chunk *chunk, float reach, float intersect_points[16][3], float intersect_normals[16][3]);
