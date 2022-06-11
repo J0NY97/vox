@@ -411,6 +411,7 @@ void	add_block_to_correct_mesh(t_chunk *chunk, t_block *block, t_block *adjacent
 	if (adjacent)
 	{
 		data = get_block_data(block);
+		// TODO : all block data should have, side_light_diff bool to check if we have different light values for each side of the block;
 		light = (int)(ft_pow(0.9f, 15 - ft_clamp(block->light_lvl, 0, 15)) * 100.0f) * (g_face_light[dir] / 100.0f);
 		if (is_fluid(block) && !is_solid(adjacent) &&
 			!(is_fluid(block) && is_fluid(adjacent)))
@@ -442,20 +443,51 @@ void	add_block_to_correct_mesh(t_chunk *chunk, t_block *block, t_block *adjacent
 }
 
 /*
+ * NOTE: wherever we are calling this we have to do 'if (helper_pelper_v2(...)) chunk->has_visible_blocks = 1;';
+ * Returns if a face was added;
+*/
+int	helper_pelper_v2(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos, int index)
+{
+	t_block			*adj;
+	t_block			*block;
+	t_block_data	adj_data;
+	t_block_data	block_data;
+	int				face_was_added;
+
+	face_was_added = 0;
+	block = &chunk->blocks[index];
+	if (is_gas(block)) // <-- very important, im not sure what happens if we are trying to render an air block;
+		return (0);
+	adj = NULL;
+
+	for (int dir = 0; dirs[dir] != -1; dir++)
+	{
+		adj = get_block_in_dir(chunk, neighbors[dirs[dir]], pos, dirs[dir]);
+		// If there is no block in this direction, just skip it;
+		if (!adj)
+			continue ;
+		// Don't add face to mesh if the face is already in it;
+		if (chunk->blocks[index].visible_faces & g_visible_faces[dirs[dir]])
+			continue ;
+		adj_data = get_block_data(adj);
+		block_data = get_block_data(block);
+		if (adj_data.see_through && block_data.through_see)
+		{
+			add_block_to_correct_mesh(chunk, block, adj, pos, dirs[dir]);
+			face_was_added = 1;
+		}
+	}	
+	return (face_was_added);
+}
+
+/*
  * 'dirs' : array of e_card_dir, only check the faces in the direction of these; last should be -1;
 */
-void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos)
+void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos, int index)
 {
-	int		index;
 	t_block	*adj;
 	static int count = 0;
 
-/*
-	count++;
-	if (count % 1000 == 0)
-		ft_printf("count : %d\n", count);
-		*/
-	index = get_block_index(pos[0], pos[1], pos[2]);
 	if (is_gas(&chunk->blocks[index])) // <-- very important, im not sure what happens if we are trying to render an air block;
 		return ;
 	adj = NULL;
@@ -492,8 +524,6 @@ void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos)
 					}
 				}
 			}
-			else
-				chunk->blocks[index].visible_faces &= ~g_visible_faces[dirs[dir]];
 		}
 	}
 }
@@ -506,6 +536,8 @@ void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos)
 */
 void	get_blocks_visible(t_chunk *chunk)
 {
+	int	index;
+
 	chunk->has_visible_blocks = 0;
 
 	chunk->blocks_solid_amount = 0;
@@ -513,23 +545,13 @@ void	get_blocks_visible(t_chunk *chunk)
 	chunk->blocks_fluid_amount = 0;
 	chunk->blocks_solid_alpha_amount = 0;
 
-	static int skips = 0;
-
 	if (!chunk->has_blocks || !chunk->block_palette[GAS_AIR])
-	{
-//		ft_printf("no blocks / no air blocks : %d\n", skips++);
 		return ;
-	}
 
 	// TODO: figure out a way to remove this;
 	t_chunk *neighbors[6];
 	for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
 		neighbors[i] = NULL;
-
-	// TODO: remove this, try to integrate it to the loop under this;
-	// Reset visible faces;
-	for (int i = 0; i < chunk->block_amount; i++)
-		chunk->blocks[i].visible_faces = 0;
 
 	int	all_dirs[] = {DIR_NORTH, DIR_EAST, DIR_SOUTH, DIR_WEST, DIR_UP, DIR_DOWN, -1};
 
@@ -540,7 +562,9 @@ void	get_blocks_visible(t_chunk *chunk)
 		{
 			for (int z = 0; z < CHUNK_BREADTH; z++)
 			{
-				helper_pelper(chunk, neighbors, all_dirs, (int []){x, y, z});
+				index = get_block_index(x, y, z);
+				chunk->blocks[index].visible_faces = 0;
+				helper_pelper(chunk, neighbors, all_dirs, (int []){x, y, z}, index);
 			}
 		}
 	}
@@ -574,17 +598,17 @@ void	update_chunk_border_visible_blocks(t_chunk *chunk)
 		for (int x = 0; x < CHUNK_WIDTH; x++)
 		{
 			if (neighbors[DIR_NORTH])
-				helper_pelper(chunk, neighbors, (int []){DIR_NORTH, -1}, (int []){x, y, 0});
+				helper_pelper(chunk, neighbors, (int []){DIR_NORTH, -1}, (int []){x, y, 0}, get_block_index(x, y, 0));
 			if (neighbors[DIR_SOUTH])
-				helper_pelper(chunk, neighbors, (int []){DIR_SOUTH, -1}, (int []){x, y, CHUNK_BREADTH - 1});
+				helper_pelper(chunk, neighbors, (int []){DIR_SOUTH, -1}, (int []){x, y, CHUNK_BREADTH - 1}, get_block_index(x, y, CHUNK_BREADTH - 1));
 		}
 		// left && right
 		for (int z = 0; z < CHUNK_BREADTH; z++)
 		{
 			if (neighbors[DIR_WEST])
-				helper_pelper(chunk, neighbors, (int []){DIR_WEST, -1}, (int []){0, y, z});
+				helper_pelper(chunk, neighbors, (int []){DIR_WEST, -1}, (int []){0, y, z}, get_block_index(0, y, z));
 			if (neighbors[DIR_EAST])
-				helper_pelper(chunk, neighbors, (int []){DIR_EAST, -1}, (int []){CHUNK_WIDTH - 1, y, z});
+				helper_pelper(chunk, neighbors, (int []){DIR_EAST, -1}, (int []){CHUNK_WIDTH - 1, y, z}, get_block_index(CHUNK_WIDTH - 1, y, z));
 		}
 	}
 	// down && up
@@ -593,9 +617,9 @@ void	update_chunk_border_visible_blocks(t_chunk *chunk)
 		for (int z = 0; z < CHUNK_BREADTH; z++)
 		{
 			if (neighbors[DIR_DOWN])
-				helper_pelper(chunk, neighbors, (int []){DIR_DOWN, -1}, (int []){x, 0, z});
+				helper_pelper(chunk, neighbors, (int []){DIR_DOWN, -1}, (int []){x, 0, z}, get_block_index(x, 0, z));
 			if (neighbors[DIR_UP])
-				helper_pelper(chunk, neighbors, (int []){DIR_UP, -1}, (int []){x, CHUNK_HEIGHT - 1, z});
+				helper_pelper(chunk, neighbors, (int []){DIR_UP, -1}, (int []){x, CHUNK_HEIGHT - 1, z}, get_block_index(x, CHUNK_HEIGHT - 1, z));
 		}
 	}
 }
@@ -1033,6 +1057,13 @@ void	update_chunk_visible_blocks(t_chunk *chunk)
 	reset_chunk_mesh_v2(&chunk->meshes);
 
 	get_blocks_visible(chunk);
+
+	{ // DEBUG
+		int total_faces = 0;
+		for (int i = 0; i < chunk->meshes.amount; i++)
+			total_faces += (chunk->meshes.indices_amount[i] / 6);
+		LG_INFO("%d visible faces in chunk.", total_faces);
+	}
 }
 
 /*

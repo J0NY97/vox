@@ -221,7 +221,7 @@ int	main(void)
 	player_info.hotbar_item_ids[1] = BLOCK_STONE;
 	player_info.hotbar_item_ids[2] = BLOCK_ALPHA_TORCH;
 	player_info.hotbar_item_ids[3] = BLOCK_OAK_LOG;
-	player_info.hotbar_item_ids[4] = BLOCK_OAK_PLANK;
+	player_info.hotbar_item_ids[4] = FLORA_GRASS;
 	player_info.hotbar_item_ids[5] = BLOCK_ALPHA_OAK_LEAF;
 	player_info.hotbar_item_ids[6] = BLOCK_ALPHA_CACTUS;
 	player_info.hotbar_item_ids[7] = BLOCK_TNT;
@@ -239,7 +239,7 @@ int	main(void)
 	chunk_info.generate_structures = 1;
 	chunk_info.light_calculation = 0;
 	chunk_info.toggle_ui = 0;
-	chunk_info.toggle_event = 1;
+	chunk_info.toggle_event = 0;
 
 	chunk_info.sky_light_lvl = 15;
 
