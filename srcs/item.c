@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/01 14:13:30 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/03 14:42:56 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/11 13:45:03 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -476,10 +476,10 @@ void	flowing_water_verts(float *verts, int face, t_block *block, float *block_wo
 	int	dirs[3];
 	int	v[3];
 
-	vec3_new(verts + 0, g_faces[face][0], g_faces[face][1], g_faces[face][2]);
-	vec3_new(verts + 3, g_faces[face][3], g_faces[face][4], g_faces[face][5]);
-	vec3_new(verts + 6, g_faces[face][6], g_faces[face][7], g_faces[face][8]);
-	vec3_new(verts + 9, g_faces[face][9], g_faces[face][10], g_faces[face][11]);
+	vec3_new(verts + 0, g_all_faces[BLOCK_FACES][face][0], g_all_faces[BLOCK_FACES][face][1], g_all_faces[BLOCK_FACES][face][2]);
+	vec3_new(verts + 3, g_all_faces[BLOCK_FACES][face][3], g_all_faces[BLOCK_FACES][face][4], g_all_faces[BLOCK_FACES][face][5]);
+	vec3_new(verts + 6, g_all_faces[BLOCK_FACES][face][6], g_all_faces[BLOCK_FACES][face][7], g_all_faces[BLOCK_FACES][face][8]);
+	vec3_new(verts + 9, g_all_faces[BLOCK_FACES][face][9], g_all_faces[BLOCK_FACES][face][10], g_all_faces[BLOCK_FACES][face][11]);
 
 	// A source block will always be a full block;
 	if (block->type == FLUID_WATER)

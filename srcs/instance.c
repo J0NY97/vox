@@ -347,7 +347,7 @@ void	add_block_to_correct_mesh_v2(t_chunk *chunk, t_block *block, t_block *adjac
 	}
 	else
 	{
-		add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_MESH, local_pos, (float *)g_faces[dir], data.texture[dir], light);
+		add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_MESH, local_pos, g_all_faces[data.face_index][dir], data.texture[dir], light);
 		++chunk->blocks_solid_amount;
 	}
 }
@@ -383,17 +383,17 @@ void	add_block_to_correct_mesh(t_chunk *chunk, t_block *block, t_block *adjacent
 		}
 		else if (is_solid(block) && !is_solid(adjacent))
 		{
-			add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_MESH, local_pos, (float *)g_faces[dir], data.texture[dir], light);
+			add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_MESH, local_pos, g_all_faces[BLOCK_FACES][dir], data.texture[dir], light);
 			++chunk->blocks_solid_amount;
 		}
 		else if (is_solid_alpha(block))
 		{
 			if (block->type == BLOCK_ALPHA_OAK_LEAF)
-				add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_ALPHA_MESH, local_pos, (float *)g_faces[dir], data.texture[dir], light);
+				add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_ALPHA_MESH, local_pos, g_all_faces[BLOCK_FACES][dir], data.texture[dir], light);
 			else if (block->type == BLOCK_ALPHA_TORCH)
-				add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_ALPHA_MESH, local_pos, (float *)g_faces_torch[dir], data.texture[dir], light);
+				add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_ALPHA_MESH, local_pos, g_all_faces[TORCH_FACES][dir], data.texture[dir], light);
 			else
-				add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_ALPHA_MESH, local_pos, (float *)g_faces_cactus[dir], data.texture[dir], light);
+				add_to_chunk_mesh_v2(&chunk->meshes, BLOCK_ALPHA_MESH, local_pos, g_all_faces[CACTUS_FACES][dir], data.texture[dir], light);
 			++chunk->blocks_solid_alpha_amount;
 		}
 	}
@@ -434,7 +434,8 @@ int	helper_pelper_v2(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos, i
 		block_data = get_block_data(block);
 		// Always add face if it's next to a gas block;
 		// Otherwise it's up to the block type settings;
-		if (is_gas(adj) || (adj_data.see_through && block_data.through_see))
+		if (adj_data.force_see_through || block_data.force_through_see ||
+			(adj_data.see_through && block_data.through_see))
 		{
 			add_block_to_correct_mesh_v2(chunk, block, adj, pos, dirs[dir]);
 			chunk->blocks[index].visible_faces |= g_visible_faces[dirs[dir]];
@@ -463,8 +464,8 @@ void	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos, int
 		{
 			chunk->blocks[index].visible_faces |= g_visible_faces[6];
 			int light = (int)(ft_pow(0.9f, 15 - ft_clamp(chunk->blocks[index].light_lvl, 0, 15)) * 100.0f) * (g_face_light[DIR_UP] / 100.0f);
-			add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, (float *)g_flora_faces[0], g_block_data[chunk->blocks[index].type].texture[0], light);
-			add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, (float *)g_flora_faces[1], g_block_data[chunk->blocks[index].type].texture[1], light);
+			add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, g_all_faces[FLORA_FACES][0], g_block_data[chunk->blocks[index].type].texture[0], light);
+			add_to_chunk_mesh_v2(&chunk->meshes, FLORA_MESH, pos, g_all_faces[FLORA_FACES][1], g_block_data[chunk->blocks[index].type].texture[1], light);
 			++chunk->blocks_flora_amount;
 			chunk->has_visible_blocks = 1;
 		}
@@ -1326,8 +1327,6 @@ t_block	*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, in
 	float	block_world[3];
 	int		blocal[3];
 	int		i;
-	const float	**faces;
-	int		face_amount;
 	t_block_data	data;
 
 	if (!chunk->has_blocks || !chunk->has_visible_blocks)
@@ -1345,25 +1344,7 @@ t_block	*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, in
 		get_block_local_pos_from_index(blocal, i);
 		get_block_world_pos(block_world, chunk->world_coordinate, blocal);
 
-		face_amount = 0;
-		if (is_solid(&chunk->blocks[i]) ||
-			(is_solid(&chunk->blocks[i]) && chunk->blocks[i].type == BLOCK_ALPHA_OAK_LEAF))
-		{
-			face_amount = 6;
-			faces = g_faces;
-		}
-		else if (is_flora(&chunk->blocks[i]))
-		{
-			face_amount = 2;
-			faces = g_flora_faces;
-		}
-		else if (is_solid_alpha(&chunk->blocks[i]))
-		{
-			face_amount = 6;
-			faces = g_faces_cactus;
-		}
-
-		if (is_hovering_block(block_world, point, face, faces, face_amount))
+		if (is_hovering_block(block_world, point, face, g_all_faces[data.face_index], 6))
 		{
 			vec3_assign(block_pos, block_world);
 			return (&chunk->blocks[i]);
@@ -1474,42 +1455,42 @@ void	render_block_outline(float *pos, float *color, float *view, float *projecti
 	float	p3[3]; // top back right
 	float	p4[3]; // top front right
 
-	p1[0] = (g_faces[DIR_UP][0] * 0.5) + pos[0];
-	p1[1] = (g_faces[DIR_UP][1] * 0.5) + pos[1];
-	p1[2] = (g_faces[DIR_UP][2] * 0.5) + pos[2];
+	p1[0] = (g_all_faces[BLOCK_FACES][DIR_UP][0] * 0.5) + pos[0];
+	p1[1] = (g_all_faces[BLOCK_FACES][DIR_UP][1] * 0.5) + pos[1];
+	p1[2] = (g_all_faces[BLOCK_FACES][DIR_UP][2] * 0.5) + pos[2];
 
-	p2[0] = (g_faces[DIR_UP][3] * 0.5) + pos[0];
-	p2[1] = (g_faces[DIR_UP][4] * 0.5) + pos[1];
-	p2[2] = (g_faces[DIR_UP][5] * 0.5) + pos[2];
+	p2[0] = (g_all_faces[BLOCK_FACES][DIR_UP][3] * 0.5) + pos[0];
+	p2[1] = (g_all_faces[BLOCK_FACES][DIR_UP][4] * 0.5) + pos[1];
+	p2[2] = (g_all_faces[BLOCK_FACES][DIR_UP][5] * 0.5) + pos[2];
 
-	p3[0] = (g_faces[DIR_UP][6] * 0.5) + pos[0];
-	p3[1] = (g_faces[DIR_UP][7] * 0.5) + pos[1];
-	p3[2] = (g_faces[DIR_UP][8] * 0.5) + pos[2];
+	p3[0] = (g_all_faces[BLOCK_FACES][DIR_UP][6] * 0.5) + pos[0];
+	p3[1] = (g_all_faces[BLOCK_FACES][DIR_UP][7] * 0.5) + pos[1];
+	p3[2] = (g_all_faces[BLOCK_FACES][DIR_UP][8] * 0.5) + pos[2];
 
-	p4[0] = (g_faces[DIR_UP][9] * 0.5) + pos[0];
-	p4[1] = (g_faces[DIR_UP][10] * 0.5) + pos[1];
-	p4[2] = (g_faces[DIR_UP][11] * 0.5) + pos[2];
+	p4[0] = (g_all_faces[BLOCK_FACES][DIR_UP][9] * 0.5) + pos[0];
+	p4[1] = (g_all_faces[BLOCK_FACES][DIR_UP][10] * 0.5) + pos[1];
+	p4[2] = (g_all_faces[BLOCK_FACES][DIR_UP][11] * 0.5) + pos[2];
 
 	float	b1[3]; // bot front left
 	float	b2[3]; // bot front right
 	float	b3[3]; // bot back right
 	float	b4[3]; // bot back left
 
-	b1[0] = (g_faces[DIR_DOWN][0] * 0.5) + pos[0];
-	b1[1] = (g_faces[DIR_DOWN][1] * 0.5) + pos[1];
-	b1[2] = (g_faces[DIR_DOWN][2] * 0.5) + pos[2];
+	b1[0] = (g_all_faces[BLOCK_FACES][DIR_DOWN][0] * 0.5) + pos[0];
+	b1[1] = (g_all_faces[BLOCK_FACES][DIR_DOWN][1] * 0.5) + pos[1];
+	b1[2] = (g_all_faces[BLOCK_FACES][DIR_DOWN][2] * 0.5) + pos[2];
 
-	b2[0] = (g_faces[DIR_DOWN][3] * 0.5) + pos[0];
-	b2[1] = (g_faces[DIR_DOWN][4] * 0.5) + pos[1];
-	b2[2] = (g_faces[DIR_DOWN][5] * 0.5) + pos[2];
+	b2[0] = (g_all_faces[BLOCK_FACES][DIR_DOWN][3] * 0.5) + pos[0];
+	b2[1] = (g_all_faces[BLOCK_FACES][DIR_DOWN][4] * 0.5) + pos[1];
+	b2[2] = (g_all_faces[BLOCK_FACES][DIR_DOWN][5] * 0.5) + pos[2];
 
-	b3[0] = (g_faces[DIR_DOWN][6] * 0.5) + pos[0];
-	b3[1] = (g_faces[DIR_DOWN][7] * 0.5) + pos[1];
-	b3[2] = (g_faces[DIR_DOWN][8] * 0.5) + pos[2];
+	b3[0] = (g_all_faces[BLOCK_FACES][DIR_DOWN][6] * 0.5) + pos[0];
+	b3[1] = (g_all_faces[BLOCK_FACES][DIR_DOWN][7] * 0.5) + pos[1];
+	b3[2] = (g_all_faces[BLOCK_FACES][DIR_DOWN][8] * 0.5) + pos[2];
 
-	b4[0] = (g_faces[DIR_DOWN][9] * 0.5) + pos[0];
-	b4[1] = (g_faces[DIR_DOWN][10] * 0.5) + pos[1];
-	b4[2] = (g_faces[DIR_DOWN][11] * 0.5) + pos[2];
+	b4[0] = (g_all_faces[BLOCK_FACES][DIR_DOWN][9] * 0.5) + pos[0];
+	b4[1] = (g_all_faces[BLOCK_FACES][DIR_DOWN][10] * 0.5) + pos[1];
+	b4[2] = (g_all_faces[BLOCK_FACES][DIR_DOWN][11] * 0.5) + pos[2];
 
 	// TOP
 	render_3d_line(p1, p2, color, view, projection);

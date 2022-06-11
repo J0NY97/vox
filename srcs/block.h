@@ -87,36 +87,45 @@ enum e_card_dir // cardinal direction aka väderstreck?
 	DIR_AMOUNT = DIR_SOURCE
 };
 
-static const float g_faces[6][12] = {
+enum e_face_verts
+{
+	BLOCK_FACES,
+	FLORA_FACES,
+	CACTUS_FACES,
+	TORCH_FACES
+};
+
+static const float g_all_faces[][6][12] = {
+	{ // g_faces
 /* NORTH */ {1, 1, -1,  1, -1, -1,  -1, -1, -1,  -1, 1, -1},
 /* RIGHT */	{1, 1, 1,  1, -1, 1,  1, -1, -1,  1, 1, -1},
 /* SOUTH */	{-1, 1, 1,  -1, -1, 1,  1, -1, 1,  1, 1, 1},
 /* LEFT  */	{-1, 1, -1,  -1, -1, -1,  -1, -1, 1,  -1, 1, 1},
 /* TOP   */	{-1, 1, -1,  -1, 1, 1,  1, 1, 1,  1, 1, -1},
 /* BOT   */	{-1, -1, -1,  1, -1, -1,  1, -1, 1,  -1, -1, 1}
-};
-
-static const float g_flora_faces[2][12] = {
+	},
+	{ // g_faces_flora
 	/* A */ {-1, 1, 1,  -1, -1, 1,  1, -1, -1,  1, 1, -1},
-	/* B */ {-1, 1, -1,  -1, -1, -1,  1, -1, 1,  1, 1, 1}
-};
-
-static const float g_faces_cactus[6][12] = {
+	/* B */ {-1, 1, -1,  -1, -1, -1,  1, -1, 1,  1, 1, 1},
+	/* C */ {1, 1, 1,  1, -1, 1,  -1, -1, -1,  -1, 1, -1},
+	/* D */ {1, 1, -1,  1, -1, -1,  -1, -1, 1,  -1, 1, 1}
+	},
+	{ // g_face_cactus
 /* NORTH */ {1, 1, -0.85,	1, -1, -0.85,	-1, -1, -0.85,	-1, 1, -0.85},
 /* RIGHT */	{0.85, 1, 1,  	0.85, -1, 1,	0.85, -1, -1,	0.85, 1, -1},
 /* SOUTH */	{-1, 1, 0.85,	-1, -1, 0.85,	1, -1, 0.85,	1, 1, 0.85},
 /* LEFT  */	{-0.85, 1, -1,	-0.85, -1, -1,	-0.85, -1, 1,	-0.85, 1, 1},
 /* TOP   */	{-1, 1, -1,		-1, 1, 1,		1, 1, 1,		1, 1, -1},
 /* BOT   */	{-1, -1, -1,	1, -1, -1,		1, -1, 1,		-1, -1, 1}
-};
-
-static const float g_faces_torch[6][12] = {
+	},
+	{ // g_faces_torch
 /* NORTH */ {1, 1, -0.125,	1, -1, -0.125,	-1, -1, -0.125,	-1, 1, -0.125},
 /* RIGHT */	{0.125, 1, 1,  	0.125, -1, 1,		0.125, -1, -1,	0.125, 1, -1},
 /* SOUTH */	{-1, 1, 0.125,	-1, -1, 0.125,	1, -1, 0.125,		1, 1, 0.125},
 /* LEFT  */	{-0.125, 1, -1,	-0.125, -1, -1,	-0.125, -1, 1,	-0.125, 1, 1},
 /* TOP   */	{-1, 0.25, -1,	-1, 0.25, 1,		1, 0.25, 1,		1, 0.25, -1},
 /* BOT   */	{-1, -1, -1,	1, -1, -1,	1, -1, 1,		-1, -1, 1}
+	}
 };
 
 static const int g_face_light[6] = {
@@ -182,11 +191,13 @@ typedef struct s_block_data
 	char			light_emit; // negative is remove, positive is add;
 	char			trigger_light_heightmap; // 0 / 1;
 	float			blast_resistance;
+	char			force_see_through;
+	char			force_through_see;
 	char			see_through; // (affects neighbors) if the block is see through and neighboring block face should be added to mesh;
 	char			through_see; // (affects block)		if the block faces should be added to the mesh if the neighboring block is see through;
 	char			player_collision; // TODO, if player will collide with its body;
 	char			hand_collision; // TODO, if you can break the block;
-	float			**faces; // TODO
+	char			face_index; // 'e_face_verts', from g_all_faces, the index of the faces to be used;
 }	t_block_data;
 
 
@@ -198,9 +209,9 @@ static const t_block_data	g_block_data[] = {
 		"Air",
 		{0, 0, 0, 0, 0, 0},
 		0, 0, 0.0f,
-		1, 0,
+		1, 0, 1, 0,
 		0, 0,
-		(float **)g_faces
+		BLOCK_FACES
 	},
 // BLOCKS
 	{
@@ -209,9 +220,9 @@ static const t_block_data	g_block_data[] = {
 		"Dirt",
 		{132, 132, 132, 132, 135, 224},
 		-15, 1, 0.5f,
-		0, 1,
+		0, 0, 0, 1,
 		1, 1,
-		(float **)g_faces
+		BLOCK_FACES
 	},
 	{
 		BLOCK_DIRT,
@@ -219,9 +230,9 @@ static const t_block_data	g_block_data[] = {
 		"Dirt",
 		{224, 224, 224, 224, 224, 224},
 		-15, 1, 0.5f,
-		0, 1,
+		0, 0, 0, 1,
 		1, 1,
-		(float **)g_faces
+		BLOCK_FACES
 	},
 	{
 		BLOCK_STONE,
@@ -229,9 +240,9 @@ static const t_block_data	g_block_data[] = {
 		"Stone",
 		{164, 164, 164, 164, 164, 164},
 		-15, 1, 6.0f,
-		0, 1,
+		0, 0, 0, 1,
 		1, 1,
-		(float **)g_faces
+		BLOCK_FACES
 	},
 	{
 		BLOCK_BEDROCK,
@@ -239,9 +250,9 @@ static const t_block_data	g_block_data[] = {
 		"Bedrock",
 		{292, 292, 292, 292, 292, 292},
 		-15, 1, 3600000.0f,
-		0, 1,
+		0, 0, 0, 1,
 		1, 1,
-		(float **)g_faces
+		BLOCK_FACES
 	},
 	{
 		BLOCK_SAND,
@@ -249,9 +260,9 @@ static const t_block_data	g_block_data[] = {
 		"Sand",
 		{211, 211, 211, 211, 211, 211},
 		-15, 1, 0.5f,
-		0, 1,
+		0, 0, 0, 1,
 		1, 1,
-		(float **)g_faces
+		BLOCK_FACES
 	},
 	{
 		BLOCK_OAK_LOG,
@@ -259,9 +270,9 @@ static const t_block_data	g_block_data[] = {
 		"Oak Log",
 		{27, 27, 27, 27, 28, 28},
 		-15, 1, 2.0f,
-		0, 1,
+		0, 0, 0, 1,
 		1, 1,
-		(float **)g_faces
+		BLOCK_FACES
 	},
 	{
 		BLOCK_OAK_PLANK,
@@ -269,9 +280,9 @@ static const t_block_data	g_block_data[] = {
 		"Oak Plank",
 		{280, 280, 280, 280, 280, 280},
 		-15, 1, 3.0f,
-		0, 1,
+		0, 0, 0, 1,
 		1, 1,
-		(float **)g_faces
+		BLOCK_FACES
 	},
 	{
 		BLOCK_TNT,
@@ -279,9 +290,9 @@ static const t_block_data	g_block_data[] = {
 		"TNT",
 		{189, 189, 189, 189, 165, 213},
 		-15, 1, 0.0f,
-		0, 1,
+		0, 0, 0, 1,
 		1, 1,
-		(float **)g_faces
+		BLOCK_FACES
 	},
 // BLOCK ALPHA
 	{
@@ -290,9 +301,9 @@ static const t_block_data	g_block_data[] = {
 		"Oak Leaf",
 		{52, 52, 52, 52, 52, 52},
 		-1, 1, 0.2f,
+		1, 0, 1, 1,
 		1, 1,
-		1, 1,
-		(float **)g_faces
+		BLOCK_FACES
 	},
 	{
 		BLOCK_ALPHA_CACTUS,
@@ -300,9 +311,9 @@ static const t_block_data	g_block_data[] = {
 		"Cactus",
 		{342, 342, 342, 342, 318, 366},
 		-1, 1, 0.4f,
+		1, 1, 1, 1,
 		1, 1,
-		1, 1,
-		(float **)g_faces_cactus
+		CACTUS_FACES
 	},
 	{
 		BLOCK_ALPHA_TORCH,
@@ -310,40 +321,40 @@ static const t_block_data	g_block_data[] = {
 		"Torch",
 		{141, 141, 141, 141, 42, 141},
 		14, 0, 0.4f,
+		1, 1, 1, 1,
 		1, 1,
-		1, 1,
-		(float **)g_faces_torch
+		TORCH_FACES
 	},
 // FLORA
 	{
 		FLORA_GRASS,
 		"FLORA_GRASS",
 		"Grass",
-		{275, 275, 0, 0, 0, 0},
+		{275, 275, 275, 275, 0, 0},
 		0, 0, 0.0f,
+		1, 1, 1, 1,
 		1, 1,
-		1, 1,
-		(float **)g_flora_faces
+		FLORA_FACES
 	},
 	{
 		FLORA_FLOWER_RED,
 		"FLORA_FLOWER_RED",
 		"Red Flower",
-		{231, 231, 0, 0, 0, 0},
+		{231, 231, 231, 231, 0, 0},
 		0, 0, 0.0f,
+		1, 1, 1, 1,
 		1, 1,
-		1, 1,
-		(float **)g_flora_faces
+		FLORA_FACES
 	},
 	{
 		FLORA_FLOWER_YELLOW,
 		"FLORA_FLOWER_YELLOW",
 		"Yellow Flower",
-		{327, 327, 0, 0, 0, 0},
+		{327, 327, 327, 327, 0, 0},
 		0, 0, 0.0f,
+		1, 1, 1, 1,
 		1, 1,
-		1, 1,
-		(float **)g_flora_faces
+		FLORA_FACES
 	},
 // FLUID
 	{
@@ -351,72 +362,72 @@ static const t_block_data	g_block_data[] = {
 		"Water",
 		{362, 362, 362, 362, 362, 362},
 		-3, 1, 100.0f,
+		0, 0, 1, 0,
 		1, 0,
-		1, 0,
-		(float **)g_faces
+		BLOCK_FACES
 	},
 	{
 		FLUID_WATER_1, "FLUID_WATER",
 		"Water",
 		{362, 0, 0, 0, 0, 0},
 		-3, 1, 100.0f,
+		0, 0, 1, 0,
 		1, 0,
-		1, 0,
-		(float **)g_faces
+		BLOCK_FACES
 	},
 	{
 		FLUID_WATER_2, "FLUID_WATER",
 		"Water",
 		{362, 0, 0, 0, 0, 0},
 		-3, 1, 100.0f,
+		0, 0, 1, 0,
 		1, 0,
-		1, 0,
-		(float **)g_faces
+		BLOCK_FACES
 	},
 	{
 		FLUID_WATER_3, "FLUID_WATER",
 		"Water",
 		{362, 0, 0, 0, 0, 0},
 		-3, 1, 100.0f,
+		0, 0, 1, 0,
 		1, 0,
-		1, 0,
-		(float **)g_faces
+		BLOCK_FACES
 	},
 	{
 		FLUID_WATER_4, "FLUID_WATER",
 		"Water",
 		{362, 0, 0, 0, 0, 0},
 		-3, 1, 100.0f,
+		0, 0, 1, 0,
 		1, 0,
-		1, 0,
-		(float **)g_faces
+		BLOCK_FACES
 	},
 	{
 		FLUID_WATER_5, "FLUID_WATER",
 		"Water",
 		{362, 0, 0, 0, 0, 0},
 		-3, 1, 100.0f,
+		0, 0, 1, 0,
 		1, 0,
-		1, 0,
-		(float **)g_faces
+		BLOCK_FACES
 	},
 	{
 		FLUID_WATER_6, "FLUID_WATER",
 		"Water",
 		{362, 0, 0, 0, 0, 0},
 		-3, 1, 100.0f,
+		0, 0, 1, 0,
 		1, 0,
-		1, 0,
-		(float **)g_faces
+		BLOCK_FACES
 	},
 	{
 		FLUID_WATER_7, "FLUID_WATER",
 		"Water",
 		{362, 0, 0, 0, 0, 0},
 		-3, 1, 100.0f,
+		0, 0, 1, 0,
 		1, 0,
-		1, 0,
-		(float **)g_faces
+		BLOCK_FACES
 	}
 };
 
