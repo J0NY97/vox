@@ -334,10 +334,6 @@ void	add_block_to_correct_mesh_v2(t_chunk *chunk, t_block *block, t_block *adjac
 	data = get_block_data(block);
 	light = (int)(ft_pow(0.9f, 15 - ft_clamp(block->light_lvl, 0, 15)) * 100.0f) * (g_face_light[dir] / 100.0f);
 
-	for (int i = 0; i < 6; i++)
-		ft_printf("%f \n", data.faces[dir][i]);
-
-
 	// TODO : rework on the fluid vertex creator;
 	if (is_fluid(block))
 	{
