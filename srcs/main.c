@@ -567,7 +567,6 @@ int	main(void)
 			column = &chunk_info.chunk_columns[col];
 			col_chunks = column->chunks;
 
-			column->chunk_needed_update = column->chunk_needs_update;
 			column->chunk_needs_update = 0;
 		
 			if (chunk_info.generate_structures && column->update_structures)

@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/01 14:13:30 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/11 13:45:03 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/12 11:39:12 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -192,60 +192,6 @@ int	find_shortest_down(t_chunk_info *info, float *pos, int curr_len, int max_len
 	return (-1);
 }
 
-int	find_shortest_path(t_chunk_info *info, float *start, float *end)
-{
-	
-}
-
-int	water_placer_v2(t_chunk_info *info, float *world_pos, int nth_from_source)
-{
-	int		shortest_dir;
-	int		type;
-	float	tmp[3];
-
-	if (nth_from_source > 7)
-		return (0);
-
-	// Check that position is not occupied;
-	type = get_block_type_at_world_pos(info, world_pos);
-	// If block is not solid, we can proceed;
-	// If block is smaller type of water block we can place this block there;
-	if (is_type_solid(type) || is_type_solid_alpha(type))
-		return (0);
-	if (is_type_fluid(type) && type < FLUID_WATER + nth_from_source)
-		return (0);
-
-	// Find shortest dir; up to 3 blocks;
-	shortest_dir = -1;
-	int	i = 0;
-	while (shortest_dir == -1 && i <= 3)
-	{
-		shortest_dir = find_shortest_down(info, world_pos, 0, i);
-		i++;
-	}
-
-	if (shortest_dir == -1) // if we havent found down block, we spread water around;
-	{
-		for (int j = DIR_NORTH; j <= DIR_WEST; j++)
-		{
-			vec3_add(tmp, world_pos, (float *)g_card_dir[j]);
-			set_block_at_world_pos(info, world_pos, FLUID_WATER + nth_from_source);
-			water_placer_v2(info, tmp, nth_from_source + 1);
-		}
-	}
-	else // go in the direction of the shortest down block;
-	{
-		vec3_add(tmp, world_pos, (float *)g_card_dir[shortest_dir]);
-		set_block_at_world_pos(info, world_pos, FLUID_WATER + nth_from_source);
-		if (shortest_dir == DIR_DOWN) // if dir is down we place source block there and it can spread up to 8 blocks again;
-			water_placer_v2(info, tmp, 0);
-		else
-			water_placer_v2(info, tmp, nth_from_source + 1);
-	}
-
-	return (1);
-}
-
 /*
  * @brief Get water block from world pos, if exists; 
  * 
@@ -380,7 +326,6 @@ void	water_flow(t_chunk_info *info, t_block_event *water)
 int	water_remove(t_chunk_info *info, t_block_event *water)
 {
 	t_block			*neighbor[6]; // neswud
-	t_block_event	*neighbor_water[6];
 	t_chunk			*neighbor_chunk[6];
 	float			tmp[3];
 	int				type;
@@ -390,7 +335,6 @@ int	water_remove(t_chunk_info *info, t_block_event *water)
 	{
 		vec3_add(tmp, water->pos, (float *)g_card_dir[d]);
 		neighbor[i] = get_block(info, tmp);
-		neighbor_water[i] = get_water_block(info, tmp);// TODO: maybe do this right before we actually use it, so we dont do this without point (onödan);
 		neighbor_chunk[i] = get_chunk_from_world_pos(info, tmp);
 	}
 
