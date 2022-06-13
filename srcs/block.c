@@ -9,7 +9,7 @@
  * 'info' : the chunk info that we use to help finding correct info for block;
  * 'pos' : world position of the wanted block;
 */
-t_block_info	*get_block_info_pos(t_block_info *res, t_chunk_info *info, float *pos)
+t_block_info	*get_block_info_pos(t_block_info *res, t_world *info, float *pos)
 {
 	int		chunk_local_pos[3];
 

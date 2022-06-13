@@ -228,7 +228,7 @@ int	main(void)
 	player_info.hotbar_item_ids[8] = FLUID_WATER;
 	player_info.equipped_block = player_info.hotbar_item_ids[player_info.equipped_hotbar];
 
-	t_chunk_info	chunk_info;
+	t_world	chunk_info;
 
 	chunk_info.seed = 896868766;
 //	chunk_info.seed = 596547633;

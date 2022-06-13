@@ -14,7 +14,7 @@
 #include "chunk.h"
 
 // Basically everything needed for minecraft : https://www.redblobgames.com/maps/terrain-from-noise/
-void	new_chunk(t_chunk *chunk, t_chunk_info *info, int nth)
+void	new_chunk(t_chunk *chunk, t_world *info, int nth)
 {
 	int error = glGetError();
 	if (error)
@@ -151,7 +151,7 @@ void	chunk_aabb_update(t_chunk *chunk)
  * 'chunks' is all the loaded chunks,
  * 'dir' is the direction you want to look for the chunk in; (v3)
 */
-t_chunk	*get_adjacent_chunk(t_chunk_info *info, t_chunk *from, float *dir)
+t_chunk	*get_adjacent_chunk(t_world *info, t_chunk *from, float *dir)
 {
 	int	from_coord[3];
 
@@ -174,7 +174,7 @@ t_chunk	*get_adjacent_chunk(t_chunk_info *info, t_chunk *from, float *dir)
 	return (NULL);
 }
 
-t_chunk	*get_chunk(t_chunk_info	*info, int *pos)
+t_chunk	*get_chunk(t_world	*info, int *pos)
 {
 	for (int i = 0; i < CHUNKS_LOADED; i++)
 	{
@@ -186,7 +186,7 @@ t_chunk	*get_chunk(t_chunk_info	*info, int *pos)
 	return (NULL);
 }
 
-t_chunk	*get_chunk_from_world_pos(t_chunk_info *info, float *pos)
+t_chunk	*get_chunk_from_world_pos(t_world *info, float *pos)
 {
 	int	local_pos[3];
 
@@ -216,7 +216,7 @@ int	*get_block_local_pos_from_world_pos(int *res, float *world)
 */
 float *get_block_world_pos(float *res, float *chunk_world_pos, int *block_local_pos)
 {
-	float	scale = 0.5; // t_chunk_info->block_scale;
+	float	scale = 0.5; // t_world->block_scale;
 
 	res[0] = chunk_world_pos[0] + (block_local_pos[0] /* scale*/);
 	res[1] = chunk_world_pos[1] + (block_local_pos[1] /* scale*/);
@@ -241,7 +241,7 @@ int	*get_block_local_pos_from_index(int *res, int index)
  * Returns pointer to block anywhere in the world with the 'coord's given;
  * World coordinates btw;
 */
-t_block	*get_block(t_chunk_info *info, float *coords)
+t_block	*get_block(t_world *info, float *coords)
 {
 	int		chunk_pos[3];
 	t_chunk	*chunk;
@@ -604,7 +604,7 @@ int	get_chunk_column_to_regen(t_chunk_col *chunk_cols, int *player_chunk, int *o
  *
  * Figures out which chunks will be loaded into which chunks;
 */
-int	get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, t_chunk_info *info, int *player_chunk_v3, int max_get)
+int	get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, t_world *info, int *player_chunk_v3, int max_get)
 {
 	int	reload_amount = 0;
 	int	found;
@@ -1388,7 +1388,7 @@ void	render_block_outline(float *pos, float *color, float *view, float *projecti
 	render_3d_line(p4, b2, color, view, projection);
 }
 
-void	player_terrain_collision(float *res, float *pos, float *velocity, t_chunk_info *info)
+void	player_terrain_collision(float *res, float *pos, float *velocity, t_world *info)
 {
 	float	normed_velocity[3];
 	float	player_intersect_normal[16][3];
@@ -1443,7 +1443,7 @@ void	player_terrain_collision(float *res, float *pos, float *velocity, t_chunk_i
  * Places block of type 'block_type' in the world position of 'world_pos' no
  *	matter what.
 */
-t_block	*set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_type)
+t_block	*set_block_at_world_pos(t_world *info, float *world_pos, int block_type)
 {
 	int		block_local[3];
 	int		chunk_pos[3];
@@ -1463,7 +1463,7 @@ t_block	*set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_
 	return (&chunk->blocks[index]);
 }
 
-void	set_block_at_world_pos_if_empty(t_chunk_info *info, float *world_pos, int block_type)
+void	set_block_at_world_pos_if_empty(t_world *info, float *world_pos, int block_type)
 {
 	int		block_local[3];
 	int		chunk_pos[3];
@@ -1482,7 +1482,7 @@ void	set_block_at_world_pos_if_empty(t_chunk_info *info, float *world_pos, int b
 	chunk->needs_to_update = 1;
 }
 
-int	get_block_type_at_world_pos(t_chunk_info *info, float *world_pos)
+int	get_block_type_at_world_pos(t_world *info, float *world_pos)
 {
 	float	under_block[3];
 	int		block_local[3];
@@ -1503,7 +1503,7 @@ int	get_block_type_at_world_pos(t_chunk_info *info, float *world_pos)
 /*
  * A no matter what cactus placer;
 */
-void	create_cactus(t_chunk_info *info, float *world_pos)
+void	create_cactus(t_world *info, float *world_pos)
 {
 	// Trunk;
 	for (int i = 0; i < 3; i++)
@@ -1514,7 +1514,7 @@ void	create_cactus(t_chunk_info *info, float *world_pos)
 /*
  * A no matter what tree placer;
 */
-void	create_tree(t_chunk_info *info, float *world_pos)
+void	create_tree(t_world *info, float *world_pos)
 {
 	// Trunk;
 	for (int i = 0; i < 6; i++)
@@ -1584,7 +1584,7 @@ void	create_tree(t_chunk_info *info, float *world_pos)
 /*
  * 'world_pos' position of where tree should be placed in the world coordinate;
 */
-void	tree_placer(t_chunk_info *info, float *world_pos)
+void	tree_placer(t_world *info, float *world_pos)
 {
 	int	type;
 
@@ -1600,7 +1600,7 @@ void	tree_placer(t_chunk_info *info, float *world_pos)
 		create_cactus(info, world_pos);
 }
 
-void	flora_placer(t_chunk_info *info, int type, float *world_pos)
+void	flora_placer(t_world *info, int type, float *world_pos)
 {
 	int	block_type;
 
@@ -1622,7 +1622,7 @@ void	flora_placer(t_chunk_info *info, int type, float *world_pos)
 /*
  * Returns highest chunk at chunk->coordinate x and z;
 */
-t_chunk *get_highest_chunk(t_chunk_info *info, int x, int z)
+t_chunk *get_highest_chunk(t_world *info, int x, int z)
 {
 	for (int i = 0; i < CHUNK_COLUMNS; i++)
 	{
@@ -1642,7 +1642,7 @@ t_chunk *get_highest_chunk(t_chunk_info *info, int x, int z)
  * Places the highest block into 'out_block' and the block's world y coordinate
  * 	into 'out_world_y';
 */
-t_chunk *get_highest_chunk_with_block(t_chunk_info *info, t_block **out_block, float *out_world_y, float world_x, float world_z)
+t_chunk *get_highest_chunk_with_block(t_world *info, t_block **out_block, float *out_world_y, float world_x, float world_z)
 {
 	int		chunk_local[3];
 	int		block_local[3];
@@ -1686,7 +1686,7 @@ t_chunk *get_highest_chunk_with_block(t_chunk_info *info, t_block **out_block, f
  * Returns y of the block, saves the block in 'out_block';
  * We dont want the highest air block, since that is not an actual block;
 */
-float	get_highest_block(t_chunk_info *info, t_block **out_block, float x, float z)
+float	get_highest_block(t_world *info, t_block **out_block, float x, float z)
 {
 	static int count = 0;
 	float	block_y;
@@ -1729,7 +1729,7 @@ float	get_highest_block_in_chunk(t_chunk *chunk, t_block **out_block, float x, f
  * NOTE : TODO : if you want to use this , first rewrite (im not deleting this
  *		so you can take example);
 */
-float	get_highest_point_of_type(t_chunk_info *info, float x, float z, int type)
+float	get_highest_point_of_type(t_world *info, float x, float z, int type)
 {
 	int		chunk_pos[3];
 	float	curr_highest = -1;
@@ -1783,7 +1783,7 @@ float	get_highest_block_in_column(t_chunk_col *column, t_block **out_highest_blo
 	return (-1);
 }
 
-void	tree_gen(t_chunk_info *info, t_chunk_col *column)
+void	tree_gen(t_world *info, t_chunk_col *column)
 {
 	float	amp = 1.0f;
 	float	freq = 0.70f;

@@ -1,7 +1,7 @@
 #include "shaderpixel.h"
 #include "chunk.h"
 
-void	explode(t_chunk_info *info, float pos[3], float intensity)
+void	explode(t_world *info, float pos[3], float intensity)
 {
 	float			tmp[3];
 	t_block			*block;
@@ -38,7 +38,7 @@ void	explode(t_chunk_info *info, float pos[3], float intensity)
 	explode(info, tmp, intensity);
 }
 
-void	tnt_explosion(t_chunk_info *info, t_chunk *chunk, t_block_event *event_block)
+void	tnt_explosion(t_world *info, t_chunk *chunk, t_block_event *event_block)
 {
 	float	intensity = 0;
 	float	explosion_str = 4.0f;

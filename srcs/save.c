@@ -4,7 +4,7 @@
 /*
  * name of file you save into is the seed;
 */
-void	save(t_chunk_info *info)
+void	save(t_world *info)
 {
 	FILE	*fp;
 

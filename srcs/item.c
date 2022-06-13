@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/01 14:13:30 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/12 11:39:12 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/13 17:10:18 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,7 +107,7 @@ int	chunk_has_non_solid(t_chunk *chunk)
 /*
  * Returns 1 if the water block could be placed;
 */
-int	water_placer(t_chunk_info *info, float *world_pos, int nth_from_source)
+int	water_placer(t_world *info, float *world_pos, int nth_from_source)
 {
 	int	type;
 	
@@ -154,7 +154,7 @@ int	water_placer(t_chunk_info *info, float *world_pos, int nth_from_source)
  *
  * 'pos' : block world position;
 */
-int	find_shortest_down(t_chunk_info *info, float *pos, int curr_len, int max_len)
+int	find_shortest_down(t_world *info, float *pos, int curr_len, int max_len)
 {
 	if (curr_len > max_len)
 		return (-1);
@@ -199,7 +199,7 @@ int	find_shortest_down(t_chunk_info *info, float *pos, int curr_len, int max_len
  * @param pos 
  * @return t_block_water* 
 */
-t_block_event	*get_water_block(t_chunk_info *info, float *pos)
+t_block_event	*get_water_block(t_world *info, float *pos)
 {
 	int		chunk_pos[3];
 	t_chunk	*chunk;
@@ -218,7 +218,7 @@ t_block_event	*get_water_block(t_chunk_info *info, float *pos)
 	return (NULL);
 }
 
-void	water_flow(t_chunk_info *info, t_block_event *water)
+void	water_flow(t_world *info, t_block_event *water)
 {
 	t_block			*neighbor[6]; // neswud
 	t_block_event	*neighbor_water[6];
@@ -323,7 +323,7 @@ void	water_flow(t_chunk_info *info, t_block_event *water)
 /*
  * Returns whether water was removed;
 */
-int	water_remove(t_chunk_info *info, t_block_event *water)
+int	water_remove(t_world *info, t_block_event *water)
 {
 	t_block			*neighbor[6]; // neswud
 	t_chunk			*neighbor_chunk[6];
@@ -370,7 +370,7 @@ int	water_remove(t_chunk_info *info, t_block_event *water)
 }
 
 // TODO: Remove this funct
-void	chunk_water_remover(t_chunk_info *info, t_chunk *chunk)
+void	chunk_water_remover(t_world *info, t_chunk *chunk)
 {
 	// For all water blocks in chunk;
 	for (int j = 0; j < chunk->event_block_amount; j++)
@@ -378,7 +378,7 @@ void	chunk_water_remover(t_chunk_info *info, t_chunk *chunk)
 			water_remove(info, &chunk->event_blocks[j]);
 }
 
-void	water_vertex_height_decider(t_chunk_info *info, t_block *block, float *block_world, float *verts, int face, int faces[3], int dirs[3], int v[3])
+void	water_vertex_height_decider(t_world *info, t_block *block, float *block_world, float *verts, int face, int faces[3], int dirs[3], int v[3])
 {
 	int		fluid_found = 0;
 	int		most = block->type;
@@ -414,7 +414,7 @@ void	water_vertex_height_decider(t_chunk_info *info, t_block *block, float *bloc
  * 'face' == e_card_dir;
  * 'block_world' : the world position of the block we want the vertices of;
 */
-void	flowing_water_verts(float *verts, int face, t_block *block, float *block_world, t_chunk_info *info)
+void	flowing_water_verts(float *verts, int face, t_block *block, float *block_world, t_world *info)
 {
 	int	faces[3];
 	int	dirs[3];

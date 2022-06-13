@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 10:06:36 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/12 11:37:35 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/13 17:26:23 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 # include "block.h"
 # include "noise.h"
+# include "vox_entity.h"
 
 typedef struct s_player_info
 {
@@ -146,7 +147,7 @@ typedef struct s_chunk_col
 	t_noise	height_map;
 }	t_chunk_col;
 
-typedef struct s_chunk_info
+typedef struct s_world
 {
 	unsigned int	seed;
 
@@ -167,6 +168,8 @@ typedef struct s_chunk_info
 	t_chunk_col	*chunk_columns; // render_distance * render_distance;
 	GLuint		texture; // the texture is stored here so we dont load a texture per chunk_mesh;
 
+	t_vox_entity	*entities;
+
 	t_hash_item	*hash_table;
 	int			hash_table_size;
 
@@ -174,7 +177,7 @@ typedef struct s_chunk_info
 	int				*meshes_render_indices;
 	int				meshes_render_amount;
 
-}	t_chunk_info;
+}	t_world;
 
 typedef struct s_block_info
 {
@@ -189,7 +192,7 @@ typedef struct s_block_info
 t_block_info	*get_block_info(t_block_info *info, t_block *block);
 t_block_info	*get_block_info_index(t_block_info *info, int index);
 */
-t_block_info	*get_block_info_pos(t_block_info *res, t_chunk_info *info, float *pos);
+t_block_info	*get_block_info_pos(t_block_info *res, t_world *info, float *pos);
 
 /* Used for threading */
 typedef struct s_chunk_args
@@ -202,7 +205,7 @@ typedef struct s_chunk_args
 
 struct	s_chunk
 {
-	t_chunk_info	*info;
+	t_world	*info;
 	int				coordinate[VEC3_SIZE];
 	float			world_coordinate[VEC3_SIZE];
 
@@ -244,7 +247,7 @@ struct	s_chunk
 	t_chunk_args	args;
 };
 
-void		new_chunk(t_chunk *chunk, t_chunk_info *info, int nth);
+void		new_chunk(t_chunk *chunk, t_world *info, int nth);
 void		generate_chunk(t_chunk *chunk, int *coord, t_noise *noise);
 void		update_chunk_visible_blocks(t_chunk *chunk);
 void		update_chunk_event_blocks(t_chunk *chunk);
@@ -255,21 +258,21 @@ void		render_aabb(t_aabb *a, t_camera *camera, float *col);
 
 int			*get_chunk_pos_from_world_pos(int *res, float *world_coords);
 float		*get_block_world_pos(float *res, float *chunk_world_pos, int *block_local_pos);
-t_chunk		*get_chunk(t_chunk_info *info, int *pos);
-t_chunk		*get_chunk_from_world_pos(t_chunk_info *info, float *pos);
-t_chunk		*get_adjacent_chunk(t_chunk_info *info, t_chunk *from, float *dir);
+t_chunk		*get_chunk(t_world *info, int *pos);
+t_chunk		*get_chunk_from_world_pos(t_world *info, float *pos);
+t_chunk		*get_adjacent_chunk(t_world *info, t_chunk *from, float *dir);
 int			*get_block_local_pos_from_world_pos(int *res, float *world);
 int			*get_block_local_pos_from_index(int *res, int index);
-t_block		*get_block(t_chunk_info *info, float *coords);
+t_block		*get_block(t_world *info, float *coords);
 int			get_block_index(int x, int y, int z);
-t_chunk		*get_highest_chunk(t_chunk_info *info, int x, int z);
+t_chunk		*get_highest_chunk(t_world *info, int x, int z);
 float		get_highest_block_in_chunk(t_chunk *chunk, t_block **out_block, float x, float z);
-float		get_highest_point(t_chunk_info *info, float x, float z);
-float		get_highest_point_of_type(t_chunk_info *info, float x, float z, int type);
-int			get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, t_chunk_info *info, int *player_chunk_v3, int max_get);
+float		get_highest_point(t_world *info, float x, float z);
+float		get_highest_point_of_type(t_world *info, float x, float z, int type);
+int			get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, t_world *info, int *player_chunk_v3, int max_get);
 int			get_chunk_column_to_regen(t_chunk_col *chunk_cols, int *player_chunk, int *out_col_indices, int (*out_col_coords)[2], int max_get);
 int			get_surrounding_coords(int *res, int x, int z, int r);
-int			get_block_type_at_world_pos(t_chunk_info *info, float *world_pos);
+int			get_block_type_at_world_pos(t_world *info, float *world_pos);
 
 t_block_data	get_block_data(t_block *block);
 t_block_data	get_block_data_from_type(int type);
@@ -282,12 +285,12 @@ typedef struct s_regen_args
 {
 	int				*reload_these_chunks;
 	int				*into_these_coords; // [2]
-	t_chunk_info	*chunk_info;
+	t_world	*chunk_info;
 }	t_regen_args;
 
 void		*regen_thread_func(void *args);
-int			regenerate_chunks(int *these, int coord[2], t_chunk_info *info);
-int			regenerate_chunks_threading(int *these, int coord[2], t_chunk_info *info);
+int			regenerate_chunks(int *these, int coord[2], t_world *info);
+int			regenerate_chunks_threading(int *these, int coord[2], t_world *info);
 void		regenerate_chunk_column(t_chunk_col *column, int coord[2], int seed);
 
 void		update_chunk(t_chunk *chunk);
@@ -306,24 +309,24 @@ int			chunk_mesh_collision_v56(float *orig, float *dir, t_chunk *chunk, float re
 t_block		*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, int *face);
 void		render_block_outline(float *pos, float *color, float *view, float *projection);
 
-t_block		*set_block_at_world_pos(t_chunk_info *info, float *world_pos, int block_type);
+t_block		*set_block_at_world_pos(t_world *info, float *world_pos, int block_type);
 
-void		player_terrain_collision(float *res, float *pos, float *velocity, t_chunk_info *info);
+void		player_terrain_collision(float *res, float *pos, float *velocity, t_world *info);
 
-void		tree_gen(t_chunk_info *info, t_chunk_col *column);
+void		tree_gen(t_world *info, t_chunk_col *column);
 
-void		tree_placer(t_chunk_info *info, float *world_pos);
-int			water_placer(t_chunk_info *info, float *world_pos, int nth_from_source);
+void		tree_placer(t_world *info, float *world_pos);
+int			water_placer(t_world *info, float *world_pos, int nth_from_source);
 
 void		event_chunk(t_chunk *chunk);
 
 // WATER
-void		flowing_water_verts(float *verts, int face, t_block *block, float *block_world, t_chunk_info *info);
-void		chunk_water_flower(t_chunk_info *info, t_chunk *chunk);
-void		chunk_water_remover(t_chunk_info *info, t_chunk *chunk);
+void		flowing_water_verts(float *verts, int face, t_block *block, float *block_world, t_world *info);
+void		chunk_water_flower(t_world *info, t_chunk *chunk);
+void		chunk_water_remover(t_world *info, t_chunk *chunk);
 
 // TNT
-void		tnt_explosion(t_chunk_info *info, t_chunk *chunk, t_block_event *event_block);
+void		tnt_explosion(t_world *info, t_chunk *chunk, t_block_event *event_block);
 
 int			is_type_gas(int type);
 int			is_type_solid(int type);

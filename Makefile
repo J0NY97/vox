@@ -33,6 +33,7 @@ CFILES = \
 	bitmap.c \
 	save.c \
 	noise.c \
+	vox_entity.c \
 	bimgf/bimgf_bmp.c \
 	bimgf/bimgf_help.c \
 	bimgf/bimgf_jpg.c \
