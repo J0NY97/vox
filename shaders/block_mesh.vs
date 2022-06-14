@@ -1,4 +1,4 @@
-#version 330
+#version 330 core
 
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in int aTextureID; // 16 bits texture, 4 bits uv, 8 bits of light;
