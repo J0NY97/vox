@@ -1,6 +1,7 @@
 #include "shaderpixel.h"
 #include "chunk.h"
 #include "shader.h"
+#include "bobj.h"
 //#include "ui_manager.h"
 //#include "ui.h"
 
@@ -172,6 +173,10 @@ void	scop_stuff(t_shaderpixel *sp)
 
 int	main(void)
 {
+	t_bobj	bobj;
+	bobj_load(&bobj, MODEL_PATH"melon_golem/melon_golem.obj");
+	exit(0);
+
 	t_shaderpixel	sp;
 	t_key			keys[GLFW_KEY_LAST];
 	t_key			mouse[GLFW_MOUSE_BUTTON_LAST];

@@ -42,6 +42,7 @@ CFILES = \
 	bmath/bmathf.c \
 	bmath/bmathi.c \
 	bobj/bobj_loader.c \
+	bobj/bobj_v2/bobj.c \
 	bobj/bobj_print.c \
 	glad/glad.c \
 #	ui.c \
@@ -62,6 +63,7 @@ INCS = \
 	-I$(LIB_DIR)/liblg \
 	-I$(CDIR)/ \
 	-I$(CDIR)/bobj \
+	-I$(CDIR)/bobj/bobj_v2 \
 	-I$(CDIR)/bmath \
 	-I$(CDIR)/bimgf \
 	-I$(CDIR)/glad \
@@ -95,6 +97,7 @@ $(ODIR):
 	@mkdir -p $@/bimgf
 	@mkdir -p $@/bmath
 	@mkdir -p $@/bobj
+	@mkdir -p $@/bobj/bobj_v2
 	@mkdir -p $@/glad
 
 $(ODIR)/%.o: $(CDIR)/%.c
