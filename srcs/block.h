@@ -192,7 +192,7 @@ typedef struct s_block_data
 	char			force_through_see;
 	char			see_through; // (affects neighbors) if the block is see through and neighboring block face should be added to mesh;
 	char			through_see; // (affects block)		if the block faces should be added to the mesh if the neighboring block is see through;
-	char			player_collision; // TODO, if player will collide with its body;
+	char			entity_collision; // TODO, if player will collide with its body;
 	char			hand_collision; // TODO, if you can break the block;
 	char			face_index; // 'e_face_verts', from g_all_faces, the index of the faces to be used;
 }	t_block_data;

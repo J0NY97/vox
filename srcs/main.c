@@ -175,7 +175,7 @@ int	main(void)
 {
 	t_bobj	bobj;
 	bobj_load(&bobj, MODEL_PATH"melon_golem/melon_golem.obj");
-	exit(0);
+	//exit(0);
 
 	t_shaderpixel	sp;
 	t_key			keys[GLFW_KEY_LAST];

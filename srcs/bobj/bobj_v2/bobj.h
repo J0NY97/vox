@@ -6,12 +6,32 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/14 13:50:57 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/14 14:20:44 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/15 14:39:35 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef BOBJ_H
 # define BOBJ_H
+
+typedef struct	s_bobj_v3
+{
+	float	x;
+	float	y;
+	float	z;
+}			t_bobj_v3;
+
+typedef struct	s_bobj_v2
+{
+	float	x;
+	float	y;
+}			t_bobj_v2;
+
+typedef struct	s_bobj_u3
+{
+	unsigned int	i0;
+	unsigned int	i1;
+	unsigned int	i2;
+}			t_bobj_u3;
 
 /*
 */
@@ -19,16 +39,7 @@ typedef struct s_bobj_mesh
 {
 	char			*name;
 
-	float			*v;
-	int				v_amount;
-
-	float			*vt;
-	int				vt_amount;
-
-	float			*vn;
-	int				vn_amount;
-
-	unsigned int	*f;
+	t_bobj_u3		*f;
 	int				f_amount;
 
 	char			*usemtl;
@@ -59,18 +70,24 @@ typedef struct s_bobj_object
 {
 	char			*name;
 
+	t_bobj_v3		*v;
+	int				v_amount;
+	t_bobj_v3		*vt;
+	int				vt_amount;
+	t_bobj_v3		*vn;
+	int				vn_amount;
+	
 	t_bobj_mesh		*meshes;
 	int				meshes_amount;
-
-	t_bobj_material	*materials;
-	int				materials_amount;
 }		t_bobj_object;
 
 typedef struct s_bobj
 {
 	t_bobj_object	*objects;
 	int				objects_amount;
-	// maybe store materials here;
+
+	t_bobj_material	*materials;
+	int				materials_amount;
 }		t_bobj;
 
 /*
@@ -85,5 +102,11 @@ typedef struct s_bobj
 */
 
 void	bobj_load(t_bobj *bobj, char *file_path);
+
+// Help
+int		get_next_word(char *result_str, char *src_str);
+
+void	bobj_v3_new(t_bobj_v3 *v3, float x, float y, float z);
+void	bobj_v2_new(t_bobj_v2 *v2, float x, float y);
 
 #endif
