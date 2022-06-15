@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/14 13:50:57 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/15 14:39:35 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/15 14:58:50 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,10 @@ typedef struct s_bobj_material
 	float	Ni;
 	float	d;
 	int		illum;
+	char	*map_Bump;
 	char	*map_Kd;
+	char	*map_Ns;
+	char	*refl;
 }	t_bobj_material;
 
 /*

@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/14 13:56:52 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/15 14:49:05 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/15 15:12:32 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,7 +84,7 @@ void	bobj_load(t_bobj *bobj, char *file_path)
 	while (file_content[i++])
 	{
 		// Continue if not newline, we dont care about the values for right now;
-		if (!(i - 1 <= 0 || file_content[i - 1] == '\n'))
+		if (i - 1 < 0 || file_content[i - 1] != '\n')
 			continue ;
 		if (file_content[i] == 'o')
 		{
@@ -139,13 +139,15 @@ void	bobj_load(t_bobj *bobj, char *file_path)
 		{
 			i += get_next_word(tmp, file_content + i + 6);	
 			ft_printf("mtllib %s\n", tmp);
-			if (!bobj_load_material(&bobj->materials, tmp))
+			bobj->materials_amount = bobj_load_material(&bobj->materials, tmp);
+			if (bobj->materials_amount <= 0)
 			{
 				char	tmp2[256];
 				ft_strcpy(tmp2, root_dir);
 				ft_strcpy(tmp2 + ft_strlen(tmp2), tmp);
-				bobj_load_material(&bobj->materials, tmp2);
+				bobj->materials_amount = bobj_load_material(&bobj->materials, tmp2);
 			}
+			ft_printf("material amount : %d\n", bobj->materials_amount);
 		}
 		else if (file_content[i] == 'u') // usemtl
 		{
@@ -261,11 +263,15 @@ void	bobj_load(t_bobj *bobj, char *file_path)
 }
 
 /*
- * Returns 1 / 0, if it was successful;
+ * NOTE: remember to have set the 'mats' to NULL;
+ *
+ * Returns material amount; so 0 if unsuccesfull;
 */
 int	bobj_load_material(t_bobj_material *mats, char *file_path)
 {
 	char	*file_content;
+	int		mat_amount;
+	char	tmp[256];
 
 	file_content = get_file_content(file_path);
 	if (!file_content)
@@ -275,8 +281,46 @@ int	bobj_load_material(t_bobj_material *mats, char *file_path)
 	}
 	LG_INFO("Success opening <%s>", file_path);
 
+	// Get amounts of material;
+	int i = 0;
+	mat_amount = 0;
+	while (file_content[++i])
+	{
+		if (i - 1 < 0 || file_content[i - 1] != '\n')
+			continue ;
+		if (file_content[i] == 'n') // newmtl;
+			++mat_amount;
+	}
+
+	mats = malloc(sizeof(t_bobj_material) * mat_amount);
+
+	// Get the values for the materials;
+	i = 0;
+	int	curr_mat = 0;
+	int	move = 0;
+	while (file_content[++i])
+	{
+		if (i - 1 < 0 || file_content[i - 1] != '\n')
+			continue ;
+		if (file_content[i] == 'n') // newmtl
+			++curr_mat;
+		else if (file_content[i] == 'N') // Ns/Ni;
+		{
+			move = get_next_word(tmp, file_content + i + 2);
+			write(1, file_content + i, 5);
+			ft_putstr(tmp);
+			if (file_content[i + 1] == 's')
+				mats[curr_mat].Ns = ft_atof(tmp);
+			else if (file_content[i + 1] == 'i')
+				mats[curr_mat].Ni = ft_atof(tmp);
+			else
+				LG_WARN("This value is not supported <%c%c>", file_content[i], file_content[i + 1]);
+			i += move;
+		}
+	}
+
 	free(file_content);
-	return (1);
+	return (mat_amount);
 }
 
 /*
