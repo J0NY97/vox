@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/14 13:56:52 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/15 15:12:32 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/16 12:55:25 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,17 +18,16 @@
  * Returns array of t_bobj;
  * Since one .obj can have multiple objects in it.
 */
-void	bobj_load(t_bobj *bobj, char *file_path)
+void	bobj_load(t_bobj *bob, char *file_path)
 {
 	LG_INFO("Start");
 	char	tmp[256];
-	char	root_dir[256];
 
 	// Reset
-	bobj->objects = NULL;
-	bobj->objects_amount = 0;
-	bobj->materials = NULL;
-	bobj->materials_amount = 0;
+	bob->objects = NULL;
+	bob->objects_amount = 0;
+	bob->materials = NULL;
+	bob->materials_amount = 0;
 
 	// Read whole file;
 	char	*file_content;
@@ -37,12 +36,12 @@ void	bobj_load(t_bobj *bobj, char *file_path)
 		LG_WARN("Couldn\'t read file <%s>", file_path);
 	
 	// Lets get the root dir, which we need for the material file;
+	// And the texture files (if they are not in the same dir as the exe)
 	int	len = ft_strlen(file_path);
-	ft_strcpy(root_dir, file_path);
-	while (root_dir[--len] != '/')
-		root_dir[len] = 0;
-	
-	ft_printf("root : %s\n", root_dir);
+	while (file_path[--len] != '/')
+		;
+	bob->root_dir = ft_strndup(file_path, len + 1);
+	ft_printf("root_dir : %s\n", bob->root_dir);
 
 	// Get amounts;
 	// Store index of starting locations for every v,vn,vt,f of the current object;
@@ -56,9 +55,7 @@ void	bobj_load(t_bobj *bobj, char *file_path)
 	int	vt_start[16];
 	int	vt_amount[16];
 
-	int	material_index[16][256]; // every mesh can have a material;
-
-	int	mesh_start[16][256]; // every o can have multiple meshi;
+	int	mesh_start[16][256]; // every o can have multiple meshi; mesh start where there is 'usemtl'
 	int	mesh_amount[16];
 
 	int	f_start[16];
@@ -100,9 +97,8 @@ void	bobj_load(t_bobj *bobj, char *file_path)
 			f_start[o_amount] = -1;
 			f_amount[o_amount] = 0;
 
-			material_index[o_amount][0] = -1;
 			mesh_start[o_amount][0] = -1;
-			mesh_amount[o_amount] = 1;
+			mesh_amount[o_amount] = 0;
 
 			o_start[o_amount] = i;
 			o_amount++;
@@ -131,6 +127,12 @@ void	bobj_load(t_bobj *bobj, char *file_path)
 		}
 		else if (file_content[i] == 'f')
 		{
+			// This means the mesh doesnt have a material, aka we dont have 'usemtl' in the file;
+			if (mesh_amount[o_amount - 1] == 0)
+			{
+				mesh_start[o_amount - 1][mesh_amount[o_amount - 1]] = i;
+				++mesh_amount[o_amount - 1];
+			}
 			++f_amount[o_amount - 1];
 			if (f_start[o_amount - 1] == -1)
 				f_start[o_amount - 1] = i;
@@ -139,21 +141,19 @@ void	bobj_load(t_bobj *bobj, char *file_path)
 		{
 			i += get_next_word(tmp, file_content + i + 6);	
 			ft_printf("mtllib %s\n", tmp);
-			bobj->materials_amount = bobj_load_material(&bobj->materials, tmp);
-			if (bobj->materials_amount <= 0)
+			bob->materials_amount = bobj_load_material(bob, tmp);
+			if (bob->materials_amount <= 0)
 			{
 				char	tmp2[256];
-				ft_strcpy(tmp2, root_dir);
+				ft_strcpy(tmp2, bob->root_dir);
 				ft_strcpy(tmp2 + ft_strlen(tmp2), tmp);
-				bobj->materials_amount = bobj_load_material(&bobj->materials, tmp2);
+				bob->materials_amount = bobj_load_material(bob, tmp2);
 			}
-			ft_printf("material amount : %d\n", bobj->materials_amount);
+			ft_printf("material amount : %d\n", bob->materials_amount);
 		}
-		else if (file_content[i] == 'u') // usemtl
+		else if (file_content[i] == 'u') // usemtl (new mesh)
 		{
-			i += get_next_word(tmp, file_content + i + 6);
-			// get material index with name;
-			ft_printf("usemtl %s\n", tmp);
+			mesh_start[o_amount - 1][++mesh_amount[o_amount - 1] - 1] = i;
 		}
 	}
 
@@ -165,6 +165,9 @@ void	bobj_load(t_bobj *bobj, char *file_path)
 		ft_printf("\tvt_start : %d, vt_amount : %d\n", vt_start[i], vt_amount[i]);
 		ft_printf("\tvn_start : %d, vn_amount : %d\n", vn_start[i], vn_amount[i]);
 		ft_printf("\tf_start : %d, f_amount : %d\n", f_start[i], f_amount[i]);
+		ft_printf("\tmesh_amount : %d\n", mesh_amount[i]);
+		for (int m = 0; m < mesh_amount[i]; m++)
+			ft_printf("\t\tstart : %d\n", mesh_start[i][m]);
 	}
 
 	// Get the most amount of v/vt/vn, malloc that amount into tmp;
@@ -185,7 +188,7 @@ void	bobj_load(t_bobj *bobj, char *file_path)
 	t_bobj_v3	*tmp_vn = malloc(sizeof(t_bobj_v3) * most_vn);
 	// All object files dont have a 'o' in the file, but they should still;
 	//	work the same;
-	bobj->objects = malloc(sizeof(t_bobj_object) * o_amount);
+	bob->objects = malloc(sizeof(t_bobj_object) * o_amount);
 
 	// Then go through the 'file_content' again, starting at 'o_start[i]',
 	//	and start filling the values;
@@ -193,7 +196,7 @@ void	bobj_load(t_bobj *bobj, char *file_path)
 	int		j;
 	int		word;
 	char	tmp_str[4][16];
-	for (int i = 0; i < o_amount; i++)
+	for (int o = 0; o < o_amount; o++)
 	{
 
 		int		tmp_v_amount = -1;
@@ -202,8 +205,8 @@ void	bobj_load(t_bobj *bobj, char *file_path)
 	
 		// Getting vertices;
 		ft_printf("Vertices :\n");
-		j = v_start[i] + 1;
-		while (j > 0 && file_content[j] && ++tmp_v_amount < v_amount[i])
+		j = v_start[o] + 1;
+		while (j > 0 && file_content[j] && ++tmp_v_amount < v_amount[o])
 		{
 			word = -1;
 			j += get_next_word(tmp_str[++word], file_content + j);
@@ -211,28 +214,28 @@ void	bobj_load(t_bobj *bobj, char *file_path)
 			j += get_next_word(tmp_str[++word], file_content + j);
 			bobj_v3_new(&tmp_v[tmp_v_amount],
 				ft_atof(tmp_str[0]), ft_atof(tmp_str[1]), ft_atof(tmp_str[2]));
-			ft_printf("\ttmp_v_amount %d / %d v_amount[%d] (%f %f %f)\n", tmp_v_amount, v_amount[i], i, tmp_v[tmp_v_amount].x, tmp_v[tmp_v_amount].y, tmp_v[tmp_v_amount].z);
+			ft_printf("\ttmp_v_amount %d / %d v_amount[%d] (%f %f %f)\n", tmp_v_amount, v_amount[o], o, tmp_v[tmp_v_amount].x, tmp_v[tmp_v_amount].y, tmp_v[tmp_v_amount].z);
 			j += 2;
 		}
 
 		// Getting uvs
 		ft_printf("Uvs :\n");
-		j = vt_start[i] + 2; // 'vt' is 2 characters, the same thing is taken into account in the end of this loop;
-		while (j > 0 && file_content[j] && ++tmp_vt_amount < vt_amount[i])
+		j = vt_start[o] + 2; // 'vt' is 2 characters, the same thing is taken into account in the end of this loop;
+		while (j > 0 && file_content[j] && ++tmp_vt_amount < vt_amount[o])
 		{
 			word = -1;
 			j += get_next_word(tmp_str[++word], file_content + j);
 			j += get_next_word(tmp_str[++word], file_content + j);
 			bobj_v2_new(&tmp_vt[tmp_vt_amount],
 				ft_atof(tmp_str[0]), ft_atof(tmp_str[1]));
-			ft_printf("\ttmp_vt_amount %d / %d vt_amount[%d] (%f %f)\n", tmp_vt_amount, vt_amount[i], i, tmp_vt[tmp_vt_amount].x, tmp_vt[tmp_vt_amount].y);
+			ft_printf("\ttmp_vt_amount %d / %d vt_amount[%d] (%f %f)\n", tmp_vt_amount, vt_amount[o], o, tmp_vt[tmp_vt_amount].x, tmp_vt[tmp_vt_amount].y);
 			j += 3;
 		}
 
 		// Getting normals
 		ft_printf("Normals :\n");
-		j = vn_start[i] + 2;
-		while (j > 0 && file_content[j] && ++tmp_vn_amount < vn_amount[i])
+		j = vn_start[o] + 2;
+		while (j > 0 && file_content[j] && ++tmp_vn_amount < vn_amount[o])
 		{
 			word = -1;
 			j += get_next_word(tmp_str[++word], file_content + j);
@@ -240,17 +243,130 @@ void	bobj_load(t_bobj *bobj, char *file_path)
 			j += get_next_word(tmp_str[++word], file_content + j);
 			bobj_v3_new(&tmp_vn[tmp_vn_amount],
 				ft_atof(tmp_str[0]), ft_atof(tmp_str[1]), ft_atof(tmp_str[2]));
-			ft_printf("tmp_vn_amount %d / %d vn_amount[%d]\n", tmp_vn_amount, vn_amount[i], i);
+			ft_printf("tmp_vn_amount %d / %d vn_amount[%d]\n", tmp_vn_amount, vn_amount[o], o);
 			j += 3;
 		}
-		ft_printf("#%d Done getting to tmp.\n", i);
+		ft_printf("#%d Done getting to tmp.\n", o);
 
 		// Malloc the correct amount of vertices/uvs/normals;
-		bobj->objects[i].v = malloc(sizeof(t_bobj_v3) * f_amount[i] * 3);
-		bobj->objects[i].vt = malloc(sizeof(t_bobj_v2) * f_amount[i] * 3);
-		bobj->objects[i].vn = malloc(sizeof(t_bobj_v3) * f_amount[i] * 3);
+		// NOTE : these are the maxiumum amounts of values, if we want to remove
+		//		duplicates at some point, no need to adjust this, we can just
+		//		realloc in the beginning (if we dont come up with better
+		//		solution)
+		bob->objects[o].v = malloc(sizeof(t_bobj_v3) * f_amount[o] * 3);
+		bob->objects[o].vt = malloc(sizeof(t_bobj_v2) * f_amount[o] * 3);
+		bob->objects[o].vn = malloc(sizeof(t_bobj_v3) * f_amount[o] * 3);
+		bob->objects[o].v_amount = 0;
+		bob->objects[o].vt_amount = 0;
+		bob->objects[o].vn_amount = 0;
 
-		// TODO : mesh stuff here;
+		// Mesh stuff here;
+		bob->objects[o].meshes_amount = ft_max(mesh_amount[o], 1);
+		bob->objects[o].meshes = malloc(sizeof(t_bobj_mesh) * bob->objects[o].meshes_amount);
+		
+		for (int m = 0; m < bob->objects[o].meshes_amount; m++)
+		{
+			if (mesh_start[o][m] < 0)
+				LG_ERROR("WTF! mesh_start index is less than 0..");
+
+			bob->objects[o].meshes[m].f = malloc(sizeof(t_bobj_u3) * f_amount[o]);
+			bob->objects[o].meshes[m].f_amount = 0;
+			bob->objects[o].meshes[m].index_amount = 0;
+
+			j = mesh_start[o][m];
+			bob->objects[o].meshes[m].material_index = -1;
+			if (file_content[j] == 'u') // 'usemtl'
+			{
+				j += 6;
+				j += get_next_word(tmp_str[0], file_content + j);
+				bob->objects[o].meshes[m].material_index = get_material_index(bob, tmp_str[0]);
+			}
+			LG_INFO("mesh mat index %d", bob->objects[o].meshes[m].material_index);
+			while (j > 0 && file_content[j] && m < bob->objects[o].meshes_amount)
+			{
+				if (file_content[j - 1] != '\n' || file_content[j] != 'f')
+				{
+					++j;
+					continue ;
+				}
+				j += 1;
+				// TODO : here do the while 'get_next_word()' returns > 0
+				//		(because a face can be more than 3 vertices in the object file);
+				for (int i = 0; i < 3; i++)
+				{
+					j += get_next_word(tmp_str[i], file_content + j);
+
+					// 0 : we have only vertex
+					// 1 : we have vertex && uv
+					// 2 : we have vertex && normals && uv
+					int slash = 0;
+					for (int i = 0; tmp_str[i][i]; i++)
+						slash += tmp_str[i][i] == '/';
+					
+					// Decide which values the face point has;
+					int	has_v = 1;
+					int	has_vn = 1;
+					int	has_vt = 1;
+
+					int	v_index = -1;
+					int	vt_index = -1;
+					int	vn_index = -1;
+
+					char	**arr;
+					arr = ft_strsplit(tmp_str, '/');
+					if (slash == 0 || (arr[2] == NULL && slash == 2))
+						has_vt = 0;
+					if (slash == 0 || slash == 1)
+						has_vn = 0;
+
+					// Get indices;
+					if (has_v)
+						v_index = ft_atoi(arr[0]);
+					if (has_vt)
+						vt_index = ft_atoi(arr[1]);
+					if (has_vn)
+					{
+						if (has_vt)
+							vn_index = ft_atoi(arr[2]);
+						else
+							vn_index = ft_atoi(arr[1]);
+					}
+
+					// Get the values from the tmp arrays, and place them in the object arrays;
+					if (v_index != -1)
+					{
+						bobj_v3_new(&bob->objects[o].v[bob->objects[o].v_amount],
+							tmp_v[v_index].x, tmp_v[v_index].y, tmp_v[v_index].z);
+						++bob->objects[o].v_amount;
+					}
+					if (vt_index != -1)
+					{
+						bobj_v2_new(&bob->objects[o].vt[bob->objects[o].vt_amount],
+							tmp_vt[vt_index].x, tmp_vt[vt_index].y);
+						++bob->objects[o].vt_amount;
+					}
+					if (vn_index != -1)
+					{
+						bobj_v3_new(&bob->objects[o].vn[bob->objects[o].vn_amount],
+							tmp_vn[vn_index].x, tmp_vn[vn_index].y, tmp_vn[vn_index].z);
+						++bob->objects[o].vn_amount;
+					}
+
+					bob->objects[o].meshes[m].f[bob->objects[o].meshes[m].f_amount].u[i] = bob->objects[o].meshes[m].index_amount;// TODO : get_combination_index();
+					++bob->objects[o].meshes[m].index_amount;
+
+					ft_printf("s : %d, %d %d %d\n", slash, has_v, has_vt, has_vn);
+					ft_printf("%d %d %d\n", v_index, vt_index, vn_index);
+
+					ft_arraydel(arr);
+				}
+				ft_printf("%d %d %d\n",
+					bob->objects[o].meshes[m].f[bob->objects[o].meshes[m].f_amount].u[0],
+					bob->objects[o].meshes[m].f[bob->objects[o].meshes[m].f_amount].u[1],
+					bob->objects[o].meshes[m].f[bob->objects[o].meshes[m].f_amount].u[2]);
+				++bob->objects[o].meshes[m].f_amount;
+			}
+		}
 	}
 	ft_printf("All Done.\n");
 
@@ -259,7 +375,6 @@ void	bobj_load(t_bobj *bobj, char *file_path)
 	free(tmp_vn);
 	free(file_content);
 	LG_INFO("End");
-	exit(0);
 }
 
 /*
@@ -267,11 +382,15 @@ void	bobj_load(t_bobj *bobj, char *file_path)
  *
  * Returns material amount; so 0 if unsuccesfull;
 */
-int	bobj_load_material(t_bobj_material *mats, char *file_path)
+int	bobj_load_material(t_bobj *bob, char *file_path)
 {
 	char	*file_content;
 	int		mat_amount;
 	char	tmp[256];
+	// Temps, where we are storing the pointers to the variable in mat struct;
+	float	*value;
+	float	*value_arr;
+	char	**str_value;
 
 	file_content = get_file_content(file_path);
 	if (!file_content)
@@ -282,7 +401,7 @@ int	bobj_load_material(t_bobj_material *mats, char *file_path)
 	LG_INFO("Success opening <%s>", file_path);
 
 	// Get amounts of material;
-	int i = 0;
+	int i = -1;
 	mat_amount = 0;
 	while (file_content[++i])
 	{
@@ -292,35 +411,127 @@ int	bobj_load_material(t_bobj_material *mats, char *file_path)
 			++mat_amount;
 	}
 
-	mats = malloc(sizeof(t_bobj_material) * mat_amount);
+	bob->materials = malloc(sizeof(t_bobj_material) * mat_amount);
 
 	// Get the values for the materials;
-	i = 0;
-	int	curr_mat = 0;
-	int	move = 0;
+	i = -1;
+	int	curr_mat = -1;
 	while (file_content[++i])
 	{
 		if (i - 1 < 0 || file_content[i - 1] != '\n')
 			continue ;
 		if (file_content[i] == 'n') // newmtl
+		{
 			++curr_mat;
+			memset(&bob->materials[curr_mat], 0, sizeof(t_bobj_material));
+			i += 6;
+			i += get_next_word(tmp, file_content + i);
+			bob->materials[curr_mat].name = ft_strdup(tmp);
+		}
 		else if (file_content[i] == 'N') // Ns/Ni;
 		{
-			move = get_next_word(tmp, file_content + i + 2);
-			write(1, file_content + i, 5);
-			ft_putstr(tmp);
 			if (file_content[i + 1] == 's')
-				mats[curr_mat].Ns = ft_atof(tmp);
+				value = &bob->materials[curr_mat].Ns;
 			else if (file_content[i + 1] == 'i')
-				mats[curr_mat].Ni = ft_atof(tmp);
-			else
-				LG_WARN("This value is not supported <%c%c>", file_content[i], file_content[i + 1]);
-			i += move;
+				value = &bob->materials[curr_mat].Ni;
+			i += 2; // skip 'N' + the other char;
+			i += get_next_word(tmp, file_content + i);
+			*value = ft_atof(tmp);
+		}
+		else if (file_content[i] == 'K') // Ka / Kd / Ks / Ke
+		{
+			if (file_content[i + 1] == 'a')
+				value_arr = ((float *)(bob->materials[curr_mat].Ka));
+			else if (file_content[i + 1] == 'd')
+				value_arr = ((float *)(bob->materials[curr_mat].Kd));
+			else if (file_content[i + 1] == 's')
+				value_arr = ((float *)(bob->materials[curr_mat].Ks));
+			else if (file_content[i + 1] == 'e')
+				value_arr = ((float *)(bob->materials[curr_mat].Ke));
+
+			i += 2; // skip 'K' + the other char;
+			i += get_next_word(tmp, file_content + i);
+			value_arr[0] = ft_atof(tmp);
+			i += get_next_word(tmp, file_content + i);
+			value_arr[1] = ft_atof(tmp);
+			i += get_next_word(tmp, file_content + i);
+			value_arr[2] = ft_atof(tmp);
+		}
+		else if (file_content[i] == 'd')
+		{
+			i += 1; // skip 'd'
+			i += get_next_word(tmp, file_content + i);
+			bob->materials[curr_mat].d = ft_atof(tmp);
+		}
+		else if (file_content[i] == 'i') // illum
+		{
+			i += 5; // skip 'illum'
+			i += get_next_word(tmp, file_content + i);
+			bob->materials[curr_mat].illum = ft_atoi(tmp);
+		}
+		else if (file_content[i] == 'm') // map_Kd / map_Bump / map_Ns
+		{
+			i += 4; // skip 'map_'
+			if (file_content[i] == 'K' && file_content[i + 1] == 'd')
+			{
+				str_value = &bob->materials[curr_mat].map_Kd;
+				i += 2;
+			}
+			else if (file_content[i] == 'B' && file_content[i + 1] == 'u')
+			{
+				str_value = &bob->materials[curr_mat].map_Bump;
+				i += 4;
+			}
+			else if (file_content[i] == 'N' && file_content[i + 1] == 's')
+			{
+				str_value = &bob->materials[curr_mat].map_Ns;
+				i += 2;
+			}
+
+			i += get_next_word(tmp, file_content + i);
+			*str_value = ft_strdup(tmp);
 		}
 	}
 
+	bobj_material_print(&bob->materials[0]);
 	free(file_content);
+
+	LG_INFO("Done reading mat file");
 	return (mat_amount);
+}
+
+/*
+ * Returns index of 't_bobj_material' with the name 'name';
+*/
+int	get_material_index(t_bobj *bob, char *name)
+{
+	int	i = 0;
+
+	if (!bob || !bob->materials || bob->materials_amount <= 0)
+		return (-1);
+	while (i < bob->materials_amount)
+	{
+		if (ft_strequ(bob->materials[i].name, name))
+			return (i);
+		++i;
+	}
+	return (-1);
+}
+
+void	bobj_material_print(t_bobj_material *mat)
+{
+	ft_printf("name : %s\n", mat->name);
+	ft_printf("Ns : %f\n", mat->Ns);
+	ft_printf("Ka : %f %f %f\n", mat->Ka[0], mat->Ka[1], mat->Ka[2]);
+	ft_printf("Kd : %f %f %f\n", mat->Kd[0], mat->Kd[1], mat->Kd[2]);
+	ft_printf("Ks : %f %f %f\n", mat->Ks[0], mat->Ks[1], mat->Ks[2]);
+	ft_printf("Ke : %f %f %f\n", mat->Ke[0], mat->Ke[1], mat->Ke[2]);
+	ft_printf("Ni : %f\n", mat->Ni);
+	ft_printf("d : %f\n", mat->d);
+	ft_printf("illum : %d\n", mat->illum);
+	ft_printf("map_Kd : %s\n", mat->map_Kd);
+	ft_printf("map_Bump : %s\n", mat->map_Bump);
+	ft_printf("map_Ns : %s\n", mat->map_Ns);
 }
 
 /*
@@ -356,4 +567,11 @@ void	bobj_v2_new(t_bobj_v2 *v2, float x, float y)
 {
 	v2->x = x;
 	v2->y = y;
+}
+
+void	bobj_u3_new(t_bobj_u3 *u3, unsigned int x, unsigned int y, unsigned int z)
+{
+	u3->i0 = x;
+	u3->i1 = y;
+	u3->i2 = z;
 }

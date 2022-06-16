@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/14 13:50:57 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/15 14:58:50 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/16 12:18:33jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,12 +18,20 @@ typedef struct	s_bobj_v3
 	float	x;
 	float	y;
 	float	z;
+	union
+	{
+		float v[3];
+	}
 }			t_bobj_v3;
 
 typedef struct	s_bobj_v2
 {
 	float	x;
 	float	y;
+	union
+	{
+		float v[2];
+	}
 }			t_bobj_v2;
 
 typedef struct	s_bobj_u3
@@ -31,18 +39,22 @@ typedef struct	s_bobj_u3
 	unsigned int	i0;
 	unsigned int	i1;
 	unsigned int	i2;
+	union
+	{
+		unsigned int	u[3];
+	}
 }			t_bobj_u3;
 
 /*
+ * 'material_index' : index of one of the materials in 't_bobj->materials';
 */
 typedef struct s_bobj_mesh
 {
-	char			*name;
-
 	t_bobj_u3		*f;
-	int				f_amount;
+	unsigned int	index_amount;
+	unsigned int	f_amount;
 
-	char			*usemtl;
+	int				material_index;
 }	t_bobj_mesh;
 
 /*
@@ -86,6 +98,8 @@ typedef struct s_bobj_object
 
 typedef struct s_bobj
 {
+	char			*root_dir;
+
 	t_bobj_object	*objects;
 	int				objects_amount;
 
@@ -104,12 +118,14 @@ typedef struct s_bobj
 	uvs : 'vt';
 */
 
-void	bobj_load(t_bobj *bobj, char *file_path);
+void	bobj_load(t_bobj *bob, char *file_path);
+int		bobj_load_material(t_bobj *bob, char *file_path);
 
 // Help
 int		get_next_word(char *result_str, char *src_str);
 
 void	bobj_v3_new(t_bobj_v3 *v3, float x, float y, float z);
 void	bobj_v2_new(t_bobj_v2 *v2, float x, float y);
+void	bobj_u3_new(t_bobj_u3 *u3, unsigned int x, unsigned int y, unsigned int z);
 
 #endif
