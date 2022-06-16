@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   model.c                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/06/16 13:41:57 by jsalmi            #+#    #+#             */
+/*   Updated: 2022/06/16 14:43:19 by jsalmi           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "shaderpixel.h"
 
 void	fill_element_info(t_element_info *info, t_element *elem)
@@ -178,10 +190,94 @@ void	render_model(t_model *model)
 ////////////////////////////////
 
 /*
+ * 'model' : has to be allocated already;
+*/
+void	model_init(t_model_v2 *model)
+{
+	GLuint	vbo[3];
+
+	glGenVertexArrays(1, &model->vao);
+	/*
+	glGenBuffers(3, vbo);
+	model->vbo_pos = vbo[0];
+	model->vbo_tex = vbo[1];
+	model->vbo_nor = vbo[2];
+	*/
+	ft_printf("how far do we get.\n");
+	// NOTE: you have to load the mats into this separately;
+	model->materials = NULL;
+	model->material_amount = 0;
+
+	model->vertices = NULL;
+	model->uvs = NULL;
+	model->normals = NULL;
+	model->vertices_amount = 0;
+	model->uvs_amount = 0;
+	model->normals_amount = 0;
+
+	// NOTE: you have to load the meshes into this separately;
+	model->meshes = NULL;
+	model->meshes_amount = 0;
+
+	glBindVertexArray(0);
+}
+
+/*
+ * 'mat' : has to be allocated already;
+*/
+void	material_init(t_material_v2 *mat)
+{
+	mat->texture = -1;
+}
+
+/*
+ * 'mesh' : has to be allocated already;
+*/
+void	mesh_init(t_mesh_v2 *mesh)
+{
+	glGenBuffers(1, &mesh->ebo);
+	mesh->indices = NULL;
+	mesh->indices_amount = 0;
+}
+
+/*
  * Since 't_bobj' can have multiple objects in it, this function wants the
  *	't_bobj_object' that we want to create a model of;
+ *
+ * 'index' : is the nth index from 't_bobj->t_bobj_object's;
 */
-void	model_from_bobj_object(t_model_v2 *model, t_bobj_object *bobject)
+void	model_from_bobj(t_model_v2 *model, t_bobj *bob, int index)
 {
+	t_bobj_object *bobject;
 
+	if (index < 0 || index > bob->objects_amount)
+	{
+		LG_WARN("Trying to create model from nonexistant bob (index : %d)", index);
+		return ;
+	}
+	LG_INFO("Start");
+	bobject = &bob->objects[index];
+
+	model_init(model);
+	// V- NOTE: we are typecasting from 't_bobj_v3' to 'float *'..; (how is this even allowed);
+	model->vertices = (float *)bobject->v;
+	model->vertices_amount = bobject->v_amount * 3;
+	model->uvs = (float *)bobject->vt;
+	model->uvs_amount = bobject->vt_amount * 3;
+	model->normals = (float *)bobject->vn;
+	model->normals_amount = bobject->vn_amount * 3;
+
+	model->material_amount = bob->materials_amount;
+/*
+	model->meshes_amount = bobject->meshes_amount;
+	model->meshes = malloc(sizeof(t_mesh_v2) * model->meshes_amount);
+	for (int m = 0; m < model->meshes_amount; m++)
+	{
+		mesh_init(&model->meshes[m]);
+		// V- NOTE: we are typecasting from 't_bobj_u3' to 'uint *'..; (how is this even allowed);
+		model->meshes[m].indices = (unsigned int *)bobject->meshes[m].f;
+		model->meshes[m].indices_amount = (int)bobject->meshes[m].index_amount;
+	}
+	*/
+	LG_INFO("End");
 }

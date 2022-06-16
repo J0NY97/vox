@@ -173,8 +173,10 @@ void	scop_stuff(t_shaderpixel *sp)
 
 int	main(void)
 {
-	t_bobj	bobj;
-	bobj_load(&bobj, MODEL_PATH"melon_golem/melon_golem.obj");
+	t_bobj	bobj_melon_golem;
+	bobj_load(&bobj_melon_golem, MODEL_PATH"melon_golem/melon_golem.obj");
+	t_model_v2	model_melon_golem;
+	model_from_bobj(&model_melon_golem, &bobj_melon_golem, 0);
 	//exit(0);
 
 	t_shaderpixel	sp;

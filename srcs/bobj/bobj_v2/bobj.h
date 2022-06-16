@@ -20,20 +20,12 @@ typedef struct	s_bobj_v3
 	float	x;
 	float	y;
 	float	z;
-	union
-	{
-		float v[3];
-	};
 }			t_bobj_v3;
 
 typedef struct	s_bobj_v2
 {
 	float	x;
 	float	y;
-	union
-	{
-		float v[2];
-	};
 }			t_bobj_v2;
 
 typedef struct	s_bobj_u3
@@ -41,10 +33,6 @@ typedef struct	s_bobj_u3
 	unsigned int	i0;
 	unsigned int	i1;
 	unsigned int	i2;
-	union
-	{
-		unsigned int	u[3];
-	};
 }			t_bobj_u3;
 
 /*
@@ -53,8 +41,8 @@ typedef struct	s_bobj_u3
 typedef struct s_bobj_mesh
 {
 	t_bobj_u3		*f;
-	unsigned int	index_amount;
-	unsigned int	f_amount;
+	unsigned int	index_amount; // how many indices in total aka f_amount * 3 since every face has 3 indices each;
+	unsigned int	f_amount; // how many 'f' we have aka faces; every face has 3 indices;
 
 	int				material_index;
 }	t_bobj_mesh;

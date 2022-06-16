@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/16 13:23:45 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/16 13:36:57 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/16 14:24:02 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,19 +69,22 @@ void		render_model(t_model *model);
 // V2
 /////////////////////////
 
+typedef struct	s_material_v2
+{
+	GLuint	texture;
+	// GLuint bump_map;
+	// GLuint bump_normalmap;
+	// ...
+}	t_material_v2;
+
 /*
- * 'texture' : gotten from 't_model_v2->textures[x]';
+ * 'material_index' : from 't_model_v2->materials[x]' where 'x' is the index;
 */
 typedef struct s_mesh_v2
 {
-	GLuint	vao;	
-	GLuint	vbo_pos;	
-	GLuint	vbo_tex;	
-	GLuint	vbo_nor;	
-	GLuint	ebo;
-	GLuint	texture; // TODO : have mutliple textures
+	GLuint			ebo;
 
-	GLuint	shader;
+	int				material_index;
 
 	unsigned int	*indices;
 	int				indices_amount;
@@ -95,7 +98,10 @@ typedef struct s_mesh_v2
 */
 typedef struct	s_model_v2
 {
-	GLuint		*textures;
+	GLuint		vao;	
+	GLuint		vbo_pos;	
+	GLuint		vbo_tex;	
+	GLuint		vbo_nor;	
 
 	float		*vertices;
 	float		*uvs;
@@ -106,6 +112,12 @@ typedef struct	s_model_v2
 	int			normals_amount;
 
 	t_mesh_v2	*meshes;
+	int			meshes_amount;
+
+	t_material_v2	*materials;
+	int			material_amount;
 }	t_model_v2;
+
+void	model_from_bobj(t_model_v2 *model, t_bobj *bob, int index);
 
 #endif

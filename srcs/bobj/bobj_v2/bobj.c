@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/14 13:56:52 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/16 13:25:43 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/16 14:31:15 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -376,7 +376,13 @@ void	bobj_load(t_bobj *bob, char *file_path)
 						++bob->objects[o].vn_amount;
 					}
 
-					bob->objects[o].meshes[m].f[bob->objects[o].meshes[m].f_amount].u[i] = bob->objects[o].meshes[m].index_amount;// TODO : get_combination_index();
+					// TODO : get_combination_index();
+					if (i == 0)
+						bob->objects[o].meshes[m].f[bob->objects[o].meshes[m].f_amount].i0 = bob->objects[o].meshes[m].index_amount;
+					if (i == 1)
+						bob->objects[o].meshes[m].f[bob->objects[o].meshes[m].f_amount].i1 = bob->objects[o].meshes[m].index_amount;
+					if (i == 2)
+						bob->objects[o].meshes[m].f[bob->objects[o].meshes[m].f_amount].i2 = bob->objects[o].meshes[m].index_amount;
 					++bob->objects[o].meshes[m].index_amount;
 # if BOBBUG
 					ft_printf("s : %d, %d %d %d\n", slash, has_v, has_vt, has_vn);
@@ -387,9 +393,9 @@ void	bobj_load(t_bobj *bob, char *file_path)
 				}
 # if BOBBUG
 				ft_printf("%d %d %d\n",
-					bob->objects[o].meshes[m].f[bob->objects[o].meshes[m].f_amount].u[0],
-					bob->objects[o].meshes[m].f[bob->objects[o].meshes[m].f_amount].u[1],
-					bob->objects[o].meshes[m].f[bob->objects[o].meshes[m].f_amount].u[2]);
+					bob->objects[o].meshes[m].f[bob->objects[o].meshes[m].f_amount].i0,
+					bob->objects[o].meshes[m].f[bob->objects[o].meshes[m].f_amount].i1,
+					bob->objects[o].meshes[m].f[bob->objects[o].meshes[m].f_amount].i2);
 # endif
 				++bob->objects[o].meshes[m].f_amount;
 			}
