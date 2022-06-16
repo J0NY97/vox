@@ -172,3 +172,16 @@ void	render_model(t_model *model)
 	for (int i = 0; i < model->info_amount; i++)
 		render_mesh(&model->info[i]);
 }
+
+////////////////////////////////
+// MODEL v2
+////////////////////////////////
+
+/*
+ * Since 't_bobj' can have multiple objects in it, this function wants the
+ *	't_bobj_object' that we want to create a model of;
+*/
+void	model_from_bobj_object(t_model_v2 *model, t_bobj_object *bobject)
+{
+
+}

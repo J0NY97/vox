@@ -13,6 +13,8 @@
 #ifndef BOBJ_H
 # define BOBJ_H
 
+# define BOBBUG 0
+
 typedef struct	s_bobj_v3
 {
 	float	x;
@@ -21,7 +23,7 @@ typedef struct	s_bobj_v3
 	union
 	{
 		float v[3];
-	}
+	};
 }			t_bobj_v3;
 
 typedef struct	s_bobj_v2
@@ -31,7 +33,7 @@ typedef struct	s_bobj_v2
 	union
 	{
 		float v[2];
-	}
+	};
 }			t_bobj_v2;
 
 typedef struct	s_bobj_u3
@@ -42,7 +44,7 @@ typedef struct	s_bobj_u3
 	union
 	{
 		unsigned int	u[3];
-	}
+	};
 }			t_bobj_u3;
 
 /*
@@ -87,7 +89,7 @@ typedef struct s_bobj_object
 
 	t_bobj_v3		*v;
 	int				v_amount;
-	t_bobj_v3		*vt;
+	t_bobj_v2		*vt;
 	int				vt_amount;
 	t_bobj_v3		*vn;
 	int				vn_amount;

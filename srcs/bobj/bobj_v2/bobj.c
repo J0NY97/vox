@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/14 13:56:52 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/16 12:55:25 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/16 13:25:43 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,9 @@ void	bobj_load(t_bobj *bob, char *file_path)
 	while (file_path[--len] != '/')
 		;
 	bob->root_dir = ft_strndup(file_path, len + 1);
+# if BOBBUG
 	ft_printf("root_dir : %s\n", bob->root_dir);
+# endif
 
 	// Get amounts;
 	// Store index of starting locations for every v,vn,vt,f of the current object;
@@ -140,7 +142,9 @@ void	bobj_load(t_bobj *bob, char *file_path)
 		else if (file_content[i] == 'm')
 		{
 			i += get_next_word(tmp, file_content + i + 6);	
+# if BOBBUG
 			ft_printf("mtllib %s\n", tmp);
+# endif
 			bob->materials_amount = bobj_load_material(bob, tmp);
 			if (bob->materials_amount <= 0)
 			{
@@ -149,7 +153,9 @@ void	bobj_load(t_bobj *bob, char *file_path)
 				ft_strcpy(tmp2 + ft_strlen(tmp2), tmp);
 				bob->materials_amount = bobj_load_material(bob, tmp2);
 			}
+# if BOBBUG
 			ft_printf("material amount : %d\n", bob->materials_amount);
+# endif
 		}
 		else if (file_content[i] == 'u') // usemtl (new mesh)
 		{
@@ -157,6 +163,7 @@ void	bobj_load(t_bobj *bob, char *file_path)
 		}
 	}
 
+# if BOBBUG
 	ft_printf("o_amount : %d\n", o_amount);
 	for (int i = 0; i < o_amount; i++)
 	{
@@ -169,6 +176,7 @@ void	bobj_load(t_bobj *bob, char *file_path)
 		for (int m = 0; m < mesh_amount[i]; m++)
 			ft_printf("\t\tstart : %d\n", mesh_start[i][m]);
 	}
+# endif
 
 	// Get the most amount of v/vt/vn, malloc that amount into tmp;
 	int	most_v = 0;
@@ -204,7 +212,9 @@ void	bobj_load(t_bobj *bob, char *file_path)
 		int		tmp_vn_amount = -1;
 	
 		// Getting vertices;
+# if BOBBUG
 		ft_printf("Vertices :\n");
+# endif
 		j = v_start[o] + 1;
 		while (j > 0 && file_content[j] && ++tmp_v_amount < v_amount[o])
 		{
@@ -214,12 +224,16 @@ void	bobj_load(t_bobj *bob, char *file_path)
 			j += get_next_word(tmp_str[++word], file_content + j);
 			bobj_v3_new(&tmp_v[tmp_v_amount],
 				ft_atof(tmp_str[0]), ft_atof(tmp_str[1]), ft_atof(tmp_str[2]));
+# if BOBBUG
 			ft_printf("\ttmp_v_amount %d / %d v_amount[%d] (%f %f %f)\n", tmp_v_amount, v_amount[o], o, tmp_v[tmp_v_amount].x, tmp_v[tmp_v_amount].y, tmp_v[tmp_v_amount].z);
+# endif
 			j += 2;
 		}
 
 		// Getting uvs
+# if BOBBUG
 		ft_printf("Uvs :\n");
+# endif
 		j = vt_start[o] + 2; // 'vt' is 2 characters, the same thing is taken into account in the end of this loop;
 		while (j > 0 && file_content[j] && ++tmp_vt_amount < vt_amount[o])
 		{
@@ -228,12 +242,16 @@ void	bobj_load(t_bobj *bob, char *file_path)
 			j += get_next_word(tmp_str[++word], file_content + j);
 			bobj_v2_new(&tmp_vt[tmp_vt_amount],
 				ft_atof(tmp_str[0]), ft_atof(tmp_str[1]));
+# if BOBBUG
 			ft_printf("\ttmp_vt_amount %d / %d vt_amount[%d] (%f %f)\n", tmp_vt_amount, vt_amount[o], o, tmp_vt[tmp_vt_amount].x, tmp_vt[tmp_vt_amount].y);
+# endif
 			j += 3;
 		}
 
 		// Getting normals
+# if BOBBUG
 		ft_printf("Normals :\n");
+# endif
 		j = vn_start[o] + 2;
 		while (j > 0 && file_content[j] && ++tmp_vn_amount < vn_amount[o])
 		{
@@ -243,10 +261,14 @@ void	bobj_load(t_bobj *bob, char *file_path)
 			j += get_next_word(tmp_str[++word], file_content + j);
 			bobj_v3_new(&tmp_vn[tmp_vn_amount],
 				ft_atof(tmp_str[0]), ft_atof(tmp_str[1]), ft_atof(tmp_str[2]));
+# if BOBBUG
 			ft_printf("tmp_vn_amount %d / %d vn_amount[%d]\n", tmp_vn_amount, vn_amount[o], o);
+# endif
 			j += 3;
 		}
+# if BOBBUG
 		ft_printf("#%d Done getting to tmp.\n", o);
+# endif
 
 		// Malloc the correct amount of vertices/uvs/normals;
 		// NOTE : these are the maxiumum amounts of values, if we want to remove
@@ -281,7 +303,9 @@ void	bobj_load(t_bobj *bob, char *file_path)
 				j += get_next_word(tmp_str[0], file_content + j);
 				bob->objects[o].meshes[m].material_index = get_material_index(bob, tmp_str[0]);
 			}
+# if BOBBUG
 			LG_INFO("mesh mat index %d", bob->objects[o].meshes[m].material_index);
+# endif
 			while (j > 0 && file_content[j] && m < bob->objects[o].meshes_amount)
 			{
 				if (file_content[j - 1] != '\n' || file_content[j] != 'f')
@@ -300,8 +324,8 @@ void	bobj_load(t_bobj *bob, char *file_path)
 					// 1 : we have vertex && uv
 					// 2 : we have vertex && normals && uv
 					int slash = 0;
-					for (int i = 0; tmp_str[i][i]; i++)
-						slash += tmp_str[i][i] == '/';
+					for (int c = 0; tmp_str[i][c]; c++)
+						slash += tmp_str[i][c] == '/';
 					
 					// Decide which values the face point has;
 					int	has_v = 1;
@@ -313,7 +337,7 @@ void	bobj_load(t_bobj *bob, char *file_path)
 					int	vn_index = -1;
 
 					char	**arr;
-					arr = ft_strsplit(tmp_str, '/');
+					arr = ft_strsplit(tmp_str[i], '/');
 					if (slash == 0 || (arr[2] == NULL && slash == 2))
 						has_vt = 0;
 					if (slash == 0 || slash == 1)
@@ -354,21 +378,43 @@ void	bobj_load(t_bobj *bob, char *file_path)
 
 					bob->objects[o].meshes[m].f[bob->objects[o].meshes[m].f_amount].u[i] = bob->objects[o].meshes[m].index_amount;// TODO : get_combination_index();
 					++bob->objects[o].meshes[m].index_amount;
-
+# if BOBBUG
 					ft_printf("s : %d, %d %d %d\n", slash, has_v, has_vt, has_vn);
 					ft_printf("%d %d %d\n", v_index, vt_index, vn_index);
+# endif
 
 					ft_arraydel(arr);
 				}
+# if BOBBUG
 				ft_printf("%d %d %d\n",
 					bob->objects[o].meshes[m].f[bob->objects[o].meshes[m].f_amount].u[0],
 					bob->objects[o].meshes[m].f[bob->objects[o].meshes[m].f_amount].u[1],
 					bob->objects[o].meshes[m].f[bob->objects[o].meshes[m].f_amount].u[2]);
+# endif
 				++bob->objects[o].meshes[m].f_amount;
 			}
 		}
+
+# if BOBBUG
+		ft_printf("Amounts :: v : %d, vt : %d, vn : %d\n",
+			bob->objects[o].v_amount,
+			bob->objects[o].vt_amount,
+			bob->objects[o].vn_amount
+			);
+# endif
+
+		// Free the extra stuff if they never were used;
+		if (bob->objects[o].vt_amount <= 0)
+		{
+			free(bob->objects[o].vt);
+			bob->objects[o].vt = NULL;
+		}
+		if (bob->objects[o].vn_amount <= 0)
+		{
+			free(bob->objects[o].vn);
+			bob->objects[o].vn = NULL;
+		}
 	}
-	ft_printf("All Done.\n");
 
 	free(tmp_v);
 	free(tmp_vt);
@@ -493,10 +539,12 @@ int	bobj_load_material(t_bobj *bob, char *file_path)
 		}
 	}
 
-	bobj_material_print(&bob->materials[0]);
 	free(file_content);
+# if BOBBUG
+	bobj_material_print(&bob->materials[0]);
 
 	LG_INFO("Done reading mat file");
+# endif
 	return (mat_amount);
 }
 

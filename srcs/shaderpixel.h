@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/11 14:27:43 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/14 12:16:32 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/16 13:25:10 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,7 @@
 # include "thread.h"
 # include "hashtable.h"
 # include "camera.h"
+# include "model.h"
 
 # define DEBUG 0
 
@@ -44,61 +45,8 @@
 # define ARRAY_SIZE(a) sizeof(a) / sizeof(a[0])
 
 typedef struct	s_player	t_player;
-typedef struct	s_model		t_model;
 typedef struct	s_fps		t_fps;
 typedef struct	s_key		t_key;
-
-///////////////////
-//	MODEL
-///////////////////
-
-typedef struct	s_material_info		t_material_info;
-
-typedef struct s_element_info
-{
-	t_element		element;
-	GLuint			ebo;
-	t_material_info	*material;
-}	t_element_info;
-
-typedef struct s_mesh_info
-{
-	t_mesh	mesh;
-	GLuint	vao;
-	GLuint	vbo_pos;
-	GLuint	vbo_color;
-	GLuint	vbo_norm;
-	GLuint	vbo_tex;
-
-	float	*colors;
-	size_t	colors_size;
-	size_t	colors_value_amount;
-	size_t	color_amount;
-	size_t	color_value_amount;
-
-	t_element_info	*elem_info;
-}	t_mesh_info;
-
-struct s_material_info
-{
-	t_material	*material;
-	GLuint		texture;
-	int			loaded;
-};
-
-struct	s_model
-{
-	t_obj			*obj;
-
-	t_mesh_info		*info;
-	int				info_amount;
-
-	t_material_info	*mat_info;
-	int				mat_info_amount;
-};
-
-void		new_model(t_model *model, t_obj *obj);
-void		render_model(t_model *model);
 
 ///////////////////
 //	TEXTURE
