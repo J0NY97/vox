@@ -229,20 +229,20 @@ int	main(void)
 	LG_INFO("All entity models loaded (%d)", ENTITY_AMOUNT);
 
 	// Create entities (DEBUG)
-	int				entity_amount = 1000;
+	int				entity_amount = 64660;
 	t_vox_entity	entities[entity_amount];
 	for (int i = 0; i < entity_amount ; i++)
 	{
 		vox_entity_new(&entities[i]);
 		entities[i].type = ENTITY_MELON_GOLEM;
-		int		w = sqrt(entity_amount);
-		int		h = 10;
-		float	x = i % w * 10;
-		float	y = i / w * 10;
+		int		w = cbrt(entity_amount);
+		int		x = i % w;
+		int		y = (i / w) % w;
+		int		z = i / (w * w);
 		v3_new(entities[i].pos,
-			player.camera.pos[0] + x,
-			player.camera.pos[1] + y, 
-			player.camera.pos[2] - 10
+			player.camera.pos[0] + (x * 10),
+			player.camera.pos[1] + (y * 10), 
+			player.camera.pos[2] + (z * 10)
 			);
 	}
 
@@ -915,12 +915,24 @@ if (error)
 ////////////////////////
 // Model Rendering Instance
 ////////////////////////
+	glDisable(GL_BLEND);
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
 	// NOTE : we need the amount of entities of a single type (entity_palette just like block_palette);
 	// Create model matrix array from all the entities of the same type;
+
 	float	*model_matrices;
 	model_matrices = malloc(sizeof(float) * entity_amount * 16);
 	for (int i = 0; i < entity_amount; i++)
+	{
+		// REMOVE : apply random rotation just to show that they have their own model mat;
+		v3_new(entities[i].rot,
+			entities[i].rot[0] + rand() / 100 * fps.delta_time, 
+			entities[i].rot[1] + rand() / 100 * fps.delta_time, 
+			entities[i].rot[2] + rand() / 100 * fps.delta_time
+			);
 		new_model_matrix(model_matrices + i * 16, entities[i].scale, entities[i].rot, entities[i].pos);
+	}
 	model_instance_render(&instance_model, model_instance_shader, model_matrices, entity_amount, player.camera.view, player.camera.projection);
 	free(model_matrices);
 
