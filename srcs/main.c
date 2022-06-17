@@ -173,12 +173,6 @@ void	scop_stuff(t_shaderpixel *sp)
 
 int	main(void)
 {
-	t_bobj	bobj_melon_golem;
-	bobj_load(&bobj_melon_golem, MODEL_PATH"melon_golem/melon_golem.obj");
-	t_model_v2	model_melon_golem;
-	model_from_bobj(&model_melon_golem, &bobj_melon_golem, 0);
-	//exit(0);
-
 	t_shaderpixel	sp;
 	t_key			keys[GLFW_KEY_LAST];
 	t_key			mouse[GLFW_MOUSE_BUTTON_LAST];
@@ -186,6 +180,16 @@ int	main(void)
 
 	init(&sp);
 	new_fps(&fps);
+
+	// Note to self, use gl stuff after gl has been inited;
+	t_bobj	bobj_melon_golem;
+	bobj_load(&bobj_melon_golem, MODEL_PATH"melon_golem/melon_golem.obj");
+	t_model_v2	model_melon_golem;
+	model_from_bobj(&model_melon_golem, &bobj_melon_golem, 0);
+	GLuint		model_shader;
+	new_shader(&model_shader, SHADER_PATH"model.vs", SHADER_PATH"model.fs");
+
+	model_update(&model_melon_golem);
 
 	t_player	player;
 	new_player(&player);
@@ -840,6 +844,15 @@ if (error)
 /////////////////
 		// END Chunk things
 /////////////////
+
+////////////////////////
+// Model Rendering
+////////////////////////
+	float	model_mat[16];
+	new_model_matrix(model_mat, 1.0f, (float []){0, 0, 0}, (float []){player.camera.pos[0], player.camera.pos[1], player.camera.pos[2] + 10.0f});
+	model_render(&model_melon_golem, model_shader, model_mat, player.camera.view, player.camera.projection);
+
+
 error = glGetError();
 if (error)
 	LG_ERROR("Afetr chunk things. (%d)", error);

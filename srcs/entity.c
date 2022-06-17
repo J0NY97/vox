@@ -1,4 +1,17 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   entity.c                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/06/17 10:42:27 by jsalmi            #+#    #+#             */
+/*   Updated: 2022/06/17 10:59:46 by jsalmi           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "shaderpixel.h"
+#include "shader.h"
 
 void	new_entity(t_entity *entity)
 {
@@ -31,6 +44,45 @@ void	entity_print(t_entity *entity)
 	mat4_string("rot_mat :", entity->rot_mat);
 	mat4_string("trans_mat :", entity->trans_mat);
 	mat4_string("model_mat :", entity->model_mat);
+}
+
+void	new_model_matrix(float *m4_res, float scale, float *v3_rot, float *v3_pos)
+{
+	float	scale_mat[16];
+	float	rot_mat[16];
+	float	trans_mat[16];
+
+	float	tmp[3];
+	float	tmp_mat[16];
+
+// Scale
+	mat4_identity(scale_mat);
+	mat4_scale(scale_mat, scale_mat, new_vec3(tmp, scale, scale, scale));
+
+// Rot
+	mat4_identity(rot_mat);
+	// x
+	mat4_identity(tmp_mat);
+	mat4_rotation_x(tmp_mat, to_radians(v3_rot[0]));
+	mat4_multiply(rot_mat, tmp_mat, rot_mat);
+	// y
+	mat4_identity(tmp_mat);
+	mat4_rotation_y(tmp_mat, to_radians(v3_rot[1]));
+	mat4_multiply(rot_mat, tmp_mat, rot_mat);
+	// z
+	mat4_identity(tmp_mat);
+	mat4_rotation_z(tmp_mat, to_radians(v3_rot[2]));
+	mat4_multiply(rot_mat, tmp_mat, rot_mat);
+
+// Trans
+	mat4_identity(trans_mat);
+	mat4_translate(trans_mat, trans_mat, v3_pos);
+
+// Final
+	mat4_identity(m4_res);
+	mat4_multiply(m4_res, scale_mat, m4_res);
+	mat4_multiply(m4_res, rot_mat, m4_res);
+	mat4_multiply(m4_res, trans_mat, m4_res);
 }
 
 /*

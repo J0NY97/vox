@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/16 13:41:57 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/16 14:43:19 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/17 11:16:21 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -197,13 +197,19 @@ void	model_init(t_model_v2 *model)
 	GLuint	vbo[3];
 
 	glGenVertexArrays(1, &model->vao);
-	/*
+	glBindVertexArray(model->vao);
+
+	glEnableVertexAttribArray(0); // pos
+	glEnableVertexAttribArray(1); // uvs
+
 	glGenBuffers(3, vbo);
 	model->vbo_pos = vbo[0];
 	model->vbo_tex = vbo[1];
 	model->vbo_nor = vbo[2];
-	*/
-	ft_printf("how far do we get.\n");
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(float) * model->vertices_amount, NULL);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_TRUE, sizeof(float) * model->uvs_amount, NULL);
+
 	// NOTE: you have to load the mats into this separately;
 	model->materials = NULL;
 	model->material_amount = 0;
@@ -268,7 +274,7 @@ void	model_from_bobj(t_model_v2 *model, t_bobj *bob, int index)
 	model->normals_amount = bobject->vn_amount * 3;
 
 	model->material_amount = bob->materials_amount;
-/*
+	
 	model->meshes_amount = bobject->meshes_amount;
 	model->meshes = malloc(sizeof(t_mesh_v2) * model->meshes_amount);
 	for (int m = 0; m < model->meshes_amount; m++)
@@ -278,6 +284,84 @@ void	model_from_bobj(t_model_v2 *model, t_bobj *bob, int index)
 		model->meshes[m].indices = (unsigned int *)bobject->meshes[m].f;
 		model->meshes[m].indices_amount = (int)bobject->meshes[m].index_amount;
 	}
-	*/
 	LG_INFO("End");
+}
+
+void	mesh_update(t_mesh_v2 *mesh)
+{
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) *
+		mesh->indices_amount, mesh->indices, GL_STATIC_DRAW);
+	
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+/*
+ * Update the model to the gpu
+ *
+ * TODO : at some point have the ability to only update one of the VBOs.
+ */
+void	model_update(t_model_v2 *model)
+{
+	glBindVertexArray(model->vao);
+
+	glBindBuffer(GL_ARRAY_BUFFER, model->vbo_pos);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * model->vertices_amount,
+		model->vertices, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, model->vbo_tex);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * model->uvs_amount,
+		model->uvs, GL_STATIC_DRAW);
+
+	for (int i = 0; i < model->meshes_amount; i++)
+		mesh_update(&model->meshes[i]);
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+/*
+ * Render the mesh;
+*/
+void	mesh_render(t_mesh_v2 *mesh)
+{
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
+	ft_printf("indices amount : %d\n", mesh->indices_amount);
+	for (int i = 0; i < mesh->indices_amount; i++)
+	{
+		if (i % 3 == 0)
+			ft_printf("\n");
+		ft_printf("%d ", mesh->indices[i]);
+	}
+	glDrawElements(GL_TRIANGLES, mesh->indices_amount, GL_UNSIGNED_INT, NULL);
+}
+
+/*
+ * Render the model;
+*/
+void	model_render(t_model_v2 *model, GLuint shader, float *model_mat, float *view_mat, float *projection_mat)
+{
+	int	error;
+
+	glUseProgram(shader);
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("(%d)", error);
+
+	glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, model_mat);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, GL_FALSE, view_mat);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, GL_FALSE, projection_mat);
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("(%d)", error);
+
+	glBindVertexArray(model->vao);
+	for (int i = 0; i < model->meshes_amount; i++)
+		mesh_render(&model->meshes[i]);
+	
+	error = glGetError();
+	if (error)
+		LG_ERROR("(%d)", error);
 }

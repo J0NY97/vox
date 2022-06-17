@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/16 13:23:45 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/16 14:24:02 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/17 11:00:05 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,6 +98,8 @@ typedef struct s_mesh_v2
 */
 typedef struct	s_model_v2
 {
+	GLuint		shader;
+
 	GLuint		vao;	
 	GLuint		vbo_pos;	
 	GLuint		vbo_tex;	
@@ -119,5 +121,9 @@ typedef struct	s_model_v2
 }	t_model_v2;
 
 void	model_from_bobj(t_model_v2 *model, t_bobj *bob, int index);
+
+void	model_init(t_model_v2 *model);
+void	model_update(t_model_v2 *model);
+void	model_render(t_model_v2 *model, GLuint shader, float *model_mat, float *view_mat, float *projection_mat);
 
 #endif
