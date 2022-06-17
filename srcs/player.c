@@ -8,7 +8,7 @@ void	new_player(t_player *player)
 	player->last_mouse_pos[0] = 0;
 	player->last_mouse_pos[1] = 0;
 
-	new_vec3(player->velocity, 0, 0, 0);
+	v3_new(player->velocity, 0, 0, 0);
 	player->gravity = 0.98;
 
 	player->moving = 0;
@@ -47,9 +47,9 @@ void	player_events(t_player *player, t_key *keys, GLFWwindow *win)
 */
 void	player_movement(t_player *player, GLFWwindow *win, t_fps fps)
 {
-	float	temp0[VEC3_SIZE];
-	float	temp1[VEC3_SIZE];
-	float	crossed[VEC3_SIZE];
+	float	temp0[V3_SIZE];
+	float	temp1[V3_SIZE];
+	float	crossed[V3_SIZE];
 	float	speed_multiplier = 1.0f;
 	float	speed;
 
@@ -59,38 +59,38 @@ void	player_movement(t_player *player, GLFWwindow *win, t_fps fps)
 		speed_multiplier = 0.25f;
 	speed = (speed_multiplier * 10.0f) * fps.delta_time;
 
-	new_vec3(temp0, 0, 0, 0);
+	v3_new(temp0, 0, 0, 0);
 	if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS)
-		vec3_multiply_f(temp0, player->camera.front, speed);
+		v3_multiply_f(temp0, player->camera.front, speed);
 	else if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS)
-		vec3_multiply_f(temp0, player->camera.front, -speed);
+		v3_multiply_f(temp0, player->camera.front, -speed);
 
-	new_vec3(temp1, 0, 0, 0);
+	v3_new(temp1, 0, 0, 0);
 	if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS)
 	{
-		vec3_cross(temp1, player->camera.front, player->camera.up);
-		vec3_normalize(temp1, temp1);
-		vec3_multiply_f(temp1, temp1, -speed);
+		v3_cross(temp1, player->camera.front, player->camera.up);
+		v3_normalize(temp1, temp1);
+		v3_multiply_f(temp1, temp1, -speed);
 	}
 	else if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS)
 	{
-		vec3_cross(temp1, player->camera.front, player->camera.up);
-		vec3_normalize(temp1, temp1);
-		vec3_multiply_f(temp1, temp1, speed);
+		v3_cross(temp1, player->camera.front, player->camera.up);
+		v3_normalize(temp1, temp1);
+		v3_multiply_f(temp1, temp1, speed);
 	}
 
-	vec3_add(player->velocity, player->velocity, temp0);
-	vec3_add(player->velocity, player->velocity, temp1);
+	v3_add(player->velocity, player->velocity, temp0);
+	v3_add(player->velocity, player->velocity, temp1);
 
 	player->moving = (player->velocity[0] || player->velocity[1] || player->velocity[2]);
 }
 
 void	player_movement_creative(t_player *player, GLFWwindow *win, t_fps fps)
 {
-	float	temp0[VEC3_SIZE];
-	float	temp1[VEC3_SIZE];
-	float	temp2[VEC3_SIZE];
-	float	crossed[VEC3_SIZE];
+	float	temp0[V3_SIZE];
+	float	temp1[V3_SIZE];
+	float	temp2[V3_SIZE];
+	float	crossed[V3_SIZE];
 	float	speed_multiplier = 1.0f;
 	float	speed;
 
@@ -100,55 +100,55 @@ void	player_movement_creative(t_player *player, GLFWwindow *win, t_fps fps)
 		speed_multiplier = 0.25f;
 	speed = (speed_multiplier * 10.0f) * fps.delta_time;
 
-	new_vec3(temp0, 0, 0, 0);
+	v3_new(temp0, 0, 0, 0);
 	if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS)
 	{
-		vec3_cross(temp0, player->camera.right, player->camera.up);
-		vec3_multiply_f(temp0, temp0, speed);
+		v3_cross(temp0, player->camera.right, player->camera.up);
+		v3_multiply_f(temp0, temp0, speed);
 	}
 	else if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS)
 	{
-		vec3_cross(temp0, player->camera.up, player->camera.right);
-		vec3_multiply_f(temp0, temp0, speed);
+		v3_cross(temp0, player->camera.up, player->camera.right);
+		v3_multiply_f(temp0, temp0, speed);
 	}
 
-	new_vec3(temp1, 0, 0, 0);
+	v3_new(temp1, 0, 0, 0);
 	if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS)
 	{
-		vec3_cross(temp1, player->camera.front, player->camera.up);
-		vec3_normalize(temp1, temp1);
-		vec3_multiply_f(temp1, temp1, -speed);
+		v3_cross(temp1, player->camera.front, player->camera.up);
+		v3_normalize(temp1, temp1);
+		v3_multiply_f(temp1, temp1, -speed);
 	}
 	else if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS)
 	{
-		vec3_cross(temp1, player->camera.front, player->camera.up);
-		vec3_normalize(temp1, temp1);
-		vec3_multiply_f(temp1, temp1, speed);
+		v3_cross(temp1, player->camera.front, player->camera.up);
+		v3_normalize(temp1, temp1);
+		v3_multiply_f(temp1, temp1, speed);
 	}
 
-	new_vec3(temp2, 0, 0, 0);
+	v3_new(temp2, 0, 0, 0);
 	if (glfwGetKey(win, GLFW_KEY_SPACE) == GLFW_PRESS)
 	{
-		vec3_multiply_f(temp2, player->camera.up, speed);
+		v3_multiply_f(temp2, player->camera.up, speed);
 	}
 	else if (glfwGetKey(win, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
 	{
-		vec3_multiply_f(temp2, player->camera.up, -speed);
+		v3_multiply_f(temp2, player->camera.up, -speed);
 	}
 
-	vec3_add(player->velocity, player->velocity, temp0);
-	vec3_add(player->velocity, player->velocity, temp1);
-	vec3_add(player->velocity, player->velocity, temp2);
+	v3_add(player->velocity, player->velocity, temp0);
+	v3_add(player->velocity, player->velocity, temp1);
+	v3_add(player->velocity, player->velocity, temp2);
 
 	player->moving = (player->velocity[0] || player->velocity[1] || player->velocity[2]);
 }
 
 void	player_movement_survival(t_player *player, GLFWwindow *win, t_fps fps)
 {
-	float	temp0[VEC3_SIZE];
-	float	temp1[VEC3_SIZE];
-	float	temp2[VEC3_SIZE];
-	float	crossed[VEC3_SIZE];
+	float	temp0[V3_SIZE];
+	float	temp1[V3_SIZE];
+	float	temp2[V3_SIZE];
+	float	crossed[V3_SIZE];
 	float	speed_multiplier = 1.0f;
 	float	speed;
 
@@ -158,30 +158,30 @@ void	player_movement_survival(t_player *player, GLFWwindow *win, t_fps fps)
 		speed_multiplier = 0.25f;
 	speed = (speed_multiplier * 10.0f) * fps.delta_time;
 
-	new_vec3(temp0, 0, 0, 0);
+	v3_new(temp0, 0, 0, 0);
 	if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS)
 	{
-		vec3_cross(temp0, player->camera.right, player->camera.up);
-		vec3_multiply_f(temp0, temp0, speed);
+		v3_cross(temp0, player->camera.right, player->camera.up);
+		v3_multiply_f(temp0, temp0, speed);
 	}
 	else if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS)
 	{
-		vec3_cross(temp0, player->camera.up, player->camera.right);
-		vec3_multiply_f(temp0, temp0, speed);
+		v3_cross(temp0, player->camera.up, player->camera.right);
+		v3_multiply_f(temp0, temp0, speed);
 	}
 
-	new_vec3(temp1, 0, 0, 0);
+	v3_new(temp1, 0, 0, 0);
 	if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS)
 	{
-		vec3_cross(temp1, player->camera.front, player->camera.up);
-		vec3_normalize(temp1, temp1);
-		vec3_multiply_f(temp1, temp1, -speed);
+		v3_cross(temp1, player->camera.front, player->camera.up);
+		v3_normalize(temp1, temp1);
+		v3_multiply_f(temp1, temp1, -speed);
 	}
 	else if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS)
 	{
-		vec3_cross(temp1, player->camera.front, player->camera.up);
-		vec3_normalize(temp1, temp1);
-		vec3_multiply_f(temp1, temp1, speed);
+		v3_cross(temp1, player->camera.front, player->camera.up);
+		v3_normalize(temp1, temp1);
+		v3_multiply_f(temp1, temp1, speed);
 	}
 
 	if (glfwGetKey(win, GLFW_KEY_SPACE) == GLFW_PRESS)
@@ -189,8 +189,8 @@ void	player_movement_survival(t_player *player, GLFWwindow *win, t_fps fps)
 	else
 		player->velocity[1] = -1;
 
-	vec3_add(player->velocity, player->velocity, temp0);
-	vec3_add(player->velocity, player->velocity, temp1);
+	v3_add(player->velocity, player->velocity, temp0);
+	v3_add(player->velocity, player->velocity, temp1);
 
 	player->moving = (player->velocity[0] || player->velocity[1] || player->velocity[2]);
 }
@@ -198,7 +198,7 @@ void	player_movement_survival(t_player *player, GLFWwindow *win, t_fps fps)
 
 void	player_apply_velocity(t_player *player)
 {
-	vec3_add(player->camera.pos, player->camera.pos, player->velocity);
+	v3_add(player->camera.pos, player->camera.pos, player->velocity);
 	player->velocity[0] *= 0.5;
 	player->velocity[1] *= player->gravity;
 	player->velocity[2] *= 0.5;
@@ -206,7 +206,7 @@ void	player_apply_velocity(t_player *player)
 
 void	player_movement_old_basically_noclip(t_player *player, GLFWwindow *win, t_fps fps)
 {
-	float	temp[VEC3_SIZE];
+	float	temp[V3_SIZE];
 	float	speed_multiplier = 1.0f;
 	float	speed;
 
@@ -216,27 +216,27 @@ void	player_movement_old_basically_noclip(t_player *player, GLFWwindow *win, t_f
 
 	if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS)
 	{
-		vec3_multiply_f(temp, player->camera.front, speed);
-		vec3_add(player->camera.pos, player->camera.pos, temp);
+		v3_multiply_f(temp, player->camera.front, speed);
+		v3_add(player->camera.pos, player->camera.pos, temp);
 	}
 	else if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS)
 	{
-		vec3_multiply_f(temp, player->camera.front, speed);
-		vec3_sub(player->camera.pos, player->camera.pos, temp);
+		v3_multiply_f(temp, player->camera.front, speed);
+		v3_sub(player->camera.pos, player->camera.pos, temp);
 	}
 	if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS)
 	{
-		vec3_cross(temp, player->camera.front, player->camera.up);
-		vec3_normalize(temp, temp);
-		vec3_multiply_f(temp, temp, speed);
-		vec3_sub(player->camera.pos, player->camera.pos, temp);
+		v3_cross(temp, player->camera.front, player->camera.up);
+		v3_normalize(temp, temp);
+		v3_multiply_f(temp, temp, speed);
+		v3_sub(player->camera.pos, player->camera.pos, temp);
 	}
 	else if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS)
 	{
-		vec3_cross(temp, player->camera.front, player->camera.up);
-		vec3_normalize(temp, temp);
-		vec3_multiply_f(temp, temp, speed);
-		vec3_add(player->camera.pos, player->camera.pos, temp);
+		v3_cross(temp, player->camera.front, player->camera.up);
+		v3_normalize(temp, temp);
+		v3_multiply_f(temp, temp, speed);
+		v3_add(player->camera.pos, player->camera.pos, temp);
 	}
 }
 
@@ -269,7 +269,7 @@ void	player_looking(t_player *player, GLFWwindow *win, t_fps fps)
 void	player_print(t_player *player)
 {
 	ft_printf("PLAYER :\n");
-	vec3_string("player.velocity : ", player->velocity);
+	v3_string("player.velocity : ", player->velocity);
 	ft_printf("player.moving : %d\n", player->moving);
 	ft_printf("player.colliding : %d\n", player->colliding);
 	camera_print(&player->camera);

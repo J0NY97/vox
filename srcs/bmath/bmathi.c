@@ -1,6 +1,6 @@
 #include "bmath.h"
 
-int	*vec3i_new(int *res, int x, int y, int z)
+int	*v3i_new(int *res, int x, int y, int z)
 {
 	res[0] = x;
 	res[1] = y;
@@ -8,7 +8,7 @@ int	*vec3i_new(int *res, int x, int y, int z)
 	return (res);
 }
 
-int	*vec3i_add(int *res, int *v0, int *v1)
+int	*v3i_add(int *res, int *v0, int *v1)
 {
 	res[0] = v0[0] + v1[0];
 	res[1] = v0[1] + v1[1];
@@ -16,7 +16,7 @@ int	*vec3i_add(int *res, int *v0, int *v1)
 	return (res);
 }
 
-int	vec3i_dist(int *v0, int *v1)
+int	v3i_dist(int *v0, int *v1)
 {
 	int	a;
 	int	b;
@@ -28,14 +28,14 @@ int	vec3i_dist(int *v0, int *v1)
 	return (sqrt(a + b + c));
 }
 
-int	vec3i_dist_sqrd(int *v0, int *v1)
+int	v3i_dist_sqrd(int *v0, int *v1)
 {
 	return ((v0[0] - v1[0]) * (v0[0] - v1[0]) +
 		(v0[1] - v1[1]) * (v0[1] - v1[1]) +
 		(v0[2] - v1[2]) * (v0[2] - v1[2]));
 }
 
-void	vec3i_string(char *str, int *v)
+void	v3i_string(char *str, int *v)
 {
 	ft_printf("%s { %d %d %d }\n", str, v[0], v[1], v[2]);
 }

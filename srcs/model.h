@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/16 13:23:45 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/17 11:00:05 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/17 12:01:37 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,13 +78,14 @@ typedef struct	s_material_v2
 }	t_material_v2;
 
 /*
- * 'material_index' : from 't_model_v2->materials[x]' where 'x' is the index;
+ * 'material_index' : from 't_model_v2->materials[x].texture';
+ *		'x' : 't_bobj->t_object->t_mesh->material_index';
 */
 typedef struct s_mesh_v2
 {
 	GLuint			ebo;
 
-	int				material_index;
+	GLuint			texture;
 
 	unsigned int	*indices;
 	int				indices_amount;

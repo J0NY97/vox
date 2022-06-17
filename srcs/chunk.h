@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 10:06:36 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/17 11:01:34 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/17 12:30:36 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -198,7 +198,7 @@ t_block_info	*get_block_info_pos(t_block_info *res, t_world *info, float *pos);
 typedef struct s_chunk_args
 {
 	t_chunk	*chunk;
-	int		coords[VEC3_SIZE];
+	int		coords[V3_SIZE];
 	int		*noise_map;
 	int		being_threaded;
 }	t_chunk_args;
@@ -206,8 +206,8 @@ typedef struct s_chunk_args
 struct	s_chunk
 {
 	t_world	*info;
-	int				coordinate[VEC3_SIZE];
-	float			world_coordinate[VEC3_SIZE];
+	int				coordinate[V3_SIZE];
+	float			world_coordinate[V3_SIZE];
 
 	int				block_amount;
 	t_block			*blocks; //x*y*z real amount should be : CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_BREADTH;

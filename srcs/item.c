@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/01 14:13:30 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/13 17:10:18 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/17 12:33:14 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,7 +130,7 @@ int	water_placer(t_world *info, float *world_pos, int nth_from_source)
 	// If we dont have block under this, we place source block;
 	float	under[3];
 
-	vec3_new(under, world_pos[0], world_pos[1] - 1.0f, world_pos[2]);
+	v3_new(under, world_pos[0], world_pos[1] - 1.0f, world_pos[2]);
 	type = get_block_type_at_world_pos(info, under);
 	if (!is_type_solid(type) && !is_type_solid_alpha(type))
 	{
@@ -143,7 +143,7 @@ int	water_placer(t_world *info, float *world_pos, int nth_from_source)
 
 	for (int j = DIR_NORTH; j <= DIR_WEST; j++)
 	{
-		vec3_add(tmp, world_pos, (float *)g_card_dir[j]);
+		v3_add(tmp, world_pos, (float *)g_card_dir[j]);
 		water_placer(info, tmp, 1 + nth_from_source);
 	}
 	return (1);
@@ -165,7 +165,7 @@ int	find_shortest_down(t_world *info, float *pos, int curr_len, int max_len)
 	int		type;
 
 	// Check first instantly down;
-	vec3_add(tmp, pos, (float *)g_card_dir[DIR_DOWN]);
+	v3_add(tmp, pos, (float *)g_card_dir[DIR_DOWN]);
 	type = get_block_type_at_world_pos(info, tmp);
 	if (!is_type_solid(type) && !is_type_solid_alpha(type))
 		return (DIR_DOWN);
@@ -173,17 +173,17 @@ int	find_shortest_down(t_world *info, float *pos, int curr_len, int max_len)
 	for (int j = DIR_NORTH; j <= DIR_WEST; j++)
 	{
 		// IF there is solid block in that dir, we wont go further;
-		vec3_add(tmp, pos, (float *)g_card_dir[j]);
+		v3_add(tmp, pos, (float *)g_card_dir[j]);
 		type = get_block_type_at_world_pos(info, tmp);
 		if (is_type_solid(type) || is_type_solid_alpha(type))
 			continue ;
 
-		vec3_add(tmp, tmp, (float *)g_card_dir[DIR_DOWN]);
+		v3_add(tmp, tmp, (float *)g_card_dir[DIR_DOWN]);
 		type = get_block_type_at_world_pos(info, tmp);
 		if (!is_type_solid(type) && !is_type_solid_alpha(type))
 			return (j);
 
-		vec3_add(tmp, pos, (float *)g_card_dir[j]);
+		v3_add(tmp, pos, (float *)g_card_dir[j]);
 		int res = find_shortest_down(info, tmp, curr_len + 1, max_len);
 		if (res != -1)
 			return (res);
@@ -230,7 +230,7 @@ void	water_flow(t_world *info, t_block_event *water)
 		return ;
 	if (water->block->type >= FLUID_WATER_7)
 	{
-		vec3_add(tmp, water->pos, (float *)g_card_dir[DIR_DOWN]);
+		v3_add(tmp, water->pos, (float *)g_card_dir[DIR_DOWN]);
 		neighbor[0] = get_block(info, tmp);
 		if ((!is_solid(neighbor[0]) && !is_solid_alpha(neighbor[0])) &&
 			(!is_fluid(neighbor[0]) || (is_fluid(neighbor[0]) && neighbor[0]->type > FLUID_WATER)))
@@ -241,7 +241,7 @@ void	water_flow(t_world *info, t_block_event *water)
 	// For all directions, get neighboring blocks;
 	for (int d = DIR_NORTH, i = 0; d <= DIR_DOWN; d++, i++)
 	{
-		vec3_add(tmp, water->pos, (float *)g_card_dir[d]);
+		v3_add(tmp, water->pos, (float *)g_card_dir[d]);
 		neighbor[i] = get_block(info, tmp);
 		neighbor_water[i] = get_water_block(info, tmp);// TODO: maybe do this right before we actually use it, so we dont do this without point (onödan);
 	}
@@ -277,28 +277,28 @@ void	water_flow(t_world *info, t_block_event *water)
 	// If doesnt have flow_dir, we spread water to all directions;
 	if (water->flow_dir == -1)
 	{
-		vec3_add(tmp, water->pos, (float *)g_card_dir[DIR_NORTH]);
+		v3_add(tmp, water->pos, (float *)g_card_dir[DIR_NORTH]);
 		if ((!is_solid(neighbor[0]) && !is_solid_alpha(neighbor[0])) &&
 			(!is_fluid(neighbor[0]) || (is_fluid(neighbor[0]) && neighbor[0]->type > water->block->type + 1)))
 			set_block_at_world_pos(info, tmp, water->block->type + 1);
 
-		vec3_add(tmp, water->pos, (float *)g_card_dir[DIR_EAST]);
+		v3_add(tmp, water->pos, (float *)g_card_dir[DIR_EAST]);
 		if ((!is_solid(neighbor[1]) && !is_solid_alpha(neighbor[1])) &&
 			(!is_fluid(neighbor[1]) || (is_fluid(neighbor[1]) && neighbor[1]->type > water->block->type + 1)))
 			set_block_at_world_pos(info, tmp, water->block->type + 1);
 
-		vec3_add(tmp, water->pos, (float *)g_card_dir[DIR_SOUTH]);
+		v3_add(tmp, water->pos, (float *)g_card_dir[DIR_SOUTH]);
 		if ((!is_solid(neighbor[2]) && !is_solid_alpha(neighbor[2])) &&
 			(!is_fluid(neighbor[2]) || (is_fluid(neighbor[2]) && neighbor[2]->type > water->block->type + 1)))
 			set_block_at_world_pos(info, tmp, water->block->type + 1);
 
-		vec3_add(tmp, water->pos, (float *)g_card_dir[DIR_WEST]);
+		v3_add(tmp, water->pos, (float *)g_card_dir[DIR_WEST]);
 		if ((!is_solid(neighbor[3]) && !is_solid_alpha(neighbor[3])) &&
 			(!is_fluid(neighbor[3]) || (is_fluid(neighbor[3]) && neighbor[3]->type > water->block->type + 1)))
 			set_block_at_world_pos(info, tmp, water->block->type + 1);
 
 		// DOWN
-		vec3_add(tmp, water->pos, (float *)g_card_dir[DIR_DOWN]);
+		v3_add(tmp, water->pos, (float *)g_card_dir[DIR_DOWN]);
 		if ((!is_solid(neighbor[5]) && !is_solid_alpha(neighbor[5])) &&
 			(is_fluid(neighbor[5]) && neighbor[5]->type > water->block->type + 1))
 			set_block_at_world_pos(info, tmp, FLUID_WATER);
@@ -307,7 +307,7 @@ void	water_flow(t_world *info, t_block_event *water)
 	{
 		t_block	*block;
 
-		vec3_add(tmp, water->pos, (float *)g_card_dir[water->flow_dir]);
+		v3_add(tmp, water->pos, (float *)g_card_dir[water->flow_dir]);
 		block = get_block(info, tmp);
 		if ((!is_solid(block) && !is_solid_alpha(block)) &&
 			(!is_fluid(block) || (is_fluid(block) && block->type > water->block->type + 1)))
@@ -333,7 +333,7 @@ int	water_remove(t_world *info, t_block_event *water)
 	// For all directions, get neighboring blocks;
 	for (int d = DIR_NORTH, i = 0; d <= DIR_DOWN; d++, i++)
 	{
-		vec3_add(tmp, water->pos, (float *)g_card_dir[d]);
+		v3_add(tmp, water->pos, (float *)g_card_dir[d]);
 		neighbor[i] = get_block(info, tmp);
 		neighbor_chunk[i] = get_chunk_from_world_pos(info, tmp);
 	}
@@ -388,7 +388,7 @@ void	water_vertex_height_decider(t_world *info, t_block *block, float *block_wor
 
 	for (int d = 0; d < 3; d++)
 	{
-		type = get_block_type_at_world_pos(info, vec3_add(tmp, block_world, (float *)g_card_dir[dirs[d]]));
+		type = get_block_type_at_world_pos(info, v3_add(tmp, block_world, (float *)g_card_dir[dirs[d]]));
 		if (is_type_fluid(type))
 		{
 			fluid_found = 1;
@@ -420,10 +420,10 @@ void	flowing_water_verts(float *verts, int face, t_block *block, float *block_wo
 	int	dirs[3];
 	int	v[3];
 
-	vec3_new(verts + 0, g_all_faces[BLOCK_FACES][face][0], g_all_faces[BLOCK_FACES][face][1], g_all_faces[BLOCK_FACES][face][2]);
-	vec3_new(verts + 3, g_all_faces[BLOCK_FACES][face][3], g_all_faces[BLOCK_FACES][face][4], g_all_faces[BLOCK_FACES][face][5]);
-	vec3_new(verts + 6, g_all_faces[BLOCK_FACES][face][6], g_all_faces[BLOCK_FACES][face][7], g_all_faces[BLOCK_FACES][face][8]);
-	vec3_new(verts + 9, g_all_faces[BLOCK_FACES][face][9], g_all_faces[BLOCK_FACES][face][10], g_all_faces[BLOCK_FACES][face][11]);
+	v3_new(verts + 0, g_all_faces[BLOCK_FACES][face][0], g_all_faces[BLOCK_FACES][face][1], g_all_faces[BLOCK_FACES][face][2]);
+	v3_new(verts + 3, g_all_faces[BLOCK_FACES][face][3], g_all_faces[BLOCK_FACES][face][4], g_all_faces[BLOCK_FACES][face][5]);
+	v3_new(verts + 6, g_all_faces[BLOCK_FACES][face][6], g_all_faces[BLOCK_FACES][face][7], g_all_faces[BLOCK_FACES][face][8]);
+	v3_new(verts + 9, g_all_faces[BLOCK_FACES][face][9], g_all_faces[BLOCK_FACES][face][10], g_all_faces[BLOCK_FACES][face][11]);
 
 	// A source block will always be a full block;
 	if (block->type == FLUID_WATER)

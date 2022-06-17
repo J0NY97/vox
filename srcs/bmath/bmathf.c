@@ -8,12 +8,7 @@ int	mod(int a, int b)
     return (r < 0 ? r + b : r);
 }
 
-float	*new_vec3(float *src, float x, float y, float z)
-{
-	return (vec3_new(src, x, y, z));
-}
-
-float	*vec3_new(float *src, float x, float y, float z)
+float	*v3_new(float *src, float x, float y, float z)
 {
 	src[0] = x;
 	src[1] = y;
@@ -21,7 +16,7 @@ float	*vec3_new(float *src, float x, float y, float z)
 	return (src);
 }
 
-float	*vec3_assign(float *dest, float *src)
+float	*v3_assign(float *dest, float *src)
 {
 	dest[0] = src[0];
 	dest[1] = src[1];
@@ -29,12 +24,12 @@ float	*vec3_assign(float *dest, float *src)
 	return (src);
 }
 
-void	vec3_string(char *str, float *v)
+void	v3_string(char *str, float *v)
 {
 	printf("%s { %f %f %f }\n", str, v[0], v[1], v[2]);
 }
 
-float *vec3_add(float *result, float *v0, float *v1)
+float *v3_add(float *result, float *v0, float *v1)
 {
 	result[0] = v0[0] + v1[0];
 	result[1] = v0[1] + v1[1];
@@ -42,7 +37,7 @@ float *vec3_add(float *result, float *v0, float *v1)
 	return (result);
 }
 
-float *vec3_sub(float *result, float *v0, float *v1)
+float *v3_sub(float *result, float *v0, float *v1)
 {
 	result[0] = v0[0] - v1[0];
 	result[1] = v0[1] - v1[1];
@@ -50,7 +45,7 @@ float *vec3_sub(float *result, float *v0, float *v1)
 	return (result);
 }
 
-float *vec3_normalize(float *result, float *v0)
+float *v3_normalize(float *result, float *v0)
 {
 	float l = sqrt(v0[0] * v0[0] + v0[1] * v0[1] + v0[2] * v0[2]);
 	result[0] = v0[0] / l;
@@ -59,9 +54,9 @@ float *vec3_normalize(float *result, float *v0)
 	return (result);
 }
 
-float *vec3_cross(float *res, float *v0, float *v1)
+float *v3_cross(float *res, float *v0, float *v1)
 {
-	float	c[VEC3_SIZE];
+	float	c[V3_SIZE];
 
 	c[0] = v0[1] * v1[2] - v0[2] * v1[1];
 	c[1] = v0[2] * v1[0] - v0[0] * v1[2];
@@ -72,7 +67,7 @@ float *vec3_cross(float *res, float *v0, float *v1)
 	return (res);
 }
 
-float	*vec3_multiply(float *res, float *v0, float *v1)
+float	*v3_multiply(float *res, float *v0, float *v1)
 {
 	res[0] = v0[0] * v1[0];
 	res[1] = v0[1] * v1[1];
@@ -80,12 +75,12 @@ float	*vec3_multiply(float *res, float *v0, float *v1)
 	return (res);
 }
 
-float	vec3_dot(float *v0, float *v1)
+float	v3_dot(float *v0, float *v1)
 {
 	return v0[0] * v1[0] + v0[1] * v1[1] + v0[2] * v1[2];
 }
 
-float	*vec3_multiply_f(float *result, float *v0, float f)
+float	*v3_multiply_f(float *result, float *v0, float f)
 {
 	result[0] = v0[0] * f;
 	result[1] = v0[1] * f;
@@ -93,7 +88,7 @@ float	*vec3_multiply_f(float *result, float *v0, float f)
 	return result;
 }
 
-float	*vec3_divide_f(float *res, float *v0, float f)
+float	*v3_divide_f(float *res, float *v0, float f)
 {
 	res[0] = v0[0] / f;
 	res[1] = v0[1] / f;
@@ -101,7 +96,7 @@ float	*vec3_divide_f(float *res, float *v0, float f)
 	return (res);
 }
 
-float	vec3_dist(float *v0, float *v1)
+float	v3_dist(float *v0, float *v1)
 {
 	float	a;
 	float	b;
@@ -113,26 +108,26 @@ float	vec3_dist(float *v0, float *v1)
 	return (sqrt(a + b + c));
 }
 
-float	vec3_dist_sqrd(float *v0, float *v1)
+float	v3_dist_sqrd(float *v0, float *v1)
 {
 	return ((v0[0] - v1[0]) * (v0[0] - v1[0]) +
 		(v0[1] - v1[1]) * (v0[1] - v1[1]) +
 		(v0[2] - v1[2]) * (v0[2] - v1[2]));
 }
 
-float	vec3_length(float *v0)
+float	v3_length(float *v0)
 {
 	return sqrt(v0[0] * v0[0] + v0[1] * v0[1] + v0[2] * v0[2]);
 }
 
-float	vec3_length_squared(float *v0)
+float	v3_length_sqrd(float *v0)
 {
 	return (v0[0] * v0[0] + v0[1] * v0[1] + v0[2] * v0[2]);
 }
 
-float	*vec3_multiply_mat3(float *res, float *v, float *m)
+float	*v3_multiply_m3(float *res, float *v, float *m)
 {
-	float	xyz[VEC3_SIZE];
+	float	xyz[V3_SIZE];
 
 	xyz[0] = v[0];
 	xyz[1] = v[1];
@@ -143,7 +138,7 @@ float	*vec3_multiply_mat3(float *res, float *v, float *m)
 	return (res);
 }
 
-float	*vec3_to_vec4(float *res, float *v3)
+float	*v3_to_v4(float *res, float *v3)
 {
 	res[0] = v3[0];
 	res[1] = v3[1];
@@ -152,7 +147,7 @@ float	*vec3_to_vec4(float *res, float *v3)
 	return (res);
 }
 
-float	*vec4_to_vec3(float *res, float *v4)
+float	*v4_to_v3(float *res, float *v4)
 {
 	res[0] = v4[0];
 	res[1] = v4[1];
@@ -160,7 +155,7 @@ float	*vec4_to_vec3(float *res, float *v4)
 	return (res);
 }
 
-float	*mat4_to_mat3(float *res, float *m4)
+float	*m4_to_m3(float *res, float *m4)
 {
 	res[0] = m4[0];
 	res[1] = m4[1];
@@ -178,7 +173,7 @@ float	*mat4_to_mat3(float *res, float *m4)
 // VEC4
 //////////////////////////
 
-float	*vec4_new(float *res, float x, float y, float z, float w)
+float	*v4_new(float *res, float x, float y, float z, float w)
 {
 	res[0] = x;
 	res[1] = y;
@@ -187,14 +182,14 @@ float	*vec4_new(float *res, float x, float y, float z, float w)
 	return (res);
 }
 
-void	vec4_string(char *str, float *v)
+void	v4_string(char *str, float *v)
 {
 	printf("%s { %f %f %f %f }\n", str, v[0], v[1], v[2], v[3]);
 }
 
-float	*vec4_multiply_mat4(float *res, float *v, float *m)
+float	*v4_multiply_m4(float *res, float *v, float *m)
 {
-	float	xyzw[VEC4_SIZE];
+	float	xyzw[V4_SIZE];
 
 	xyzw[0] = v[0];
 	xyzw[1] = v[1];
@@ -230,7 +225,7 @@ float	mat2_determinant(float *m)
 // MAT3
 ////////////////////////////////
 
-float	*mat3_identity(float *result)
+float	*m3_identity(float *result)
 {
 	result[0] = 1.0f;
 	result[1] = 0.0f;
@@ -244,7 +239,7 @@ float	*mat3_identity(float *result)
 	return (result);
 }
 
-float	*mat3_assign(float *result, float *m0)
+float	*m3_assign(float *result, float *m0)
 {
 	result[0] = m0[0];
 	result[1] = m0[1];
@@ -258,13 +253,13 @@ float	*mat3_assign(float *result, float *m0)
 	return (result);
 }
 
-void	mat3_string(char *str, float *m)
+void	m3_string(char *str, float *m)
 {
 	int	i;
 
 	i = 0;
 	printf("%s {", str);
-	while (i < MAT3_SIZE)
+	while (i < M3_SIZE)
 	{
 		if (i % 3 == 0)
 			printf("\n");
@@ -290,8 +285,8 @@ float	*mat3_multiply_f(float *result, float *m0, float f)
 
 float *mat3_cofactor(float *result, float *m0)
 {
-	float	cofactor[MAT3_SIZE];
-	float	minor[MAT2_SIZE];
+	float	cofactor[M3_SIZE];
+	float	minor[M2_SIZE];
 	minor[0] = m0[4];
 	minor[1] = m0[5];
 	minor[2] = m0[7];
@@ -369,15 +364,15 @@ float mat3_determinant(float *m)
 	return (determinant);
 }
 
-float	*mat3_inverse(float *res, float *m)
+float	*m3_inverse(float *res, float *m)
 {
-	float	inverse[MAT3_SIZE];
+	float	inverse[M3_SIZE];
 	float	det;
 
 	det = mat3_determinant(m);
 	mat3_cofactor(inverse, m);
 	mat3_multiply_f(inverse, inverse, 1.0f / det);
-	for (int i = 0; i < MAT3_SIZE; i++)
+	for (int i = 0; i < M3_SIZE; i++)
 		res[i] = inverse[i];
 	return (res);
 }
@@ -386,7 +381,7 @@ float	*mat3_inverse(float *res, float *m)
 // MAT4
 ///////////////////
 
-float	*mat4_identity(float *result)
+float	*m4_identity(float *result)
 {
 	result[0] = 1.0f;
 	result[1] = 0.0f;
@@ -407,7 +402,7 @@ float	*mat4_identity(float *result)
 	return (result);
 }
 
-float	*mat4_assign(float *result, float *m0)
+float	*m4_assign(float *result, float *m0)
 {
 	result[0] = m0[0];
 	result[1] = m0[1];
@@ -428,7 +423,7 @@ float	*mat4_assign(float *result, float *m0)
 	return (result);
 }
 
-void	mat4_string(char *str, float *m)
+void	m4_string(char *str, float *m)
 {
 	int	i;
 
@@ -444,7 +439,7 @@ void	mat4_string(char *str, float *m)
 	printf("}\n");
 }
 
-float	*mat4_translate(float *result, float *m0, float *v0)
+float	*m4_translate(float *result, float *m0, float *v0)
 {
 	result[0] = m0[0];
 	result[1] = m0[1];
@@ -465,7 +460,7 @@ float	*mat4_translate(float *result, float *m0, float *v0)
 	return (result);
 }
 
-float	*mat4_scale(float *result, float *m0, float *v0)
+float	*m4_scale(float *result, float *m0, float *v0)
 {
 	result[0] = m0[0] * v0[0];
 	result[1] = m0[1];
@@ -486,7 +481,7 @@ float	*mat4_scale(float *result, float *m0, float *v0)
 	return (result);
 }
 
-float	*mat4_rotation_x(float *result, float f)
+float	*m4_rotation_x(float *result, float f)
 {
 	float	c;
 	float	s;
@@ -500,7 +495,7 @@ float	*mat4_rotation_x(float *result, float f)
 	return (result);
 }
 
-float	*mat4_rotation_y(float *result, float f)
+float	*m4_rotation_y(float *result, float f)
 {
 	float	c = cos(f);
 	float	s = sin(f);
@@ -511,7 +506,7 @@ float	*mat4_rotation_y(float *result, float f)
 	return result;
 }
 
-float	*mat4_rotation_z(float *result, float f)
+float	*m4_rotation_z(float *result, float f)
 {
 	float	c = cos(f);
 	float	s = sin(f);
@@ -522,7 +517,7 @@ float	*mat4_rotation_z(float *result, float f)
 	return result;
 }
 
-float	*mat4_rotation_axis(float *result, float *v0, float f)
+float	*m4_rotation_axis(float *result, float *v0, float f)
 {
 	float	c = cos(f);
 	float	s = sin(f);
@@ -557,7 +552,7 @@ float	*mat4_rotation_axis(float *result, float *v0, float f)
 	return result;
 }
 
-float	*mat4_perspective_fov(float *result, float fov, float w, float h, float n, float f)
+float	*m4_perspective_fov(float *result, float fov, float w, float h, float n, float f)
 {
 	float	h2 = cos(fov * 0.5f) / sin(fov * 0.5f);
 	float	w2 = h2 * h / w;
@@ -581,21 +576,21 @@ float	*mat4_perspective_fov(float *result, float fov, float w, float h, float n,
 	return (result);
 }
 
-float	*mat4_look_at(float *result, float *position, float *target, float *up)
+float	*m4_look_at(float *result, float *position, float *target, float *up)
 {
-	float	tmp_forward[VEC3_SIZE];
-	float	tmp_side[VEC3_SIZE];
-	float	tmp_up[VEC3_SIZE];
+	float	tmp_forward[V3_SIZE];
+	float	tmp_side[V3_SIZE];
+	float	tmp_up[V3_SIZE];
 
-	vec3_sub(tmp_forward, target, position);
-	vec3_normalize(tmp_forward, tmp_forward);
-	vec3_cross(tmp_side, tmp_forward, up);
-	vec3_normalize(tmp_side, tmp_side);
-	vec3_cross(tmp_up, tmp_side, tmp_forward);
+	v3_sub(tmp_forward, target, position);
+	v3_normalize(tmp_forward, tmp_forward);
+	v3_cross(tmp_side, tmp_forward, up);
+	v3_normalize(tmp_side, tmp_side);
+	v3_cross(tmp_up, tmp_side, tmp_forward);
 
 /*
 	float t[3];
-	vec3_string("look at", vec3_normalize(t, vec3_add(t, tmp_forward, vec3_add(t, tmp_up, tmp_side))));
+	v3_string("look at", v3_normalize(t, v3_add(t, tmp_forward, v3_add(t, tmp_up, tmp_side))));
 	*/
 
 	result[0] = tmp_side[0];
@@ -610,9 +605,9 @@ float	*mat4_look_at(float *result, float *position, float *target, float *up)
 	result[9] = tmp_up[2];
 	result[10] = -tmp_forward[2];
 	result[11] = 0.0f;
-	result[12] = -vec3_dot(tmp_side, position);
-	result[13] = -vec3_dot(tmp_up, position);
-	result[14] = vec3_dot(tmp_forward, position);
+	result[12] = -v3_dot(tmp_side, position);
+	result[13] = -v3_dot(tmp_up, position);
+	result[14] = v3_dot(tmp_forward, position);
 	result[15] = 1.0f;
 	return (result);
 }
@@ -624,9 +619,9 @@ float	*mat4_look_at(float *result, float *position, float *target, float *up)
  * There is a difference in which matrix you multiplicate by;
  * why?
 */
-float	*mat4_multiply(float *result, float *m0, float *m1)
+float	*m4_multiply(float *result, float *m0, float *m1)
 {
-	float	multiplied[MAT4_SIZE];
+	float	multiplied[M4_SIZE];
 	multiplied[0] = m0[0] * m1[0] + m0[4] * m1[1] + m0[8] * m1[2] + m0[12] * m1[3];
 	multiplied[1] = m0[1] * m1[0] + m0[5] * m1[1] + m0[9] * m1[2] + m0[13] * m1[3];
 	multiplied[2] = m0[2] * m1[0] + m0[6] * m1[1] + m0[10] * m1[2] + m0[14] * m1[3];
@@ -662,9 +657,9 @@ float	*mat4_multiply(float *result, float *m0, float *m1)
 	return (result);
 }
 
-float	*mat4_inverse(float *result, float *m0)
+float	*m4_inverse(float *result, float *m0)
 {
-	float inverse[MAT4_SIZE];
+	float inverse[M4_SIZE];
 	float inverted_determinant;
 	float m11 = m0[0];
 	float m21 = m0[1];
@@ -828,7 +823,7 @@ float	*euler_to_quat(float *res, float roll, float pitch, float yaw) // roll (X)
 	return (res);
 }
 
-float	*mat4_rotation_quat(float *res, float *q0)
+float	*m4_rotation_quat(float *res, float *q0)
 {
 	float	xx = q0[0] * q0[0];
 	float	yy = q0[1] * q0[1];

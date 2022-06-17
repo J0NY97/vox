@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/16 13:41:57 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/17 11:16:21 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/17 12:08:06 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -202,13 +202,15 @@ void	model_init(t_model_v2 *model)
 	glEnableVertexAttribArray(0); // pos
 	glEnableVertexAttribArray(1); // uvs
 
-	glGenBuffers(3, vbo);
+	glGenBuffers(2, vbo);
 	model->vbo_pos = vbo[0];
 	model->vbo_tex = vbo[1];
-	model->vbo_nor = vbo[2];
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(float) * model->vertices_amount, NULL);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_TRUE, sizeof(float) * model->uvs_amount, NULL);
+	glBindBuffer(GL_ARRAY_BUFFER, model->vbo_pos);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
+
+	glBindBuffer(GL_ARRAY_BUFFER, model->vbo_tex);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_TRUE, sizeof(float) * 2, NULL);
 
 	// NOTE: you have to load the mats into this separately;
 	model->materials = NULL;
@@ -233,7 +235,7 @@ void	model_init(t_model_v2 *model)
 */
 void	material_init(t_material_v2 *mat)
 {
-	mat->texture = -1;
+	mat->texture = 0;
 }
 
 /*
@@ -254,7 +256,8 @@ void	mesh_init(t_mesh_v2 *mesh)
 */
 void	model_from_bobj(t_model_v2 *model, t_bobj *bob, int index)
 {
-	t_bobj_object *bobject;
+	t_bobj_object	*bobject;
+	char			tmp[256];
 
 	if (index < 0 || index > bob->objects_amount)
 	{
@@ -274,6 +277,17 @@ void	model_from_bobj(t_model_v2 *model, t_bobj *bob, int index)
 	model->normals_amount = bobject->vn_amount * 3;
 
 	model->material_amount = bob->materials_amount;
+	model->materials = malloc(sizeof(t_material_v2) * model->material_amount);
+	for (int m = 0; m < model->material_amount; m++)
+	{
+		material_init(&model->materials[m]);
+		if (!new_texture(&model->materials[m].texture, bob->materials[m].map_Kd))
+		{
+			ft_strcpy(tmp, bob->root_dir);
+			ft_strcpy(tmp + ft_strlen(tmp), bob->materials[m].map_Kd);
+			new_texture(&model->materials[m].texture, tmp);
+		}
+	}
 	
 	model->meshes_amount = bobject->meshes_amount;
 	model->meshes = malloc(sizeof(t_mesh_v2) * model->meshes_amount);
@@ -283,6 +297,8 @@ void	model_from_bobj(t_model_v2 *model, t_bobj *bob, int index)
 		// V- NOTE: we are typecasting from 't_bobj_u3' to 'uint *'..; (how is this even allowed);
 		model->meshes[m].indices = (unsigned int *)bobject->meshes[m].f;
 		model->meshes[m].indices_amount = (int)bobject->meshes[m].index_amount;
+		model->meshes[m].texture = model->materials[bobject->meshes[m].material_index].texture;
+		ft_printf("texture : %d\n", model->meshes[m].texture);
 	}
 	LG_INFO("End");
 }
@@ -325,14 +341,9 @@ void	model_update(t_model_v2 *model)
 */
 void	mesh_render(t_mesh_v2 *mesh)
 {
+	glActiveTexture(GL_TEXTURE0 + 0);
+	glBindTexture(GL_TEXTURE_2D, mesh->texture);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
-	ft_printf("indices amount : %d\n", mesh->indices_amount);
-	for (int i = 0; i < mesh->indices_amount; i++)
-	{
-		if (i % 3 == 0)
-			ft_printf("\n");
-		ft_printf("%d ", mesh->indices[i]);
-	}
 	glDrawElements(GL_TRIANGLES, mesh->indices_amount, GL_UNSIGNED_INT, NULL);
 }
 

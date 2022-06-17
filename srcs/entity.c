@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/17 10:42:27 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/17 10:59:46 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/17 12:38:28 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 
 void	new_entity(t_entity *entity)
 {
-	new_vec3(entity->pos, 0.0f, 0.0f, 0.0f);
+	v3_new(entity->pos, 0.0f, 0.0f, 0.0f);
 	entity->rot_x_angle = 0.0f;
 	entity->rot_y_angle = 0.0f;
 	entity->rot_z_angle = 0.0f;
@@ -35,15 +35,15 @@ void	new_entity(t_entity *entity)
 void	entity_print(t_entity *entity)
 {
 	ft_printf("Entity :\n");
-	vec3_string("entity.pos : ", entity->pos);
+	v3_string("entity.pos : ", entity->pos);
 	ft_printf("entity.rot_x_angle : %f\n", entity->rot_x_angle);
 	ft_printf("entity.rot_y_angle : %f\n", entity->rot_y_angle);
 	ft_printf("entity.rot_z_angle : %f\n", entity->rot_z_angle);
 
-	mat4_string("scale_mat :", entity->scale_mat);
-	mat4_string("rot_mat :", entity->rot_mat);
-	mat4_string("trans_mat :", entity->trans_mat);
-	mat4_string("model_mat :", entity->model_mat);
+	m4_string("scale_mat :", entity->scale_mat);
+	m4_string("rot_mat :", entity->rot_mat);
+	m4_string("trans_mat :", entity->trans_mat);
+	m4_string("model_mat :", entity->model_mat);
 }
 
 void	new_model_matrix(float *m4_res, float scale, float *v3_rot, float *v3_pos)
@@ -56,33 +56,33 @@ void	new_model_matrix(float *m4_res, float scale, float *v3_rot, float *v3_pos)
 	float	tmp_mat[16];
 
 // Scale
-	mat4_identity(scale_mat);
-	mat4_scale(scale_mat, scale_mat, new_vec3(tmp, scale, scale, scale));
+	m4_identity(scale_mat);
+	m4_scale(scale_mat, scale_mat, v3_new(tmp, scale, scale, scale));
 
 // Rot
-	mat4_identity(rot_mat);
+	m4_identity(rot_mat);
 	// x
-	mat4_identity(tmp_mat);
-	mat4_rotation_x(tmp_mat, to_radians(v3_rot[0]));
-	mat4_multiply(rot_mat, tmp_mat, rot_mat);
+	m4_identity(tmp_mat);
+	m4_rotation_x(tmp_mat, to_radians(v3_rot[0]));
+	m4_multiply(rot_mat, tmp_mat, rot_mat);
 	// y
-	mat4_identity(tmp_mat);
-	mat4_rotation_y(tmp_mat, to_radians(v3_rot[1]));
-	mat4_multiply(rot_mat, tmp_mat, rot_mat);
+	m4_identity(tmp_mat);
+	m4_rotation_y(tmp_mat, to_radians(v3_rot[1]));
+	m4_multiply(rot_mat, tmp_mat, rot_mat);
 	// z
-	mat4_identity(tmp_mat);
-	mat4_rotation_z(tmp_mat, to_radians(v3_rot[2]));
-	mat4_multiply(rot_mat, tmp_mat, rot_mat);
+	m4_identity(tmp_mat);
+	m4_rotation_z(tmp_mat, to_radians(v3_rot[2]));
+	m4_multiply(rot_mat, tmp_mat, rot_mat);
 
 // Trans
-	mat4_identity(trans_mat);
-	mat4_translate(trans_mat, trans_mat, v3_pos);
+	m4_identity(trans_mat);
+	m4_translate(trans_mat, trans_mat, v3_pos);
 
 // Final
-	mat4_identity(m4_res);
-	mat4_multiply(m4_res, scale_mat, m4_res);
-	mat4_multiply(m4_res, rot_mat, m4_res);
-	mat4_multiply(m4_res, trans_mat, m4_res);
+	m4_identity(m4_res);
+	m4_multiply(m4_res, scale_mat, m4_res);
+	m4_multiply(m4_res, rot_mat, m4_res);
+	m4_multiply(m4_res, trans_mat, m4_res);
 }
 
 /*
@@ -90,30 +90,30 @@ void	new_model_matrix(float *m4_res, float scale, float *v3_rot, float *v3_pos)
  */
 void	update_entity(t_entity *entity)
 {
-	float	temp[VEC3_SIZE];
+	float	temp[V3_SIZE];
 
-	mat4_identity(entity->scale_mat);
-	mat4_scale(entity->scale_mat, entity->scale_mat,
-		new_vec3(temp, entity->scale_value, entity->scale_value, entity->scale_value));
+	m4_identity(entity->scale_mat);
+	m4_scale(entity->scale_mat, entity->scale_mat,
+		v3_new(temp, entity->scale_value, entity->scale_value, entity->scale_value));
 
 
-	mat4_identity(entity->rot_mat);
+	m4_identity(entity->rot_mat);
 
-	float	rot_x[MAT4_SIZE];
-	mat4_identity(rot_x);
-	mat4_rotation_x(rot_x, to_radians(entity->rot_x_angle));
+	float	rot_x[M4_SIZE];
+	m4_identity(rot_x);
+	m4_rotation_x(rot_x, to_radians(entity->rot_x_angle));
 
-	float	rot_y[MAT4_SIZE];
-	mat4_identity(rot_y);
-	mat4_rotation_y(rot_y, to_radians(entity->rot_y_angle));
+	float	rot_y[M4_SIZE];
+	m4_identity(rot_y);
+	m4_rotation_y(rot_y, to_radians(entity->rot_y_angle));
 
-	float	rot_z[MAT4_SIZE];
-	mat4_identity(rot_z);
-	mat4_rotation_z(rot_z, to_radians(entity->rot_z_angle));
+	float	rot_z[M4_SIZE];
+	m4_identity(rot_z);
+	m4_rotation_z(rot_z, to_radians(entity->rot_z_angle));
 
-	mat4_multiply(entity->rot_mat, rot_x, entity->rot_mat);
-	mat4_multiply(entity->rot_mat, rot_y, entity->rot_mat);
-	mat4_multiply(entity->rot_mat, rot_z, entity->rot_mat);
+	m4_multiply(entity->rot_mat, rot_x, entity->rot_mat);
+	m4_multiply(entity->rot_mat, rot_y, entity->rot_mat);
+	m4_multiply(entity->rot_mat, rot_z, entity->rot_mat);
 
 /*
 	float	q[QUAT_SIZE];
@@ -121,17 +121,17 @@ void	update_entity(t_entity *entity)
 		to_radians(entity->rot_x_angle),
 		to_radians(entity->rot_y_angle),
 		to_radians(entity->rot_z_angle));
-	mat4_rotation_quat(entity->rot_mat, q);
+	m4_rotation_quat(entity->rot_mat, q);
 	*/
 
-	mat4_identity(entity->trans_mat);
-	mat4_translate(entity->trans_mat, entity->trans_mat, entity->pos);
+	m4_identity(entity->trans_mat);
+	m4_translate(entity->trans_mat, entity->trans_mat, entity->pos);
 
 
-	mat4_identity(entity->model_mat);
-	mat4_multiply(entity->model_mat, entity->scale_mat, entity->model_mat);
-	mat4_multiply(entity->model_mat, entity->rot_mat, entity->model_mat);
-	mat4_multiply(entity->model_mat, entity->trans_mat, entity->model_mat);
+	m4_identity(entity->model_mat);
+	m4_multiply(entity->model_mat, entity->scale_mat, entity->model_mat);
+	m4_multiply(entity->model_mat, entity->rot_mat, entity->model_mat);
+	m4_multiply(entity->model_mat, entity->trans_mat, entity->model_mat);
 
 	// AABB
 	if (entity->collision_detection_enabled)

@@ -2,11 +2,11 @@
 
 void	new_camera(t_camera *camera)
 {
-	new_vec3(camera->pos, 0.0f, 0.0f, 0.0f);
-	new_vec3(camera->front, 0.0f, 0.0f, -1.0f);
-	new_vec3(camera->up, 0.0f, 1.0f, 0.0f);
-	vec3_normalize(camera->right,
-		vec3_cross(camera->right, camera->up, camera->front));
+	v3_new(camera->pos, 0.0f, 0.0f, 0.0f);
+	v3_new(camera->front, 0.0f, 0.0f, -1.0f);
+	v3_new(camera->up, 0.0f, 1.0f, 0.0f);
+	v3_normalize(camera->right,
+		v3_cross(camera->right, camera->up, camera->front));
 	camera->fov = 90.0f;
 	camera->pitch = 0.0f;
 	camera->yaw = -90.0f;
@@ -25,25 +25,25 @@ void	new_camera(t_camera *camera)
  */
 void	update_camera(t_camera *camera)
 {
-	float	v3[VEC3_SIZE];
+	float	v3[V3_SIZE];
 
-	new_vec3(camera->front,
+	v3_new(camera->front,
 		cos(to_radians(camera->yaw)) * cos(to_radians(camera->pitch)),
 		sin(to_radians(camera->pitch)),
 		sin(to_radians(camera->yaw)) * cos(to_radians(camera->pitch)));
-	vec3_normalize(camera->front, camera->front);
+	v3_normalize(camera->front, camera->front);
 
-	vec3_normalize(camera->right,
-		vec3_cross(camera->right, camera->up, camera->front));
+	v3_normalize(camera->right,
+		v3_cross(camera->right, camera->up, camera->front));
 
-	mat4_identity(camera->projection);
-	mat4_perspective_fov(camera->projection, to_radians(camera->fov),
+	m4_identity(camera->projection);
+	m4_perspective_fov(camera->projection, to_radians(camera->fov),
 		camera->viewport_w, camera->viewport_h,
 		camera->near_plane, camera->far_plane);
 
-	mat4_identity(camera->view);
-	mat4_look_at(camera->view, camera->pos,
-		vec3_add(v3, camera->pos, camera->front), camera->up);
+	m4_identity(camera->view);
+	m4_look_at(camera->view, camera->pos,
+		v3_add(v3, camera->pos, camera->front), camera->up);
 
 	frustum_new(&camera->frustum, camera);
 }
@@ -51,10 +51,10 @@ void	update_camera(t_camera *camera)
 void	camera_print(t_camera *camera)
 {
 	ft_printf("CAMERA :\n");
-	vec3_string("camera.pos : ", camera->pos);
-	vec3_string("camera.front : ", camera->front);
-	vec3_string("camera.up : ", camera->up);
-	vec3_string("camera.right : ", camera->right);
+	v3_string("camera.pos : ", camera->pos);
+	v3_string("camera.front : ", camera->front);
+	v3_string("camera.up : ", camera->up);
+	v3_string("camera.right : ", camera->right);
 	ft_printf("camera.pitch : %f\n", camera->pitch);
 	ft_printf("camera.yaw : %f\n", camera->yaw);
 	ft_printf("camera.fov : %f\n", camera->fov);

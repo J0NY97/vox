@@ -6,22 +6,22 @@
  */
 int	is_point_in_triangle(float *point, float *p1, float *p2, float *p3)
 {
-	float	e0[VEC3_SIZE];
-	float	e1[VEC3_SIZE];
+	float	e0[V3_SIZE];
+	float	e1[V3_SIZE];
 
-	vec3_sub(e0, p2, p1);
-	vec3_sub(e1, p3, p1);
+	v3_sub(e0, p2, p1);
+	v3_sub(e1, p3, p1);
 
-	float a = vec3_dot(e0, e0);
-	float b = vec3_dot(e0, e1);
-	float c = vec3_dot(e1, e1);
+	float a = v3_dot(e0, e0);
+	float b = v3_dot(e0, e1);
+	float c = v3_dot(e1, e1);
 	float ac_bb = (a * c) + (b * b);
 
-	float vp[VEC3_SIZE];
-	new_vec3(vp, point[0] - p1[0], point[1] - p1[1], point[2] - p1[2]);
+	float vp[V3_SIZE];
+	v3_new(vp, point[0] - p1[0], point[1] - p1[1], point[2] - p1[2]);
 
-	float d = vec3_dot(vp, e0);
-	float e = vec3_dot(vp, e1);
+	float d = v3_dot(vp, e0);
+	float e = v3_dot(vp, e1);
 	float x = (d * c) - (e * b);
 	float y = (e * a) - (d * b);
 	float z = x + y - ac_bb;
@@ -107,7 +107,7 @@ int	triangle_collision(float *pos, float *velocity, float *p1, float *p2, float 
 }
 
 /*
- * Both 'res' and 'src' should be 'float [VEC3_SIZE]';
+ * Both 'res' and 'src' should be 'float [V3_SIZE]';
  *
  * Returns 'res';
  */
@@ -138,7 +138,7 @@ float	*espace_conversion(float *res, float *src)
  */
 int	ellipsoid_collision(float *pos, float *velocity, float *p1, float *p2, float *p3)
 {
-	float	epos[VEC3_SIZE];
+	float	epos[V3_SIZE];
 	int		found;
 
 	found = 0;

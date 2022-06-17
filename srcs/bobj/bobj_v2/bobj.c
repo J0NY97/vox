@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/14 13:56:52 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/16 14:31:15 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/17 12:28:43 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -355,21 +355,25 @@ void	bobj_load(t_bobj *bob, char *file_path)
 						else
 							vn_index = ft_atoi(arr[1]);
 					}
+					// Because .obj is stupid and thinks 1 is the first index;
+					v_index -= 1;
+					vt_index -= 1;
+					vn_index -= 1;
 
 					// Get the values from the tmp arrays, and place them in the object arrays;
-					if (v_index != -1)
+					if (v_index >= 0)
 					{
 						bobj_v3_new(&bob->objects[o].v[bob->objects[o].v_amount],
 							tmp_v[v_index].x, tmp_v[v_index].y, tmp_v[v_index].z);
 						++bob->objects[o].v_amount;
 					}
-					if (vt_index != -1)
+					if (vt_index >= 0)
 					{
 						bobj_v2_new(&bob->objects[o].vt[bob->objects[o].vt_amount],
 							tmp_vt[vt_index].x, tmp_vt[vt_index].y);
 						++bob->objects[o].vt_amount;
 					}
-					if (vn_index != -1)
+					if (vn_index >= 0)
 					{
 						bobj_v3_new(&bob->objects[o].vn[bob->objects[o].vn_amount],
 							tmp_vn[vn_index].x, tmp_vn[vn_index].y, tmp_vn[vn_index].z);
@@ -552,6 +556,66 @@ int	bobj_load_material(t_bobj *bob, char *file_path)
 	LG_INFO("Done reading mat file");
 # endif
 	return (mat_amount);
+}
+
+void	bobj_free(t_bobj *bob)
+{
+	free(bob->root_dir);
+
+	// bobject free;
+	t_bobj_object	*bobject;
+	t_bobj_mesh		*bobmesh;
+	for (int b = 0; b < bob->objects_amount; b++)
+	{
+		bobject = &bob->objects[b];
+
+		if (bobject->name)
+			free(bobject->name);
+		if (bobject->v)
+			free(bobject->v);
+		if (bobject->vt)
+			free(bobject->vt);
+		if (bobject->vn)
+			free(bobject->vn);
+
+		bobject->name = NULL;
+		bobject->v = NULL;
+		bobject->vt = NULL;
+		bobject->vn = NULL;
+
+		// free Mesh
+		for (int m = 0; m < bobject->meshes_amount; m++)
+		{
+			bobmesh = &bobject->meshes[m];
+			free(bobmesh->f);
+			bobmesh->f = NULL;
+		}
+		free(bobject->meshes);
+		bobject->meshes = NULL;
+	}
+
+	// free material
+	t_bobj_material	*boberial;
+	for (int m = 0; m < bob->materials_amount; m++)
+	{
+		boberial = &bob->materials[m];
+		if (boberial->name)
+			free(boberial->name);
+		if (boberial->map_Bump)
+			free(boberial->map_Bump);
+		if (boberial->map_Kd)
+			free(boberial->map_Kd);
+		if (boberial->map_Ns)
+			free(boberial->map_Ns);
+		if (boberial->refl)
+			free(boberial->refl);
+		
+		boberial->name = NULL;
+		boberial->map_Bump = NULL;
+		boberial->map_Kd = NULL;
+		boberial->map_Ns = NULL;
+		boberial->refl = NULL;
+	}
 }
 
 /*

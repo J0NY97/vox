@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/14 12:14:59 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/14 12:19:35 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/17 12:31:48 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@ typedef struct s_camera	t_camera;
 
 typedef struct s_plane
 {
-	float	normal[VEC3_SIZE];
+	float	normal[V3_SIZE];
 	float	dist;
 }	t_plane;
 
@@ -51,10 +51,10 @@ int			aabb_on_plane(t_aabb *a, t_plane *p);
 
 struct s_camera
 {
-	float		pos[VEC3_SIZE];
-	float		front[VEC3_SIZE];
-	float		up[VEC3_SIZE];
-	float		right[VEC3_SIZE];
+	float		pos[V3_SIZE];
+	float		front[V3_SIZE];
+	float		up[V3_SIZE];
+	float		right[V3_SIZE];
 	float		yaw;
 	float		pitch;
 	float		fov;
@@ -64,8 +64,8 @@ struct s_camera
 	int			viewport_w;
 	int			viewport_h;
 
-	float		view[MAT4_SIZE];
-	float		projection[MAT4_SIZE];
+	float		view[M4_SIZE];
+	float		projection[M4_SIZE];
 
 	t_frustum	frustum;
 };

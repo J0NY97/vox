@@ -19,22 +19,22 @@ void	explode(t_world *info, float pos[3], float intensity)
 
 	set_block_at_world_pos(info, pos, GAS_AIR);
 
-	vec3_new(tmp, pos[0] - 1, pos[1], pos[2]);
+	v3_new(tmp, pos[0] - 1, pos[1], pos[2]);
 	explode(info, tmp, intensity);
 		
-	vec3_new(tmp, pos[0] + 1, pos[1], pos[2]);
+	v3_new(tmp, pos[0] + 1, pos[1], pos[2]);
 	explode(info, tmp, intensity);
 
-	vec3_new(tmp, pos[0], pos[1] - 1, pos[2]);
+	v3_new(tmp, pos[0], pos[1] - 1, pos[2]);
 	explode(info, tmp, intensity);
 
-	vec3_new(tmp, pos[0], pos[1] + 1, pos[2]);
+	v3_new(tmp, pos[0], pos[1] + 1, pos[2]);
 	explode(info, tmp, intensity);
 
-	vec3_new(tmp, pos[0], pos[1], pos[2] - 1);
+	v3_new(tmp, pos[0], pos[1], pos[2] - 1);
 	explode(info, tmp, intensity);
 
-	vec3_new(tmp, pos[0], pos[1], pos[2] + 1);
+	v3_new(tmp, pos[0], pos[1], pos[2] + 1);
 	explode(info, tmp, intensity);
 }
 

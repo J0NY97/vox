@@ -32,16 +32,16 @@ void	aabb_create(t_aabb *res, float *vertices, size_t vertex_amount)
 */
 void	aabb_transform(t_aabb *a, float *model)
 {
-	float	v4[VEC4_SIZE];
+	float	v4[V4_SIZE];
 	t_aabb	temp;
 
-	vec4_new(v4, a->min[0], a->min[1], a->min[2], 1);
-	vec4_multiply_mat4(v4, v4, model);
-	vec4_to_vec3(a->min, v4);
+	v4_new(v4, a->min[0], a->min[1], a->min[2], 1);
+	v4_multiply_m4(v4, v4, model);
+	v4_to_v3(a->min, v4);
 
-	vec4_new(v4, a->max[0], a->max[1], a->max[2], 1);
-	vec4_multiply_mat4(v4, v4, model);
-	vec4_to_vec3(a->max, v4);
+	v4_new(v4, a->max[0], a->max[1], a->max[2], 1);
+	v4_multiply_m4(v4, v4, model);
+	v4_to_v3(a->max, v4);
 
 	temp = *a;
 	if (temp.min[0] > temp.max[0])
@@ -56,7 +56,7 @@ void	aabb_transform(t_aabb *a, float *model)
 // TODO : Replace the old version with this;
 void	aabb_transform_new(t_aabb *a, float *model)
 {
-	float	v4[VEC4_SIZE];
+	float	v4[V4_SIZE];
 
 	a->min[0] = INFINITY;
 	a->min[1] = INFINITY;
@@ -68,8 +68,8 @@ void	aabb_transform_new(t_aabb *a, float *model)
 
 	for (int i = 0; i < 24; i += 3)
 	{
-		vec4_new(v4, a->vertices[i + 0], a->vertices[i + 1], a->vertices[i + 2], 1);
-		vec4_multiply_mat4(v4, v4, model);
+		v4_new(v4, a->vertices[i + 0], a->vertices[i + 1], a->vertices[i + 2], 1);
+		v4_multiply_m4(v4, v4, model);
 		a->vertices[i + 0] = v4[0];
 		a->vertices[i + 1] = v4[1];
 		a->vertices[i + 2] = v4[2];
@@ -142,15 +142,15 @@ float	point_aabb_nearest_distance(float *point, t_aabb *b)
 {
 	float	dist = INFINITY;
 
-	float d0 = vec3_dist_sqrd(point, (float []){b->min[0], b->min[1], b->min[2]});
-	float d1 = vec3_dist_sqrd(point, (float []){b->min[0], b->max[1], b->min[2]});
-	float d2 = vec3_dist_sqrd(point, (float []){b->max[0], b->max[1], b->min[2]});
-	float d3 = vec3_dist_sqrd(point, (float []){b->max[0], b->min[1], b->min[2]});
+	float d0 = v3_dist_sqrd(point, (float []){b->min[0], b->min[1], b->min[2]});
+	float d1 = v3_dist_sqrd(point, (float []){b->min[0], b->max[1], b->min[2]});
+	float d2 = v3_dist_sqrd(point, (float []){b->max[0], b->max[1], b->min[2]});
+	float d3 = v3_dist_sqrd(point, (float []){b->max[0], b->min[1], b->min[2]});
 
-	float b0 = vec3_dist_sqrd(point, (float []){b->max[0], b->max[1], b->max[2]});
-	float b1 = vec3_dist_sqrd(point, (float []){b->max[0], b->min[1], b->max[2]});
-	float b2 = vec3_dist_sqrd(point, (float []){b->min[0], b->min[1], b->max[2]});
-	float b3 = vec3_dist_sqrd(point, (float []){b->min[0], b->max[1], b->max[2]});
+	float b0 = v3_dist_sqrd(point, (float []){b->max[0], b->max[1], b->max[2]});
+	float b1 = v3_dist_sqrd(point, (float []){b->max[0], b->min[1], b->max[2]});
+	float b2 = v3_dist_sqrd(point, (float []){b->min[0], b->min[1], b->max[2]});
+	float b3 = v3_dist_sqrd(point, (float []){b->min[0], b->max[1], b->max[2]});
 
 	float c0 = fmin(d0, d1);
 	float c1 = fmin(d2, d3);
@@ -172,7 +172,7 @@ float	point_aabb_center_distance(float *point, t_aabb *b)
 	float	e[3];
 	float	c[3];
 
-	vec3_multiply_f(e, vec3_sub(e, b->max, b->min), 0.5f);
-	vec3_add(c, b->min, e);
-	return (vec3_dist_sqrd(point, c));
+	v3_multiply_f(e, v3_sub(e, b->max, b->min), 0.5f);
+	v3_add(c, b->min, e);
+	return (v3_dist_sqrd(point, c));
 }

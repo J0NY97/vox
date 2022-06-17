@@ -2,6 +2,7 @@
 #include "chunk.h"
 #include "shader.h"
 #include "bobj.h"
+#include "enum.h"
 //#include "ui_manager.h"
 //#include "ui.h"
 
@@ -53,7 +54,7 @@ void	uninit(t_shaderpixel *sp)
 
 /*
  * From face get nth vertex;
- * res[VEC3_SIZE];
+ * res[V3_SIZE];
  * vertex_index = 0-3;
  * face_index = 0-index_amount;
 */
@@ -72,8 +73,8 @@ void	scop_stuff(t_shaderpixel *sp)
 {
 	t_player	player;
 	new_player(&player);
-	new_vec3(player.camera.pos, 5, 70, 5);
-//	new_vec3(player.camera.pos, 16384, 80, 16384);
+	v3_new(player.camera.pos, 5, 70, 5);
+//	v3_new(player.camera.pos, 16384, 80, 16384);
 	player.camera.pitch = 0;
 	player.camera.yaw = -90;
 	player.camera.viewport_w = sp->win_w;
@@ -90,8 +91,8 @@ void	scop_stuff(t_shaderpixel *sp)
 	t_entity	*retrotv = malloc(sizeof(t_entity));
 	new_entity(retrotv);
 	new_model(&retrotv->model, &retrotv_obj);
-	//new_vec3(retrotv->pos, 0, 0, -2.5);
-	new_vec3(retrotv->pos, 0, 90, 0);
+	//v3_new(retrotv->pos, 0, 0, -2.5);
+	v3_new(retrotv->pos, 0, 90, 0);
 //	size_t	retrotv_index = add_entity_to_scene(&scene, retrotv);
 	retrotv->collision_detection_enabled = 0;
 	retrotv->collision_use_precise = 0;
@@ -118,7 +119,7 @@ void	scop_stuff(t_shaderpixel *sp)
 	new_model(&display->model, &display_obj);
 	size_t display_index = 0;
 //	display_index = add_entity_to_scene(&scene, display);
-	new_vec3(display->pos, 1.2, 90, -2.0);
+	v3_new(display->pos, 1.2, 90, -2.0);
 	display->collision_detection_enabled = 0;
 	display->scale_value = 0.1;
 	display->rot_x_angle = 0;
@@ -181,26 +182,64 @@ int	main(void)
 	init(&sp);
 	new_fps(&fps);
 
-	// Note to self, use gl stuff after gl has been inited;
-	t_bobj	bobj_melon_golem;
-	bobj_load(&bobj_melon_golem, MODEL_PATH"melon_golem/melon_golem.obj");
-	t_model_v2	model_melon_golem;
-	model_from_bobj(&model_melon_golem, &bobj_melon_golem, 0);
-	GLuint		model_shader;
-	new_shader(&model_shader, SHADER_PATH"model.vs", SHADER_PATH"model.fs");
-
-	model_update(&model_melon_golem);
-
+	//////////////////
+	// PLAYER
+	//////////////////
 	t_player	player;
 	new_player(&player);
-	new_vec3(player.camera.pos, 5000, 90, 5000);
+	v3_new(player.camera.pos, 5000, 90, 5000);
 //	new_vec3(player.camera.pos, 16384, 80, 16384);
 	player.camera.pitch = 0;
 	player.camera.yaw = -90;
 	player.camera.viewport_w = sp.win_w;
 	player.camera.viewport_h = sp.win_h;
-
 	player.gravity = 0;
+
+
+	////////////////////////////////
+	// MODEL / BOBJ / ENTITY
+	////////////////////////////////
+
+	// Note to self, use gl stuff after gl has been inited;
+	t_bobj	bobj_melon_golem;
+	bobj_load(&bobj_melon_golem, MODEL_PATH"melon_golem/melon_golem.obj");
+	GLuint		model_shader;
+	new_shader(&model_shader, SHADER_PATH"model.vs", SHADER_PATH"model.fs");
+	t_model_v2	model_melon_golem;
+	model_from_bobj(&model_melon_golem, &bobj_melon_golem, 0);
+
+	float melon_golem_pos[3];
+	v3_new(melon_golem_pos, 5000, 90, 5010);
+	model_update(&model_melon_golem);
+
+	// Load vox entity models
+	t_bobj		vox_entity_bobj[ENTITY_AMOUNT]; // NOTE : remember to free;
+	t_model_v2	vox_entity_models[ENTITY_AMOUNT];
+	for (int i = 0; i < ENTITY_AMOUNT; i++)
+	{
+		bobj_load(&vox_entity_bobj[i], g_entity_data[i].model_path);
+		model_from_bobj(&vox_entity_models[i], &vox_entity_bobj[i], 0);
+	}
+	LG_INFO("All entity models loaded (%d)", ENTITY_AMOUNT);
+
+	// Create entities (DEBUG)
+	int				entity_amount = 1000;
+	t_vox_entity	entities[entity_amount];
+	for (int i = 0; i < entity_amount ; i++)
+	{
+		vox_entity_new(&entities[i]);
+		entities[i].type = ENTITY_MELON_GOLEM;
+		int		w = sqrt(entity_amount);
+		int		h = 10;
+		float	x = i % w * 10;
+		float	y = i / w * 10;
+		v3_new(entities[i].pos,
+			player.camera.pos[0] + x,
+			player.camera.pos[1] + y, 
+			player.camera.pos[2] - 10
+			);
+	}
+
 
 	GLuint	crosshair_shader;
 	new_crosshair_shader(&crosshair_shader);
@@ -266,7 +305,7 @@ int	main(void)
 	chunk_info.meshes_render_amount = 0;
 
 	glGenTextures(1, &chunk_info.texture);
-	new_texture(&chunk_info.texture, MODEL_PATH"cube/version_3_texture_alpha.bmp");
+	new_texture(&chunk_info.texture, TEXTURE_PATH"version_3_texture_alpha.bmp");
 
 	chunk_info.chunks = malloc(sizeof(t_chunk) * CHUNKS_LOADED);
 	chunk_info.chunk_columns = malloc(sizeof(t_chunk_col) * CHUNK_COLUMNS);
@@ -274,7 +313,7 @@ int	main(void)
 	int		nth_chunk = 0;
 	int		nth_col = -1;
 	int		nth_col_chunk = 0;
-	int		player_chunk[VEC3_SIZE];
+	int		player_chunk[V3_SIZE];
 
 	get_chunk_pos_from_world_pos(player_chunk, player.camera.pos);
 
@@ -376,15 +415,15 @@ int	main(void)
 			player_print(&player);
 
 		if (keys[GLFW_KEY_R].state == BUTTON_PRESS)
-			vec3_new(player.camera.pos, 0, 100, 0);
+			v3_new(player.camera.pos, 0, 100, 0);
 		if (keys[GLFW_KEY_LEFT].state == BUTTON_PRESS)
-			vec3_add(player.camera.pos, player.camera.pos, (float []){-10, 0, 0});
+			v3_add(player.camera.pos, player.camera.pos, (float []){-10, 0, 0});
 		if (keys[GLFW_KEY_RIGHT].state == BUTTON_PRESS)
-			vec3_add(player.camera.pos, player.camera.pos, (float []){10, 0, 0});
+			v3_add(player.camera.pos, player.camera.pos, (float []){10, 0, 0});
 		if (keys[GLFW_KEY_UP].state == BUTTON_PRESS)
-			vec3_add(player.camera.pos, player.camera.pos, (float []){0, -10, 0});
+			v3_add(player.camera.pos, player.camera.pos, (float []){0, -10, 0});
 		if (keys[GLFW_KEY_DOWN].state == BUTTON_PRESS)
-			vec3_add(player.camera.pos, player.camera.pos, (float []){0, 10, 0});
+			v3_add(player.camera.pos, player.camera.pos, (float []){0, 10, 0});
 
 		if (keys[GLFW_KEY_C].state == BUTTON_PRESS)
 		{
@@ -705,7 +744,7 @@ int	main(void)
 			// Dont render if the chunk is outside the view fustrum;
 			// Dont render if hasnt been sent to gpu yet;
 			if (chunk_info.chunks[nth_chunk].was_updated == 0 &&
-				vec3_dist(player.camera.pos, chunk_info.chunks[nth_chunk].world_coordinate) <
+				v3_dist(player.camera.pos, chunk_info.chunks[nth_chunk].world_coordinate) <
 				player.camera.far_plane + CHUNK_SIZE_X &&
 				aabb_in_frustum(&chunk_info.chunks[nth_chunk].aabb, &player.camera.frustum))
 			{
@@ -752,11 +791,11 @@ int	main(void)
 			float	closest_dist = INFINITY;
 			for (int colli = 0; colli < collision_result; ++colli)
 			{
-				distancione = vec3_dist_sqrd(player.camera.pos, intersect_point[colli]);
+				distancione = v3_dist_sqrd(player.camera.pos, intersect_point[colli]);
 				if (distancione < closest_dist)
 				{
 					closest_dist = distancione;
-					vec3_assign(closest_point, intersect_point[colli]);
+					v3_assign(closest_point, intersect_point[colli]);
 					closest_index = intersect_chunk_index[colli];
 				}
 			}
@@ -776,7 +815,7 @@ int	main(void)
 				else if (mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS)
 				{
 					float	block_world[3];
-					vec3_add(block_world, block_pos, (float *)g_card_dir[face]);
+					v3_add(block_world, block_pos, (float *)g_card_dir[face]);
 					// Check if block or item equipped;
 					LG_INFO("Place Item at %f %f %f", block_world[0], block_world[1], block_world[2]);
 					if (!is_type_item(player_info.equipped_block))
@@ -793,11 +832,11 @@ int	main(void)
 				else if (mouse[GLFW_MOUSE_BUTTON_MIDDLE].state == BUTTON_PRESS)
 				{
 					block_print(hovered_block);
-					vec3i_string("Local Coordinates : ", block_local);
-					vec3_string("World Coordinates : ", block_pos);
+					v3i_string("Local Coordinates : ", block_local);
+					v3_string("World Coordinates : ", block_pos);
 					t_chunk *temp_chunk = get_chunk_from_world_pos(&chunk_info, block_pos);
-					vec3i_string("Chunk Coordinates : ", temp_chunk->coordinate);
-					vec3_string("Chunk World Coordinates : ", temp_chunk->world_coordinate);
+					v3i_string("Chunk Coordinates : ", temp_chunk->coordinate);
+					v3_string("Chunk World Coordinates : ", temp_chunk->world_coordinate);
 
 				}
 			}
@@ -849,8 +888,21 @@ if (error)
 // Model Rendering
 ////////////////////////
 	float	model_mat[16];
-	new_model_matrix(model_mat, 1.0f, (float []){0, 0, 0}, (float []){player.camera.pos[0], player.camera.pos[1], player.camera.pos[2] + 10.0f});
-	model_render(&model_melon_golem, model_shader, model_mat, player.camera.view, player.camera.projection);
+	new_model_matrix(model_mat, 1.0f, (float []){90, 0, 0}, melon_golem_pos);
+//	model_render(&model_melon_golem, model_shader, model_mat, player.camera.view, player.camera.projection);
+
+	for (int i = 0; i < entity_amount; i++)
+	{
+	//	ft_printf("#%d %s (%d)\n", i, g_entity_data[entities[i].type].name, g_entity_data[entities[i].type].type);
+		v3_new(entities[i].rot,
+			entities[i].rot[0] + rand() / 100 * fps.delta_time, 
+			entities[i].rot[1] + rand() / 100 * fps.delta_time, 
+			entities[i].rot[2] + rand() / 100 * fps.delta_time
+			);
+		new_model_matrix(model_mat, 1.0f, entities[i].rot, entities[i].pos);
+//		model_render(&vox_entity_models[entities[i].type], model_shader, model_mat, player.camera.view, player.camera.projection);
+		model_render(&model_melon_golem, model_shader, model_mat, player.camera.view, player.camera.projection);
+	}
 
 
 error = glGetError();

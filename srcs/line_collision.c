@@ -13,8 +13,8 @@ int	point_on_line(float *point, float *start, float *end)
 	float	c[3];
 	float	g = -(INFINITY - 1);
 
-	vec3_normalize(a, start);
-	vec3_normalize(b, end);
+	v3_normalize(a, start);
+	v3_normalize(b, end);
 	if (a[0] != b[0] || a[1] != b[1] || a[2] != b[2])
 		return (0);
 	for (int i = 0; i < 3; i++)
@@ -24,13 +24,13 @@ int	point_on_line(float *point, float *start, float *end)
 		if (b[i] > g)
 			g = b[i];
 	}
-	vec3_normalize(c, point);
-	vec3_divide_f(a, a, g);
-	vec3_divide_f(b, b, g);
-	vec3_divide_f(c, c, g);
-	vec3_string("a ", a);
-	vec3_string("b ", b);
-	vec3_string("c ", c);
+	v3_normalize(c, point);
+	v3_divide_f(a, a, g);
+	v3_divide_f(b, b, g);
+	v3_divide_f(c, c, g);
+	v3_string("a ", a);
+	v3_string("b ", b);
+	v3_string("c ", c);
 	return ((a[0] == c[0] && a[1] == c[1] && a[2] == c[2]));
 }
 
@@ -43,36 +43,36 @@ int	ray_line_intersect(float *orig, float *dir, float *p1, float *p2, float *int
 	float	dc[3];
 	float	jj[3];
 
-	vec3_sub(db, p2, p1);
-	vec3_sub(dc, p1, orig);
+	v3_sub(db, p2, p1);
+	v3_sub(dc, p1, orig);
 
-	vec3_cross(jj, dir, db);
-	if (fabs(vec3_dot(dc, jj)) >= 0.7f)
+	v3_cross(jj, dir, db);
+	if (fabs(v3_dot(dc, jj)) >= 0.7f)
 		return (0);
 		
 	float	s;
-	float	a = vec3_length_squared(jj);
+	float	a = v3_length_sqrd(jj);
 	float	b[3];
-	vec3_cross(b, dc, db);
-	float	c = vec3_dot(b, jj);
+	v3_cross(b, dc, db);
+	float	c = v3_dot(b, jj);
 	s = c / a;
 
 	if (s >= 0.0 && s <= 1.0)
 	{
 		float	intersection[3];
 		float	tmp[3];
-		vec3_multiply_f(tmp, dir, s);
-		vec3_add(intersection, orig, tmp);
+		v3_multiply_f(tmp, dir, s);
+		v3_add(intersection, orig, tmp);
 
 		float	p1il[3]; // lenght_squared(intersection - p1)
 		float	p2il[3];
 
-		vec3_sub(p1il, intersection, p1);
-		vec3_sub(p2il, intersection, p2);
-		if (vec3_length_squared(p1il) + vec3_length_squared(p2il) <=
-			vec3_length_squared(p1) + vec3_length_squared(p2) + 0.001f)
+		v3_sub(p1il, intersection, p1);
+		v3_sub(p2il, intersection, p2);
+		if (v3_length_sqrd(p1il) + v3_length_sqrd(p2il) <=
+			v3_length_sqrd(p1) + v3_length_sqrd(p2) + 0.001f)
 		{
-			vec3_assign(intersect_point, intersection);
+			v3_assign(intersect_point, intersection);
 			return (1);
 		}
 	}

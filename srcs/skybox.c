@@ -81,8 +81,8 @@ float	*skybox_vertices(float *res, size_t *size)
 
 void	render_skybox(t_skybox *skybox, t_camera *camera)
 {
-	float	view[MAT4_SIZE];
-	float	temp[MAT3_SIZE];
+	float	view[M4_SIZE];
+	float	temp[M3_SIZE];
 	int		error;
 
 	error = glGetError();
@@ -100,7 +100,7 @@ void	render_skybox(t_skybox *skybox, t_camera *camera)
 	glDepthFunc(GL_LEQUAL);
 	glUseProgram(skybox->shader);
 
-	mat4_assign(view, camera->view);
+	m4_assign(view, camera->view);
 	view[12] = 0.0f;
 	view[13] = 0.0f;
 	view[14] = 0.0f;

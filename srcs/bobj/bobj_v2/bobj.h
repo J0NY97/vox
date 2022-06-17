@@ -111,6 +111,8 @@ typedef struct s_bobj
 void	bobj_load(t_bobj *bob, char *file_path);
 int		bobj_load_material(t_bobj *bob, char *file_path);
 
+void	bobj_free(t_bobj *bob);
+
 // Help
 int		get_next_word(char *result_str, char *src_str);
 

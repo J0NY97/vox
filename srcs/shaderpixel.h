@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/11 14:27:43 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/17 10:59:27 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/17 12:31:48 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,18 +31,7 @@
 # include "hashtable.h"
 # include "camera.h"
 # include "model.h"
-
-# define DEBUG 0
-
-# define Uint32	unsigned int
-
-# define ROOT_PATH "./"
-# define MODEL_PATH ROOT_PATH"models/"
-# define SHADER_PATH ROOT_PATH"shaders/"
-# define TEXTURE_PATH ROOT_PATH"textures/"
-# define SAVE_PATH ROOT_PATH"saves/"
-
-# define ARRAY_SIZE(a) sizeof(a) / sizeof(a[0])
+# include "enum.h"
 
 typedef struct	s_player	t_player;
 typedef struct	s_fps		t_fps;
@@ -115,16 +104,16 @@ typedef struct	s_entity
 {
 	size_t			id;
 
-	float			pos[VEC3_SIZE];
+	float			pos[V3_SIZE];
 	float			rot_x_angle;
 	float			rot_y_angle;
 	float			rot_z_angle;
 	float			scale_value;
 
-	float			scale_mat[MAT4_SIZE];
-	float			rot_mat[MAT4_SIZE];
-	float			trans_mat[MAT4_SIZE];
-	float			model_mat[MAT4_SIZE];
+	float			scale_mat[M4_SIZE];
+	float			rot_mat[M4_SIZE];
+	float			trans_mat[M4_SIZE];
+	float			model_mat[M4_SIZE];
 
 	int				render_aabb;
 	int				collision_detection_enabled;
@@ -154,7 +143,7 @@ struct s_player
 {
 	t_camera	camera;
 
-	float		velocity[VEC3_SIZE];
+	float		velocity[V3_SIZE];
 	float		gravity;
 
 	int			moving;

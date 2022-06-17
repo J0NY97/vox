@@ -485,7 +485,7 @@ void	generate_chunk(t_chunk *chunk, int *coord, t_noise *noise)
 {
 	for (int i = 0; i < 3; i++)
 		chunk->coordinate[i] = coord[i];
-	vec3_new(chunk->world_coordinate,
+	v3_new(chunk->world_coordinate,
 		chunk->coordinate[0] * CHUNK_SIZE_X,
 		chunk->coordinate[1] * CHUNK_SIZE_Y,
 		chunk->coordinate[2] * CHUNK_SIZE_Z);
@@ -759,7 +759,7 @@ void	update_chunk_event_blocks(t_chunk *chunk)
 			get_block_world_pos(pos, chunk->world_coordinate, local_pos);
 			event_block = &chunk->event_blocks[chunk->event_block_amount++];
 			event_block->block = block;
-			vec3_assign(event_block->pos, pos);
+			v3_assign(event_block->pos, pos);
 			if (!event_block)
 				continue ;
 			if (is_water(block))
@@ -1221,7 +1221,7 @@ t_block	*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, in
 
 		if (is_hovering_block(block_world, point, face, g_all_faces[data.face_index], 6))
 		{
-			vec3_assign(block_pos, block_world);
+			v3_assign(block_pos, block_world);
 			return (&chunk->blocks[i]);
 		}
 	}
@@ -1247,7 +1247,7 @@ int	chunk_mesh_collision_v2(float *orig, float *dir, t_chunk_mesh *mesh, int mes
 	int				triangle_amount;
 	float			dist;
 
-	vec3_normalize(norm_dir, dir);
+	v3_normalize(norm_dir, dir);
 	vertices = mesh->vertices;
 	indices = mesh->indices[mesh_type];
 	triangle_amount = mesh->indices_amount[mesh_type] / 3;
@@ -1257,14 +1257,14 @@ int	chunk_mesh_collision_v2(float *orig, float *dir, t_chunk_mesh *mesh, int mes
 		int k0 = indices[k + 0] * 3;
 		int k1 = indices[k + 1] * 3;
 		int k2 = indices[k + 2] * 3;
-		vec3_new(p1, vertices[k0 + 0], vertices[k0 + 1], vertices[k0 + 2]);
-		vec3_new(p2, vertices[k1 + 0], vertices[k1 + 1], vertices[k1 + 2]);
-		vec3_new(p3, vertices[k2 + 0], vertices[k2 + 1], vertices[k2 + 2]);
+		v3_new(p1, vertices[k0 + 0], vertices[k0 + 1], vertices[k0 + 2]);
+		v3_new(p2, vertices[k1 + 0], vertices[k1 + 1], vertices[k1 + 2]);
+		v3_new(p3, vertices[k2 + 0], vertices[k2 + 1], vertices[k2 + 2]);
 
 		// We are adding chunk woorld coordinate to points, to get the world point coordinate;
-		vec3_add(p1, p1, world_coords);
-		vec3_add(p2, p2, world_coords);
-		vec3_add(p3, p3, world_coords);
+		v3_add(p1, p1, world_coords);
+		v3_add(p2, p2, world_coords);
+		v3_add(p3, p3, world_coords);
 		if (ray_triangle_intersect(orig, dir, p1, p2, p3, intersect_point[collisions], &dist))
 			if (dist <= reach + EPSILON)
 				collisions += 1;
@@ -1287,30 +1287,30 @@ int	chunk_mesh_collision_v56(float *orig, float *dir, t_chunk *chunk, float reac
 	int				collisions = 0;
 	float			dist;
 
-	vec3_normalize(norm_dir, dir);
+	v3_normalize(norm_dir, dir);
 	vertices = chunk->meshes.vertices;
 	indices = chunk->meshes.indices[BLOCK_MESH];
 	for (int i = 0; i < chunk->meshes.indices_amount[BLOCK_MESH] / 3; i++)
 	{
 		int k = i * 3;
-		vec3_new(p1,
+		v3_new(p1,
 			vertices[indices[k + 0] * 3 + 0],
 			vertices[indices[k + 0] * 3 + 1],
 			vertices[indices[k + 0] * 3 + 2]);
-		vec3_new(p2,
+		v3_new(p2,
 			vertices[indices[k + 1] * 3 + 0],
 			vertices[indices[k + 1] * 3 + 1],
 			vertices[indices[k + 1] * 3 + 2]);
-		vec3_new(p3,
+		v3_new(p3,
 			vertices[indices[k + 2] * 3 + 0],
 			vertices[indices[k + 2] * 3 + 1],
 			vertices[indices[k + 2] * 3 + 2]);
 
 		// We have to add the chunk position to the chunk mesh, since that is
 		//		what we are doing in the shader;
-		vec3_add(p1, p1, chunk->world_coordinate);
-		vec3_add(p2, p2, chunk->world_coordinate);
-		vec3_add(p3, p3, chunk->world_coordinate);
+		v3_add(p1, p1, chunk->world_coordinate);
+		v3_add(p2, p2, chunk->world_coordinate);
+		v3_add(p3, p3, chunk->world_coordinate);
 		if (ray_triangle_intersect(orig, dir, p1, p2, p3, intersect_points[collisions], &dist))
 		{
 			if (dist <= reach + EPSILON)
@@ -1394,20 +1394,20 @@ void	player_terrain_collision(float *res, float *pos, float *velocity, t_world *
 	float	player_intersect_normal[16][3];
 	float	player_intersect_point[16][3];
 	int		player_collision_amount = 0;
-	float	velocity_dist = vec3_dist((float []){0, 0, 0}, velocity);
+	float	velocity_dist = v3_dist((float []){0, 0, 0}, velocity);
 	int		player_chunk[3];
 	float	final[3];
 
-	vec3_assign(final, velocity);
+	v3_assign(final, velocity);
 	while (velocity_dist > EPSILON)
 	{
 		get_chunk_pos_from_world_pos(player_chunk, pos);
 		player_collision_amount = 0;
-		vec3_normalize(normed_velocity, final);
+		v3_normalize(normed_velocity, final);
 		for (int i = 0; i < CHUNKS_LOADED; i++)
 		{
 			if (!(info->chunks[i].blocks_solid_amount > 0 &&
-				vec3i_dist(player_chunk, info->chunks[i].coordinate) < 2))
+				v3i_dist(player_chunk, info->chunks[i].coordinate) < 2))
 				continue ;
 			int colls = chunk_mesh_collision_v56(pos, normed_velocity, &info->chunks[i], velocity_dist, player_intersect_point + player_collision_amount, player_intersect_normal + player_collision_amount);
 			player_collision_amount += colls;
@@ -1418,23 +1418,23 @@ void	player_terrain_collision(float *res, float *pos, float *velocity, t_world *
 		for (int i = 0; i < player_collision_amount; i++)
 		{
 			float	destination[3];
-			vec3_add(destination, pos, final);
+			v3_add(destination, pos, final);
 
 			float	distance = EPSILON;
-			distance = vec3_dist(player_intersect_point[i], destination);
+			distance = v3_dist(player_intersect_point[i], destination);
 			distance = ft_fmax(EPSILON, distance);
 
 			float	new_destination[3];
-			vec3_multiply_f(new_destination, player_intersect_normal[i], distance);
-			vec3_sub(new_destination, destination, new_destination);
+			v3_multiply_f(new_destination, player_intersect_normal[i], distance);
+			v3_sub(new_destination, destination, new_destination);
 
 			float	tmp[3];
-			vec3_sub(tmp, destination, new_destination);
-			vec3_add(final, final, tmp);
+			v3_sub(tmp, destination, new_destination);
+			v3_add(final, final, tmp);
 		}
-		velocity_dist = vec3_dist((float []){0, 0, 0}, final);
+		velocity_dist = v3_dist((float []){0, 0, 0}, final);
 	}
-	vec3_assign(res, final);
+	v3_assign(res, final);
 }
 
 /*
@@ -1490,7 +1490,7 @@ int	get_block_type_at_world_pos(t_world *info, float *world_pos)
 	t_chunk	*chunk;
 	int		index;
 
-	vec3_new(under_block, world_pos[0], world_pos[1], world_pos[2]);
+	v3_new(under_block, world_pos[0], world_pos[1], world_pos[2]);
 	get_chunk_pos_from_world_pos(chunk_pos, under_block);
 	chunk = get_chunk(info, chunk_pos);
 	if (!chunk)
@@ -1901,7 +1901,7 @@ void	update_chunk_column_light_0(t_chunk_col *column)
 		{
 			light_index = x * CHUNK_WIDTH + z;
 			column->lights[light_index].chunk_index = -1;
-			vec3i_new(column->lights[light_index].local, x, -1, z);
+			v3i_new(column->lights[light_index].local, x, -1, z);
 			for (int i = CHUNKS_PER_COLUMN - 1; i >= 0; i--)
 			{
 				for (int y = CHUNK_HEIGHT - 1; y >= 0; y--)
