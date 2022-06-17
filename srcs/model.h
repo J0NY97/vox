@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/16 13:23:45 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/17 12:01:37 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/17 14:31:33 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,7 +104,8 @@ typedef struct	s_model_v2
 	GLuint		vao;	
 	GLuint		vbo_pos;	
 	GLuint		vbo_tex;	
-	GLuint		vbo_nor;	
+
+	GLuint		vbo_instance_model;
 
 	float		*vertices;
 	float		*uvs;
@@ -126,5 +127,8 @@ void	model_from_bobj(t_model_v2 *model, t_bobj *bob, int index);
 void	model_init(t_model_v2 *model);
 void	model_update(t_model_v2 *model);
 void	model_render(t_model_v2 *model, GLuint shader, float *model_mat, float *view_mat, float *projection_mat);
+
+void	model_instance_from_bobj(t_model_v2 *model, t_bobj *bob, int index);
+void	model_instance_render(t_model_v2 *model, GLuint shader, float *model_mat, int model_amount, float *view_mat, float *projection_mat);
 
 #endif

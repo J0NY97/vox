@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/16 13:41:57 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/17 12:08:06 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/17 15:04:24 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -375,4 +375,163 @@ void	model_render(t_model_v2 *model, GLuint shader, float *model_mat, float *vie
 	error = glGetError();
 	if (error)
 		LG_ERROR("(%d)", error);
+}
+
+//////////////////////////
+// INSTANCE 
+//////////////////////////
+
+void	model_init_instance(t_model_v2 *model)
+{
+	GLuint	vbo[3];
+
+	glGenVertexArrays(1, &model->vao);
+	glBindVertexArray(model->vao);
+
+	glEnableVertexAttribArray(0); // pos
+	glEnableVertexAttribArray(1); // uvs
+
+	glEnableVertexAttribArray(2); // instance mat4
+	glEnableVertexAttribArray(3); // instance mat4
+	glEnableVertexAttribArray(4); // instance mat4
+	glEnableVertexAttribArray(5); // instance mat4
+
+	glGenBuffers(3, vbo);
+	model->vbo_pos = vbo[0];
+	model->vbo_tex = vbo[1];
+	model->vbo_instance_model = vbo[2];
+
+	glBindBuffer(GL_ARRAY_BUFFER, model->vbo_pos);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
+
+	glBindBuffer(GL_ARRAY_BUFFER, model->vbo_tex);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_TRUE, sizeof(float) * 2, NULL);
+
+	glBindBuffer(GL_ARRAY_BUFFER, model->vbo_instance_model);
+	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), NULL);
+	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void *)(1 * 4 * sizeof(float)));
+	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void *)(2 * 4 * sizeof(float)));
+	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 16 * sizeof(float), (void *)(3 * 4 * sizeof(float)));
+
+	glVertexAttribDivisor(2, 1);
+	glVertexAttribDivisor(3, 1);
+	glVertexAttribDivisor(4, 1);
+	glVertexAttribDivisor(5, 1);
+
+
+	// NOTE: you have to load the mats into this separately;
+	model->materials = NULL;
+	model->material_amount = 0;
+
+	model->vertices = NULL;
+	model->uvs = NULL;
+	model->normals = NULL;
+	model->vertices_amount = 0;
+	model->uvs_amount = 0;
+	model->normals_amount = 0;
+
+	// NOTE: you have to load the meshes into this separately;
+	model->meshes = NULL;
+	model->meshes_amount = 0;
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+/*
+ * Exactly the same as 'model_from_bobj()', but we are calling
+ *	'model_instance_init()' instead of 'model_init()';
+*/
+void	model_instance_from_bobj(t_model_v2 *model, t_bobj *bob, int index)
+{
+	t_bobj_object	*bobject;
+	char			tmp[256];
+
+	if (index < 0 || index > bob->objects_amount)
+	{
+		LG_WARN("Trying to create model from nonexistant bob (index : %d)", index);
+		return ;
+	}
+	LG_INFO("Start");
+	bobject = &bob->objects[index];
+
+	model_init_instance(model);
+	// V- NOTE: we are typecasting from 't_bobj_v3' to 'float *'..; (how is this even allowed);
+	model->vertices = (float *)bobject->v;
+	model->vertices_amount = bobject->v_amount * 3;
+	model->uvs = (float *)bobject->vt;
+	model->uvs_amount = bobject->vt_amount * 3;
+	model->normals = (float *)bobject->vn;
+	model->normals_amount = bobject->vn_amount * 3;
+
+	model->material_amount = bob->materials_amount;
+	model->materials = malloc(sizeof(t_material_v2) * model->material_amount);
+	for (int m = 0; m < model->material_amount; m++)
+	{
+		material_init(&model->materials[m]);
+		if (!new_texture(&model->materials[m].texture, bob->materials[m].map_Kd))
+		{
+			ft_strcpy(tmp, bob->root_dir);
+			ft_strcpy(tmp + ft_strlen(tmp), bob->materials[m].map_Kd);
+			new_texture(&model->materials[m].texture, tmp);
+		}
+	}
+	
+	model->meshes_amount = bobject->meshes_amount;
+	model->meshes = malloc(sizeof(t_mesh_v2) * model->meshes_amount);
+	for (int m = 0; m < model->meshes_amount; m++)
+	{
+		mesh_init(&model->meshes[m]);
+		// V- NOTE: we are typecasting from 't_bobj_u3' to 'uint *'..; (how is this even allowed);
+		model->meshes[m].indices = (unsigned int *)bobject->meshes[m].f;
+		model->meshes[m].indices_amount = (int)bobject->meshes[m].index_amount;
+		model->meshes[m].texture = model->materials[bobject->meshes[m].material_index].texture;
+		ft_printf("texture : %d\n", model->meshes[m].texture);
+	}
+	LG_INFO("End");
+}
+
+/*
+ * Render the mesh;
+*/
+void	mesh_instance_render(t_mesh_v2 *mesh, int amount)
+{
+	glActiveTexture(GL_TEXTURE0 + 0);
+	glBindTexture(GL_TEXTURE_2D, mesh->texture);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
+	glDrawElementsInstanced(GL_TRIANGLES, mesh->indices_amount, GL_UNSIGNED_INT, NULL, amount);
+}
+
+void	model_instance_render(t_model_v2 *model, GLuint shader, float *model_mat, int amount, float *view_mat, float *projection_mat)
+{
+	int	error;
+
+	glUseProgram(shader);
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("(%d)", error);
+	
+	glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, GL_FALSE, view_mat);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, GL_FALSE, projection_mat);
+
+	error = glGetError();
+	if (error)
+		LG_ERROR("(%d)", error);
+
+	glBindBuffer(GL_ARRAY_BUFFER, model->vbo_instance_model);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 16 * amount, model_mat, GL_STATIC_DRAW);
+
+	glBindVertexArray(model->vao);
+
+	for (int i = 0; i < model->meshes_amount; i++)
+		mesh_instance_render(&model->meshes[i], amount);
+	
+	error = glGetError();
+	if (error)
+		LG_ERROR("(%d)", error);
+	
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }

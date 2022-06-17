@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 17:21:38 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/17 13:02:05 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/17 13:21:51 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,7 @@ typedef struct s_vox_entity
 {
 	float	pos[3];
 	float	rot[3];
+	float	scale;
 
 	char	type; // 'e_entity_types';
 }		t_vox_entity;

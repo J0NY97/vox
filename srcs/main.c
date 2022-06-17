@@ -206,7 +206,7 @@ int	main(void)
 	GLuint		model_shader;
 	new_shader(&model_shader, SHADER_PATH"model.vs", SHADER_PATH"model.fs");
 	t_model_v2	model_melon_golem;
-	model_from_bobj(&model_melon_golem, &bobj_melon_golem, 0);
+	model_instance_from_bobj(&model_melon_golem, &bobj_melon_golem, 0);
 
 	float melon_golem_pos[3];
 	v3_new(melon_golem_pos, 5000, 90, 5010);
@@ -215,10 +215,16 @@ int	main(void)
 	// Load vox entity models
 	t_bobj		vox_entity_bobj[ENTITY_AMOUNT]; // NOTE : remember to free;
 	t_model_v2	vox_entity_models[ENTITY_AMOUNT];
+
+	GLuint		model_instance_shader;
+	new_shader(&model_instance_shader, SHADER_PATH"model_instance.vs", SHADER_PATH"model_instance.fs");
+	t_model_v2	instance_model;
 	for (int i = 0; i < ENTITY_AMOUNT; i++)
 	{
 		bobj_load(&vox_entity_bobj[i], g_entity_data[i].model_path);
-		model_from_bobj(&vox_entity_models[i], &vox_entity_bobj[i], 0);
+	//	model_from_bobj(&vox_entity_models[i], &vox_entity_bobj[i], 0);
+		model_instance_from_bobj(&instance_model, &vox_entity_bobj[i], 0);
+		model_update(&instance_model);
 	}
 	LG_INFO("All entity models loaded (%d)", ENTITY_AMOUNT);
 
@@ -887,6 +893,7 @@ if (error)
 ////////////////////////
 // Model Rendering
 ////////////////////////
+/*
 	float	model_mat[16];
 	new_model_matrix(model_mat, 1.0f, (float []){90, 0, 0}, melon_golem_pos);
 //	model_render(&model_melon_golem, model_shader, model_mat, player.camera.view, player.camera.projection);
@@ -901,9 +908,21 @@ if (error)
 			);
 		new_model_matrix(model_mat, 1.0f, entities[i].rot, entities[i].pos);
 //		model_render(&vox_entity_models[entities[i].type], model_shader, model_mat, player.camera.view, player.camera.projection);
-		model_render(&model_melon_golem, model_shader, model_mat, player.camera.view, player.camera.projection);
+//		model_render(&model_melon_golem, model_shader, model_mat, player.camera.view, player.camera.projection);
 	}
+	*/
 
+////////////////////////
+// Model Rendering Instance
+////////////////////////
+	// NOTE : we need the amount of entities of a single type (entity_palette just like block_palette);
+	// Create model matrix array from all the entities of the same type;
+	float	*model_matrices;
+	model_matrices = malloc(sizeof(float) * entity_amount * 16);
+	for (int i = 0; i < entity_amount; i++)
+		new_model_matrix(model_matrices + i * 16, entities[i].scale, entities[i].rot, entities[i].pos);
+	model_instance_render(&instance_model, model_instance_shader, model_matrices, entity_amount, player.camera.view, player.camera.projection);
+	free(model_matrices);
 
 error = glGetError();
 if (error)
