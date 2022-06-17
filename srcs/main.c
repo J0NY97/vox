@@ -200,17 +200,15 @@ int	main(void)
 	// MODEL / BOBJ / ENTITY
 	////////////////////////////////
 
-	// Note to self, use gl stuff after gl has been inited;
-	t_bobj	bobj_melon_golem;
-	bobj_load(&bobj_melon_golem, MODEL_PATH"melon_golem/melon_golem.obj");
 	GLuint		model_shader;
-	new_shader(&model_shader, SHADER_PATH"model.vs", SHADER_PATH"model.fs");
+	t_bobj		bobj_melon_golem;
 	t_model_v2	model_melon_golem;
-	model_instance_from_bobj(&model_melon_golem, &bobj_melon_golem, 0);
+	float		melon_golem_pos[3];
+	int			attach_entity = 1;
 
-	float melon_golem_pos[3];
-	v3_new(melon_golem_pos, 5000, 90, 5010);
-	model_update(&model_melon_golem);
+	new_shader(&model_shader, SHADER_PATH"model.vs", SHADER_PATH"model.fs");
+	bobj_load(&bobj_melon_golem, MODEL_PATH"melon_golem/melon_golem.obj");
+	model_from_bobj(&model_melon_golem, &bobj_melon_golem, 0);
 
 	// Load vox entity models
 	t_bobj		vox_entity_bobj[ENTITY_AMOUNT]; // NOTE : remember to free;
@@ -230,7 +228,10 @@ int	main(void)
 
 	// Create entities (DEBUG)
 	int				entity_amount = 64660;
-	t_vox_entity	entities[entity_amount];
+	t_vox_entity	*entities = malloc(sizeof(t_vox_entity) * entity_amount);
+	float	*model_matrices;
+	model_matrices = malloc(sizeof(float) * entity_amount * 16);
+//	free(model_matrices);
 	for (int i = 0; i < entity_amount ; i++)
 	{
 		vox_entity_new(&entities[i]);
@@ -240,10 +241,13 @@ int	main(void)
 		int		y = (i / w) % w;
 		int		z = i / (w * w);
 		v3_new(entities[i].pos,
-			player.camera.pos[0] + (x * 10),
-			player.camera.pos[1] + (y * 10), 
-			player.camera.pos[2] + (z * 10)
+			player.camera.pos[0] + (x * 4),
+			player.camera.pos[1] + (y * 4), 
+			player.camera.pos[2] + (z * 4)
 			);
+		scale_matrix(entities[i].scale_m4, entities[i].scale);
+		rotation_matrix(entities[i].rot_m4, entities[i].rot);
+		translation_matrix(entities[i].trans_m4, entities[i].pos);
 	}
 
 
@@ -547,6 +551,16 @@ int	main(void)
 				LG_INFO("Event => ON.");
 			else
 				LG_INFO("Event => OFF.");
+		}
+
+		// Toggle event;
+		if (keys[GLFW_KEY_Q].state == BUTTON_PRESS)
+		{
+			attach_entity = attach_entity != 1;
+			if (attach_entity)
+				LG_INFO("attach_entity => ON.");
+			else
+				LG_INFO("attach_entity => OFF.");
 		}
 
 // Select equipped block;
@@ -893,24 +907,15 @@ if (error)
 ////////////////////////
 // Model Rendering
 ////////////////////////
-/*
 	float	model_mat[16];
-	new_model_matrix(model_mat, 1.0f, (float []){90, 0, 0}, melon_golem_pos);
-//	model_render(&model_melon_golem, model_shader, model_mat, player.camera.view, player.camera.projection);
 
-	for (int i = 0; i < entity_amount; i++)
+	if (attach_entity)
 	{
-	//	ft_printf("#%d %s (%d)\n", i, g_entity_data[entities[i].type].name, g_entity_data[entities[i].type].type);
-		v3_new(entities[i].rot,
-			entities[i].rot[0] + rand() / 100 * fps.delta_time, 
-			entities[i].rot[1] + rand() / 100 * fps.delta_time, 
-			entities[i].rot[2] + rand() / 100 * fps.delta_time
-			);
-		new_model_matrix(model_mat, 1.0f, entities[i].rot, entities[i].pos);
-//		model_render(&vox_entity_models[entities[i].type], model_shader, model_mat, player.camera.view, player.camera.projection);
-//		model_render(&model_melon_golem, model_shader, model_mat, player.camera.view, player.camera.projection);
+		v3_new(melon_golem_pos, player.camera.pos[0], player.camera.pos[1] - 2, player.camera.pos[2] - 2);
+		model_update(&model_melon_golem);
 	}
-	*/
+	new_model_matrix(model_mat, 1.0f, (float []){90, 0, 0}, melon_golem_pos);
+	model_render(&model_melon_golem, model_shader, model_mat, player.camera.view, player.camera.projection);
 
 ////////////////////////
 // Model Rendering Instance
@@ -921,22 +926,25 @@ if (error)
 	// NOTE : we need the amount of entities of a single type (entity_palette just like block_palette);
 	// Create model matrix array from all the entities of the same type;
 
-	float	*model_matrices;
-	model_matrices = malloc(sizeof(float) * entity_amount * 16);
+	ft_timer_start();
 	for (int i = 0; i < entity_amount; i++)
 	{
 		// REMOVE : apply random rotation just to show that they have their own model mat;
 		v3_new(entities[i].rot,
-			entities[i].rot[0] + rand() / 100 * fps.delta_time, 
-			entities[i].rot[1] + rand() / 100 * fps.delta_time, 
+			entities[i].rot[0] + rand() / 100 * fps.delta_time,
+			entities[i].rot[1] + rand() / 100 * fps.delta_time,
 			entities[i].rot[2] + rand() / 100 * fps.delta_time
 			);
-		new_model_matrix(model_matrices + i * 16, entities[i].scale, entities[i].rot, entities[i].pos);
+		rotation_matrix(entities[i].rot_m4, entities[i].rot);
+		model_matrix(model_matrices + i * 16, entities[i].scale_m4, entities[i].rot_m4, entities[i].trans_m4);
+	//	new_model_matrix(model_matrices + i * 16, entities[i].scale, entities[i].rot, entities[i].pos);
 	}
+	ft_printf("model mat creation : %f\n", ft_timer_end());
+	ft_timer_start();
 	model_instance_render(&instance_model, model_instance_shader, model_matrices, entity_amount, player.camera.view, player.camera.projection);
-	free(model_matrices);
+	ft_printf("instance render : %f\n", ft_timer_end());
 
-error = glGetError();
+	error = glGetError();
 if (error)
 	LG_ERROR("Afetr chunk things. (%d)", error);
 		glDisable(GL_BLEND);

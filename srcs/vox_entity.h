@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 17:21:38 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/17 13:21:51 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/17 16:30:11 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,11 @@ typedef struct s_vox_entity
 	float	scale;
 
 	char	type; // 'e_entity_types';
+
+	// Matrices
+	float	scale_m4[16];
+	float	rot_m4[16];
+	float	trans_m4[16];
 }		t_vox_entity;
 
 void	vox_entity_new(t_vox_entity *entity);

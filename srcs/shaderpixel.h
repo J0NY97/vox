@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/11 14:27:43 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/17 12:31:48 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/17 16:33:41 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -134,6 +134,11 @@ void				update_entity(t_entity *entity);
 void				render_entity(t_entity *entity, t_camera *camera, t_model *model, GLuint shader);
 
 void				new_model_matrix(float *m4_res, float scale, float *v3_rot, float *v3_pos);;
+
+void				model_matrix(float *m4_res, float *m4_scale, float *m4_rot, float *m4_trans);
+void				scale_matrix(float *m4_res, float scale);
+void				rotation_matrix(float *m4_res, float *v3_rot);
+void				translation_matrix(float *m4_res, float *v3_pos);
 
 ///////////////////
 //	PLAYER

@@ -230,7 +230,8 @@ float *get_block_world_pos(float *res, float *chunk_world_pos, int *block_local_
 */
 int	*get_block_local_pos_from_index(int *res, int index)
 {
-	// TODO : for sure doesnt work;
+	// TODO : for sure doesnt work; (meaning : it for sure wont work if the
+	//		dimensions arent symmetrical);
 	res[0] = index / (CHUNK_WIDTH * CHUNK_HEIGHT);
 	res[1] = index % CHUNK_HEIGHT;
 	res[2] = (index / CHUNK_WIDTH) % CHUNK_HEIGHT;

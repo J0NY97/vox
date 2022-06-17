@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/17 10:42:27 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/17 12:38:28 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/17 16:37:14 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,37 +52,56 @@ void	new_model_matrix(float *m4_res, float scale, float *v3_rot, float *v3_pos)
 	float	rot_mat[16];
 	float	trans_mat[16];
 
+	scale_matrix(scale_mat, scale);
+	rotation_matrix(rot_mat, v3_rot);
+	translation_matrix(trans_mat, v3_pos);
+	model_matrix(m4_res, scale_mat, rot_mat, trans_mat);
+}
+
+/*
+ * Creates a model matrix from scale-, rotation-, and transformation matrix;
+*/
+void	model_matrix(float *m4_res, float *m4_scale, float *m4_rot, float *m4_trans)
+{
+	m4_identity(m4_res);
+	m4_multiply(m4_res, m4_scale, m4_res);
+	m4_multiply(m4_res, m4_rot, m4_res);
+	m4_multiply(m4_res, m4_trans, m4_res);
+}
+
+void	scale_matrix(float *m4_res, float scale)
+{
 	float	tmp[3];
+
+	m4_identity(m4_res);
+	m4_scale(m4_res, m4_res, v3_new(tmp, scale, scale, scale));
+}
+
+void	rotation_matrix(float *m4_res, float *v3_rot)
+{
 	float	tmp_mat[16];
+	float	tmp[3];
 
-// Scale
-	m4_identity(scale_mat);
-	m4_scale(scale_mat, scale_mat, v3_new(tmp, scale, scale, scale));
-
-// Rot
-	m4_identity(rot_mat);
+	m4_identity(m4_res);
 	// x
 	m4_identity(tmp_mat);
 	m4_rotation_x(tmp_mat, to_radians(v3_rot[0]));
-	m4_multiply(rot_mat, tmp_mat, rot_mat);
+	m4_multiply(m4_res, tmp_mat, m4_res);
 	// y
 	m4_identity(tmp_mat);
 	m4_rotation_y(tmp_mat, to_radians(v3_rot[1]));
-	m4_multiply(rot_mat, tmp_mat, rot_mat);
+	m4_multiply(m4_res, tmp_mat, m4_res);
 	// z
 	m4_identity(tmp_mat);
 	m4_rotation_z(tmp_mat, to_radians(v3_rot[2]));
-	m4_multiply(rot_mat, tmp_mat, rot_mat);
+	m4_multiply(m4_res, tmp_mat, m4_res);
+}
 
-// Trans
-	m4_identity(trans_mat);
-	m4_translate(trans_mat, trans_mat, v3_pos);
-
-// Final
+void	translation_matrix(float *m4_res, float *v3_pos)
+{
+	// Trans
 	m4_identity(m4_res);
-	m4_multiply(m4_res, scale_mat, m4_res);
-	m4_multiply(m4_res, rot_mat, m4_res);
-	m4_multiply(m4_res, trans_mat, m4_res);
+	m4_translate(m4_res, m4_res, v3_pos);
 }
 
 /*
