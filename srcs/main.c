@@ -926,23 +926,31 @@ if (error)
 	// NOTE : we need the amount of entities of a single type (entity_palette just like block_palette);
 	// Create model matrix array from all the entities of the same type;
 
-	ft_timer_start();
+	float	v3_total = 0;
+	float	rot_total = 0;
+	float	mod_total = 0;
 	for (int i = 0; i < entity_amount; i++)
 	{
 		// REMOVE : apply random rotation just to show that they have their own model mat;
+		ft_timer_start();
 		v3_new(entities[i].rot,
 			entities[i].rot[0] + rand() / 100 * fps.delta_time,
 			entities[i].rot[1] + rand() / 100 * fps.delta_time,
 			entities[i].rot[2] + rand() / 100 * fps.delta_time
 			);
+		v3_total += ft_timer_end();
+
+		ft_timer_start();
 		rotation_matrix(entities[i].rot_m4, entities[i].rot);
+		rot_total += ft_timer_end();
+
+		ft_timer_start();
 		model_matrix(model_matrices + i * 16, entities[i].scale_m4, entities[i].rot_m4, entities[i].trans_m4);
+		mod_total += ft_timer_end();
 	//	new_model_matrix(model_matrices + i * 16, entities[i].scale, entities[i].rot, entities[i].pos);
 	}
-	ft_printf("model mat creation : %f\n", ft_timer_end());
-	ft_timer_start();
+	ft_printf("model mat creation : v3 : %f, rot : %f, mod : %f\n", v3_total, rot_total, mod_total);
 	model_instance_render(&instance_model, model_instance_shader, model_matrices, entity_amount, player.camera.view, player.camera.projection);
-	ft_printf("instance render : %f\n", ft_timer_end());
 
 	error = glGetError();
 if (error)
