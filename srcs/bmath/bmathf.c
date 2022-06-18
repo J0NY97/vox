@@ -48,6 +48,13 @@ float *v3_sub(float *result, float *v0, float *v1)
 float *v3_normalize(float *result, float *v0)
 {
 	float l = sqrt(v0[0] * v0[0] + v0[1] * v0[1] + v0[2] * v0[2]);
+	if (l == 0)
+	{
+		result[0] = 0;
+		result[1] = 0;
+		result[2] = 0;
+		return (result);
+	}
 	result[0] = v0[0] / l;
 	result[1] = v0[1] / l;
 	result[2] = v0[2] / l;

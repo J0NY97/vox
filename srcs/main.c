@@ -290,7 +290,7 @@ int	main(void)
 	world_info.entity_amount = 0;
 
 	// Create entities (DEBUG)
-	int		entities_wanted = 64000;
+	int		entities_wanted = 50;
 	float	*model_matrices;
 	model_matrices = malloc(sizeof(float) * MAX_ENTITIES * 16);
 
@@ -949,6 +949,13 @@ if (error)
 		// Decide if the entity should even be rendered;
 		if (v3_dist_sqrd(player.camera.pos, world_info.entities[i].pos) > player.camera.far_plane * player.camera.far_plane)
 			continue ;
+		if (world_info.game_tick)
+			vox_entity_event(&world_info.entities[i], &fps);
+		if (world_info.entities[i].needs_update)
+		{
+			vox_entity_update(&world_info.entities[i]);
+			world_info.entities[i].needs_update = 0;
+		}
 		model_matrix(model_matrices + amount_to_render * 16, world_info.entities[i].scale_m4, world_info.entities[i].rot_m4, world_info.entities[i].trans_m4);
 		++amount_to_render;
 	}

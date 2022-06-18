@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/11 14:27:43 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/17 16:33:41 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/18 13:44:35 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,9 +32,9 @@
 # include "camera.h"
 # include "model.h"
 # include "enum.h"
+# include "fps.h"
 
 typedef struct	s_player	t_player;
-typedef struct	s_fps		t_fps;
 typedef struct	s_key		t_key;
 
 ///////////////////
@@ -170,22 +170,6 @@ void		player_looking(t_player *player, GLFWwindow *win, t_fps fps);
 void		player_entity_collision(t_player *player, t_entity *entity);
 int			player_entity_mesh_collision(t_player *player, t_entity *entity);
 void		player_print(t_player *player);
-
-///////////////////
-//	FPS
-///////////////////
-
-struct	s_fps
-{
-	float			last_time;
-	float			curr_time;
-	float			delta_time;
-	int				fps;
-	int				count;
-};
-
-void		new_fps(t_fps *fps);
-void		update_fps(t_fps *fps);
 
 ///////////////////
 //	KEYS

@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 17:21:38 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/18 12:09:04 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/18 13:45:08 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 # include "enum.h"
 # include "model.h"
 # include "chunk.h"
+# include "fps.h"
 
 # define MAX_ENTITIES 64400
 
@@ -26,6 +27,16 @@ enum e_entity_types
 {
 	ENTITY_MELON_GOLEM = 0,
 	ENTITY_AMOUNT
+};
+
+enum e_entity_states
+{
+	ENTITY_STATE_IDLE = 0,
+	ENTITY_STATE_WANDER,
+	ENTITY_STATE_FLEE,
+	ENTITY_STATE_SEEK,
+	ENTITY_STATE_ATTACK,
+	ENTITY_STATE_AMOUNT
 };
 
 typedef struct s_vox_entity_data
@@ -47,11 +58,23 @@ static const t_vox_entity_data	g_entity_data[] = {
 
 typedef struct s_vox_entity
 {
-	float	pos[3];
-	float	rot[3];
-	float	scale;
+	int		health; // TODO
+	int		speed;
 
-	char	type; // 'e_entity_types';
+	float	pos[3];	// model pos / tbh entity pos aswell
+	float	rot[3];	// model rotation
+	float	scale;	// model scale
+
+	int		yaw;
+	int		pitch;
+	float	front[3];
+	float	up[3];
+	float	velocity[3];
+
+	char	type;	// 'e_entity_types';
+	char	state;	// 'e_entity_states';
+
+	char	needs_update;
 
 	// Matrices
 	float	scale_m4[16];
@@ -61,6 +84,8 @@ typedef struct s_vox_entity
 
 void	vox_entity_new(t_vox_entity *entity);
 void	vox_entity_update(t_vox_entity *entity);
+
+void	vox_entity_event(t_vox_entity *entity, t_fps *fps);
 
 void	set_entity_at_world_pos(t_world *info, float *world_pos, int entity_type);
 
