@@ -1,5 +1,7 @@
 #include "shaderpixel.h"
+#include "world.h"
 #include "chunk.h"
+#include "vox_entity.h"
 #include "shader.h"
 #include "bobj.h"
 #include "enum.h"
@@ -69,6 +71,7 @@ float *nth(float *res, unsigned int *indices, float *vertices, int face_index, i
 	return (res);
 }
 
+/*
 void	scop_stuff(t_shaderpixel *sp)
 {
 	t_player	player;
@@ -171,6 +174,7 @@ void	scop_stuff(t_shaderpixel *sp)
 		}
 	}
 }
+*/
 
 int	main(void)
 {
@@ -193,6 +197,7 @@ int	main(void)
 	player.camera.yaw = -90;
 	player.camera.viewport_w = sp.win_w;
 	player.camera.viewport_h = sp.win_h;
+	player.camera.far_plane = 144.0f;
 	player.gravity = 0;
 
 
@@ -213,10 +218,10 @@ int	main(void)
 	// Load vox entity models
 	t_bobj		vox_entity_bobj[ENTITY_AMOUNT]; // NOTE : remember to free;
 	t_model_v2	vox_entity_models[ENTITY_AMOUNT];
-
 	GLuint		model_instance_shader;
-	new_shader(&model_instance_shader, SHADER_PATH"model_instance.vs", SHADER_PATH"model_instance.fs");
 	t_model_v2	instance_model;
+
+	new_shader(&model_instance_shader, SHADER_PATH"model_instance.vs", SHADER_PATH"model_instance.fs");
 	for (int i = 0; i < ENTITY_AMOUNT; i++)
 	{
 		bobj_load(&vox_entity_bobj[i], g_entity_data[i].model_path);
@@ -225,31 +230,6 @@ int	main(void)
 		model_update(&instance_model);
 	}
 	LG_INFO("All entity models loaded (%d)", ENTITY_AMOUNT);
-
-	// Create entities (DEBUG)
-	int				entity_amount = 64660;
-	t_vox_entity	*entities = malloc(sizeof(t_vox_entity) * entity_amount);
-	float	*model_matrices;
-	model_matrices = malloc(sizeof(float) * entity_amount * 16);
-//	free(model_matrices);
-	for (int i = 0; i < entity_amount ; i++)
-	{
-		vox_entity_new(&entities[i]);
-		entities[i].type = ENTITY_MELON_GOLEM;
-		int		w = cbrt(entity_amount);
-		int		x = i % w;
-		int		y = (i / w) % w;
-		int		z = i / (w * w);
-		v3_new(entities[i].pos,
-			player.camera.pos[0] + (x * 4),
-			player.camera.pos[1] + (y * 4), 
-			player.camera.pos[2] + (z * 4)
-			);
-		scale_matrix(entities[i].scale_m4, entities[i].scale);
-		rotation_matrix(entities[i].rot_m4, entities[i].rot);
-		translation_matrix(entities[i].trans_m4, entities[i].pos);
-	}
-
 
 	GLuint	crosshair_shader;
 	new_crosshair_shader(&crosshair_shader);
@@ -288,37 +268,67 @@ int	main(void)
 	player_info.hotbar_item_ids[8] = FLUID_WATER;
 	player_info.equipped_block = player_info.hotbar_item_ids[player_info.equipped_hotbar];
 
-	t_world	chunk_info;
+	t_world	world_info;
 
-	chunk_info.seed = 896868766;
-//	chunk_info.seed = 596547633;
+	world_info.seed = 896868766;
+//	world_info.seed = 596547633;
 
-	chunk_info.block_collision_enabled = 0;
-	chunk_info.player_collision_enabled = 0;
-	chunk_info.fancy_graphics = 0;
-	chunk_info.generate_structures = 1;
-	chunk_info.light_calculation = 0;
-	chunk_info.toggle_ui = 0;
-	chunk_info.toggle_event = 0;
+	world_info.block_collision_enabled = 0;
+	world_info.player_collision_enabled = 0;
+	world_info.fancy_graphics = 0;
+	world_info.generate_structures = 1;
+	world_info.light_calculation = 0;
+	world_info.toggle_ui = 0;
+	world_info.toggle_event = 0;
 
-	chunk_info.sky_light_lvl = 15;
+	world_info.sky_light_lvl = 15;
+
+	world_info.fog_max_dist = player.camera.far_plane;
+	world_info.fog_min_dist = player.camera.far_plane - 50;
+
+	world_info.entities = malloc(sizeof(t_vox_entity) * MAX_ENTITIES);
+	world_info.entity_amount = 0;
+
+	// Create entities (DEBUG)
+	int		entities_wanted = 64000;
+	float	*model_matrices;
+	model_matrices = malloc(sizeof(float) * MAX_ENTITIES * 16);
+
+	entities_wanted = min(entities_wanted, MAX_ENTITIES);
+	for (int i = 0; i < entities_wanted; i++)
+	{
+		vox_entity_new(&world_info.entities[i]);
+		world_info.entities[i].type = ENTITY_MELON_GOLEM;
+		int		w = cbrt(entities_wanted);
+		int		x = i % w;
+		int		y = (i / w) % w;
+		int		z = i / (w * w);
+		v3_new(world_info.entities[i].pos,
+			player.camera.pos[0] + (x * 4),
+			player.camera.pos[1] + (y * 4), 
+			player.camera.pos[2] + (z * 4)
+			);
+		vox_entity_update(&world_info.entities[i]);
+		++world_info.entity_amount;
+	}
+
 
 	// Creation of hashtable
 	/*
-	chunk_info.hash_table_size = (int)(chunk_info.chunks_loaded * 3);
-	chunk_info.hash_table = malloc(sizeof(t_hash_item) * chunk_info.hash_table_size);
-	hash_table_clear(chunk_info.hash_table, chunk_info.hash_table_size);
+	world_info.hash_table_size = (int)(world_info.chunks_loaded * 3);
+	world_info.hash_table = malloc(sizeof(t_hash_item) * world_info.hash_table_size);
+	hash_table_clear(world_info.hash_table, world_info.hash_table_size);
 	*/
 
 	// Creation of rendering lists;
-	chunk_info.meshes_render_indices = malloc(sizeof(int) * CHUNKS_LOADED);
-	chunk_info.meshes_render_amount = 0;
+	world_info.meshes_render_indices = malloc(sizeof(int) * CHUNKS_LOADED);
+	world_info.meshes_render_amount = 0;
 
-	glGenTextures(1, &chunk_info.texture);
-	new_texture(&chunk_info.texture, TEXTURE_PATH"version_3_texture_alpha.bmp");
+	glGenTextures(1, &world_info.texture);
+	new_texture(&world_info.texture, TEXTURE_PATH"version_3_texture_alpha.bmp");
 
-	chunk_info.chunks = malloc(sizeof(t_chunk) * CHUNKS_LOADED);
-	chunk_info.chunk_columns = malloc(sizeof(t_chunk_col) * CHUNK_COLUMNS);
+	world_info.chunks = malloc(sizeof(t_chunk) * CHUNKS_LOADED);
+	world_info.chunk_columns = malloc(sizeof(t_chunk_col) * CHUNK_COLUMNS);
 
 	int		nth_chunk = 0;
 	int		nth_col = -1;
@@ -330,24 +340,24 @@ int	main(void)
 	LG_INFO("Inits done, lets create some chunks (%d wanted)\n", CHUNKS_LOADED);
 	for (; nth_chunk < CHUNKS_LOADED; ++nth_chunk)
 	{
-		new_chunk(&chunk_info.chunks[nth_chunk], &chunk_info, nth_chunk);
-		init_chunk_mesh(&chunk_info.chunks[nth_chunk].meshes, cube_shader_v2, MESH_TYPE_AMOUNT);
-		chunk_info.chunks[nth_chunk].meshes.texture = chunk_info.texture;
+		new_chunk(&world_info.chunks[nth_chunk], &world_info, nth_chunk);
+		init_chunk_mesh(&world_info.chunks[nth_chunk].meshes, cube_shader_v2, MESH_TYPE_AMOUNT);
+		world_info.chunks[nth_chunk].meshes.texture = world_info.texture;
 		if (nth_chunk % CHUNKS_PER_COLUMN == 0)
 		{
 			nth_col_chunk = 0;
 			++nth_col;
-			chunk_info.chunk_columns[nth_col].chunks = malloc(sizeof(t_chunk *) * CHUNKS_PER_COLUMN);
-			chunk_info.chunk_columns[nth_col].lights = malloc(sizeof(t_light) * CHUNK_COLUMN_LIGHT_AMOUNT);
-			chunk_info.chunk_columns[nth_col].height_map.map = NULL;
+			world_info.chunk_columns[nth_col].chunks = malloc(sizeof(t_chunk *) * CHUNKS_PER_COLUMN);
+			world_info.chunk_columns[nth_col].lights = malloc(sizeof(t_light) * CHUNK_COLUMN_LIGHT_AMOUNT);
+			world_info.chunk_columns[nth_col].height_map.map = NULL;
 
-			chunk_info.chunk_columns[nth_col].coordinate[0] = chunk_info.chunks[nth_chunk].coordinate[0];
-			chunk_info.chunk_columns[nth_col].coordinate[1] = chunk_info.chunks[nth_chunk].coordinate[2];
-			chunk_info.chunk_columns[nth_col].world_coordinate[0] = chunk_info.chunks[nth_chunk].world_coordinate[0];
-			chunk_info.chunk_columns[nth_col].world_coordinate[1] = chunk_info.chunks[nth_chunk].world_coordinate[2];
-			chunk_info.chunk_columns[nth_col].update_structures = 0;
+			world_info.chunk_columns[nth_col].coordinate[0] = world_info.chunks[nth_chunk].coordinate[0];
+			world_info.chunk_columns[nth_col].coordinate[1] = world_info.chunks[nth_chunk].coordinate[2];
+			world_info.chunk_columns[nth_col].world_coordinate[0] = world_info.chunks[nth_chunk].world_coordinate[0];
+			world_info.chunk_columns[nth_col].world_coordinate[1] = world_info.chunks[nth_chunk].world_coordinate[2];
+			world_info.chunk_columns[nth_col].update_structures = 0;
 		}
-		chunk_info.chunk_columns[nth_col].chunks[nth_col_chunk] = &chunk_info.chunks[nth_chunk];
+		world_info.chunk_columns[nth_col].chunks[nth_col_chunk] = &world_info.chunks[nth_chunk];
 		++nth_col_chunk;
 	}
 	ft_printf("Total Chunks created : %d\n", nth_chunk);
@@ -403,7 +413,7 @@ int	main(void)
 		}
 
 		// CHUNK STUFF
-		chunk_info.sky_light_lvl_prev = chunk_info.sky_light_lvl;
+		world_info.sky_light_lvl_prev = world_info.sky_light_lvl;
 
 		update_all_keys(keys, mouse, sp.win);
 		glfwPollEvents();
@@ -437,8 +447,8 @@ int	main(void)
 
 		if (keys[GLFW_KEY_C].state == BUTTON_PRESS)
 		{
-			chunk_info.block_collision_enabled = chunk_info.block_collision_enabled != 1;
-			if (chunk_info.block_collision_enabled)
+			world_info.block_collision_enabled = world_info.block_collision_enabled != 1;
+			if (world_info.block_collision_enabled)
 				LG_INFO("Block collision => ON");
 			else
 				LG_INFO("Block collision => OFF");
@@ -446,8 +456,8 @@ int	main(void)
 
 		if (keys[GLFW_KEY_V].state == BUTTON_PRESS)
 		{
-			chunk_info.player_collision_enabled = chunk_info.player_collision_enabled != 1;
-			if (chunk_info.player_collision_enabled)
+			world_info.player_collision_enabled = world_info.player_collision_enabled != 1;
+			if (world_info.player_collision_enabled)
 				LG_INFO("Player collision detection => ON");
 			else
 				LG_INFO("Player collision detection => OFF");
@@ -481,13 +491,13 @@ int	main(void)
 			int	most_indices = 0;
 			for (int j = 0; j < CHUNKS_LOADED; j++)
 			{
-				if (chunk_info.chunks[j].meshes.vertices_allocated > most_vertices)
-					most_vertices = chunk_info.chunks[j].meshes.vertices_allocated;
-				if (chunk_info.chunks[j].meshes.texture_ids_allocated > most_textures)
-					most_textures = chunk_info.chunks[j].meshes.texture_ids_allocated;
-				for (int m = 0; m < chunk_info.chunks[j].meshes.amount; m++)
-					if (chunk_info.chunks[j].meshes.indices_allocated[m] > most_indices)
-						most_indices = chunk_info.chunks[j].meshes.indices_allocated[m];
+				if (world_info.chunks[j].meshes.vertices_allocated > most_vertices)
+					most_vertices = world_info.chunks[j].meshes.vertices_allocated;
+				if (world_info.chunks[j].meshes.texture_ids_allocated > most_textures)
+					most_textures = world_info.chunks[j].meshes.texture_ids_allocated;
+				for (int m = 0; m < world_info.chunks[j].meshes.amount; m++)
+					if (world_info.chunks[j].meshes.indices_allocated[m] > most_indices)
+						most_indices = world_info.chunks[j].meshes.indices_allocated[m];
 			}
 			LG_INFO("Most vertices : %d", most_vertices);
 			LG_INFO("Most texture ids : %d", most_textures);
@@ -500,14 +510,14 @@ int	main(void)
 		{
 			LG_INFO("Force updating all chunks. (Chunks Loaded : %d)", CHUNKS_LOADED);
 			for (int i = 0; i < CHUNKS_LOADED; i++)
-				chunk_info.chunks[i].needs_to_update = 1;
+				world_info.chunks[i].needs_to_update = 1;
 		}
 
 		// Toggle fancy graphics
 		if (keys[GLFW_KEY_F].state == BUTTON_PRESS)
 		{
-			chunk_info.fancy_graphics = chunk_info.fancy_graphics != 1;
-			if (chunk_info.fancy_graphics)
+			world_info.fancy_graphics = world_info.fancy_graphics != 1;
+			if (world_info.fancy_graphics)
 				LG_INFO("Fancy graphics => ON.");
 			else
 				LG_INFO("Fancy graphics => OFF.");
@@ -516,8 +526,8 @@ int	main(void)
 		// Toggle generation of structures
 		if (keys[GLFW_KEY_Y].state == BUTTON_PRESS)
 		{
-			chunk_info.generate_structures = chunk_info.generate_structures != 1;
-			if (chunk_info.generate_structures)
+			world_info.generate_structures = world_info.generate_structures != 1;
+			if (world_info.generate_structures)
 				LG_INFO("Generate Structures => ON.");
 			else
 				LG_INFO("Generate Structures => OFF.");
@@ -526,8 +536,8 @@ int	main(void)
 		// Toggle light calculation;
 		if (keys[GLFW_KEY_L].state == BUTTON_PRESS)
 		{
-			chunk_info.light_calculation = chunk_info.light_calculation != 1;
-			if (chunk_info.light_calculation)
+			world_info.light_calculation = world_info.light_calculation != 1;
+			if (world_info.light_calculation)
 				LG_INFO("Light Calculation => ON.");
 			else
 				LG_INFO("Light Calculation => OFF.");
@@ -536,8 +546,8 @@ int	main(void)
 		// Toggle UI;
 		if (keys[GLFW_KEY_U].state == BUTTON_PRESS)
 		{
-			chunk_info.toggle_ui = chunk_info.toggle_ui != 1;
-			if (chunk_info.toggle_ui)
+			world_info.toggle_ui = world_info.toggle_ui != 1;
+			if (world_info.toggle_ui)
 				LG_INFO("UI => ON.");
 			else
 				LG_INFO("UI => OFF.");
@@ -546,8 +556,8 @@ int	main(void)
 		// Toggle event;
 		if (keys[GLFW_KEY_I].state == BUTTON_PRESS)
 		{
-			chunk_info.toggle_event = chunk_info.toggle_event != 1;
-			if (chunk_info.toggle_event)
+			world_info.toggle_event = world_info.toggle_event != 1;
+			if (world_info.toggle_event)
 				LG_INFO("Event => ON.");
 			else
 				LG_INFO("Event => OFF.");
@@ -583,13 +593,13 @@ int	main(void)
 		// Change sky light level, Debug only;
 		if (keys[GLFW_KEY_KP_SUBTRACT].state == BUTTON_PRESS)
 		{
-			chunk_info.sky_light_lvl = ft_clamp(chunk_info.sky_light_lvl - 1, 0, 15);
-			LG_INFO("Sky Light Level : %d", chunk_info.sky_light_lvl);
+			world_info.sky_light_lvl = ft_clamp(world_info.sky_light_lvl - 1, 0, 15);
+			LG_INFO("Sky Light Level : %d", world_info.sky_light_lvl);
 		}
 		if (keys[GLFW_KEY_KP_ADD].state == BUTTON_PRESS)
 		{
-			chunk_info.sky_light_lvl = ft_clamp(chunk_info.sky_light_lvl + 1, 0, 15);
-			LG_INFO("Sky Light Level : %d", chunk_info.sky_light_lvl);
+			world_info.sky_light_lvl = ft_clamp(world_info.sky_light_lvl + 1, 0, 15);
+			LG_INFO("Sky Light Level : %d", world_info.sky_light_lvl);
 		}
 
 		update_fps(&fps);
@@ -605,9 +615,9 @@ int	main(void)
 /////////////////
 		// Chunk things
 /////////////////
-		chunk_info.game_tick = 0;
+		world_info.game_tick = 0;
 		if ((int)(fps.curr_time * 100) % 33 == 0)
-			chunk_info.game_tick = 1;
+			world_info.game_tick = 1;
 
 		get_chunk_pos_from_world_pos(player_chunk, player.camera.pos);
 
@@ -618,10 +628,10 @@ int	main(void)
 			int	col_indices[max_get];
 			int	col_coords[max_get][2];
 			int	start_coord[2];
-			tobegen = get_chunk_column_to_regen(chunk_info.chunk_columns, player_chunk, col_indices, col_coords, max_get);
+			tobegen = get_chunk_column_to_regen(world_info.chunk_columns, player_chunk, col_indices, col_coords, max_get);
 			for (int i = 0; i < tobegen; i++)
 			{
-				regenerate_chunk_column(&chunk_info.chunk_columns[col_indices[i]], col_coords[i], chunk_info.seed);
+				regenerate_chunk_column(&world_info.chunk_columns[col_indices[i]], col_coords[i], world_info.seed);
 			}
 		}
 
@@ -634,14 +644,14 @@ int	main(void)
 
 		for (int col = 0; col < CHUNK_COLUMNS; col++)
 		{
-			column = &chunk_info.chunk_columns[col];
+			column = &world_info.chunk_columns[col];
 			col_chunks = column->chunks;
 
 			column->chunk_needs_update = 0;
 		
-			if (chunk_info.generate_structures && column->update_structures)
+			if (world_info.generate_structures && column->update_structures)
 			{
-				tree_gen(&chunk_info, column);
+				tree_gen(&world_info, column);
 				column->update_structures = 0;
 			}
 
@@ -656,9 +666,9 @@ int	main(void)
 			}
 
 			// Light calculation;
-			if (chunk_info.light_calculation &&
+			if (world_info.light_calculation &&
 				(column->chunk_needs_update ||
-				chunk_info.sky_light_lvl != chunk_info.sky_light_lvl_prev))
+				world_info.sky_light_lvl != world_info.sky_light_lvl_prev))
 				update_chunk_column_light(column);
 			// Other Chunk updates;
 			for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
@@ -667,12 +677,12 @@ int	main(void)
 
 				// We only need to update the chunks if a chunk has been regenerated
 				if ((col_chunks[ent]->needs_to_update ||
-					(chunk_info.generate_structures && column->update_structures)))
+					(world_info.generate_structures && column->update_structures)))
 				{
 					// Get all neighbors for this chunk;
 					for (int dir = DIR_NORTH, i = 0; dir < DIR_AMOUNT; ++dir, ++i)
 					{
-						neighbors[i] = get_adjacent_chunk(&chunk_info, col_chunks[ent], (float *)g_card_dir[dir]);
+						neighbors[i] = get_adjacent_chunk(&world_info, col_chunks[ent], (float *)g_card_dir[dir]);
 						++neighbors_found;
 					}
 				}
@@ -689,7 +699,7 @@ int	main(void)
 
 				col_chunks[ent]->needs_to_update = 0;
 
-				if (chunk_info.toggle_event && chunk_info.game_tick)
+				if (world_info.toggle_event && world_info.game_tick)
 					event_chunk(col_chunks[ent]);
 			}
 		}
@@ -704,7 +714,7 @@ int	main(void)
 			int	column_redo_light;
 			for (int col = 0; col < CHUNK_COLUMNS; col++)
 			{
-				column = &chunk_info.chunk_columns[col];
+				column = &world_info.chunk_columns[col];
 				col_chunks = column->chunks;
 
 				for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
@@ -733,9 +743,9 @@ int	main(void)
 		}
 
 		// head
-//		player_terrain_collision(player.velocity, (float []){player.camera.pos[0], player.camera.pos[1] + 0.25f, player.camera.pos[2]}, player.velocity, &chunk_info);
+//		player_terrain_collision(player.velocity, (float []){player.camera.pos[0], player.camera.pos[1] + 0.25f, player.camera.pos[2]}, player.velocity, &world_info);
 		// feet
-//		player_terrain_collision(player.velocity, (float []){player.camera.pos[0], player.camera.pos[1] - 1.0f, player.camera.pos[2]}, player.velocity, &chunk_info);
+//		player_terrain_collision(player.velocity, (float []){player.camera.pos[0], player.camera.pos[1] - 1.0f, player.camera.pos[2]}, player.velocity, &world_info);
 
 		player_apply_velocity(&player);
 		update_camera(&player.camera);
@@ -752,41 +762,43 @@ int	main(void)
 		glEnable(GL_DEPTH_TEST); // note to self, if we disable depth_test. we dont write to it either, which means the next thing checking int the depth tester wont see what you have not written there.... aka the skybox in this case
 
 		// Reset the rendering amount to 0;
-		chunk_info.meshes_render_amount = 0;
+		world_info.meshes_render_amount = 0;
 
 		for (; nth_chunk < CHUNKS_LOADED; ++nth_chunk)
 		{
-			if (!chunk_info.chunks[nth_chunk].has_visible_blocks)
+			if (!world_info.chunks[nth_chunk].has_visible_blocks)
 				continue ;
 
 			// Decide if we want to render the chunk or not;
 			// Dont render chunk if the chunk is further away than the farplane of the camear;
 			// Dont render if the chunk is outside the view fustrum;
 			// Dont render if hasnt been sent to gpu yet;
-			if (chunk_info.chunks[nth_chunk].was_updated == 0 &&
-				v3_dist(player.camera.pos, chunk_info.chunks[nth_chunk].world_coordinate) <
-				player.camera.far_plane + CHUNK_SIZE_X &&
-				aabb_in_frustum(&chunk_info.chunks[nth_chunk].aabb, &player.camera.frustum))
+			if (world_info.chunks[nth_chunk].was_updated == 0 &&
+				v3_dist_sqrd(player.camera.pos,
+					world_info.chunks[nth_chunk].world_coordinate) <
+				(player.camera.far_plane + CHUNK_SIZE_X) *
+				(player.camera.far_plane + CHUNK_SIZE_X) &&
+				aabb_in_frustum(&world_info.chunks[nth_chunk].aabb, &player.camera.frustum))
 			{
-				chunk_info.meshes_render_indices[chunk_info.meshes_render_amount] = nth_chunk;
-				++chunk_info.meshes_render_amount;
+				world_info.meshes_render_indices[world_info.meshes_render_amount] = nth_chunk;
+				++world_info.meshes_render_amount;
 			}
 
 			// Collision Detection
-			if (chunk_info.block_collision_enabled)
+			if (world_info.block_collision_enabled)
 			{
-				if (point_aabb_center_distance(player.camera.pos, &chunk_info.chunks[nth_chunk].aabb) <= (CHUNK_WIDTH * CHUNK_WIDTH))
+				if (point_aabb_center_distance(player.camera.pos, &world_info.chunks[nth_chunk].aabb) <= (CHUNK_WIDTH * CHUNK_WIDTH))
 				{
-					show_chunk_borders(&chunk_info.chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
+					show_chunk_borders(&world_info.chunks[nth_chunk], &player.camera, (float []){1, 0, 0});
 					// Place Blocking and Removing;
 					// Go through all chunks and check for collision on blocks,
 					// store intersections and indices of the chunk the intersection
 					// is in;
 
 					// Collision on solid mesh;
-					if (chunk_info.chunks[nth_chunk].blocks_solid_amount > 0)
+					if (world_info.chunks[nth_chunk].blocks_solid_amount > 0)
 					{
-						int collisions_on_chunk = chunk_mesh_collision_v2(player.camera.pos, player.camera.front, &chunk_info.chunks[nth_chunk].meshes, BLOCK_MESH, chunk_info.chunks[nth_chunk].world_coordinate, player_info.reach, intersect_point + collision_result);
+						int collisions_on_chunk = chunk_mesh_collision_v2(player.camera.pos, player.camera.front, &world_info.chunks[nth_chunk].meshes, BLOCK_MESH, world_info.chunks[nth_chunk].world_coordinate, player_info.reach, intersect_point + collision_result);
 						for (int i = 0; i < collisions_on_chunk; i++)
 							intersect_chunk_index[collision_result + i] = nth_chunk;
 						collision_result += collisions_on_chunk;
@@ -821,17 +833,22 @@ int	main(void)
 			}
 
 			t_block *hovered_block = NULL;
-			hovered_block = get_block_from_chunk(&chunk_info.chunks[closest_index], closest_point, block_pos, &face);
+			hovered_block = get_block_from_chunk(&world_info.chunks[closest_index], closest_point, block_pos, &face);
 			if (hovered_block)
+			{
 				render_block_outline(block_pos, (float []){0, 0, 0}, player.camera.view, player.camera.projection);
-			if (hovered_block &&
+				get_block_local_pos_from_world_pos(block_local, block_pos);
+			}
+			// Lets summon mob on the hovered_block
+			if (hovered_block && keys[GLFW_KEY_M].state == BUTTON_PRESS)
+				set_entity_at_world_pos(&world_info, v3_add(block_pos, block_pos, (float *)g_card_dir[DIR_UP]), ENTITY_MELON_GOLEM);
+			else if (hovered_block &&
 				(mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS ||
 				mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS ||
 				mouse[GLFW_MOUSE_BUTTON_MIDDLE].state == BUTTON_PRESS))
 			{
-				get_block_local_pos_from_world_pos(block_local, block_pos);
 				if (mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS)
-					set_block_at_world_pos(&chunk_info, block_pos, GAS_AIR);
+					set_block_at_world_pos(&world_info, block_pos, GAS_AIR);
 				else if (mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS)
 				{
 					float	block_world[3];
@@ -839,12 +856,12 @@ int	main(void)
 					// Check if block or item equipped;
 					LG_INFO("Place Item at %f %f %f", block_world[0], block_world[1], block_world[2]);
 					if (!is_type_item(player_info.equipped_block))
-						set_block_at_world_pos(&chunk_info, block_world, player_info.equipped_block);
+						set_block_at_world_pos(&world_info, block_world, player_info.equipped_block);
 					else if (is_type_item(player_info.equipped_block))
 					{
 						ft_printf("Using : %s\n", g_item_data[player_info.equipped_block - ITEM_FIRST - 1].name);
 						if (player_info.equipped_block == ITEM_TREE_PLACER)
-							tree_placer(&chunk_info, block_world);
+							tree_placer(&world_info, block_world);
 					}
 					else
 						LG_WARN("We dont allow the placing of that type of block.");
@@ -854,7 +871,7 @@ int	main(void)
 					block_print(hovered_block);
 					v3i_string("Local Coordinates : ", block_local);
 					v3_string("World Coordinates : ", block_pos);
-					t_chunk *temp_chunk = get_chunk_from_world_pos(&chunk_info, block_pos);
+					t_chunk *temp_chunk = get_chunk_from_world_pos(&world_info, block_pos);
 					v3i_string("Chunk Coordinates : ", temp_chunk->coordinate);
 					v3_string("Chunk World Coordinates : ", temp_chunk->world_coordinate);
 
@@ -878,11 +895,11 @@ if (error)
 		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_BLEND);
 		glEnable(GL_CULL_FACE);
-		for (int r = 0; r < chunk_info.meshes_render_amount; r++)
+		for (int r = 0; r < world_info.meshes_render_amount; r++)
 		{
-			int render_index = chunk_info.meshes_render_indices[r];
-			if (chunk_info.chunks[render_index].blocks_solid_amount > 0)
-				render_chunk_mesh(&chunk_info.chunks[render_index].meshes, BLOCK_MESH, chunk_info.chunks[render_index].world_coordinate, &player.camera);
+			int render_index = world_info.meshes_render_indices[r];
+			if (world_info.chunks[render_index].blocks_solid_amount > 0)
+				render_chunk_mesh(&world_info.chunks[render_index].meshes, BLOCK_MESH, world_info.chunks[render_index].world_coordinate, &player.camera);
 		}
 
 error = glGetError();
@@ -893,11 +910,11 @@ if (error)
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
-		for (int r = 0; r < chunk_info.meshes_render_amount; r++)
+		for (int r = 0; r < world_info.meshes_render_amount; r++)
 		{
-			int render_index = chunk_info.meshes_render_indices[r];
-			if (chunk_info.chunks[render_index].blocks_fluid_amount > 0)
-				render_chunk_mesh(&chunk_info.chunks[render_index].meshes, FLUID_MESH, chunk_info.chunks[render_index].world_coordinate, &player.camera);
+			int render_index = world_info.meshes_render_indices[r];
+			if (world_info.chunks[render_index].blocks_fluid_amount > 0)
+				render_chunk_mesh(&world_info.chunks[render_index].meshes, FLUID_MESH, world_info.chunks[render_index].world_coordinate, &player.camera);
 		}
 
 /////////////////
@@ -926,31 +943,16 @@ if (error)
 	// NOTE : we need the amount of entities of a single type (entity_palette just like block_palette);
 	// Create model matrix array from all the entities of the same type;
 
-	float	v3_total = 0;
-	float	rot_total = 0;
-	float	mod_total = 0;
-	for (int i = 0; i < entity_amount; i++)
+	int	amount_to_render = 0;
+	for (int i = 0; i < world_info.entity_amount; i++)
 	{
-		// REMOVE : apply random rotation just to show that they have their own model mat;
-		ft_timer_start();
-		v3_new(entities[i].rot,
-			entities[i].rot[0] + rand() / 100 * fps.delta_time,
-			entities[i].rot[1] + rand() / 100 * fps.delta_time,
-			entities[i].rot[2] + rand() / 100 * fps.delta_time
-			);
-		v3_total += ft_timer_end();
-
-		ft_timer_start();
-		rotation_matrix(entities[i].rot_m4, entities[i].rot);
-		rot_total += ft_timer_end();
-
-		ft_timer_start();
-		model_matrix(model_matrices + i * 16, entities[i].scale_m4, entities[i].rot_m4, entities[i].trans_m4);
-		mod_total += ft_timer_end();
-	//	new_model_matrix(model_matrices + i * 16, entities[i].scale, entities[i].rot, entities[i].pos);
+		// Decide if the entity should even be rendered;
+		if (v3_dist_sqrd(player.camera.pos, world_info.entities[i].pos) > player.camera.far_plane * player.camera.far_plane)
+			continue ;
+		model_matrix(model_matrices + amount_to_render * 16, world_info.entities[i].scale_m4, world_info.entities[i].rot_m4, world_info.entities[i].trans_m4);
+		++amount_to_render;
 	}
-	ft_printf("model mat creation : v3 : %f, rot : %f, mod : %f\n", v3_total, rot_total, mod_total);
-	model_instance_render(&instance_model, model_instance_shader, model_matrices, entity_amount, player.camera.view, player.camera.projection);
+	model_instance_render(&instance_model, model_instance_shader, model_matrices, amount_to_render, player.camera.view, player.camera.projection);
 
 	error = glGetError();
 if (error)
@@ -960,7 +962,7 @@ if (error)
 		glDisable(GL_DEPTH_TEST);
 		render_crosshair();
 
-		if (chunk_info.toggle_ui)
+		if (world_info.toggle_ui)
 		{
 			/*
 			ui_manager_start(&ui);

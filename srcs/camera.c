@@ -60,5 +60,7 @@ void	camera_print(t_camera *camera)
 	ft_printf("camera.fov : %f\n", camera->fov);
 	ft_printf("camera.viewport_w : %d\n", camera->viewport_w);
 	ft_printf("camera.viewport_h : %d\n", camera->viewport_h);
+	ft_printf("camera.near_plane : %.2f\n", camera->near_plane);
+	ft_printf("camera.far_plane : %.2f\n", camera->far_plane);
 	frustum_print(&camera->frustum);
 }

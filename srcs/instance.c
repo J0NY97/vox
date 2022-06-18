@@ -12,6 +12,7 @@
 
 #include "shaderpixel.h"
 #include "chunk.h"
+#include "world.h"
 
 // Basically everything needed for minecraft : https://www.redblobgames.com/maps/terrain-from-noise/
 void	new_chunk(t_chunk *chunk, t_world *info, int nth)
@@ -1006,6 +1007,7 @@ void	render_chunk_mesh(t_chunk_mesh *mesh, int mesh_type, float *coordinate, t_c
 	glUseProgram(mesh->shader);
 	glUniformMatrix4fv(mesh->uniform_view, 1, GL_FALSE, &camera->view[0]);
 	glUniformMatrix4fv(mesh->uniform_proj, 1, GL_FALSE, &camera->projection[0]);
+	glUniform2fv(glGetUniformLocation(mesh->shader, "fog_dist"), 1, (float []){camera->far_plane, camera->far_plane - 50});
 
 	glUniform3fv(mesh->uniform_chunk_pos, 1, &coordinate[0]);
 	// Night tint

@@ -204,12 +204,12 @@ float	*v4_multiply_m4(float *res, float *v, float *m)
 
 float	to_radians(float degrees)
 {
-	return (degrees * M_PI / 180.0f);
+	return (degrees * _PI_180);
 }
 
 float	to_degrees(float radians)
 {
-	return (radians * 180.0f / M_PI);
+	return (radians * _180_PI);
 }
 
 ////////////////////////////////

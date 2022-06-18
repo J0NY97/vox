@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 17:21:38 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/17 16:30:11 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/18 12:09:04 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,9 @@
 # include "glfw3.h"
 # include "enum.h"
 # include "model.h"
+# include "chunk.h"
+
+# define MAX_ENTITIES 64400
 
 enum e_entity_types
 {
@@ -57,5 +60,8 @@ typedef struct s_vox_entity
 }		t_vox_entity;
 
 void	vox_entity_new(t_vox_entity *entity);
+void	vox_entity_update(t_vox_entity *entity);
+
+void	set_entity_at_world_pos(t_world *info, float *world_pos, int entity_type);
 
 #endif

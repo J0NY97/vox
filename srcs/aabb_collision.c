@@ -165,7 +165,7 @@ float	point_aabb_nearest_distance(float *point, t_aabb *b)
 }
 
 /*
- * Returns distance from the center of the aabb 'b' to the point 'point';
+ * Returns distance squared from the center of the aabb 'b' to the point 'point';
 */
 float	point_aabb_center_distance(float *point, t_aabb *b)
 {

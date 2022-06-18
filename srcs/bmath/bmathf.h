@@ -3,6 +3,9 @@
 
 # include "bmath.h"
 
+# define _PI_180 0.01745329251
+# define _180_PI 57.2957795131
+
 // OTHER EXTRAS
 int		mod(int a, int b);
 
