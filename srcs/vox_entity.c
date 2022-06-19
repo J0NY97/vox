@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/18 11:58:23 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/18 13:47:06 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/19 12:59:15 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,8 +25,9 @@ void	vox_entity_new(t_vox_entity *entity)
 	entity->health = 100;
 	entity->speed = 1;
 
-	entity->yaw = 0;
+	entity->yaw = -90;
 	entity->pitch = 0;
+	entity->roll = 0;
 }
 
 /*
@@ -34,18 +35,21 @@ void	vox_entity_new(t_vox_entity *entity)
 */
 void	vox_entity_update(t_vox_entity *entity)
 {
-	v3_new(entity->front,
-		cos(to_radians(entity->yaw)) * cos(to_radians(entity->pitch)),
-		sin(to_radians(entity->pitch)),
-		sin(to_radians(entity->yaw)) * cos(to_radians(entity->pitch)));
+	float	rad_yaw;
+	float	rad_pitch;
+
+	rad_yaw = to_radians(entity->yaw);
+	rad_pitch = to_radians(entity->pitch);
+	v3_new(entity->front, cos(rad_yaw) * cos(rad_pitch),
+		sin(rad_pitch), sin(rad_yaw) * cos(rad_pitch));
 	v3_normalize(entity->front, entity->front);
 
 	v3_add(entity->pos, entity->pos, entity->velocity);
 	v3_new(entity->velocity, 0, 0, 0);
 
-	entity->rot[0] = to_degrees(entity->front[0]);
-	entity->rot[1] = to_degrees(entity->front[1]);
-	entity->rot[2] = to_degrees(entity->front[2]);
+	entity->rot[0] = entity->yaw;
+	entity->rot[1] = entity->pitch;
+	entity->rot[2] = entity->roll;
 
 	scale_matrix(entity->scale_m4, entity->scale);
 	rotation_matrix(entity->rot_m4, entity->rot);
@@ -99,6 +103,14 @@ int	vox_entity_state_wander(t_vox_entity *entity, t_fps *fps)
 {
 	// While wandering the entity can change direction it walking in;
 	vox_entity_state_idle(entity);
+
+	float	rad_yaw;
+	float	rad_pitch;
+	rad_yaw = to_radians(entity->yaw);
+	rad_pitch = to_radians(entity->pitch);
+	v3_new(entity->front, cos(rad_yaw) * cos(rad_pitch),
+		sin(rad_pitch), sin(rad_yaw) * cos(rad_pitch));
+	v3_normalize(entity->front, entity->front);
 
 	v3_multiply_f(entity->velocity, entity->front, entity->speed * fps->delta_time);
 	/*

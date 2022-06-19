@@ -208,12 +208,16 @@ int	main(void)
 	GLuint		model_shader;
 	t_bobj		bobj_melon_golem;
 	t_model_v2	model_melon_golem;
-	float		melon_golem_pos[3];
+
 	int			attach_entity = 1;
+	t_vox_entity	melon_entity;
 
 	new_shader(&model_shader, SHADER_PATH"model.vs", SHADER_PATH"model.fs");
 	bobj_load(&bobj_melon_golem, MODEL_PATH"melon_golem/melon_golem.obj");
 	model_from_bobj(&model_melon_golem, &bobj_melon_golem, 0);
+	model_update(&model_melon_golem);
+
+	vox_entity_new(&melon_entity);
 
 	// Load vox entity models
 	t_bobj		vox_entity_bobj[ENTITY_AMOUNT]; // NOTE : remember to free;
@@ -926,12 +930,29 @@ if (error)
 ////////////////////////
 	float	model_mat[16];
 
-	if (attach_entity)
+	if (keys[GLFW_KEY_KP_4].state == BUTTON_PRESS)
+		melon_entity.yaw -= 1;
+	if (keys[GLFW_KEY_KP_6].state == BUTTON_PRESS)
+		melon_entity.yaw += 1;
+	if (keys[GLFW_KEY_KP_0].state == BUTTON_PRESS)
+		v3_multiply_f(melon_entity.velocity, melon_entity.front, melon_entity.speed * fps.delta_time);
+
+	if (keys[GLFW_KEY_P].state == BUTTON_PRESS)
 	{
-		v3_new(melon_golem_pos, player.camera.pos[0], player.camera.pos[1] - 2, player.camera.pos[2] - 2);
-		model_update(&model_melon_golem);
+		ft_printf("Euler : %d %d %d\n", melon_entity.yaw, melon_entity.pitch, melon_entity.roll);
+		ft_printf("Front : %.2f %.2f %.2f\n", melon_entity.front[0], melon_entity.front[1], melon_entity.front[2]);
 	}
-	new_model_matrix(model_mat, 1.0f, (float []){90, 0, 0}, melon_golem_pos);
+
+	if (attach_entity)
+		v3_new(melon_entity.pos, player.camera.pos[0], player.camera.pos[1] - 2, player.camera.pos[2] - 2);
+
+	float ent_pos2[3];
+	v3_multiply_f(ent_pos2, melon_entity.front, 1.0f);
+	v3_add(ent_pos2, ent_pos2, melon_entity.pos);
+	render_3d_line(melon_entity.pos, ent_pos2, (float []){0, 0, 255}, player.camera.view, player.camera.projection);
+
+	vox_entity_update(&melon_entity);
+	new_model_matrix(model_mat, melon_entity.scale, melon_entity.rot, melon_entity.pos);
 	model_render(&model_melon_golem, model_shader, model_mat, player.camera.view, player.camera.projection);
 
 ////////////////////////

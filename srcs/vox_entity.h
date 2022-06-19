@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 17:21:38 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/18 13:45:08 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/19 11:05:18 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,6 +67,8 @@ typedef struct s_vox_entity
 
 	int		yaw;
 	int		pitch;
+	int		roll;
+
 	float	front[3];
 	float	up[3];
 	float	velocity[3];

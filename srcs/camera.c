@@ -26,11 +26,13 @@ void	new_camera(t_camera *camera)
 void	update_camera(t_camera *camera)
 {
 	float	v3[V3_SIZE];
+	float	rad_yaw;
+	float	rad_pitch;
 
-	v3_new(camera->front,
-		cos(to_radians(camera->yaw)) * cos(to_radians(camera->pitch)),
-		sin(to_radians(camera->pitch)),
-		sin(to_radians(camera->yaw)) * cos(to_radians(camera->pitch)));
+	rad_yaw = to_radians(camera->yaw);
+	rad_pitch = to_radians(camera->pitch);
+	v3_new(camera->front, cos(rad_yaw) * cos(rad_pitch),
+		sin(rad_pitch), sin(rad_yaw) * cos(rad_pitch));
 	v3_normalize(camera->front, camera->front);
 
 	v3_normalize(camera->right,
