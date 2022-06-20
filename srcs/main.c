@@ -210,6 +210,7 @@ int	main(void)
 	t_model_v2	model_melon_golem;
 
 	int			attach_entity = 1;
+	int			attach_to_entity = 0;
 	t_vox_entity	melon_entity;
 
 	new_shader(&model_shader, SHADER_PATH"model.vs", SHADER_PATH"model.fs");
@@ -294,7 +295,7 @@ int	main(void)
 	world_info.entity_amount = 0;
 
 	// Create entities (DEBUG)
-	int		entities_wanted = 50;
+	int		entities_wanted = 500;
 	float	*model_matrices;
 	model_matrices = malloc(sizeof(float) * MAX_ENTITIES * 16);
 
@@ -567,7 +568,7 @@ int	main(void)
 				LG_INFO("Event => OFF.");
 		}
 
-		// Toggle event;
+		// Toggle attach entity;
 		if (keys[GLFW_KEY_Q].state == BUTTON_PRESS)
 		{
 			attach_entity = attach_entity != 1;
@@ -576,6 +577,48 @@ int	main(void)
 			else
 				LG_INFO("attach_entity => OFF.");
 		}
+		
+		// Toggle attach to entity;
+		if (keys[GLFW_KEY_Z].state == BUTTON_PRESS)
+		{
+			attach_to_entity = attach_to_entity != 1;
+			if (attach_to_entity)
+				LG_INFO("attach_to_entity => ON.");
+			else
+				LG_INFO("attach_to_entity => OFF.");
+		}
+
+	if (keys[GLFW_KEY_KP_4].state == BUTTON_HOLD)
+		melon_entity.yaw -= 0.1f;
+	if (keys[GLFW_KEY_KP_6].state == BUTTON_HOLD)
+		melon_entity.yaw += 0.1f;
+	if (keys[GLFW_KEY_KP_0].state == BUTTON_HOLD)
+	{
+		float speed = melon_entity.speed;
+		if (keys[GLFW_KEY_LEFT_SHIFT].state == BUTTON_HOLD)
+			speed *= 10;
+		v3_multiply_f(melon_entity.velocity, melon_entity.front, speed * fps.delta_time);
+	}
+
+	if (keys[GLFW_KEY_P].state == BUTTON_PRESS)
+	{
+		ft_printf("Euler : %d %d %d\n", melon_entity.yaw, melon_entity.pitch, melon_entity.roll);
+		ft_printf("Front : %.2f %.2f %.2f\n", melon_entity.front[0], melon_entity.front[1], melon_entity.front[2]);
+	}
+
+	if (attach_entity)
+		v3_new(melon_entity.pos, player.camera.pos[0], player.camera.pos[1] - 2, player.camera.pos[2] - 2);
+	else if (attach_to_entity)
+	{
+		float p_pos[3];
+		v3_multiply_f(p_pos, melon_entity.front, -2.0f);
+		v3_add(p_pos, p_pos, melon_entity.pos);
+		v3_assign(player.camera.pos, p_pos);
+		player.camera.yaw = melon_entity.yaw;
+		player.camera.pitch = -melon_entity.pitch;
+	}
+
+	
 
 // Select equipped block;
 		for (int i = GLFW_KEY_1; i <= GLFW_KEY_9; i++)
@@ -930,26 +973,15 @@ if (error)
 ////////////////////////
 	float	model_mat[16];
 
-	if (keys[GLFW_KEY_KP_4].state == BUTTON_PRESS)
-		melon_entity.yaw -= 1;
-	if (keys[GLFW_KEY_KP_6].state == BUTTON_PRESS)
-		melon_entity.yaw += 1;
-	if (keys[GLFW_KEY_KP_0].state == BUTTON_PRESS)
-		v3_multiply_f(melon_entity.velocity, melon_entity.front, melon_entity.speed * fps.delta_time);
-
-	if (keys[GLFW_KEY_P].state == BUTTON_PRESS)
-	{
-		ft_printf("Euler : %d %d %d\n", melon_entity.yaw, melon_entity.pitch, melon_entity.roll);
-		ft_printf("Front : %.2f %.2f %.2f\n", melon_entity.front[0], melon_entity.front[1], melon_entity.front[2]);
-	}
-
-	if (attach_entity)
-		v3_new(melon_entity.pos, player.camera.pos[0], player.camera.pos[1] - 2, player.camera.pos[2] - 2);
-
 	float ent_pos2[3];
+	// Front 
 	v3_multiply_f(ent_pos2, melon_entity.front, 1.0f);
 	v3_add(ent_pos2, ent_pos2, melon_entity.pos);
 	render_3d_line(melon_entity.pos, ent_pos2, (float []){0, 0, 255}, player.camera.view, player.camera.projection);
+	// Up 
+	v3_multiply_f(ent_pos2, (float []){0, 1, 0}, 1.0f);
+	v3_add(ent_pos2, ent_pos2, melon_entity.pos);
+	render_3d_line(melon_entity.pos, ent_pos2, (float []){255, 0, 0}, player.camera.view, player.camera.projection);
 
 	vox_entity_update(&melon_entity);
 	new_model_matrix(model_mat, melon_entity.scale, melon_entity.rot, melon_entity.pos);
@@ -970,7 +1002,7 @@ if (error)
 		// Decide if the entity should even be rendered;
 		if (v3_dist_sqrd(player.camera.pos, world_info.entities[i].pos) > player.camera.far_plane * player.camera.far_plane)
 			continue ;
-		if (world_info.game_tick)
+//		if (world_info.game_tick)
 			vox_entity_event(&world_info.entities[i], &fps);
 		if (world_info.entities[i].needs_update)
 		{
@@ -979,6 +1011,18 @@ if (error)
 		}
 		model_matrix(model_matrices + amount_to_render * 16, world_info.entities[i].scale_m4, world_info.entities[i].rot_m4, world_info.entities[i].trans_m4);
 		++amount_to_render;
+
+		if (world_info.entities[i].draw_dir)
+		{
+			// Front 
+			v3_multiply_f(ent_pos2, world_info.entities[i].front, 1.0f);
+			v3_add(ent_pos2, ent_pos2, world_info.entities[i].pos);
+			render_3d_line(world_info.entities[i].pos, ent_pos2, (float []){0, 0, 255}, player.camera.view, player.camera.projection);
+			// Up 
+			v3_multiply_f(ent_pos2, (float []){0, 1, 0}, 1.0f);
+			v3_add(ent_pos2, ent_pos2, world_info.entities[i].pos);
+			render_3d_line(world_info.entities[i].pos, ent_pos2, (float []){255, 0, 0}, player.camera.view, player.camera.projection);
+		}
 	}
 	model_instance_render(&instance_model, model_instance_shader, model_matrices, amount_to_render, player.camera.view, player.camera.projection);
 

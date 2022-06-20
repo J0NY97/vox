@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/18 11:58:23 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/19 12:59:15 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/20 11:38:23 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,9 +25,12 @@ void	vox_entity_new(t_vox_entity *entity)
 	entity->health = 100;
 	entity->speed = 1;
 
-	entity->yaw = -90;
+	entity->yaw = 0;
 	entity->pitch = 0;
 	entity->roll = 0;
+
+	// Debug toggles
+	entity->draw_dir = 1;
 }
 
 /*
@@ -47,9 +50,9 @@ void	vox_entity_update(t_vox_entity *entity)
 	v3_add(entity->pos, entity->pos, entity->velocity);
 	v3_new(entity->velocity, 0, 0, 0);
 
-	entity->rot[0] = entity->yaw;
-	entity->rot[1] = entity->pitch;
-	entity->rot[2] = entity->roll;
+	entity->rot[0] = fmod(entity->pitch, 360);
+	entity->rot[1] = fmod(-entity->yaw, 360);
+	entity->rot[2] = fmod(entity->roll, 360);
 
 	scale_matrix(entity->scale_m4, entity->scale);
 	rotation_matrix(entity->rot_m4, entity->rot);

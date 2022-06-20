@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 17:21:38 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/19 11:05:18 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/20 11:34:42 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,9 +65,9 @@ typedef struct s_vox_entity
 	float	rot[3];	// model rotation
 	float	scale;	// model scale
 
-	int		yaw;
-	int		pitch;
-	int		roll;
+	float	yaw;
+	float	pitch;
+	float	roll;
 
 	float	front[3];
 	float	up[3];
@@ -77,6 +77,9 @@ typedef struct s_vox_entity
 	char	state;	// 'e_entity_states';
 
 	char	needs_update;
+
+	// Debug
+	char	draw_dir;
 
 	// Matrices
 	float	scale_m4[16];
