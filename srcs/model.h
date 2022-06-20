@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/16 13:23:45 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/17 14:31:33 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/20 13:59:44 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 # include "bobj_loader.h"
 # include "bobj.h"
+# include "aabb.h"
 
 typedef struct	s_model				t_model;
 typedef struct	s_material_info		t_material_info;
@@ -89,6 +90,8 @@ typedef struct s_mesh_v2
 
 	unsigned int	*indices;
 	int				indices_amount;
+
+	t_aabb			bound;
 }	t_mesh_v2;
 
 /*
@@ -120,6 +123,8 @@ typedef struct	s_model_v2
 
 	t_material_v2	*materials;
 	int			material_amount;
+
+	t_aabb			bound;
 }	t_model_v2;
 
 void	model_from_bobj(t_model_v2 *model, t_bobj *bob, int index);

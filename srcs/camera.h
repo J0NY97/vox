@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/14 12:14:59 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/17 12:31:48 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/20 14:00:30 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 # define CAMERA_H
 
 # include "bmath.h"
-# include "collision.h"
+# include "aabb.h"
 
 typedef struct s_camera	t_camera;
 

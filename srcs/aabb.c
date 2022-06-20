@@ -1,5 +1,19 @@
-#include "collision.h"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   aabb.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/06/20 14:01:02 by jsalmi            #+#    #+#             */
+/*   Updated: 2022/06/20 14:02:14 by jsalmi           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "bmath.h"
+#include "aabb.h"
+#include "string.h"
+#include "libft.h"
 
 /*
  * amount of values in vertices should be vertex_amount * 3 (xyz per vertex);
@@ -45,11 +59,11 @@ void	aabb_transform(t_aabb *a, float *model)
 
 	temp = *a;
 	if (temp.min[0] > temp.max[0])
-		ft_swap(&temp.min[0], &temp.max[0]);
+		ft_fswap(&temp.min[0], &temp.max[0]);
 	if (temp.min[1] > temp.max[1])
-		ft_swap(&temp.min[1], &temp.max[1]);
+		ft_fswap(&temp.min[1], &temp.max[1]);
 	if (temp.min[2] > temp.max[2])
-		ft_swap(&temp.min[2], &temp.max[2]);
+		ft_fswap(&temp.min[2], &temp.max[2]);
 	*a = temp;
 }
 

@@ -15,7 +15,7 @@ CFILES = \
 	fps.c \
 	key.c \
 	collision.c \
-	aabb_collision.c \
+	aabb.c \
 	ellipsoid_collision.c \
 	triangle_collision.c \
 	plane_collision.c \

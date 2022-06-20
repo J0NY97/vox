@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/20 12:03:17 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/20 12:07:18 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/20 14:03:00 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 # include "camera.h"
 
 typedef struct	s_player	t_player;
+typedef struct	s_entity	t_entity;
 
 struct s_player
 {
