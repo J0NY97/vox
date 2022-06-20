@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/20 13:59:58 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/20 14:00:10 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/20 14:11:04 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,8 @@ typedef struct s_aabb
 	float	vertices[24];
 }			t_aabb;
 
-void		aabb_create(t_aabb *res, float *vertices, size_t vertex_amount);
+void		aabb_create(t_aabb *res, float *vertices, int vertex_amount);
+void		aabb_create_from_indices(t_aabb *res, float *vertices, unsigned int *indices, int indices_amount);
 void		aabb_transform(t_aabb *a, float *model);
 void		aabb_transform_new(t_aabb *a, float *model);
 void		aabb_vertify(t_aabb *a);

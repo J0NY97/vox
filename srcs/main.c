@@ -992,13 +992,8 @@ if (error)
 ////////////////////////
 // Model Rendering Instance
 ////////////////////////
-	float	pmin[3];
-	float	pmax[3];
 	float	tmp[3];
 	float	tmp2[3];
-
-	v3_new(pmin, -0.375f, -0.89f, -0.375f);
-	v3_new(pmax, 0.375f, 1.055f, 0.375f);
 
 	glDisable(GL_BLEND);
 	glEnable(GL_CULL_FACE);
@@ -1041,9 +1036,8 @@ if (error)
 
 		if (world_info.entities[i].draw_aabb)
 		{
-			// NOTE : TODO: Not actual aabb, but just testing out;
-			render_3d_rectangle(v3_add(tmp, world_info.entities[i].pos, pmin),
-				v3_add(tmp2, world_info.entities[i].pos, pmax), (float []){255, 0, 0},
+			render_3d_rectangle(v3_add(tmp, world_info.entities[i].pos, instance_model.bound.min),
+				v3_add(tmp2, world_info.entities[i].pos, instance_model.bound.max), (float []){255, 0, 0},
 				player.camera.view, player.camera.projection);
 		}
 	}

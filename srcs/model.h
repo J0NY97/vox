@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/16 13:23:45 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/20 13:59:44 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/20 14:08:31 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,6 +81,8 @@ typedef struct	s_material_v2
 /*
  * 'material_index' : from 't_model_v2->materials[x].texture';
  *		'x' : 't_bobj->t_object->t_mesh->material_index';
+ *
+ * 
 */
 typedef struct s_mesh_v2
 {
@@ -99,6 +101,8 @@ typedef struct s_mesh_v2
  *		't_bobj->vertices/-...' or do we copy the over?;
  *
  * 'textures' : all the textures loaded from 't_bobj->t_bobj_material's;
+ * 'bound' : the local model bounding box, if you want the global one, you have
+ * 		to calculate it using the model matrix; (which you also have to calc);
 */
 typedef struct	s_model_v2
 {

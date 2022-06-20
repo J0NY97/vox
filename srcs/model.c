@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/16 13:41:57 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/17 15:04:24 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/20 14:18:43 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -303,6 +303,9 @@ void	model_from_bobj(t_model_v2 *model, t_bobj *bob, int index)
 	LG_INFO("End");
 }
 
+/*
+ * Note : this wont update the bounding box of the mesh;
+*/
 void	mesh_update(t_mesh_v2 *mesh)
 {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
@@ -328,9 +331,15 @@ void	model_update(t_model_v2 *model)
 	glBindBuffer(GL_ARRAY_BUFFER, model->vbo_tex);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * model->uvs_amount,
 		model->uvs, GL_STATIC_DRAW);
+	
+	// TODO : update model aabb here;
+	aabb_create(&model->bound, model->vertices, model->vertices_amount / 3);
 
 	for (int i = 0; i < model->meshes_amount; i++)
+	{
 		mesh_update(&model->meshes[i]);
+		aabb_create_from_indices(&model->meshes[i].bound, model->vertices, model->meshes[i].indices, model->meshes[i].indices_amount / 3);
+	}
 
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);

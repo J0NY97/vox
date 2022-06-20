@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/20 14:01:02 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/20 14:02:14 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/20 14:10:52 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
 /*
  * amount of values in vertices should be vertex_amount * 3 (xyz per vertex);
 */
-void	aabb_create(t_aabb *res, float *vertices, size_t vertex_amount)
+void	aabb_create(t_aabb *res, float *vertices, int vertex_amount)
 {
 	res->min[0] = INFINITY;
 	res->min[1] = INFINITY;
@@ -28,7 +28,7 @@ void	aabb_create(t_aabb *res, float *vertices, size_t vertex_amount)
 	res->max[1] = -INFINITY;
 	res->max[2] = -INFINITY;
 
-	for (size_t i = 0; i < vertex_amount; i++)
+	for (int i = 0; i < vertex_amount; i++)
 	{
 		res->min[0] = fmin(res->min[0], vertices[i * 3 + 0]);
 		res->min[1] = fmin(res->min[1], vertices[i * 3 + 1]);
@@ -37,6 +37,31 @@ void	aabb_create(t_aabb *res, float *vertices, size_t vertex_amount)
 		res->max[0] = fmax(res->max[0], vertices[i * 3 + 0]);
 		res->max[1] = fmax(res->max[1], vertices[i * 3 + 1]);
 		res->max[2] = fmax(res->max[2], vertices[i * 3 + 2]);
+	}
+}
+
+/*
+ * 
+*/
+void	aabb_create_from_indices(t_aabb *res, float *vertices, unsigned int *indices, int indices_amount)
+{
+	res->min[0] = INFINITY;
+	res->min[1] = INFINITY;
+	res->min[2] = INFINITY;
+
+	res->max[0] = -INFINITY;
+	res->max[1] = -INFINITY;
+	res->max[2] = -INFINITY;
+
+	for (int i = 0; i < indices_amount; i++)
+	{
+		res->min[0] = fmin(res->min[0], vertices[indices[i] * 3 + 0]);
+		res->min[1] = fmin(res->min[1], vertices[indices[i] * 3 + 1]);
+		res->min[2] = fmin(res->min[2], vertices[indices[i] * 3 + 2]);
+
+		res->max[0] = fmax(res->max[0], vertices[indices[i] * 3 + 0]);
+		res->max[1] = fmax(res->max[1], vertices[indices[i] * 3 + 1]);
+		res->max[2] = fmax(res->max[2], vertices[indices[i] * 3 + 2]);
 	}
 }
 
