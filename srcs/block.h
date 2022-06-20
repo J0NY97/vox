@@ -349,7 +349,7 @@ static const t_block_data	g_block_data[] = {
 		{275, 275, 275, 275, 0, 0},
 		0, 0, 0.0f,
 		1, 1, 1, 1,
-		1, 1,
+		0, 1,
 		FLORA_FACES
 	},
 	{
@@ -359,7 +359,7 @@ static const t_block_data	g_block_data[] = {
 		{231, 231, 231, 231, 0, 0},
 		0, 0, 0.0f,
 		1, 1, 1, 1,
-		1, 1,
+		0, 1,
 		FLORA_FACES
 	},
 	{
@@ -369,7 +369,7 @@ static const t_block_data	g_block_data[] = {
 		{327, 327, 327, 327, 0, 0},
 		0, 0, 0.0f,
 		1, 1, 1, 1,
-		1, 1,
+		0, 1,
 		FLORA_FACES
 	},
 // FLUID

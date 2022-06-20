@@ -6,12 +6,14 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/18 12:11:30 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/18 12:13:48 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/20 12:03:00 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef WORLD_H
 # define WORLD_H
+
+# include "player.h"
 
 #define CHUNK_WIDTH 32
 #define CHUNK_HEIGHT 32
@@ -67,6 +69,9 @@ typedef struct s_world
 
 	t_vox_entity	*entities;
 	int				entity_amount;
+
+	// Player
+	t_player	*player;
 
 /*
 	t_hash_item	*hash_table;

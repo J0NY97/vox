@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/11 14:27:43 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/18 13:44:35 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/20 12:06:51 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,9 +33,6 @@
 # include "model.h"
 # include "enum.h"
 # include "fps.h"
-
-typedef struct	s_player	t_player;
-typedef struct	s_key		t_key;
 
 ///////////////////
 //	TEXTURE
@@ -139,56 +136,6 @@ void				model_matrix(float *m4_res, float *m4_scale, float *m4_rot, float *m4_tr
 void				scale_matrix(float *m4_res, float scale);
 void				rotation_matrix(float *m4_res, float *v3_rot);
 void				translation_matrix(float *m4_res, float *v3_pos);
-
-///////////////////
-//	PLAYER
-///////////////////
-
-struct s_player
-{
-	t_camera	camera;
-
-	float		velocity[V3_SIZE];
-	float		gravity;
-
-	int			moving;
-	int			colliding;
-	int			enabled_mouse;
-	double		mouse_pos[2];
-	double		last_mouse_pos[2];
-
-	t_aabb		aabb;
-
-};
-
-void		new_player(t_player *player);
-void		player_events(t_player *player, t_key *keys, GLFWwindow *win);
-void		player_movement(t_player *player, GLFWwindow *win, t_fps fps);
-void		player_apply_velocity(t_player *player);
-void		player_apply_gravity(t_player *player);
-void		player_looking(t_player *player, GLFWwindow *win, t_fps fps);
-void		player_entity_collision(t_player *player, t_entity *entity);
-int			player_entity_mesh_collision(t_player *player, t_entity *entity);
-void		player_print(t_player *player);
-
-///////////////////
-//	KEYS
-///////////////////
-
-enum e_mouse_button_state
-{
-	BUTTON_PRESS, // the framei t was pressed;
-	BUTTON_HOLD, // if held for more than a frame;
-	BUTTON_RELEASE, // the frame it was released;
-	BUTTON_NONE // if not one of the above (aka not pressed?);
-};
-
-struct	s_key
-{
-	int		state;
-};
-
-void		update_all_keys(t_key *keys, t_key *mouse, GLFWwindow *win);
 
 ///////////////////
 //	SCENE

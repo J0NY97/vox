@@ -294,6 +294,8 @@ int	main(void)
 	world_info.entities = malloc(sizeof(t_vox_entity) * MAX_ENTITIES);
 	world_info.entity_amount = 0;
 
+	world_info.player = &player;
+
 	// Create entities (DEBUG)
 	int		entities_wanted = 500;
 	float	*model_matrices;
@@ -1000,10 +1002,10 @@ if (error)
 	for (int i = 0; i < world_info.entity_amount; i++)
 	{
 		// Decide if the entity should even be rendered;
+		// TODO : if its too far away, it should probably despawn;
 		if (v3_dist_sqrd(player.camera.pos, world_info.entities[i].pos) > player.camera.far_plane * player.camera.far_plane)
 			continue ;
-//		if (world_info.game_tick)
-			vox_entity_event(&world_info.entities[i], &fps);
+		vox_entity_event(&world_info.entities[i], &world_info, &fps);
 		if (world_info.entities[i].needs_update)
 		{
 			vox_entity_update(&world_info.entities[i]);
@@ -1012,6 +1014,7 @@ if (error)
 		model_matrix(model_matrices + amount_to_render * 16, world_info.entities[i].scale_m4, world_info.entities[i].rot_m4, world_info.entities[i].trans_m4);
 		++amount_to_render;
 
+		// Debug
 		if (world_info.entities[i].draw_dir)
 		{
 			// Front 

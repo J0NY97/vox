@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 17:21:38 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/20 11:34:42 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/20 12:57:05 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,6 +80,7 @@ typedef struct s_vox_entity
 
 	// Debug
 	char	draw_dir;
+	char	draw_terrain_collision;
 
 	// Matrices
 	float	scale_m4[16];
@@ -90,7 +91,7 @@ typedef struct s_vox_entity
 void	vox_entity_new(t_vox_entity *entity);
 void	vox_entity_update(t_vox_entity *entity);
 
-void	vox_entity_event(t_vox_entity *entity, t_fps *fps);
+void	vox_entity_event(t_vox_entity *entity, t_world *info, t_fps *fps);
 
 void	set_entity_at_world_pos(t_world *info, float *world_pos, int entity_type);
 
