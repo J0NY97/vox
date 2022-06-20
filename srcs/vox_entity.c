@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/18 11:58:23 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/20 12:57:58 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/20 13:47:09 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,9 @@ void	vox_entity_new(t_vox_entity *entity)
 	// Debug toggles
 	entity->draw_dir = 0;
 	entity->draw_terrain_collision = 0;
+	entity->draw_aabb = 0;
+
+	entity->ai = 1;
 }
 
 /*
@@ -147,6 +150,7 @@ void	vox_entity_event(t_vox_entity *entity, t_world *info, t_fps *fps)
 	else if (entity->state == ENTITY_STATE_WANDER)
 		result = vox_entity_state_wander(entity, fps);
 	
+	// Collision
 	// Check if the entity is inside a loaded chunk;
 	int	chunk_pos[3];
 	get_chunk_pos_from_world_pos(chunk_pos, entity->pos);
@@ -159,9 +163,11 @@ void	vox_entity_event(t_vox_entity *entity, t_world *info, t_fps *fps)
 		float	forward[3];
 
 		v3_add(forward, entity->pos, entity->velocity);
+		/*
 		forward[0] = floor(forward[0]);
 		forward[1] = floor(forward[1]);
 		forward[2] = floor(forward[2]);
+		*/
 		block = get_block(info, forward);
 		if (block)
 		{
@@ -190,6 +196,8 @@ void	vox_entity_event(t_vox_entity *entity, t_world *info, t_fps *fps)
 
 		// Gravity
 		// If no block one block down, move the entity downward
+		// TODO : the '- 1.41f',  is basically the height from the pos to the entity feet,
+		//		in the future take this from the difference from pos and entity model aabb min;
 		float	gravity = (9.8f * fps->delta_time);
 		float	downward[3];
 		v3_new(downward, entity->pos[0], ceil((entity->pos[1] - 1.41f) - gravity), entity->pos[2]);
@@ -203,7 +211,6 @@ void	vox_entity_event(t_vox_entity *entity, t_world *info, t_fps *fps)
 				entity->velocity[1] -= gravity;
 		}
 	}
-	// Check if the entity pos + velocity is going to be inside chunk;
 
 	// if any of the functions changed the entity, we need to update it;
 	entity->needs_update = result;

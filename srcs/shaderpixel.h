@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/11 14:27:43 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/20 12:06:51 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/20 13:21:36 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -194,6 +194,7 @@ void		render_crosshair(void);
 void		render_2d_line(float *p1, float *p2, float *col);
 void		render_3d_line(float *p1, float *p2, float *col, float *view_mat, float *project_mat);
 void		render_3d_point(float *p1, float *col, float *view_mat, float *project_mat);
+void		render_3d_rectangle(float *p1, float *p2, float *col, float *view_mat, float *proj_mat);
 
 ///////////////////
 // Box Draw

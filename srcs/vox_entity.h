@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 17:21:38 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/20 12:57:05 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/20 13:33:49 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@
 # include "chunk.h"
 # include "fps.h"
 
-# define MAX_ENTITIES 64400
+# define MAX_ENTITIES 1024
 
 enum e_entity_types
 {
@@ -78,9 +78,11 @@ typedef struct s_vox_entity
 
 	char	needs_update;
 
+	char	ai;
 	// Debug
 	char	draw_dir;
 	char	draw_terrain_collision;
+	char	draw_aabb;
 
 	// Matrices
 	float	scale_m4[16];

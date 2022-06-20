@@ -992,11 +992,22 @@ if (error)
 ////////////////////////
 // Model Rendering Instance
 ////////////////////////
+	float	pmin[3];
+	float	pmax[3];
+	float	tmp[3];
+	float	tmp2[3];
+
+	v3_new(pmin, -0.375f, -0.89f, -0.375f);
+	v3_new(pmax, 0.375f, 1.055f, 0.375f);
+
 	glDisable(GL_BLEND);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 	// NOTE : we need the amount of entities of a single type (entity_palette just like block_palette);
 	// Create model matrix array from all the entities of the same type;
+
+	world_info.entities[0].ai = 0;
+	world_info.entities[0].draw_aabb = 1;
 
 	int	amount_to_render = 0;
 	for (int i = 0; i < world_info.entity_amount; i++)
@@ -1005,7 +1016,8 @@ if (error)
 		// TODO : if its too far away, it should probably despawn;
 		if (v3_dist_sqrd(player.camera.pos, world_info.entities[i].pos) > player.camera.far_plane * player.camera.far_plane)
 			continue ;
-		vox_entity_event(&world_info.entities[i], &world_info, &fps);
+		if (world_info.entities[i].ai)
+			vox_entity_event(&world_info.entities[i], &world_info, &fps);
 		if (world_info.entities[i].needs_update)
 		{
 			vox_entity_update(&world_info.entities[i]);
@@ -1025,6 +1037,14 @@ if (error)
 			v3_multiply_f(ent_pos2, (float []){0, 1, 0}, 1.0f);
 			v3_add(ent_pos2, ent_pos2, world_info.entities[i].pos);
 			render_3d_line(world_info.entities[i].pos, ent_pos2, (float []){255, 0, 0}, player.camera.view, player.camera.projection);
+		}
+
+		if (world_info.entities[i].draw_aabb)
+		{
+			// NOTE : TODO: Not actual aabb, but just testing out;
+			render_3d_rectangle(v3_add(tmp, world_info.entities[i].pos, pmin),
+				v3_add(tmp2, world_info.entities[i].pos, pmax), (float []){255, 0, 0},
+				player.camera.view, player.camera.projection);
 		}
 	}
 	model_instance_render(&instance_model, model_instance_shader, model_matrices, amount_to_render, player.camera.view, player.camera.projection);

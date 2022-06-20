@@ -163,44 +163,79 @@ void	render_3d_line(float *p1, float *p2, float *col, float *view_mat, float *pr
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-/////////////////////////////////
-// Point
-/////////////////////////////////
+//////////////////////////////////
+// 3d rectangle
+//////////////////////////////////
 
 /*
- * Doesnt work!
+ * 'p1' & 'p2' should be the 2 opposing points in a rectangle; (min & max);
 */
-void	render_3d_point(float *p1, float *col, float *view_mat, float *project_mat)
+void	render_3d_rectangle(float *p1, float *p2, float *col, float *view_mat, float *proj_mat)
 {
-	static t_render_line	info = {};
-	static int				set = 0;
+	float	pmin[3];
+	float	pmax[3];
 
-	if (!set)
-	{
-		setup_3d_line(&info);
-		set = 1;
-	}
-	int i = 0;
-	for (; i < 3; i++)
-		info.vertices[i] = p1[i];
+	pmin[0] = min(p1[0], p2[0]);
+	pmin[1] = min(p1[1], p2[1]);
+	pmin[2] = min(p1[2], p2[2]);
 
-	glUseProgram(info.shader);
-	glBindVertexArray(info.vao);
-	glBindBuffer(GL_ARRAY_BUFFER, info.vbo_pos);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, sizeof(float) * 3, NULL);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3, &info.vertices[0], GL_DYNAMIC_DRAW);
+	pmax[0] = max(p1[0], p2[0]);
+	pmax[1] = max(p1[1], p2[1]);
+	pmax[2] = max(p1[2], p2[2]);
+	
+	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_BLEND);
+	glDisable(GL_CULL_FACE);
 
-	glUniform3fv(glGetUniformLocation(info.shader, "inColor"), 1, col);
-	glUniformMatrix4fv(glGetUniformLocation(info.shader, "view"), 1, GL_FALSE, &view_mat[0]);
-	glUniformMatrix4fv(glGetUniformLocation(info.shader, "projection"), 1, GL_FALSE, &project_mat[0]);
+	render_3d_line(
+		(float []){pmin[0], pmin[1], pmin[2]},
+		(float []){pmax[0], pmin[1], pmin[2]},
+		col, view_mat, proj_mat);
+	render_3d_line(
+		(float []){pmax[0], pmin[1], pmin[2]},
+		(float []){pmax[0], pmax[1], pmin[2]},
+		col, view_mat, proj_mat);
+	render_3d_line(
+		(float []){pmax[0], pmax[1], pmin[2]},
+		(float []){pmin[0], pmax[1], pmin[2]},
+		col, view_mat, proj_mat);
+	render_3d_line(
+		(float []){pmin[0], pmax[1], pmin[2]},
+		(float []){pmin[0], pmin[1], pmin[2]},
+		col, view_mat, proj_mat);
 
-	glDrawArrays(GL_POINTS, 0, 1);
+	render_3d_line(
+		(float []){pmin[0], pmin[1], pmax[2]},
+		(float []){pmax[0], pmin[1], pmax[2]},
+		col, view_mat, proj_mat);
+	render_3d_line(
+		(float []){pmax[0], pmin[1], pmax[2]},
+		(float []){pmax[0], pmax[1], pmax[2]},
+		col, view_mat, proj_mat);
+	render_3d_line(
+		(float []){pmax[0], pmax[1], pmax[2]},
+		(float []){pmin[0], pmax[1], pmax[2]},
+		col, view_mat, proj_mat);
+	render_3d_line(
+		(float []){pmin[0], pmax[1], pmax[2]},
+		(float []){pmin[0], pmin[1], pmax[2]},
+		col, view_mat, proj_mat);
 
-	int error = glGetError();
-	if (error)
-		LG_WARN("(%d)", error);
+	render_3d_line(
+		(float []){pmin[0], pmin[1], pmin[2]},
+		(float []){pmin[0], pmin[1], pmax[2]},
+		col, view_mat, proj_mat);
+	render_3d_line(
+		(float []){pmax[0], pmin[1], pmin[2]},
+		(float []){pmax[0], pmin[1], pmax[2]},
+		col, view_mat, proj_mat);
 
-	glUseProgram(0);
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	render_3d_line(
+		(float []){pmin[0], pmax[1], pmin[2]},
+		(float []){pmin[0], pmax[1], pmax[2]},
+		col, view_mat, proj_mat);
+	render_3d_line(
+		(float []){pmax[0], pmax[1], pmin[2]},
+		(float []){pmax[0], pmax[1], pmax[2]},
+		col, view_mat, proj_mat);
 }
