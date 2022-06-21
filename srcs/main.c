@@ -412,6 +412,10 @@ int	main(void)
 	glClearColor(1, 0, 1, 1);
 
 	char	fps_str[10];
+	float	tmp[3];
+	float	tmp2[3];
+	float	ent_pos2[3];
+	
 	while (!glfwWindowShouldClose(sp.win))
 	{
 		error = glGetError();
@@ -890,7 +894,7 @@ int	main(void)
 
 		}
 
-		/* START OF COLLISION */
+		/* * * * * START OF COLLISION * * * * */
 		// Save the closest point, of a maximum 16 points
 		//	gotten from chunk_mesh_collision, in the closest_point var;
 		// Also the index of which chunk the collision is in;
@@ -961,6 +965,27 @@ int	main(void)
 			}
 		}
 		/* END OF COLLISION */
+
+		/* * * * * START OF PLAYER ENTITY HITBOX COLLISION * * * * */
+		t_vox_entity	*rent;
+		for (int i = 0; i < world_info.entity_amount_total; i++)
+		{
+			rent = &world_info.entities[i];
+			// Continue if we are not within reach;
+			if (v3_dist_sqrd(player.camera.pos, rent->pos) > player_info.reach * player_info.reach)
+				continue ;
+			if (aabb_ray_intersection(&world_info.entity_models[(int)rent->type].bound, player.camera.pos, player.camera.front))
+			{
+				render_3d_rectangle(v3_add(tmp, rent->pos,
+					world_info.entity_models[(int)rent->type].bound.min),
+					v3_add(tmp2, rent->pos, world_info.entity_models[(int)rent->type].bound.max),
+					(float []){255, 255, 0}, player.camera.view, player.camera.projection);
+				ft_printf("we have some entities in of intersection.\n");		
+			}
+		}
+		/* END OF PLAYER ENTITY HITBOX COLLISION */
+
+
 error = glGetError();
 if (error)
 	LG_ERROR("before skybox things. (%d)", error);
@@ -1005,10 +1030,6 @@ if (error)
 ////////////////////////
 // Model Rendering Instance
 ////////////////////////
-	float	tmp[3];
-	float	tmp2[3];
-	float	ent_pos2[3];
-
 	glDisable(GL_BLEND);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);

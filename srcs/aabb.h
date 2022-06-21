@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/20 13:59:58 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/20 14:11:04 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/21 14:54:19 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@ int			aabb_aabb_collision(t_aabb *a, t_aabb *b);
 int			point_aabb_collision(float *point, t_aabb *b);
 float		point_aabb_nearest_distance(float *point, t_aabb *b);
 float		point_aabb_center_distance(float *point, t_aabb *b);
+int			aabb_ray_intersection(t_aabb *a, float *orig, float *dir);
 
 void		aabb_print(t_aabb *a);
 
