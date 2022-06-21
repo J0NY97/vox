@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/18 12:11:30 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/21 11:32:43 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/21 13:59:12 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,13 +63,19 @@ typedef struct s_world
 	int			fog_max_dist;
 	int			fog_min_dist;
 
-	t_chunk		*chunks; // you should not store the chunks here mainly; its just here so you can acces from places you need, without having to pass them in the function as argumnet;
-	t_chunk_col	*chunk_columns; // render_distance * render_distance;
+	t_chunk		*chunks;		// size : CHUNKS_LOADED;
+	t_chunk_col	*chunk_columns; // size : RENDER_DISTANCE * RENDER_DISTANCE;
 	GLuint		texture; // the texture is stored here so we dont load a texture per chunk_mesh;
 
+	/////////////////
+	// ENTITY
+	/////////////////
+	t_bobj			*entity_objects;		// size : ENTITY_AMOUNT;
+	t_model_v2		*entity_models;			// size : ENTITY_AMOUNT;
+
 	t_vox_entity	*entities;
-	int				*entity_amount; // arr size: ENTITY_AMOUNT (e_entity_types); each index corresponds to the 'type' in 't_vox_entity';
-	int				entity_amount_total; // all 'entity_amount's added up;
+	int				*entity_amount;			// size: ENTITY_AMOUNT;
+	int				entity_amount_total;	// all 'entity_amount's added up;
 
 	// Player
 	t_player	*player;

@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/16 13:41:57 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/21 11:53:32 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/21 13:07:32 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -235,7 +235,7 @@ void	model_init(t_model_v2 *model)
 */
 void	material_init(t_material_v2 *mat)
 {
-	mat->texture = 0;
+	glGenTextures(1, &mat->texture);
 }
 
 /*
@@ -286,6 +286,7 @@ void	model_from_bobj(t_model_v2 *model, t_bobj *bob, int index)
 			ft_strcpy(tmp, bob->root_dir);
 			ft_strcpy(tmp + ft_strlen(tmp), bob->materials[m].map_Kd);
 			new_texture(&model->materials[m].texture, tmp);
+			LG_INFO("nvm, we all gucci");
 		}
 	}
 	
@@ -298,7 +299,6 @@ void	model_from_bobj(t_model_v2 *model, t_bobj *bob, int index)
 		model->meshes[m].indices = (unsigned int *)bobject->meshes[m].f;
 		model->meshes[m].indices_amount = (int)bobject->meshes[m].index_amount;
 		model->meshes[m].texture = model->materials[bobject->meshes[m].material_index].texture;
-		ft_printf("texture : %d\n", model->meshes[m].texture);
 	}
 	LG_INFO("End");
 }
@@ -483,6 +483,7 @@ void	model_instance_from_bobj(t_model_v2 *model, t_bobj *bob, int index)
 			ft_strcpy(tmp, bob->root_dir);
 			ft_strcpy(tmp + ft_strlen(tmp), bob->materials[m].map_Kd);
 			new_texture(&model->materials[m].texture, tmp);
+			LG_INFO("nvm, we all gucci, texture was got (%s)", tmp);
 		}
 	}
 	
@@ -495,7 +496,6 @@ void	model_instance_from_bobj(t_model_v2 *model, t_bobj *bob, int index)
 		model->meshes[m].indices = (unsigned int *)bobject->meshes[m].f;
 		model->meshes[m].indices_amount = (int)bobject->meshes[m].index_amount;
 		model->meshes[m].texture = model->materials[bobject->meshes[m].material_index].texture;
-		ft_printf("texture : %d\n", model->meshes[m].texture);
 	}
 	LG_INFO("End");
 }

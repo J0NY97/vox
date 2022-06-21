@@ -201,27 +201,6 @@ int	main(void)
 	player.gravity = 0;
 
 
-	////////////////////////////////
-	// MODEL / BOBJ / ENTITY
-	////////////////////////////////
-
-	int				attach_entity = 0;
-	int				attach_to_entity = 0;
-
-	// Load vox entity models
-	t_bobj		*vox_entity_bobj = malloc(sizeof(t_bobj) * ENTITY_AMOUNT);
-	t_model_v2	*vox_entity_models = malloc(sizeof(t_model_v2) * ENTITY_AMOUNT);
-	GLuint		model_instance_shader;
-
-	new_shader(&model_instance_shader, SHADER_PATH"model_instance.vs", SHADER_PATH"model_instance.fs");
-	for (int i = 0; i < ENTITY_AMOUNT; i++)
-	{
-		bobj_load(&vox_entity_bobj[i], g_entity_data[i].model_path);
-		model_instance_from_bobj(&vox_entity_models[i], &vox_entity_bobj[i], 0);
-		model_update(&vox_entity_models[i]);
-	}
-	LG_INFO("All entity models loaded (%d)", ENTITY_AMOUNT);
-
 	GLuint	crosshair_shader;
 	new_crosshair_shader(&crosshair_shader);
 
@@ -284,6 +263,27 @@ int	main(void)
 
 	world_info.player = &player;
 
+	////////////////////////////////
+	// MODEL / BOBJ / ENTITY
+	////////////////////////////////
+	world_info.entity_objects = malloc(sizeof(t_bobj) * ENTITY_AMOUNT);
+	world_info.entity_models = malloc(sizeof(t_model_v2) * ENTITY_AMOUNT);
+
+	GLuint		model_instance_shader;
+	new_shader(&model_instance_shader, SHADER_PATH"model_instance.vs", SHADER_PATH"model_instance.fs");
+
+	for (int i = 0; i < ENTITY_AMOUNT; i++)
+	{
+		bobj_load(&world_info.entity_objects[i], g_entity_data[i].model_path);
+		model_instance_from_bobj(&world_info.entity_models[i],
+			&world_info.entity_objects[i], 0);
+		model_update(&world_info.entity_models[i]);
+	}
+	LG_INFO("All entity models loaded (%d)", ENTITY_AMOUNT);
+
+	int				attach_entity = 0;
+	int				attach_to_entity = 0;
+
 	// Create entities (DEBUG)
 	int		entities_wanted = 500;
 	float	**model_matrices;
@@ -296,7 +296,10 @@ int	main(void)
 	for (int i = 0; i < entities_wanted; i++)
 	{
 		vox_entity_new(&world_info.entities[i]);
-		world_info.entities[i].type = ENTITY_MELON_GOLEM;
+		if (i % 2 == 0)
+			world_info.entities[i].type = ENTITY_MELON_GOLEM;
+		else
+			world_info.entities[i].type = ENTITY_CHICKEN;
 		int		w = cbrt(entities_wanted);
 		int		x = i % w;
 		int		y = (i / w) % w;
@@ -313,9 +316,19 @@ int	main(void)
 
 	t_vox_entity	*melon_entity;
 	melon_entity = &world_info.entities[0];
+	melon_entity->type = ENTITY_MELON_GOLEM;
 	melon_entity->ai = 0;
 	melon_entity->draw_aabb = 1;
 	melon_entity->draw_dir = 1;
+
+	t_vox_entity	*chicken_entity;
+	chicken_entity = &world_info.entities[1];
+	chicken_entity->type = ENTITY_CHICKEN;
+	chicken_entity->ai = 0;
+	chicken_entity->draw_aabb = 1;
+	chicken_entity->draw_dir = 1;
+
+
 
 
 	// Creation of hashtable
@@ -590,9 +603,13 @@ int	main(void)
 	
 	// Melon controls
 	if (keys[GLFW_KEY_KP_4].state == BUTTON_HOLD)
+	{
 		melon_entity->yaw -= 0.1f;
+	}
 	if (keys[GLFW_KEY_KP_6].state == BUTTON_HOLD)
+	{
 		melon_entity->yaw += 0.1f;
+	}
 	if (keys[GLFW_KEY_KP_0].state == BUTTON_HOLD)
 	{
 		float speed = melon_entity->speed;
@@ -608,11 +625,24 @@ int	main(void)
 	if (keys[GLFW_KEY_KP_5].state == BUTTON_PRESS)
 	{
 		melon_entity->ai = melon_entity->ai != 1;
+		chicken_entity->ai = chicken_entity->ai != 1;
 		if (melon_entity->ai)
-			LG_INFO("melon_entity->ai => ON.");
+			LG_INFO("entity->ai => ON.");
 		else
-			LG_INFO("melon_entity->ai => OFF.");
+			LG_INFO("entity->ai => OFF.");
 	}
+	if (keys[GLFW_KEY_KP_7].state == BUTTON_PRESS)
+	{
+		melon_entity->draw_aabb = melon_entity->draw_aabb != 1;
+		melon_entity->draw_dir = melon_entity->draw_aabb;
+		chicken_entity->draw_aabb = chicken_entity->draw_aabb != 1;
+		chicken_entity->draw_dir = chicken_entity->draw_aabb;
+		if (melon_entity->draw_aabb)
+			LG_INFO("entity->draw_aabb => ON.");
+		else
+			LG_INFO("entity->draw_aabb => OFF.");
+	}
+	
 	if (attach_entity)
 		v3_new(melon_entity->pos, player.camera.pos[0], player.camera.pos[1] - 2, player.camera.pos[2] - 2);
 	else if (attach_to_entity)
@@ -990,7 +1020,7 @@ if (error)
 
 //	int	amount_to_render = 0;
 	int	amount_to_render[ENTITY_AMOUNT];
-	amount_to_render[0] = 0;
+	memset(amount_to_render, 0, sizeof(int) * ENTITY_AMOUNT);
 
 	t_vox_entity	*curr_ent;
 
@@ -1028,14 +1058,17 @@ if (error)
 		if (curr_ent->draw_aabb)
 		{
 			render_3d_rectangle(v3_add(tmp, curr_ent->pos,
-				vox_entity_models[(int)curr_ent->type].bound.min),
-				v3_add(tmp2, curr_ent->pos, vox_entity_models[(int)curr_ent->type].bound.max),
+				world_info.entity_models[(int)curr_ent->type].bound.min),
+				v3_add(tmp2, curr_ent->pos, world_info.entity_models[(int)curr_ent->type].bound.max),
 				(float []){255, 0, 0}, player.camera.view, player.camera.projection);
 		}
 	}
 	for (int i = 0; i < ENTITY_AMOUNT; i++)
 	{
-		model_instance_render(&vox_entity_models[i], model_instance_shader,
+		// We dont have any entities of this type;
+		if (amount_to_render[i] == 0)
+			continue ;
+		model_instance_render(&world_info.entity_models[i], model_instance_shader,
 			model_matrices[i], amount_to_render[i],
 			player.camera.view, player.camera.projection);
 	}

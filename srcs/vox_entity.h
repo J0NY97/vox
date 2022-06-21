@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 17:21:38 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/20 13:33:49 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/21 13:49:37 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,8 @@
 
 enum e_entity_types
 {
-	ENTITY_MELON_GOLEM = 0,
+	ENTITY_MELON_GOLEM,
+	ENTITY_CHICKEN,
 	ENTITY_AMOUNT
 };
 
@@ -53,6 +54,12 @@ static const t_vox_entity_data	g_entity_data[] = {
 		"Melon Golem",
 		ENTITY_MELON_GOLEM,
 		MODEL_PATH"melon_golem/melon_golem.obj"
+	},
+	{
+		"ENTITY_CHICKEN",
+		"Chicken",
+		ENTITY_CHICKEN,
+		MODEL_PATH"chicken/chiekn.obj"
 	}
 };
 
