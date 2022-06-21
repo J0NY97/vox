@@ -414,6 +414,7 @@ int	main(void)
 	char	fps_str[10];
 	float	tmp[3];
 	float	tmp2[3];
+	float	tmp3[3];
 	float	ent_pos2[3];
 	
 	while (!glfwWindowShouldClose(sp.win))
@@ -968,19 +969,21 @@ int	main(void)
 
 		/* * * * * START OF PLAYER ENTITY HITBOX COLLISION * * * * */
 		t_vox_entity	*rent;
+		t_aabb			rent_aabb;
 		for (int i = 0; i < world_info.entity_amount_total; i++)
 		{
 			rent = &world_info.entities[i];
 			// Continue if we are not within reach;
+			/*
 			if (v3_dist_sqrd(player.camera.pos, rent->pos) > player_info.reach * player_info.reach)
 				continue ;
-			if (aabb_ray_intersection(&world_info.entity_models[(int)rent->type].bound, player.camera.pos, player.camera.front))
+				*/
+			v3_add(rent_aabb.min, world_info.entity_models[(int)rent->type].bound.min, rent->pos);
+			v3_add(rent_aabb.max, world_info.entity_models[(int)rent->type].bound.max, rent->pos);
+			if (aabb_ray_intersection(&rent_aabb, player.camera.pos, player.camera.front)) //v3_multiply_f(tmp2, player.camera.front, player_info.reach)))
 			{
-				render_3d_rectangle(v3_add(tmp, rent->pos,
-					world_info.entity_models[(int)rent->type].bound.min),
-					v3_add(tmp2, rent->pos, world_info.entity_models[(int)rent->type].bound.max),
+				render_3d_rectangle(rent_aabb.min, rent_aabb.max,
 					(float []){255, 255, 0}, player.camera.view, player.camera.projection);
-				ft_printf("we have some entities in of intersection.\n");		
 			}
 		}
 		/* END OF PLAYER ENTITY HITBOX COLLISION */
@@ -1097,7 +1100,7 @@ if (error)
 	error = glGetError();
 if (error)
 	LG_ERROR("Afetr chunk things. (%d)", error);
-		glDisable(GL_BLEND);
+		glEnable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
 		render_crosshair();

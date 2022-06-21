@@ -34,6 +34,7 @@ void	new_crosshair_shader(GLuint *shader)
 void	render_crosshair(void)
 {
 	GLint	viewport[4];
+	float	col[3] = {0.90, 0.90, 0.90};
 	int		error;
 
 	error = glGetError();
@@ -41,10 +42,12 @@ void	render_crosshair(void)
 		LG_ERROR("Before (%d)", error);
 
 	glGetIntegerv(GL_VIEWPORT, viewport);
+	glLineWidth(2);
 	float	len = 0.009;
 	float	h_len = (viewport[2] * len) / viewport[3];
-	render_2d_line((float []){-len, 0, 0}, (float []){len, 0, 0}, (float []){1, 1, 1});
-	render_2d_line((float []){0, -h_len, 0}, (float []){0, h_len, 0}, (float []){1, 1, 1});
+	render_2d_line((float []){-len, 0, 0}, (float []){len, 0, 0}, col);
+	render_2d_line((float []){0, -h_len, 0}, (float []){0, h_len, 0}, col);
+	glLineWidth(1);
 
 	error = glGetError();
 	if (error)

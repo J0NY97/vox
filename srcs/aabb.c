@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/20 14:01:02 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/21 15:01:03 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/21 15:20:00 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -218,13 +218,12 @@ float	point_aabb_center_distance(float *point, t_aabb *b)
 
 /*
  * if ray created from 'orig' & 'dir' intersects aabb 'a';
+ * NOTE : make sure all the values are in the same coordinate space system;
  *
- * 'dir' : unit vector;
+ * 'a_pos' : the coordinate of aabb in global coords;
 */
 int	aabb_ray_intersection(t_aabb *a, float *orig, float *dir)
 {
-	v3_string("dir :", dir);
-
 	float	t1 = (a->min[0] - orig[0]) * dir[0];	
 	float	t2 = (a->max[0] - orig[0]) * dir[0];	
 
@@ -234,13 +233,13 @@ int	aabb_ray_intersection(t_aabb *a, float *orig, float *dir)
 	float	t5 = (a->min[2] - orig[2]) * dir[2];	
 	float	t6 = (a->max[2] - orig[2]) * dir[2];	
 
+	float	tmin = fmax(fmax(fmin(t1, t2), fmin(t3, t4)), fmin(t5, t6));
 	float	tmax = fmin(fmin(fmax(t1, t2), fmax(t3, t4)), fmax(t5, t6));
 
 	// ray intersects aabb but aabb is behind;
 	if (tmax < 0)
 		return (0);
 
-	float	tmin = fmax(fmax(fmin(t1, t2), fmin(t3, t4)), fmin(t5, t6));
 
 	// ray doesnt intersects;
 	if (tmin > tmax)
