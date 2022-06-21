@@ -205,34 +205,20 @@ int	main(void)
 	// MODEL / BOBJ / ENTITY
 	////////////////////////////////
 
-	GLuint		model_shader;
-	t_bobj		bobj_melon_golem;
-	t_model_v2	model_melon_golem;
-
-	int			attach_entity = 1;
-	int			attach_to_entity = 0;
-	t_vox_entity	melon_entity;
-
-	new_shader(&model_shader, SHADER_PATH"model.vs", SHADER_PATH"model.fs");
-	bobj_load(&bobj_melon_golem, MODEL_PATH"melon_golem/melon_golem.obj");
-	model_from_bobj(&model_melon_golem, &bobj_melon_golem, 0);
-	model_update(&model_melon_golem);
-
-	vox_entity_new(&melon_entity);
+	int				attach_entity = 0;
+	int				attach_to_entity = 0;
 
 	// Load vox entity models
-	t_bobj		vox_entity_bobj[ENTITY_AMOUNT]; // NOTE : remember to free;
-	t_model_v2	vox_entity_models[ENTITY_AMOUNT];
+	t_bobj		*vox_entity_bobj = malloc(sizeof(t_bobj) * ENTITY_AMOUNT);
+	t_model_v2	*vox_entity_models = malloc(sizeof(t_model_v2) * ENTITY_AMOUNT);
 	GLuint		model_instance_shader;
-	t_model_v2	instance_model;
 
 	new_shader(&model_instance_shader, SHADER_PATH"model_instance.vs", SHADER_PATH"model_instance.fs");
 	for (int i = 0; i < ENTITY_AMOUNT; i++)
 	{
 		bobj_load(&vox_entity_bobj[i], g_entity_data[i].model_path);
-	//	model_from_bobj(&vox_entity_models[i], &vox_entity_bobj[i], 0);
-		model_instance_from_bobj(&instance_model, &vox_entity_bobj[i], 0);
-		model_update(&instance_model);
+		model_instance_from_bobj(&vox_entity_models[i], &vox_entity_bobj[i], 0);
+		model_update(&vox_entity_models[i]);
 	}
 	LG_INFO("All entity models loaded (%d)", ENTITY_AMOUNT);
 
@@ -292,14 +278,19 @@ int	main(void)
 	world_info.fog_min_dist = player.camera.far_plane - 50;
 
 	world_info.entities = malloc(sizeof(t_vox_entity) * MAX_ENTITIES);
-	world_info.entity_amount = 0;
+	world_info.entity_amount = malloc(sizeof(int) * ENTITY_AMOUNT);
+	memset(world_info.entity_amount, 0, sizeof(int) * ENTITY_AMOUNT);
+	world_info.entity_amount_total = 0;
 
 	world_info.player = &player;
 
 	// Create entities (DEBUG)
 	int		entities_wanted = 500;
-	float	*model_matrices;
-	model_matrices = malloc(sizeof(float) * MAX_ENTITIES * 16);
+	float	**model_matrices;
+
+	model_matrices = malloc(sizeof(float *) * ENTITY_AMOUNT);
+	for (int i = 0; i < ENTITY_AMOUNT; i++)
+		model_matrices[i] = malloc(sizeof(float) * (MAX_ENTITIES / ENTITY_AMOUNT) * 16);
 
 	entities_wanted = min(entities_wanted, MAX_ENTITIES);
 	for (int i = 0; i < entities_wanted; i++)
@@ -316,8 +307,15 @@ int	main(void)
 			player.camera.pos[2] + (z * 4)
 			);
 		vox_entity_update(&world_info.entities[i]);
-		++world_info.entity_amount;
+		++world_info.entity_amount[(int)world_info.entities[i].type];
+		++world_info.entity_amount_total;
 	}
+
+	t_vox_entity	*melon_entity;
+	melon_entity = &world_info.entities[0];
+	melon_entity->ai = 0;
+	melon_entity->draw_aabb = 1;
+	melon_entity->draw_dir = 1;
 
 
 	// Creation of hashtable
@@ -589,38 +587,43 @@ int	main(void)
 			else
 				LG_INFO("attach_to_entity => OFF.");
 		}
-
+	
+	// Melon controls
 	if (keys[GLFW_KEY_KP_4].state == BUTTON_HOLD)
-		melon_entity.yaw -= 0.1f;
+		melon_entity->yaw -= 0.1f;
 	if (keys[GLFW_KEY_KP_6].state == BUTTON_HOLD)
-		melon_entity.yaw += 0.1f;
+		melon_entity->yaw += 0.1f;
 	if (keys[GLFW_KEY_KP_0].state == BUTTON_HOLD)
 	{
-		float speed = melon_entity.speed;
+		float speed = melon_entity->speed;
 		if (keys[GLFW_KEY_LEFT_SHIFT].state == BUTTON_HOLD)
 			speed *= 10;
-		v3_multiply_f(melon_entity.velocity, melon_entity.front, speed * fps.delta_time);
+		v3_multiply_f(melon_entity->velocity, melon_entity->front, speed * fps.delta_time);
 	}
-
 	if (keys[GLFW_KEY_P].state == BUTTON_PRESS)
 	{
-		ft_printf("Euler : %d %d %d\n", melon_entity.yaw, melon_entity.pitch, melon_entity.roll);
-		ft_printf("Front : %.2f %.2f %.2f\n", melon_entity.front[0], melon_entity.front[1], melon_entity.front[2]);
+		ft_printf("Euler : %d %d %d\n", melon_entity->yaw, melon_entity->pitch, melon_entity->roll);
+		ft_printf("Front : %.2f %.2f %.2f\n", melon_entity->front[0], melon_entity->front[1], melon_entity->front[2]);
 	}
-
+	if (keys[GLFW_KEY_KP_5].state == BUTTON_PRESS)
+	{
+		melon_entity->ai = melon_entity->ai != 1;
+		if (melon_entity->ai)
+			LG_INFO("melon_entity->ai => ON.");
+		else
+			LG_INFO("melon_entity->ai => OFF.");
+	}
 	if (attach_entity)
-		v3_new(melon_entity.pos, player.camera.pos[0], player.camera.pos[1] - 2, player.camera.pos[2] - 2);
+		v3_new(melon_entity->pos, player.camera.pos[0], player.camera.pos[1] - 2, player.camera.pos[2] - 2);
 	else if (attach_to_entity)
 	{
 		float p_pos[3];
-		v3_multiply_f(p_pos, melon_entity.front, -2.0f);
-		v3_add(p_pos, p_pos, melon_entity.pos);
+		v3_multiply_f(p_pos, melon_entity->front, -2.0f);
+		v3_add(p_pos, p_pos, melon_entity->pos);
 		v3_assign(player.camera.pos, p_pos);
-		player.camera.yaw = melon_entity.yaw;
-		player.camera.pitch = -melon_entity.pitch;
+		player.camera.yaw = melon_entity->yaw;
+		player.camera.pitch = -melon_entity->pitch;
 	}
-
-	
 
 // Select equipped block;
 		for (int i = GLFW_KEY_1; i <= GLFW_KEY_9; i++)
@@ -969,31 +972,12 @@ if (error)
 /////////////////
 		// END Chunk things
 /////////////////
-
-////////////////////////
-// Model Rendering
-////////////////////////
-	float	model_mat[16];
-
-	float ent_pos2[3];
-	// Front 
-	v3_multiply_f(ent_pos2, melon_entity.front, 1.0f);
-	v3_add(ent_pos2, ent_pos2, melon_entity.pos);
-	render_3d_line(melon_entity.pos, ent_pos2, (float []){0, 0, 255}, player.camera.view, player.camera.projection);
-	// Up 
-	v3_multiply_f(ent_pos2, (float []){0, 1, 0}, 1.0f);
-	v3_add(ent_pos2, ent_pos2, melon_entity.pos);
-	render_3d_line(melon_entity.pos, ent_pos2, (float []){255, 0, 0}, player.camera.view, player.camera.projection);
-
-	vox_entity_update(&melon_entity);
-	new_model_matrix(model_mat, melon_entity.scale, melon_entity.rot, melon_entity.pos);
-	model_render(&model_melon_golem, model_shader, model_mat, player.camera.view, player.camera.projection);
-
 ////////////////////////
 // Model Rendering Instance
 ////////////////////////
 	float	tmp[3];
 	float	tmp2[3];
+	float	ent_pos2[3];
 
 	glDisable(GL_BLEND);
 	glEnable(GL_CULL_FACE);
@@ -1001,47 +985,60 @@ if (error)
 	// NOTE : we need the amount of entities of a single type (entity_palette just like block_palette);
 	// Create model matrix array from all the entities of the same type;
 
-	world_info.entities[0].ai = 0;
-	world_info.entities[0].draw_aabb = 1;
+	// DEBUG
+	melon_entity->needs_update = 1;
 
-	int	amount_to_render = 0;
-	for (int i = 0; i < world_info.entity_amount; i++)
+//	int	amount_to_render = 0;
+	int	amount_to_render[ENTITY_AMOUNT];
+	amount_to_render[0] = 0;
+
+	t_vox_entity	*curr_ent;
+
+	for (int i = 0; i < world_info.entity_amount_total; i++)
 	{
+		curr_ent = &world_info.entities[i];
 		// Decide if the entity should even be rendered;
 		// TODO : if its too far away, it should probably despawn;
-		if (v3_dist_sqrd(player.camera.pos, world_info.entities[i].pos) > player.camera.far_plane * player.camera.far_plane)
+		if (v3_dist_sqrd(player.camera.pos, curr_ent->pos) > player.camera.far_plane * player.camera.far_plane)
 			continue ;
-		if (world_info.entities[i].ai)
-			vox_entity_event(&world_info.entities[i], &world_info, &fps);
-		if (world_info.entities[i].needs_update)
+		if (curr_ent->ai)
+			vox_entity_event(curr_ent, &world_info, &fps);
+		if (curr_ent->needs_update)
 		{
-			vox_entity_update(&world_info.entities[i]);
-			world_info.entities[i].needs_update = 0;
+			vox_entity_update(curr_ent);
+			curr_ent->needs_update = 0;
 		}
-		model_matrix(model_matrices + amount_to_render * 16, world_info.entities[i].scale_m4, world_info.entities[i].rot_m4, world_info.entities[i].trans_m4);
-		++amount_to_render;
+		model_matrix(model_matrices[(int)curr_ent->type] + amount_to_render[(int)curr_ent->type] * 16,
+			curr_ent->scale_m4, curr_ent->rot_m4, curr_ent->trans_m4);
+		++amount_to_render[(int)curr_ent->type];
 
 		// Debug
-		if (world_info.entities[i].draw_dir)
+		if (curr_ent->draw_dir)
 		{
 			// Front 
-			v3_multiply_f(ent_pos2, world_info.entities[i].front, 1.0f);
-			v3_add(ent_pos2, ent_pos2, world_info.entities[i].pos);
-			render_3d_line(world_info.entities[i].pos, ent_pos2, (float []){0, 0, 255}, player.camera.view, player.camera.projection);
+			v3_multiply_f(ent_pos2, curr_ent->front, 1.0f);
+			v3_add(ent_pos2, ent_pos2, curr_ent->pos);
+			render_3d_line(curr_ent->pos, ent_pos2, (float []){0, 0, 255}, player.camera.view, player.camera.projection);
 			// Up 
 			v3_multiply_f(ent_pos2, (float []){0, 1, 0}, 1.0f);
-			v3_add(ent_pos2, ent_pos2, world_info.entities[i].pos);
-			render_3d_line(world_info.entities[i].pos, ent_pos2, (float []){255, 0, 0}, player.camera.view, player.camera.projection);
+			v3_add(ent_pos2, ent_pos2, curr_ent->pos);
+			render_3d_line(curr_ent->pos, ent_pos2, (float []){255, 0, 0}, player.camera.view, player.camera.projection);
 		}
 
-		if (world_info.entities[i].draw_aabb)
+		if (curr_ent->draw_aabb)
 		{
-			render_3d_rectangle(v3_add(tmp, world_info.entities[i].pos, instance_model.bound.min),
-				v3_add(tmp2, world_info.entities[i].pos, instance_model.bound.max), (float []){255, 0, 0},
-				player.camera.view, player.camera.projection);
+			render_3d_rectangle(v3_add(tmp, curr_ent->pos,
+				vox_entity_models[(int)curr_ent->type].bound.min),
+				v3_add(tmp2, curr_ent->pos, vox_entity_models[(int)curr_ent->type].bound.max),
+				(float []){255, 0, 0}, player.camera.view, player.camera.projection);
 		}
 	}
-	model_instance_render(&instance_model, model_instance_shader, model_matrices, amount_to_render, player.camera.view, player.camera.projection);
+	for (int i = 0; i < ENTITY_AMOUNT; i++)
+	{
+		model_instance_render(&vox_entity_models[i], model_instance_shader,
+			model_matrices[i], amount_to_render[i],
+			player.camera.view, player.camera.projection);
+	}
 
 	error = glGetError();
 if (error)

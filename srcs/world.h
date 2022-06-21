@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/18 12:11:30 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/20 12:03:00 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/21 11:32:43 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,7 +68,8 @@ typedef struct s_world
 	GLuint		texture; // the texture is stored here so we dont load a texture per chunk_mesh;
 
 	t_vox_entity	*entities;
-	int				entity_amount;
+	int				*entity_amount; // arr size: ENTITY_AMOUNT (e_entity_types); each index corresponds to the 'type' in 't_vox_entity';
+	int				entity_amount_total; // all 'entity_amount's added up;
 
 	// Player
 	t_player	*player;

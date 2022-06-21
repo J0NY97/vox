@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/18 11:58:23 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/20 13:47:09 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/21 12:00:47 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,12 +67,12 @@ void	set_entity_at_world_pos(t_world *info, float *world_pos, int entity_type)
 {
 	t_vox_entity	*entity;
 
-	if (info->entity_amount >= MAX_ENTITIES)
+	if (info->entity_amount_total >= MAX_ENTITIES)
 	{
 		LG_WARN("Max entities (%d) reached.", MAX_ENTITIES);
 		return ;
 	}
-	entity = &info->entities[info->entity_amount];
+	entity = &info->entities[info->entity_amount[entity_type]];
 	vox_entity_new(entity);
 	entity->type = entity_type;
 	v3_assign(entity->pos, world_pos);
@@ -81,7 +81,8 @@ void	set_entity_at_world_pos(t_world *info, float *world_pos, int entity_type)
 	// instead of this;
 	vox_entity_update(entity);
 
-	++info->entity_amount;
+	++info->entity_amount[entity_type];
+	++info->entity_amount_total;
 	LG_INFO("Entity (#%d) added at %f %f %f", info->entity_amount, entity->pos[0], entity->pos[1], entity->pos[2]);
 }
 

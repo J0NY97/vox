@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/16 13:41:57 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/20 14:18:43 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/21 11:53:32 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -514,6 +514,12 @@ void	mesh_instance_render(t_mesh_v2 *mesh, int amount)
 void	model_instance_render(t_model_v2 *model, GLuint shader, float *model_mat, int amount, float *view_mat, float *projection_mat)
 {
 	int	error;
+
+	if (amount <= 0)
+	{
+		LG_WARN("amount %d", amount);
+		return ;
+	}
 
 	glUseProgram(shader);
 
