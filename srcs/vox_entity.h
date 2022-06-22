@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 17:21:38 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/22 09:36:20 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/22 10:48:35 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,7 @@ typedef struct s_vox_entity_data
 	char		*readable_name;
 	char		type;			// 'e_entity_types';
 	char		*model_path;
+	float		fall_speed;
 }		t_vox_entity_data;
 
 static const t_vox_entity_data	g_entity_data[] = {
@@ -56,13 +57,15 @@ static const t_vox_entity_data	g_entity_data[] = {
 		"ENTITY_MELON_GOLEM",
 		"Melon Golem",
 		ENTITY_MELON_GOLEM,
-		MODEL_PATH"melon_golem/melon_golem.obj"
+		MODEL_PATH"melon_golem/melon_golem.obj",
+		1.5	
 	},
 	{
 		"ENTITY_CHICKEN",
 		"Chicken",
 		ENTITY_CHICKEN,
-		MODEL_PATH"chicken/chiekn.obj"
+		MODEL_PATH"chicken/chiekn.obj",
+		1
 	}
 };
 

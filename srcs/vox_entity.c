@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/18 11:58:23 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/22 10:38:43 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/22 10:46:34 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -191,7 +191,7 @@ void	vox_entity_event(t_vox_entity *entity, t_world *info, t_fps *fps)
 
 		// Gravity
 		// If no block one block down, move the entity downward
-		float	gravity = (9.8f * fps->delta_time);
+		float	gravity = (9.8f * g_entity_data[entity->type].fall_speed) * fps->delta_time;
 		float	downward[3];
 		v3_new(downward, entity->pos[0], ceil(entity->pos[1] - BLOCK_SCALE - gravity), entity->pos[2]);
 		block = get_block(info, downward);
