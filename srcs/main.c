@@ -257,8 +257,7 @@ int	main(void)
 	world_info.fog_min_dist = player.camera.far_plane - 50;
 
 	world_info.entities = malloc(sizeof(t_vox_entity) * MAX_ENTITIES);
-	world_info.entity_amount = malloc(sizeof(int) * ENTITY_AMOUNT);
-	memset(world_info.entity_amount, 0, sizeof(int) * ENTITY_AMOUNT);
+	world_info.entity_palette = malloc(sizeof(int) * ENTITY_AMOUNT);
 	world_info.entity_amount_total = 0;
 
 	world_info.player = &player;
@@ -310,7 +309,6 @@ int	main(void)
 			player.camera.pos[2] + (z * 4)
 			);
 		vox_entity_update(&world_info.entities[i]);
-		++world_info.entity_amount[(int)world_info.entities[i].type];
 		++world_info.entity_amount_total;
 	}
 
@@ -624,7 +622,7 @@ int	main(void)
 	}
 	if (keys[GLFW_KEY_P].state == BUTTON_PRESS)
 	{
-		ft_printf("Euler : %d %d %d\n", melon_entity->yaw, melon_entity->pitch, melon_entity->roll);
+		ft_printf("Euler : %d %d\n", melon_entity->yaw, melon_entity->pitch);
 		ft_printf("Front : %.2f %.2f %.2f\n", melon_entity->front[0], melon_entity->front[1], melon_entity->front[2]);
 	}
 	if (keys[GLFW_KEY_KP_5].state == BUTTON_PRESS)
@@ -974,10 +972,8 @@ int	main(void)
 		{
 			rent = &world_info.entities[i];
 			// Continue if we are not within reach;
-			/*
 			if (v3_dist_sqrd(player.camera.pos, rent->pos) > player_info.reach * player_info.reach)
 				continue ;
-				*/
 			v3_add(rent_aabb.min, world_info.entity_models[(int)rent->type].bound.min, rent->pos);
 			v3_add(rent_aabb.max, world_info.entity_models[(int)rent->type].bound.max, rent->pos);
 			if (aabb_ray_intersection(&rent_aabb, player.camera.pos, player.camera.front)) //v3_multiply_f(tmp2, player.camera.front, player_info.reach)))
@@ -1033,16 +1029,14 @@ if (error)
 ////////////////////////
 // Model Rendering Instance
 ////////////////////////
+	world_update_entity_palette(&world_info);
+
 	glDisable(GL_BLEND);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 	// NOTE : we need the amount of entities of a single type (entity_palette just like block_palette);
 	// Create model matrix array from all the entities of the same type;
 
-	// DEBUG
-	melon_entity->needs_update = 1;
-
-//	int	amount_to_render = 0;
 	int	amount_to_render[ENTITY_AMOUNT];
 	memset(amount_to_render, 0, sizeof(int) * ENTITY_AMOUNT);
 
@@ -1053,7 +1047,8 @@ if (error)
 		curr_ent = &world_info.entities[i];
 		// Decide if the entity should even be rendered;
 		// TODO : if its too far away, it should probably despawn;
-		if (v3_dist_sqrd(player.camera.pos, curr_ent->pos) > player.camera.far_plane * player.camera.far_plane)
+		if (v3_dist_sqrd(player.camera.pos, curr_ent->pos) >
+			player.camera.far_plane * player.camera.far_plane)
 			continue ;
 		if (curr_ent->ai)
 			vox_entity_event(curr_ent, &world_info, &fps);

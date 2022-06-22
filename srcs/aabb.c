@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/20 14:01:02 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/21 15:20:00 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/22 09:48:28 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -224,6 +224,7 @@ float	point_aabb_center_distance(float *point, t_aabb *b)
 */
 int	aabb_ray_intersection(t_aabb *a, float *orig, float *dir)
 {
+	/*
 	float	t1 = (a->min[0] - orig[0]) * dir[0];	
 	float	t2 = (a->max[0] - orig[0]) * dir[0];	
 
@@ -240,10 +241,55 @@ int	aabb_ray_intersection(t_aabb *a, float *orig, float *dir)
 	if (tmax < 0)
 		return (0);
 
-
 	// ray doesnt intersects;
 	if (tmin > tmax)
 		return (0);
 
+	return (1);
+	*/
+
+	/*
+	float	tx1 = (a->min[0] - orig[0]) * dir[0];
+	float	tx2 = (a->max[0] - orig[0]) * dir[0];
+
+	float	tmin = fmin(tx1, tx2);
+	float	tmax = fmax(tx1, tx2);
+
+	float	ty1 = (a->min[1] - orig[1]) * dir[1];
+	float	ty2 = (a->max[1] - orig[1]) * dir[1];
+
+	tmin = fmax(tmin, fmin(ty1, ty2));
+	tmax = fmin(tmax, fmax(ty1, ty2));
+
+	return (tmax >= tmin);
+	*/
+
+	float	t1[3];
+	float	t2[3];
+	float	tnear = -INFINITY;
+	float	tfar = INFINITY;
+
+	for (int i = 0; i < 3; i++)
+	{
+		if (dir[i] == 0)
+		{
+			if (orig[i] < a->min[i] || orig[i] > a->max[i])
+				return (0);
+		}
+		else
+		{
+			t1[i] = (a->min[i] - orig[i]) / dir[i];
+			t2[i] = (a->max[i] - orig[i]) / dir[i];
+
+			if (t1[i] > t2[i])
+				ft_fswap(&t1[i], &t2[i]);
+			if (t1[i] > tnear)
+				tnear = t1[i];
+			if (t2[i] < tfar)
+				tfar = t2[i];
+			if (tnear > tfar || tfar < 0)
+				return (0);
+		}
+	}
 	return (1);
 }

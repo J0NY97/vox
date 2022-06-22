@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/18 12:11:30 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/21 13:59:12 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/22 10:36:53 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,11 +70,12 @@ typedef struct s_world
 	/////////////////
 	// ENTITY
 	/////////////////
+	int				*entity_palette;		// size : ENTITY_AMOUNT;
+
 	t_bobj			*entity_objects;		// size : ENTITY_AMOUNT;
 	t_model_v2		*entity_models;			// size : ENTITY_AMOUNT;
 
 	t_vox_entity	*entities;
-	int				*entity_amount;			// size: ENTITY_AMOUNT;
 	int				entity_amount_total;	// all 'entity_amount's added up;
 
 	// Player
@@ -90,5 +91,7 @@ typedef struct s_world
 	int				meshes_render_amount;
 
 }	t_world;
+
+void	world_update_entity_palette(t_world *info);
 
 #endif

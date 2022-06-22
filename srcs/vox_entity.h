@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 17:21:38 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/21 13:49:37 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/22 09:36:20 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,9 @@ enum e_entity_states
 	ENTITY_STATE_AMOUNT
 };
 
+// entities should probably have 'persistent' flag, and wont despawn if it's set
+// (torches / doors / beds / boats / farmed animals / dropped items);
+	
 typedef struct s_vox_entity_data
 {
 	char		*name;
@@ -74,7 +77,6 @@ typedef struct s_vox_entity
 
 	float	yaw;
 	float	pitch;
-	float	roll;
 
 	float	front[3];
 	float	up[3];
