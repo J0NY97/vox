@@ -105,7 +105,7 @@ $(ODIR)/%.o: $(CDIR)/%.c
 	@printf $(YELLOW)"Compiling $<\n"$(RESET)
 
 $(NAME): $(OBJ)
-	@gcc -o $(NAME) $(OBJ) $(INCS) $(LIB_DIRS) $(LIBS) #-fsanitize=address
+	@gcc -o $(NAME) $(OBJ) $(INCS) $(LIB_DIRS) $(LIBS) -fsanitize=address
 	@echo "$(NAME) was successfully created."
 
 clean:

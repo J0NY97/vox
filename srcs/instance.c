@@ -68,14 +68,15 @@ int	get_block_type(int x, int y, int z, float noise_value)
 	{
 		if (y == 0)
 			return (BLOCK_BEDROCK);
-		
+
 		// Cave gen;
-		float cave_noise = noise3d_octave(x, y, z, 1.0f, 0.07f, 4, 0.5f, 1.0f);
-		if (cave_noise > 0.75f)
-			return (GAS_AIR);
-		/*
-			*/
-		
+		if (0) // TODO : change to 't_world->generate_caves';
+		{
+			float cave_noise = noise3d_octave(x, y, z, 1.0f, 0.07f, 4, 0.5f, 1.0f);
+			if (cave_noise > 0.75f)
+				return (GAS_AIR);
+		}
+
 		if (y == surface_y - 1)
 			return (BLOCK_DIRT_GRASS);
 		else if (y > surface_y - 3)
@@ -367,7 +368,7 @@ int	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos, int 
 			chunk->blocks[index].visible_faces |= g_visible_faces[dirs[dir]];
 			face_was_added = 1;
 		}
-	}	
+	}
 	return (face_was_added);
 }
 
@@ -376,7 +377,7 @@ int	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos, int 
  *	if touching air, add that face to the chunk's mesh.
  *
  * This func resets the mesh before doing anything;
- * 
+ *
  * NOTE: 'update_chunk_block_palette()' needs to get ran before this;
 */
 void	get_blocks_visible(t_chunk *chunk)

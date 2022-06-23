@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   model.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
+/*   By: jsalmi <jsalmi@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/16 13:41:57 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/21 13:07:32 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/23 16:28:09 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -272,7 +272,7 @@ void	model_from_bobj(t_model_v2 *model, t_bobj *bob, int index)
 	model->vertices = (float *)bobject->v;
 	model->vertices_amount = bobject->v_amount * 3;
 	model->uvs = (float *)bobject->vt;
-	model->uvs_amount = bobject->vt_amount * 3;
+	model->uvs_amount = bobject->vt_amount * 2;
 	model->normals = (float *)bobject->vn;
 	model->normals_amount = bobject->vn_amount * 3;
 
@@ -289,7 +289,7 @@ void	model_from_bobj(t_model_v2 *model, t_bobj *bob, int index)
 			LG_INFO("nvm, we all gucci");
 		}
 	}
-	
+
 	model->meshes_amount = bobject->meshes_amount;
 	model->meshes = malloc(sizeof(t_mesh_v2) * model->meshes_amount);
 	for (int m = 0; m < model->meshes_amount; m++)
@@ -311,7 +311,7 @@ void	mesh_update(t_mesh_v2 *mesh)
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) *
 		mesh->indices_amount, mesh->indices, GL_STATIC_DRAW);
-	
+
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
@@ -331,7 +331,7 @@ void	model_update(t_model_v2 *model)
 	glBindBuffer(GL_ARRAY_BUFFER, model->vbo_tex);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * model->uvs_amount,
 		model->uvs, GL_STATIC_DRAW);
-	
+
 	// TODO : update model aabb here;
 	aabb_create(&model->bound, model->vertices, model->vertices_amount / 3);
 
@@ -380,14 +380,14 @@ void	model_render(t_model_v2 *model, GLuint shader, float *model_mat, float *vie
 	glBindVertexArray(model->vao);
 	for (int i = 0; i < model->meshes_amount; i++)
 		mesh_render(&model->meshes[i]);
-	
+
 	error = glGetError();
 	if (error)
 		LG_ERROR("(%d)", error);
 }
 
 //////////////////////////
-// INSTANCE 
+// INSTANCE
 //////////////////////////
 
 void	model_init_instance(t_model_v2 *model)
@@ -469,7 +469,7 @@ void	model_instance_from_bobj(t_model_v2 *model, t_bobj *bob, int index)
 	model->vertices = (float *)bobject->v;
 	model->vertices_amount = bobject->v_amount * 3;
 	model->uvs = (float *)bobject->vt;
-	model->uvs_amount = bobject->vt_amount * 3;
+	model->uvs_amount = bobject->vt_amount * 2;
 	model->normals = (float *)bobject->vn;
 	model->normals_amount = bobject->vn_amount * 3;
 
@@ -486,7 +486,7 @@ void	model_instance_from_bobj(t_model_v2 *model, t_bobj *bob, int index)
 			LG_INFO("nvm, we all gucci, texture was got (%s)", tmp);
 		}
 	}
-	
+
 	model->meshes_amount = bobject->meshes_amount;
 	model->meshes = malloc(sizeof(t_mesh_v2) * model->meshes_amount);
 	for (int m = 0; m < model->meshes_amount; m++)
@@ -526,7 +526,7 @@ void	model_instance_render(t_model_v2 *model, GLuint shader, float *model_mat, i
 	error = glGetError();
 	if (error)
 		LG_ERROR("(%d)", error);
-	
+
 	glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, GL_FALSE, view_mat);
 	glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, GL_FALSE, projection_mat);
 
@@ -541,11 +541,11 @@ void	model_instance_render(t_model_v2 *model, GLuint shader, float *model_mat, i
 
 	for (int i = 0; i < model->meshes_amount; i++)
 		mesh_instance_render(&model->meshes[i], amount);
-	
+
 	error = glGetError();
 	if (error)
 		LG_ERROR("(%d)", error);
-	
+
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);

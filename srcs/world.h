@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   world.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
+/*   By: jsalmi <jsalmi@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/18 12:11:30 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/22 10:36:53 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/23 16:46:41 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,17 +49,18 @@ typedef struct s_world
 
 	char		game_tick; // every time new game tick, set to 1 the frame the tick happened;
 
-	int			block_collision_enabled;
-	int			player_collision_enabled;
-	int			fancy_graphics;
-	int			generate_structures;
-	int			light_calculation;
-	int			toggle_ui;
-	int			toggle_event;
+	char		block_collision_enabled;
+	char		player_collision_enabled;
+	char		fancy_graphics;
+	char		generate_structures;
+	char		light_calculation;
+	char		toggle_ui;
+	char		toggle_event;
+	char		generate_caves;
 
 	int			sky_light_lvl;
 	int			sky_light_lvl_prev; // previous frame light lvl; (used to decide if the sky light has changed or not);
-	
+
 	int			fog_max_dist;
 	int			fog_min_dist;
 

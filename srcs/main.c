@@ -197,7 +197,7 @@ int	main(void)
 	player.camera.yaw = -90;
 	player.camera.viewport_w = sp.win_w;
 	player.camera.viewport_h = sp.win_h;
-	player.camera.far_plane = 144.0f;
+	player.camera.far_plane = 500;//144.0f;
 	player.gravity = 0;
 
 
@@ -246,10 +246,11 @@ int	main(void)
 	world_info.block_collision_enabled = 0;
 	world_info.player_collision_enabled = 0;
 	world_info.fancy_graphics = 0;
-	world_info.generate_structures = 1;
+	world_info.generate_structures = 0;
 	world_info.light_calculation = 0;
 	world_info.toggle_ui = 0;
 	world_info.toggle_event = 0;
+	world_info.generate_caves = 0;
 
 	world_info.sky_light_lvl = 15;
 
@@ -291,7 +292,7 @@ int	main(void)
 	for (int i = 0; i < ENTITY_AMOUNT; i++)
 		model_matrices[i] = malloc(sizeof(float) * (MAX_ENTITIES / ENTITY_AMOUNT) * 16);
 
-	entities_wanted = min(entities_wanted, MAX_ENTITIES);
+	entities_wanted = ft_min(entities_wanted, MAX_ENTITIES);
 	for (int i = 0; i < entities_wanted; i++)
 	{
 		vox_entity_new(&world_info.entities[i]);
@@ -305,7 +306,7 @@ int	main(void)
 		int		z = i / (w * w);
 		v3_new(world_info.entities[i].pos,
 			player.camera.pos[0] + (x * 4),
-			player.camera.pos[1] + (y * 4), 
+			player.camera.pos[1] + (y * 4),
 			player.camera.pos[2] + (z * 4)
 			);
 		vox_entity_update(&world_info.entities[i]);
@@ -414,7 +415,7 @@ int	main(void)
 	float	tmp2[3];
 	float	tmp3[3];
 	float	ent_pos2[3];
-	
+
 	while (!glfwWindowShouldClose(sp.win))
 	{
 		error = glGetError();
@@ -593,7 +594,7 @@ int	main(void)
 			else
 				LG_INFO("attach_entity => OFF.");
 		}
-		
+
 		// Toggle attach to entity;
 		if (keys[GLFW_KEY_Z].state == BUTTON_PRESS)
 		{
@@ -603,7 +604,7 @@ int	main(void)
 			else
 				LG_INFO("attach_to_entity => OFF.");
 		}
-	
+
 	// Melon controls
 	if (keys[GLFW_KEY_KP_4].state == BUTTON_HOLD)
 	{
@@ -645,7 +646,7 @@ int	main(void)
 		else
 			LG_INFO("entity->draw_aabb => OFF.");
 	}
-	
+
 	if (attach_entity)
 		v3_new(melon_entity->pos, player.camera.pos[0], player.camera.pos[1] - 2, player.camera.pos[2] - 2);
 	else if (attach_to_entity)
@@ -733,7 +734,7 @@ int	main(void)
 			col_chunks = column->chunks;
 
 			column->chunk_needs_update = 0;
-		
+
 			if (world_info.generate_structures && column->update_structures)
 			{
 				tree_gen(&world_info, column);
@@ -1064,11 +1065,11 @@ if (error)
 		// Debug
 		if (curr_ent->draw_dir)
 		{
-			// Front 
+			// Front
 			v3_multiply_f(ent_pos2, curr_ent->front, 1.0f);
 			v3_add(ent_pos2, ent_pos2, curr_ent->pos);
 			render_3d_line(curr_ent->pos, ent_pos2, (float []){0, 0, 255}, player.camera.view, player.camera.projection);
-			// Up 
+			// Up
 			v3_multiply_f(ent_pos2, (float []){0, 1, 0}, 1.0f);
 			v3_add(ent_pos2, ent_pos2, curr_ent->pos);
 			render_3d_line(curr_ent->pos, ent_pos2, (float []){255, 0, 0}, player.camera.view, player.camera.projection);

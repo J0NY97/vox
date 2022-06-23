@@ -6,7 +6,7 @@
 #    By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/05/17 13:09:50 by jsalmi            #+#    #+#              #
-#    Updated: 2022/05/17 14:49:11 by jsalmi           ###   ########.fr        #
+#    Updated: 2022/06/23 16:21:16 by jsalmi           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -40,7 +40,7 @@ CFLAGS = -Wall -Wextra -MMD -O3 #-Werror
 BUILD_FLAGS = -DFT2_BUILD_LIBRARY
 
 ifeq ($(SHELL_NAME), Darwin)
-BUILD_FLAGS += -mmacosx-version-min=10.2
+BUILD_FLAGS += -mmacosx-version-min=10.4
 endif
 
 all: $(NAME)

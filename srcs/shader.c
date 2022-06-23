@@ -62,7 +62,7 @@ void	new_shader(GLuint *shader, const char *vs, const char *fs)
 
 	error = glGetError();
 	if (error)
-		LG_ERROR("before this func <%s> <%s>", vs, fs);
+		LG_WARN("before this func <%s> <%s>", vs, fs);
 
 	vs_cont = get_file_content((char *)vs);
 	fs_cont = get_file_content((char *)fs);
