@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/18 11:58:23 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/22 10:46:34 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/23 09:53:45 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -215,5 +215,5 @@ void	world_update_entity_palette(t_world *info)
 {
 	memset(info->entity_palette, 0, sizeof(int) * ENTITY_AMOUNT);
 	for (int i = 0; i < info->entity_amount_total; i++)
-		++info->entity_palette[info->entities[i].type];
+		++info->entity_palette[(int)info->entities[i].type];
 }

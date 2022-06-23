@@ -10,6 +10,7 @@
 #                                                                              #
 # **************************************************************************** #
 
+SHELL_NAME = $(shell uname -s)
 RAW =	\
 	base/ftsystem.c \
 	base/ftinit.c \
@@ -25,6 +26,10 @@ RAW =	\
 	truetype/truetype.c \
 	raster/raster.c \
 
+ifeq ($(SHELL_NAME), Darwin)
+	RAW += base/ftmac.c
+endif
+
 NAME = libfreetype.a
 CDIR = src
 IDIR = -Iinclude
@@ -32,6 +37,11 @@ ODIR = obj
 SRCS = $(addprefix $(CDIR)/, $(RAW))
 OBJS = $(addprefix $(ODIR)/, $(RAW:.c=.o))
 CFLAGS = -Wall -Wextra -MMD -O3 #-Werror
+BUILD_FLAGS = -DFT2_BUILD_LIBRARY
+
+ifeq ($(SHELL_NAME), Darwin)
+BUILD_FLAGS += -mmacosx-version-min=10.2
+endif
 
 all: $(NAME)
 	@printf $(GREEN)"\e[J[INFO] $(NAME) ready!\n"$(RESET)
@@ -45,7 +55,7 @@ $(ODIR):
 
 $(ODIR)/%.o: $(CDIR)/%.c
 	@printf $(YELLOW)"\e[JCompiling $<\n\e[F"$(RESET)
-	@gcc -DFT2_BUILD_LIBRARY -c $< -o $@ $(CFLAGS) $(IDIR)
+	@gcc $(BUILD_FLAGS) -c $< -o $@ $(CFLAGS) $(IDIR)
 
 $(NAME): $(ODIR) $(OBJS)
 	@ar rc $(NAME) $(OBJS)
