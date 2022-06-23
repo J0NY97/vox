@@ -389,6 +389,8 @@ int	main(void)
 
 	ui_manager_init(&ui);
 	ui_init(&gui);
+	gui.keys = keys;
+	gui.mouse = mouse;
 	gui.manager = &ui;
 	gui.hotbar_item_id = player_info.hotbar_item_ids;
 	gui.selected_hotbar = player_info.equipped_hotbar;
@@ -1098,8 +1100,14 @@ if (error)
 		glDisable(GL_DEPTH_TEST);
 		render_crosshair();
 
+		///////////// UI ////////////
+		////// EVENTS ////////
+		if (keys[GLFW_KEY_H].state == BUTTON_PRESS)
+			gui.inventory_open = !gui.inventory_open;
+		////// DRAW ////////
 		if (world_info.toggle_ui)
 		{
+			ui_update(&gui, sp.win);
 			ui_manager_start(&ui);
 			{
 				char		buffer[256];

@@ -352,3 +352,11 @@ void	ui_draw_bitmap(t_ui_manager *ui, float *pos, t_bitmap *bmp)
 	ui->elements[elem_index].draw_type = GL_TRIANGLES; 
 	ui->elements[elem_index].texture = ui_new_texture(ui, bmp);
 }
+
+// Collision ?
+
+int	point_in_rectangle(float *v2, float *v4)
+{
+	return (v2[0] >= v4[0] && v2[0] < v4[0] + v4[2] &&
+		v2[1] >= v4[1] && v2[1] < v4[1] + v4[3]);
+}

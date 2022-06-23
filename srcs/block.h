@@ -192,8 +192,9 @@ typedef struct s_block_data
 	char			force_through_see;
 	char			see_through; // (affects neighbors) if the block is see through and neighboring block face should be added to mesh;
 	char			through_see; // (affects block)		if the block faces should be added to the mesh if the neighboring block is see through;
-	char			entity_collision; // TODO, if player will collide with its body;
-	char			hand_collision; // TODO, if you can break the block;
+	char			entity_collision; // if player will collide with its body;
+	char			hand_collision; // if you can break the block;
+	char			max_stack_size; // the maximum value of items in one stack in the inventory;
 	char			face_index; // 'e_face_verts', from g_all_faces, the index of the faces to be used;
 }	t_block_data;
 
@@ -212,6 +213,7 @@ static const t_block_data	g_item_data[] = {
 		0, 0, 0.0f,
 		0, 0, 0, 0,
 		0, 0,
+		0,
 		BLOCK_FACES
 	}
 };
@@ -227,6 +229,7 @@ static const t_block_data	g_block_data[] = {
 		0, 0, 0.0f,
 		1, 0, 1, 0,
 		0, 0,
+		0,
 		BLOCK_FACES
 	},
 // BLOCKS
@@ -238,6 +241,7 @@ static const t_block_data	g_block_data[] = {
 		-15, 1, 0.5f,
 		0, 0, 0, 1,
 		1, 1,
+		64,
 		BLOCK_FACES
 	},
 	{
@@ -248,6 +252,7 @@ static const t_block_data	g_block_data[] = {
 		-15, 1, 0.5f,
 		0, 0, 0, 1,
 		1, 1,
+		64,
 		BLOCK_FACES
 	},
 	{
@@ -258,6 +263,7 @@ static const t_block_data	g_block_data[] = {
 		-15, 1, 6.0f,
 		0, 0, 0, 1,
 		1, 1,
+		64,
 		BLOCK_FACES
 	},
 	{
@@ -268,6 +274,7 @@ static const t_block_data	g_block_data[] = {
 		-15, 1, 3600000.0f,
 		0, 0, 0, 1,
 		1, 1,
+		64,
 		BLOCK_FACES
 	},
 	{
@@ -278,6 +285,7 @@ static const t_block_data	g_block_data[] = {
 		-15, 1, 0.5f,
 		0, 0, 0, 1,
 		1, 1,
+		64,
 		BLOCK_FACES
 	},
 	{
@@ -288,6 +296,7 @@ static const t_block_data	g_block_data[] = {
 		-15, 1, 2.0f,
 		0, 0, 0, 1,
 		1, 1,
+		64,
 		BLOCK_FACES
 	},
 	{
@@ -298,6 +307,7 @@ static const t_block_data	g_block_data[] = {
 		-15, 1, 3.0f,
 		0, 0, 0, 1,
 		1, 1,
+		64,
 		BLOCK_FACES
 	},
 	{
@@ -308,6 +318,7 @@ static const t_block_data	g_block_data[] = {
 		-15, 1, 0.0f,
 		0, 0, 0, 1,
 		1, 1,
+		64,
 		BLOCK_FACES
 	},
 // BLOCK ALPHA
@@ -319,6 +330,7 @@ static const t_block_data	g_block_data[] = {
 		-1, 1, 0.2f,
 		1, 0, 1, 1,
 		1, 1,
+		64,
 		BLOCK_FACES
 	},
 	{
@@ -329,6 +341,7 @@ static const t_block_data	g_block_data[] = {
 		-1, 1, 0.4f,
 		1, 1, 1, 1,
 		1, 1,
+		64,
 		CACTUS_FACES
 	},
 	{
@@ -339,6 +352,7 @@ static const t_block_data	g_block_data[] = {
 		14, 0, 0.4f,
 		1, 1, 1, 1,
 		1, 1,
+		64,
 		TORCH_FACES
 	},
 // FLORA
@@ -350,6 +364,7 @@ static const t_block_data	g_block_data[] = {
 		0, 0, 0.0f,
 		1, 1, 1, 1,
 		0, 1,
+		64,
 		FLORA_FACES
 	},
 	{
@@ -360,6 +375,7 @@ static const t_block_data	g_block_data[] = {
 		0, 0, 0.0f,
 		1, 1, 1, 1,
 		0, 1,
+		64,
 		FLORA_FACES
 	},
 	{
@@ -370,6 +386,7 @@ static const t_block_data	g_block_data[] = {
 		0, 0, 0.0f,
 		1, 1, 1, 1,
 		0, 1,
+		64,
 		FLORA_FACES
 	},
 // FLUID
@@ -380,6 +397,7 @@ static const t_block_data	g_block_data[] = {
 		-3, 1, 100.0f,
 		0, 0, 1, 0,
 		1, 0,
+		64,
 		BLOCK_FACES
 	},
 	{
@@ -389,6 +407,7 @@ static const t_block_data	g_block_data[] = {
 		-3, 1, 100.0f,
 		0, 0, 1, 0,
 		1, 0,
+		0,
 		BLOCK_FACES
 	},
 	{
@@ -398,6 +417,7 @@ static const t_block_data	g_block_data[] = {
 		-3, 1, 100.0f,
 		0, 0, 1, 0,
 		1, 0,
+		0,
 		BLOCK_FACES
 	},
 	{
@@ -407,6 +427,7 @@ static const t_block_data	g_block_data[] = {
 		-3, 1, 100.0f,
 		0, 0, 1, 0,
 		1, 0,
+		0,
 		BLOCK_FACES
 	},
 	{
@@ -416,6 +437,7 @@ static const t_block_data	g_block_data[] = {
 		-3, 1, 100.0f,
 		0, 0, 1, 0,
 		1, 0,
+		0,
 		BLOCK_FACES
 	},
 	{
@@ -425,6 +447,7 @@ static const t_block_data	g_block_data[] = {
 		-3, 1, 100.0f,
 		0, 0, 1, 0,
 		1, 0,
+		0,
 		BLOCK_FACES
 	},
 	{
@@ -434,6 +457,7 @@ static const t_block_data	g_block_data[] = {
 		-3, 1, 100.0f,
 		0, 0, 1, 0,
 		1, 0,
+		0,
 		BLOCK_FACES
 	},
 	{
@@ -443,6 +467,7 @@ static const t_block_data	g_block_data[] = {
 		-3, 1, 100.0f,
 		0, 0, 1, 0,
 		1, 0,
+		0,
 		BLOCK_FACES
 	}
 };

@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/18 13:10:15 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/23 10:22:21 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/23 10:56:41 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,5 +81,8 @@ void	ui_draw_filled_rect_multi_color(t_ui_manager *ui, float *pos, Uint32 *color
 void	ui_draw_filled_rect(t_ui_manager *ui, float *pos, Uint8 *color);
 void	ui_draw_rect(t_ui_manager *ui, float *pos, Uint8 *color);
 void	ui_draw_bitmap(t_ui_manager *ui, float *pos, t_bitmap *bmp);
+
+// 
+int		point_in_rectangle(float *v2, float *v4);
 
 #endif
