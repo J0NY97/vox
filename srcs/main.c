@@ -235,7 +235,7 @@ int	main(void)
 	player_info.hotbar_item_ids[5] = BLOCK_ALPHA_OAK_LEAF;
 	player_info.hotbar_item_ids[6] = BLOCK_ALPHA_CACTUS;
 	player_info.hotbar_item_ids[7] = BLOCK_TNT;
-	player_info.hotbar_item_ids[8] = FLUID_WATER;
+	player_info.hotbar_item_ids[8] = 0;//FLUID_WATER;
 	player_info.equipped_block = player_info.hotbar_item_ids[player_info.equipped_hotbar];
 
 	t_world	world_info;

@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/23 10:30:34 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/23 12:24:40 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/23 12:42:18 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,8 +108,10 @@ void	draw_hotbar(t_ui *ui)
 	bitmap_free(&bmp);
 	*/
 	// SELECTED
-	hotbar_pos[2] = slot_dim[0];
-	hotbar_pos[0] = hotbar_pos[0] + (ui->selected_hotbar * hotbar_pos[2]);
+	hotbar_pos[0] = (ui->selected_hotbar * slot_dim[0]) + hotbar_pos[2];
+	hotbar_pos[1] -= 2;
+	hotbar_pos[2] = slot_dim[0] + 4;
+	hotbar_pos[3] = slot_dim[1] + 2;
 	ui_draw_bitmap(ui->manager, hotbar_pos, &ui->hotbar_select_bmp);
 }
 
@@ -127,7 +129,7 @@ void	draw_inventory(t_ui *ui)
 	glGetIntegerv(GL_VIEWPORT, viewport);
 
 	orig_ratio = ((float)ui->inventory_bmp.height / (float)ui->inventory_bmp.width);
-	inventory_pos[2] = viewport[2] / 4 * 3;
+	inventory_pos[2] = viewport[2] / 2 * 1;
 	inventory_pos[3] = viewport[3] * orig_ratio;
 	inventory_pos[0] = viewport[2] / 2 - inventory_pos[2] / 2;
 	inventory_pos[1] = viewport[3] / 2 - inventory_pos[3] / 2;
