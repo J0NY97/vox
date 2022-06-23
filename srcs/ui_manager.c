@@ -55,10 +55,12 @@ void	ui_manager_setup_opengl(t_ui_manager *ui)
 
 void	ui_manager_init(t_ui_manager *ui)
 {
+	/*
 	font_manager_init(&ui->font_manager);
 	// Lets open default font;
 	int arial_font_index = font_manager_get_font(&ui->font_manager, "C:/Windows/Fonts/arial.ttf", 12);
 	print_face(ui->font_manager.font_faces[arial_font_index]);
+	*/
 
 	bitmap_new(&ui->bitmap, 1, 1);
 	bitmap_fill(&ui->bitmap, 0xffffffff);

@@ -66,6 +66,7 @@ void	draw_hotbar(t_ui *ui)
 		return ;
 
 	// Selected block name;
+	/*
 	fm_render_text(&bmp, &ui->manager->font_manager, 0,
 		g_block_data[ui->hotbar_item_id[ui->selected_hotbar]].readable_name,
 		0xffffffff, 0x00);
@@ -76,6 +77,7 @@ void	draw_hotbar(t_ui *ui)
 	name_pos[1] = hotbar_pos[1] - bmp.height - (name_pos[3] * 0.5f);
 	ui_draw_bitmap(ui->manager, name_pos, &bmp);
 	bitmap_free(&bmp);
+	*/
 	// SELECTED
 	hotbar_pos[2] = slot_dim[0];
 	hotbar_pos[0] = hotbar_pos[0] + (ui->selected_hotbar * hotbar_pos[2]);
@@ -91,7 +93,7 @@ void	ui_init(t_ui *ui)
 
 	img_set.flip = 1;
 	img_set.rgb = 1;
-	bimgf_load_bmp(&tex, MODEL_PATH"cube/version_3_texture_alpha.bmp", img_set);
+	bimgf_load_bmp(&tex, TEXTURE_PATH"version_3_texture_alpha.bmp", img_set);
 	bitmap_duplicate(&ui->block_texture_bmp, tex.pixels, tex.w, tex.h);
 	bimgf_free(&tex);
 

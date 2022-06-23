@@ -5,8 +5,8 @@
 #include "shader.h"
 #include "bobj.h"
 #include "enum.h"
-//#include "ui_manager.h"
-//#include "ui.h"
+#include "ui_manager.h"
+#include "ui.h"
 
 void	init(t_shaderpixel *sp)
 {
@@ -384,7 +384,6 @@ int	main(void)
 ////////////////////////////////////////
 	// UI TESTING
 ////////////////////////////////////////
-/*
 	t_ui			gui;
 	t_ui_manager	ui;
 
@@ -394,7 +393,6 @@ int	main(void)
 	gui.hotbar_item_id = player_info.hotbar_item_ids;
 	gui.selected_hotbar = player_info.equipped_hotbar;
 	LG_INFO("UI init done.");
-	*/
 ////////////////////////////////////////
 	// END UI TESTING
 ///////////////////////////////////////
@@ -665,7 +663,7 @@ int	main(void)
 			{
 				player_info.equipped_hotbar = i - GLFW_KEY_1;
 				player_info.equipped_block = player_info.hotbar_item_ids[player_info.equipped_hotbar];
-				//gui.selected_hotbar = player_info.equipped_hotbar;
+				gui.selected_hotbar = player_info.equipped_hotbar;
 				if (is_type_solid(player_info.equipped_block) ||
 					is_type_fluid(player_info.equipped_block) ||
 					is_type_solid_alpha(player_info.equipped_block))
@@ -1102,12 +1100,12 @@ if (error)
 
 		if (world_info.toggle_ui)
 		{
-			/*
 			ui_manager_start(&ui);
 			{
 				char		buffer[256];
 				t_bitmap	bmp;
 
+				/*
 				// Player Position
 				strcpy(buffer, "Position : ");
 				ft_b_ftoa(player.camera.pos[0], 2, buffer + strlen(buffer));
@@ -1129,6 +1127,7 @@ if (error)
 				fm_render_text(&bmp, &ui.font_manager, 0, buffer, 0xff0000ff, 0xffffffff);
 				ui_draw_bitmap(&ui, (float []){120, 40, bmp.width, bmp.height}, &bmp);
 				bitmap_free(&bmp);
+				*/
 
 				bitmap_new(&bmp, 100, 100);
 				bitmap_fill(&bmp, 0xff00ffff);
@@ -1147,7 +1146,6 @@ if (error)
 			}
 			ui_manager_render(&ui, sp.win_w, sp.win_h);
 			ui_manager_end(&ui);
-			*/
 		}
 
 		glfwSwapBuffers(sp.win);

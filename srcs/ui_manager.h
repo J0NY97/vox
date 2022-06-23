@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/18 13:10:15 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/07 15:03:22 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/23 10:22:21 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ typedef struct s_ui_element
 
 typedef struct s_ui_manager
 {
-	t_font_manager	font_manager;
+//	t_font_manager	font_manager;
 	t_bitmap		bitmap;
 
 	t_ui_element	*elements;

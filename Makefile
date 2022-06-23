@@ -45,9 +45,9 @@ CFILES = \
 	bobj/bobj_v2/bobj.c \
 	bobj/bobj_print.c \
 	glad/glad.c \
-#	ui.c \
+	ui.c \
+	ui_manager.c \
 #	font_manager.c \
-#	ui_manager.c \
 
 CDIR = srcs
 ODIR = obj
