@@ -828,6 +828,16 @@ void	event_chunk(t_chunk *chunk)
 	ft_printf("Chunk events handled : %d / %d\n", events_handled, chunk->event_block_amount);
 }
 
+void	regen_column_thread(void *args)
+{
+	t_chunk_col	*column;	
+
+	column = args;
+	column->being_threaded = 1;
+	regenerate_chunk_column(column, column->wanted_coord, column->world->seed);
+	column->being_threaded = 0;
+}
+
 void	regenerate_chunk_column(t_chunk_col *column, int coord[2], int seed)
 {
 	noise_create(&column->height_map, CHUNK_WIDTH, CHUNK_HEIGHT,

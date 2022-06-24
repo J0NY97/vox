@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 10:06:36 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/24 11:17:55 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/24 11:53:19 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,6 +123,10 @@ typedef struct s_chunk_col
 	t_light	*lights; // def CHUNK_COLUMN_LIGHT_AMOUNT; (this is only skylights);
 
 	t_noise	height_map;
+
+	t_world	*world;
+	int		wanted_coord[2];
+	char	being_threaded;
 }	t_chunk_col;
 
 typedef struct s_block_info
@@ -237,7 +241,7 @@ typedef struct s_regen_args
 	t_world	*chunk_info;
 }	t_regen_args;
 
-void		*regen_thread_func(void *args);
+void		regen_column_thread(void *args);
 int			regenerate_chunks(int *these, int coord[2], t_world *info);
 int			regenerate_chunks_threading(int *these, int coord[2], t_world *info);
 void		regenerate_chunk_column(t_chunk_col *column, int coord[2], int seed);

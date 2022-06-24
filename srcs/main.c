@@ -376,6 +376,8 @@ int	main(void)
 			world_info.chunk_columns[nth_col].world_coordinate[0] = world_info.chunks[nth_chunk].world_coordinate[0];
 			world_info.chunk_columns[nth_col].world_coordinate[1] = world_info.chunks[nth_chunk].world_coordinate[2];
 			world_info.chunk_columns[nth_col].update_structures = 0;
+			world_info.chunk_columns[nth_col].being_threaded = 0;
+			world_info.chunk_columns[nth_col].world = &world_info;
 		}
 		world_info.chunk_columns[nth_col].chunks[nth_col_chunk] = &world_info.chunks[nth_chunk];
 		++nth_col_chunk;
@@ -705,6 +707,8 @@ int	main(void)
 
 		get_chunk_pos_from_world_pos(player_chunk, player.camera.pos);
 
+		thread_manager_check_threadiness(&tm);
+
 		int	tobegen = 0;
 		if (regen_chunks)
 		{
@@ -713,13 +717,14 @@ int	main(void)
 			int	col_coords[max_get][2];
 			int	start_coord[2];
 			tobegen = get_chunk_column_to_regen(&world_info, player_chunk, col_indices, col_coords, max_get);
-			for (int i = 0; i < tobegen; i++)
+			for (int i = 0; i < tobegen && i < max_get; i++)
 			{
-				regenerate_chunk_column(&world_info.chunk_columns[col_indices[i]], col_coords[i], world_info.seed);
+				world_info.chunk_columns[col_indices[i]].wanted_coord[0] = col_coords[i][0];
+				world_info.chunk_columns[col_indices[i]].wanted_coord[1] = col_coords[i][1];
+				thread_manager_new_thread(&tm, &regen_column_thread, &world_info.chunk_columns[col_indices[i]]);
+//				regenerate_chunk_column(&world_info.chunk_columns[col_indices[i]], col_coords[i], world_info.seed);
 			}
 		}
-
-		thread_manager_check_threadiness(&tm);
 
 		t_chunk		*neighbors[DIR_AMOUNT];
 		t_chunk		**col_chunks;
