@@ -329,7 +329,7 @@ t_block	*get_block_in_dir(t_chunk *chunk, t_chunk *neighbor, int *local_pos, int
 */
 void	add_block_to_correct_mesh(t_chunk *chunk, t_block *block, int *local_pos, int dir)
 {
-	t_block_data	data;
+	t_block_data	*data;
 	int				light;
 
 	data = get_block_data(block);
@@ -343,12 +343,12 @@ void	add_block_to_correct_mesh(t_chunk *chunk, t_block *block, int *local_pos, i
 
 		get_block_world_pos(block_world, chunk->world_coordinate, local_pos);
 		flowing_water_verts(verts, dir, block, block_world, chunk->info);
-		add_to_chunk_mesh(&chunk->meshes, FLUID_MESH, local_pos, verts, data.texture[0], light);
+		add_to_chunk_mesh(&chunk->meshes, FLUID_MESH, local_pos, verts, data->texture[0], light);
 		++chunk->blocks_fluid_amount;
 	}
 	else
 	{
-		add_to_chunk_mesh(&chunk->meshes, BLOCK_MESH, local_pos, (float *)g_all_faces[data.face_index][dir], data.texture[dir], light);
+		add_to_chunk_mesh(&chunk->meshes, BLOCK_MESH, local_pos, (float *)g_all_faces[data->face_index][dir], data->texture[dir], light);
 		++chunk->blocks_solid_amount;
 	}
 }
@@ -365,8 +365,8 @@ int	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos, int 
 {
 	t_block			*adj;
 	t_block			*block;
-	t_block_data	adj_data;
-	t_block_data	block_data;
+	t_block_data	*adj_data;
+	t_block_data	*block_data;
 	int				face_was_added;
 
 	face_was_added = 0;
@@ -388,8 +388,8 @@ int	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos, int 
 		block_data = get_block_data(block);
 		// Always add face if it's next to a gas block;
 		// Otherwise it's up to the block type settings;
-		if (adj_data.force_see_through || block_data.force_through_see ||
-			(adj_data.see_through && block_data.through_see))
+		if (adj_data->force_see_through || block_data->force_through_see ||
+			(adj_data->see_through && block_data->through_see))
 		{
 			add_block_to_correct_mesh(chunk, block, pos, dirs[dir]);
 			chunk->blocks[index].visible_faces |= g_visible_faces[dirs[dir]];
@@ -702,11 +702,13 @@ int	get_chunk_water_amount(t_chunk *chunk)
 */
 void	update_chunk_block_palette(t_chunk *chunk)
 {
+	/*
 	static int count = 0;
 
 	count++;
 	if (count % 100 == 0)
 		ft_printf("count : %d\n", count);
+		*/
 	memset(chunk->block_palette, 0, sizeof(int) * BLOCK_TYPE_AMOUNT);
 	for (int i = 0; i < chunk->block_amount; i++)
 	{
@@ -727,7 +729,7 @@ void	update_chunk_block_palette(t_chunk *chunk)
 void print_block_palette(t_chunk *chunk)
 {
 	for (int i = 0; i < BLOCK_TYPE_AMOUNT; i++)
-		ft_printf("%2d : %5d [%s]\n", i, chunk->block_palette[i], get_block_data_from_type(i).name);
+		ft_printf("%2d : %5d [%s]\n", i, chunk->block_palette[i], get_block_data_from_type(i)->name);
 }
 
 /*
@@ -923,12 +925,14 @@ void	update_chunk_visible_blocks(t_chunk *chunk)
 
 	get_blocks_visible(chunk);
 
+/*
 	{ // DEBUG
 		int total_faces = 0;
 		for (int i = 0; i < chunk->meshes.amount; i++)
 			total_faces += (chunk->meshes.indices_amount[i] / 6);
 		LG_INFO("%d visible faces in chunk.", total_faces);
 	}
+	*/
 }
 
 /*
@@ -1225,7 +1229,7 @@ t_block	*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, in
 	float	block_world[3];
 	int		blocal[3];
 	int		i;
-	t_block_data	data;
+	t_block_data	*data;
 
 	if (!chunk->has_blocks || !chunk->has_visible_blocks)
 		return (NULL);
@@ -1236,13 +1240,13 @@ t_block	*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, in
 			continue ;
 		// Continue if the block doesnt have collision;
 		data = get_block_data(&chunk->blocks[i]);
-		if (!data.hand_collision)
+		if (!data->hand_collision)
 			continue;
 
 		get_block_local_pos_from_index(blocal, i);
 		get_block_world_pos(block_world, chunk->world_coordinate, blocal);
 
-		if (is_hovering_block(block_world, point, face, g_all_faces[data.face_index], 6))
+		if (is_hovering_block(block_world, point, face, g_all_faces[data->face_index], 6))
 		{
 			v3_assign(block_pos, block_world);
 			return (&chunk->blocks[i]);
@@ -1711,7 +1715,6 @@ t_chunk *get_highest_chunk_with_block(t_world *info, t_block **out_block, float 
 */
 float	get_highest_block(t_world *info, t_block **out_block, float x, float z)
 {
-	static int count = 0;
 	float	block_y;
 	t_chunk	*highest_chunk;
 
@@ -1856,7 +1859,7 @@ void	emit_sky_light(t_chunk_col *column, int chunk_index, int *coord, int light)
 	t_chunk			*chunk;
 	t_block			*block;
 	t_block			*next_block;
-	t_block_data	data;
+	t_block_data	*data;
 	static int count = 0;
 
 /*
@@ -1895,7 +1898,7 @@ void	emit_sky_light(t_chunk_col *column, int chunk_index, int *coord, int light)
 	data = get_block_data(block);
 /*
 */
-	int	new_light = ft_max(ft_clamp(block->light_lvl + data.light_emit, 0, 15) - 1, 0);
+	int	new_light = ft_max(ft_clamp(block->light_lvl + data->light_emit, 0, 15) - 1, 0);
 	emit_sky_light(column, chunk_index, (int []){coord[0], coord[1] + 1, coord[2]}, new_light);
 	emit_sky_light(column, chunk_index, (int []){coord[0], coord[1] - 1, coord[2]}, new_light);
 	emit_sky_light(column, chunk_index, (int []){coord[0] + 1, coord[1], coord[2]}, new_light);
@@ -1916,7 +1919,7 @@ void	update_chunk_column_light_0(t_chunk_col *column)
 	int	light_index;
 	int	block_index;
 	int	curr_chunk_index;
-	t_block_data	data;
+	t_block_data	*data;
 
 	for (int x = 0; x < CHUNK_WIDTH; x++)
 	{
@@ -1940,7 +1943,7 @@ void	update_chunk_column_light_0(t_chunk_col *column)
 					// NOTE : might break if the highest chunk has a non light heightmap
 					//		triggering block at the top most y coordinate;
 					if (column->lights[light_index].chunk_index == -1 &&
-						data.trigger_light_heightmap)
+						data->trigger_light_heightmap)
 					{
 						if (y + 1 < CHUNK_HEIGHT)
 						{
@@ -1975,7 +1978,7 @@ void	update_chunk_column_light_1(t_chunk_col *column)
 
 	// Torch Light
 	int				block_index;
-	t_block_data	data;
+	t_block_data	*data;
 
 	for (int i = 0; i < CHUNKS_PER_COLUMN; i++)
 	{
@@ -1989,7 +1992,7 @@ void	update_chunk_column_light_1(t_chunk_col *column)
 				{
 					get_block_local_pos_from_index(local, block_index);
 					data = get_block_data(&column->chunks[i]->blocks[block_index]);
-					emit_sky_light(column, i, local, data.light_emit);
+					emit_sky_light(column, i, local, data->light_emit);
 					break ;
 				}
 			}
@@ -2081,15 +2084,15 @@ void	update_chunk_column_border_light(t_chunk_col *column)
 
 void	block_print(t_block *block)
 {
-	t_block_data	data;
+	t_block_data	*data;
 
 	data = get_block_data(block);
-	ft_printf("\n[%s] :\n", data.name);
+	ft_printf("\n[%s] :\n", data->name);
 	ft_printf("\tType : %d\n", block->type);
 	ft_printf("\tLight Level : %d\n", block->light_lvl);
 	ft_printf("\tVisible Faces : ");
 	print_binary(block->visible_faces, 8);
 	ft_printf(" (last 2 bits are not used)\n");
 	ft_printf("Data :\n");
-	ft_printf("\tLight Emit : %d\n", data.light_emit);
+	ft_printf("\tLight Emit : %d\n", data->light_emit);
 }

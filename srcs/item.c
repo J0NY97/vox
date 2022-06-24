@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/01 14:13:30 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/17 12:33:14 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/24 12:20:32 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,12 +78,12 @@ int	is_water(t_block *block)
 	return (block && block->type >= FLUID_WATER && block->type <= FLUID_WATER_7);
 }
 
-t_block_data	get_block_data_from_type(int type)
+t_block_data	*get_block_data_from_type(int type)
 {
-	return (g_block_data[type]);
+	return (&g_block_data[type]);
 }
 
-t_block_data	get_block_data(t_block *block)
+t_block_data	*get_block_data(t_block *block)
 {
 	return (get_block_data_from_type(block->type));
 }

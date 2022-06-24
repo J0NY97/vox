@@ -5,7 +5,7 @@ void	explode(t_world *info, float pos[3], float intensity)
 {
 	float			tmp[3];
 	t_block			*block;
-	t_block_data	data;
+	t_block_data	*data;
 
 	block = get_block(info, pos);
 	if (!block) // CRASH : if the tnt is trying to explode something that doesnt exist;
@@ -13,7 +13,7 @@ void	explode(t_world *info, float pos[3], float intensity)
 	data = get_block_data(block);
 	intensity -= (0.225f * 3);
 	if (!is_gas(block))
-		intensity -= (data.blast_resistance + 0.3f) * 0.3f;
+		intensity -= (data->blast_resistance + 0.3f) * 0.3f;
 	if (intensity <= 0.0f)
 		return ;
 

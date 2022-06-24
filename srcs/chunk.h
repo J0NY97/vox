@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 10:06:36 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/24 11:53:19 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/24 12:20:25 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -227,8 +227,8 @@ int			get_chunk_column_to_regen(t_world *info, int *player_chunk, int *out_col_i
 int			get_surrounding_coords(int *res, int x, int z, int r);
 int			get_block_type_at_world_pos(t_world *info, float *world_pos);
 
-t_block_data	get_block_data(t_block *block);
-t_block_data	get_block_data_from_type(int type);
+t_block_data	*get_block_data(t_block *block);
+t_block_data	*get_block_data_from_type(int type);
 
 void		update_chunk_column_light(t_chunk_col *column);
 

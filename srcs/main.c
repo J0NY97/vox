@@ -712,7 +712,7 @@ int	main(void)
 		int	tobegen = 0;
 		if (regen_chunks)
 		{
-			int	max_get = 1;
+			int	max_get = RENDER_DISTANCE;
 			int	col_indices[max_get];
 			int	col_coords[max_get][2];
 			int	start_coord[2];
@@ -734,6 +734,8 @@ int	main(void)
 		for (int col = 0; col < CHUNK_COLUMNS; col++)
 		{
 			column = &world_info.chunk_columns[col];
+			if (column->being_threaded)
+				continue ;
 			col_chunks = column->chunks;
 
 			column->chunk_needs_update = 0;
@@ -779,7 +781,7 @@ int	main(void)
 				if (col_chunks[ent]->needs_to_update)
 				{
 					update_chunk(col_chunks[ent]);
-					update_chunk_event_blocks(col_chunks[ent]);
+				//	update_chunk_event_blocks(col_chunks[ent]);
 					// Set needs to update to all 6 neighbors of the chunk;
 					for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
 						if (neighbors[i])
@@ -798,12 +800,13 @@ int	main(void)
 		//	updated, because they might update themselves;
 		// So if theres still chunks that needs updating after we've gone through
 		// 	the chunks once, we update them here;
-		if (tobegen == 0)
+//		if (tobegen == 0)
 		{
-			int	column_redo_light;
 			for (int col = 0; col < CHUNK_COLUMNS; col++)
 			{
 				column = &world_info.chunk_columns[col];
+				if (column->being_threaded)
+					continue ;
 				col_chunks = column->chunks;
 
 				for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
