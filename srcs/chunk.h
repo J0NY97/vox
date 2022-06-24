@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 10:06:36 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/18 12:14:39 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/24 11:17:55 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -206,6 +206,8 @@ void		render_aabb(t_aabb *a, t_camera *camera, float *col);
 int			*get_chunk_pos_from_world_pos(int *res, float *world_coords);
 float		*get_block_world_pos(float *res, float *chunk_world_pos, int *block_local_pos);
 t_chunk		*get_chunk(t_world *info, int *pos);
+t_chunk		*get_chunk_from_column(t_chunk_col *col, int y);
+t_chunk_col	*get_chunk_column(t_world *info, int *pos_v2);
 t_chunk		*get_chunk_from_world_pos(t_world *info, float *pos);
 t_chunk		*get_adjacent_chunk(t_world *info, t_chunk *from, float *dir);
 int			*get_block_local_pos_from_world_pos(int *res, float *world);
@@ -217,7 +219,7 @@ float		get_highest_block_in_chunk(t_chunk *chunk, t_block **out_block, float x, 
 float		get_highest_point(t_world *info, float x, float z);
 float		get_highest_point_of_type(t_world *info, float x, float z, int type);
 int			get_chunks_to_reload_v2(int *these, int (*into_these)[2], int *start_coord, t_world *info, int *player_chunk_v3, int max_get);
-int			get_chunk_column_to_regen(t_chunk_col *chunk_cols, int *player_chunk, int *out_col_indices, int (*out_col_coords)[2], int max_get);
+int			get_chunk_column_to_regen(t_world *info, int *player_chunk, int *out_col_indices, int (*out_col_coords)[2], int max_get);
 int			get_surrounding_coords(int *res, int x, int z, int r);
 int			get_block_type_at_world_pos(t_world *info, float *world_pos);
 

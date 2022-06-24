@@ -712,7 +712,7 @@ int	main(void)
 			int	col_indices[max_get];
 			int	col_coords[max_get][2];
 			int	start_coord[2];
-			tobegen = get_chunk_column_to_regen(world_info.chunk_columns, player_chunk, col_indices, col_coords, max_get);
+			tobegen = get_chunk_column_to_regen(&world_info, player_chunk, col_indices, col_coords, max_get);
 			for (int i = 0; i < tobegen; i++)
 			{
 				regenerate_chunk_column(&world_info.chunk_columns[col_indices[i]], col_coords[i], world_info.seed);

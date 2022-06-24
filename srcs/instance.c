@@ -176,14 +176,41 @@ t_chunk	*get_adjacent_chunk(t_world *info, t_chunk *from, float *dir)
 	return (NULL);
 }
 
-t_chunk	*get_chunk(t_world	*info, int *pos)
+/*
+ * 'pos' : local pos;
+*/
+t_chunk	*get_chunk(t_world *info, int *pos)
 {
-	for (int i = 0; i < CHUNKS_LOADED; i++)
+	t_chunk_col	*column;
+
+	column = get_chunk_column(info, (int []){pos[0], pos[2]});
+	if (column)
+		return (get_chunk_from_column(column, pos[1]));
+	return (NULL);
+}
+
+/*
+ * make sure the chunk is a part of this column, otherwise it will return the
+ *	the wrong chunk at the same y you wanted;
+*/
+t_chunk	*get_chunk_from_column(t_chunk_col *col, int y)
+{
+	for (int i = 0; i < CHUNKS_PER_COLUMN; i++)
+		if (col->chunks[i]->coordinate[1] == y)
+			return (col->chunks[i]);
+	return (NULL);
+}
+
+/*
+ * 'pos_v2' : x / z;
+*/
+t_chunk_col	*get_chunk_column(t_world *info, int *pos_v2)
+{
+	for (int i = 0; i < CHUNK_COLUMNS; i++)
 	{
-		if (info->chunks[i].coordinate[0] == pos[0] &&
-			info->chunks[i].coordinate[1] == pos[1] &&
-			info->chunks[i].coordinate[2] == pos[2])
-			return (&info->chunks[i]);
+		if (info->chunk_columns[i].coordinate[0] == pos_v2[0] &&
+			info->chunk_columns[i].coordinate[1] == pos_v2[1])
+			return (&info->chunk_columns[i]);
 	}
 	return (NULL);
 }
@@ -534,66 +561,48 @@ int	get_surrounding_coords(int *res, int x, int z, int r)
 /*
  * 'player_chunk' : [3](xyz);
 */
-int	get_chunk_column_to_regen(t_chunk_col *chunk_cols, int *player_chunk, int *out_col_indices, int (*out_col_coords)[2], int max_get)
+int	get_chunk_column_to_regen(t_world *info, int *player_chunk, int *out_col_indices, int (*out_col_coords)[2], int max_get)
 {
 	int	start_coord[2];
 	int	reload_amount = 0;
 	int	chunk_amount = 0;
 	int	found;
+	t_chunk_col *column = NULL;
 
 	start_coord[0] = player_chunk[0] - (RENDER_DISTANCE / 2);
 	start_coord[1] = player_chunk[2] - (RENDER_DISTANCE / 2);
+	// Check which column coordinates should be rendered;
 	for (int x = start_coord[0], x_amount = 0; x_amount < RENDER_DISTANCE; x++, x_amount++)
 	{
 		for (int z = start_coord[1], z_amount = 0; z_amount < RENDER_DISTANCE; z++, z_amount++)
 		{
-			found = 0;
-			for (int i = 0; i < RENDER_DISTANCE * RENDER_DISTANCE; i++)
-			{
-				if (chunk_cols[i].coordinate[0] == x &&
-					chunk_cols[i].coordinate[1] == z)
-				{
-					found = 1;
-					break ;
-				}
-			}
-			if (!found)
+			column = get_chunk_column(info, (int []){x, z});
+			if (!column)
 			{
 				out_col_coords[reload_amount][0] = x;
 				out_col_coords[reload_amount][1] = z;
 				++reload_amount;
+				if (reload_amount >= max_get)
+					break;
 			}
-			if (reload_amount >= max_get)
-				break;
 		}
 		if (reload_amount >= max_get)
 			break;
 	}
 
+	// Check which columns shouldnt be loaded;
 	for (int i = 0; i < RENDER_DISTANCE * RENDER_DISTANCE; i++)
 	{
-		for (int x = start_coord[0], x_amount = 0; x_amount < RENDER_DISTANCE; x++, x_amount++)
-		{
-			for (int z = start_coord[1], z_amount = 0; z_amount < RENDER_DISTANCE; z++, z_amount++)
-			{
-				found = 0;
-				if (chunk_cols[i].coordinate[0] == x &&
-					chunk_cols[i].coordinate[1] == z)
-				{
-					found = 1;
-					break ;
-				}
-			}
-			if (found)
-				break ;
-		}
-		if (!found)
+		if (info->chunk_columns[i].coordinate[0] < start_coord[0] ||
+			info->chunk_columns[i].coordinate[0] >= start_coord[0] + RENDER_DISTANCE ||
+			info->chunk_columns[i].coordinate[1] < start_coord[1] ||
+			info->chunk_columns[i].coordinate[1] >= start_coord[1] + RENDER_DISTANCE)
 		{
 			out_col_indices[chunk_amount] = i;
 			++chunk_amount;
+			if (chunk_amount >= max_get)
+				break;
 		}
-		if (chunk_amount >= max_get)
-			break;
 	}
 	return (reload_amount);
 }
