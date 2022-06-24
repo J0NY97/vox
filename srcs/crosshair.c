@@ -178,13 +178,13 @@ void	render_3d_rectangle(float *p1, float *p2, float *col, float *view_mat, floa
 	float	pmin[3];
 	float	pmax[3];
 
-	pmin[0] = ft_min(p1[0], p2[0]);
-	pmin[1] = ft_min(p1[1], p2[1]);
-	pmin[2] = ft_min(p1[2], p2[2]);
+	pmin[0] = ft_fmin(p1[0], p2[0]);
+	pmin[1] = ft_fmin(p1[1], p2[1]);
+	pmin[2] = ft_fmin(p1[2], p2[2]);
 
-	pmax[0] = ft_max(p1[0], p2[0]);
-	pmax[1] = ft_max(p1[1], p2[1]);
-	pmax[2] = ft_max(p1[2], p2[2]);
+	pmax[0] = ft_fmax(p1[0], p2[0]);
+	pmax[1] = ft_fmax(p1[1], p2[1]);
+	pmax[2] = ft_fmax(p1[2], p2[2]);
 
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);

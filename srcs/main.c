@@ -191,13 +191,12 @@ int	main(void)
 	//////////////////
 	t_player	player;
 	new_player(&player);
-	v3_new(player.camera.pos, 5000, 90, 5000);
-//	new_vec3(player.camera.pos, 16384, 80, 16384);
+	v3_new(player.camera.pos, 0, 0, 0);
 	player.camera.pitch = 0;
 	player.camera.yaw = -90;
 	player.camera.viewport_w = sp.win_w;
 	player.camera.viewport_h = sp.win_h;
-	player.camera.far_plane = 500;//144.0f;
+	player.camera.far_plane = RENDER_DISTANCE * CHUNK_WIDTH / 2;
 	player.gravity = 0;
 
 
@@ -241,7 +240,6 @@ int	main(void)
 	t_world	world_info;
 
 	world_info.seed = 896868766;
-//	world_info.seed = 596547633;
 
 	world_info.block_collision_enabled = 0;
 	world_info.player_collision_enabled = 0;
@@ -262,6 +260,11 @@ int	main(void)
 	world_info.entity_amount_total = 0;
 
 	world_info.player = &player;
+
+	v3_new(world_info.spawn_point, 5000, 90, 5000);
+
+	// set player pos to spawn point;
+	v3_assign(player.camera.pos, world_info.spawn_point);
 
 	////////////////////////////////
 	// MODEL / BOBJ / ENTITY
@@ -423,11 +426,6 @@ int	main(void)
 			LG_ERROR("errors in start of while : %d", error);
 
 		glCullFace(GL_BACK);
-		/*
-		glDisable(GL_DEPTH_TEST);
-		render_fractal2d(&fractal, &mandelbrot_shader);
-		*/
-//		ft_printf("FPS : %d\n", fps.fps);
 		if (fps.count % 60 == 0)
 		{
 			ft_b_itoa(fps.fps, fps_str);
@@ -457,7 +455,7 @@ int	main(void)
 			player_print(&player);
 
 		if (keys[GLFW_KEY_R].state == BUTTON_PRESS)
-			v3_new(player.camera.pos, 0, 100, 0);
+			v3_assign(player.camera.pos, world_info.spawn_point);
 		if (keys[GLFW_KEY_LEFT].state == BUTTON_PRESS)
 			v3_add(player.camera.pos, player.camera.pos, (float []){-10, 0, 0});
 		if (keys[GLFW_KEY_RIGHT].state == BUTTON_PRESS)
