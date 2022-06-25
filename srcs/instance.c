@@ -70,7 +70,7 @@ int	get_block_type(int x, int y, int z, float noise_value)
 			return (BLOCK_BEDROCK);
 
 		// Cave gen;
-		if (0) // TODO : change to 't_world->generate_caves';
+		if (1) // TODO : change to 't_world->generate_caves';
 		{
 			float cave_noise = noise3d_octave(x, y, z, 1.0f, 0.07f, 4, 0.5f, 1.0f);
 			if (cave_noise > 0.75f)
@@ -827,7 +827,6 @@ void	event_chunk(t_chunk *chunk)
 			tnt_explosion(chunk->info, chunk, &chunk->event_blocks[j]);
 		chunk->event_blocks[j].statique = 1;
 	}
-	ft_printf("Chunk events handled : %d / %d\n", events_handled, chunk->event_block_amount);
 }
 
 void	regen_column_thread(void *args)

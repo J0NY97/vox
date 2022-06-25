@@ -781,7 +781,7 @@ int	main(void)
 				if (col_chunks[ent]->needs_to_update)
 				{
 					update_chunk(col_chunks[ent]);
-				//	update_chunk_event_blocks(col_chunks[ent]);
+					update_chunk_event_blocks(col_chunks[ent]);
 					// Set needs to update to all 6 neighbors of the chunk;
 					for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
 						if (neighbors[i])
