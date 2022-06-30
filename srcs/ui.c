@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/23 10:30:34 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/30 13:44:21 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/30 13:49:12 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,7 +91,7 @@ void	draw_hotbar(t_ui *ui)
 		bitmap_free(&bmp);
 	}
 
-	if (ui->selected_hotbar < 0 || ui->selected_hotbar > 9)
+	if (ui->selected_hotbar > 9) // "ui->selected_hotbar < 0" gcc hates this;
 		return ;
 
 	// Selected block name;
@@ -199,8 +199,7 @@ void	ui_init(t_ui *ui)
 
 	img_set.flip = 1;
 	img_set.rgb = 1;
-//	bimgf_load_bmp(&tex, TEXTURE_PATH"version_3_texture_alpha.bmp", img_set);
-	bimgf_load(&tex, "./srcs/bimgf/seagull1.jpeg");
+	bimgf_load_bmp(&tex, TEXTURE_PATH"version_3_texture_alpha.bmp", img_set);
 	bitmap_duplicate(&ui->block_texture_bmp, tex.pixels, tex.w, tex.h);
 	bimgf_free(&tex);
 

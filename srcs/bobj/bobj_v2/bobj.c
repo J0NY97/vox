@@ -6,13 +6,14 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/14 13:56:52 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/17 12:28:43 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/30 13:46:49 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "bobj.h"
 #include "libft.h"
 #include "liblg.h"
+#include "libpf.h"
 
 /*
  * Returns array of t_bobj;
@@ -63,7 +64,7 @@ void	bobj_load(t_bobj *bob, char *file_path)
 	int	f_start[16];
 	int	f_amount[16];
 
-	int	o_start[16];
+//	int	o_start[16];
 	int	o_amount = 0;
 	int	i = -1;
 
@@ -79,7 +80,7 @@ void	bobj_load(t_bobj *bob, char *file_path)
 	f_start[o_amount] = -1;
 	f_amount[o_amount] = 0;
 
-	o_start[o_amount] = 0;
+//	o_start[o_amount] = 0;
 	while (file_content[i++])
 	{
 		// Continue if not newline, we dont care about the values for right now;
@@ -102,7 +103,7 @@ void	bobj_load(t_bobj *bob, char *file_path)
 			mesh_start[o_amount][0] = -1;
 			mesh_amount[o_amount] = 0;
 
-			o_start[o_amount] = i;
+//			o_start[o_amount] = i;
 			o_amount++;
 		}
 		else if (file_content[i] == 'v')

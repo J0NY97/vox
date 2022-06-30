@@ -109,7 +109,9 @@ typedef struct s_bobj
 */
 
 void	bobj_load(t_bobj *bob, char *file_path);
+
 int		bobj_load_material(t_bobj *bob, char *file_path);
+int		get_material_index(t_bobj *bob, char *name);
 
 void	bobj_free(t_bobj *bob);
 
