@@ -1,35 +1,5 @@
 #include "shaderpixel.h"
-
-void	new_crosshair_shader(GLuint *shader)
-{
-	GLuint	vs_shader;
-	GLuint	gs_shader;
-	GLuint	fs_shader;
-
-	char	*vs_src;
-	char	*gs_src;
-	char	*fs_src;
-
-	vs_src = get_file_content(ROOT_PATH"shaders/crosshair.vs");
-	gs_src = get_file_content(ROOT_PATH"shaders/crosshair.gs");
-	fs_src = get_file_content(ROOT_PATH"shaders/crosshair.fs");
-
-	create_shader(&vs_shader, vs_src, GL_VERTEX_SHADER);
-	create_shader(&gs_shader, gs_src, GL_GEOMETRY_SHADER);
-	create_shader(&fs_shader, fs_src, GL_FRAGMENT_SHADER);
-
-	free(vs_src);
-	free(gs_src);
-	free(fs_src);
-
-	*shader = glCreateProgram();
-	glAttachShader(*shader, vs_shader);
-	glAttachShader(*shader, gs_shader);
-	glAttachShader(*shader, fs_shader);
-	glLinkProgram(*shader);
-
-	check_program_errors(*shader);
-}
+#include "shader.h"
 
 void	render_crosshair(void)
 {

@@ -25,68 +25,68 @@
 // JPEG/JFIF Image Segment
 typedef struct s_jfif
 {
-	uint16_t	length; // length of this segment excluding marker 2 bytes;
-	uint8_t		identifier[5]; // 4A 46 49 46 00 , aka "JFIF\0";
-	uint16_t	version; // 1st byte major version, 2nd byte minor version;
-	uint8_t		density; // 00 : widht / height pixel aspect ratio; 01 : pixels per inch??; 02 : pixels per centiemer??!?!?
-	uint16_t	x_density; // horizontal pixel density;
-	uint16_t	y_density; // vertical pixel density;
-	uint8_t		x_thumbnail; // horizontal pixel density for thumbnail;
-	uint8_t		y_thumbnail; // vertical pixel density for thumbnail;
-	uint8_t		thumbnail_size; // 3 * x_thumbnail * y_thumbnail;
-	uint8_t		*thumbnail; // 3 * n; r,g,b; n = x_thumbnail * y_thumbnail;
+	uint16	length; // length of this segment excluding marker 2 bytes;
+	uint8		identifier[5]; // 4A 46 49 46 00 , aka "JFIF\0";
+	uint16	version; // 1st byte major version, 2nd byte minor version;
+	uint8		density; // 00 : widht / height pixel aspect ratio; 01 : pixels per inch??; 02 : pixels per centiemer??!?!?
+	uint16	x_density; // horizontal pixel density;
+	uint16	y_density; // vertical pixel density;
+	uint8		x_thumbnail; // horizontal pixel density for thumbnail;
+	uint8		y_thumbnail; // vertical pixel density for thumbnail;
+	uint8		thumbnail_size; // 3 * x_thumbnail * y_thumbnail;
+	uint8		*thumbnail; // 3 * n; r,g,b; n = x_thumbnail * y_thumbnail;
 
 	// not in file;
-	uint8_t		got; // if we have already got jfif, so we know if there is one more of the same marker, that its the jfxx;
-	uint16_t	bytes_read;
+	uint8		got; // if we have already got jfif, so we know if there is one more of the same marker, that its the jfxx;
+	uint16	bytes_read;
 }	t_jfif;
 
 // Comment
 typedef struct s_com
 {
-	uint16_t	length; // length in bytes of segment;
-	uint8_t		*data; // comment data; size == length
+	uint16	length; // length in bytes of segment;
+	uint8		*data; // comment data; size == length
 }	t_com;
 
 // Define Quantization Table
 typedef struct s_dqt
 {
-	uint16_t	length; // lenght of segment in bytes;
-	uint8_t		info; // Pq, 1st 4 bits represent precision (0 = 8-bit, 1 = 16-bit), Tq, last 4 bits represent quantiziation table num;
-	uint16_t	data[64]; // quantization data, vector of 64 elements in zig-zag order; size == count of unique Tq's given in info;
+	uint16	length; // lenght of segment in bytes;
+	uint8		info; // Pq, 1st 4 bits represent precision (0 = 8-bit, 1 = 16-bit), Tq, last 4 bits represent quantiziation table num;
+	uint16	data[64]; // quantization data, vector of 64 elements in zig-zag order; size == count of unique Tq's given in info;
 
 	// not in file;
 	// Saving the amount of bytes read in this segment, should match up to length;
-	uint16_t	bytes_read;
+	uint16	bytes_read;
 }	t_dqt;
 
 // Start of Frame-0
 typedef struct s_sof
 {
-	uint16_t	length; // length in bytes of segment;
-	uint8_t		precision; // of frame data;
-	uint16_t	height; // image height in pixels;
-	uint16_t	width; // image width in pixels;
-	uint8_t		comp_amount; // component amount in frame, 3 for RGB images;
+	uint16	length; // length in bytes of segment;
+	uint8		precision; // of frame data;
+	uint16	height; // image height in pixels;
+	uint16	width; // image width in pixels;
+	uint8		comp_amount; // component amount in frame, 3 for RGB images;
 
 	// ID 8 / Horizontal sampling 4 / Vertical- 4 / qtable 8
-	uint8_t		*components; // size = ( 3 x comp_amount ) ; 1st byte id of component, 2nd byte sampling factpr (1st 4 bits represent horizontal, last 4 represent vertical), 3rd byte represent which quantization table to use;
+	uint8		*components; // size = ( 3 x comp_amount ) ; 1st byte id of component, 2nd byte sampling factpr (1st 4 bits represent horizontal, last 4 represent vertical), 3rd byte represent which quantization table to use;
 
 	// Saving the amount of bytes read in this segment, should match up to length;
-	uint16_t	bytes_read;
+	uint16	bytes_read;
 }	t_sof;
 
 // Define Huffman Table
 typedef struct s_dht
 {
-	uint16_t	length; // length in bytes of segment;
+	uint16	length; // length in bytes of segment;
 
-	uint8_t		info; // 1st 4 bits represent table type (0 : DC, 1 : AC), last four represent table num;
-	uint8_t		symbol_count[16]; // 
-	uint8_t		*symbols; // (size <= 256)??? source : http://mykb.cipindanci.com/archive/SuperKB/1294/JPEG%20File%20Layout%20and%20Format.htm
+	uint8		info; // 1st 4 bits represent table type (0 : DC, 1 : AC), last four represent table num;
+	uint8		symbol_count[16]; // 
+	uint8		*symbols; // (size <= 256)??? source : http://mykb.cipindanci.com/archive/SuperKB/1294/JPEG%20File%20Layout%20and%20Format.htm
 
 	// not in the file;
-	uint16_t	total_symbol_count; // total_symbol_count += symbol_count[i];
+	uint16	total_symbol_count; // total_symbol_count += symbol_count[i];
 	t_hm_node	*tree;
 
 	// not in file
@@ -96,33 +96,33 @@ typedef struct s_dht
 // Start of Scan
 typedef struct s_sos
 {
-	uint16_t	length; // length in bytes of segment;
-	uint8_t		count; // component count, pretty self explanatory; (count > 1 && count < 4)??? source : https://koushtav.me/jpeg/tutorial/c++/decoder/2019/03/02/lets-write-a-simple-jpeg-library-part-2/#parsesossegment
-	uint8_t		*data; // component data; (size = 2 * count);... 
+	uint16	length; // length in bytes of segment;
+	uint8		count; // component count, pretty self explanatory; (count > 1 && count < 4)??? source : https://koushtav.me/jpeg/tutorial/c++/decoder/2019/03/02/lets-write-a-simple-jpeg-library-part-2/#parsesossegment
+	uint8		*data; // component data; (size = 2 * count);... 
 	// ... scan component selector, 8 bits
 	// ... DC entropy coding table selector, 4 bits
 	// ... AC entropy coding table selector, 4 bits
-	uint8_t		skip_bytes[3]; // mandatory bytes to skip; ...
+	uint8		skip_bytes[3]; // mandatory bytes to skip; ...
 	// ... start of spectral selection, 8bits
 	// ... end of spectral selection,	8bits
 	// ... successive approximation bit high, 4bits
 	// ... successive approximation bit low, 4bits
 
 	// not in file;
-	uint16_t	bytes_read;
+	uint16	bytes_read;
 }	t_sos;
 
 // Image data
 // This site is godlike : https://www.impulseadventure.com/photo/jpeg-huffman-coding.html
 typedef struct s_imgdata
 {
-	uint8_t		*data; // bytified bits...; size == 'amount' * 8;
-	uint32_t	amount; // amount of 'bits';
+	uint8		*data; // bytified bits...; size == 'amount' * 8;
+	uint32	amount; // amount of 'bits';
 
 	// not in file;
-	uint32_t	bytes_read;
+	uint32	bytes_read;
 	// from file
-	uint8_t		*unprocessed_data; // used for debugging;
+	uint8		*unprocessed_data; // used for debugging;
 }	t_imgdata;
 
 typedef struct s_mcu
@@ -289,7 +289,7 @@ void	idct_row(float *data)
 			+ (thing[3] * row_thing[ind + 3])
 			+ (thing[4] * row_thing[ind + 4])
 			+ (thing[5] * row_thing[ind + 5])
-			+ (thing[6] * row_thing[ind + 6]);
+			+ (thing[6] * row_thing[ind + 6])
 			+ (thing[7] * row_thing[ind + 7]);
 	}
 }
@@ -340,7 +340,7 @@ void	idct_col(float *data)
  * NOTE:
  * 	We are looping backwards because of endianness;
  */
-int	bytify_bits(uint8_t *dest, uint8_t byte)
+int	bytify_bits(uint8 *dest, uint8 byte)
 {
 	for (int i = 0; i < 8; i++)
 		dest[i] = ((byte >> (7 - i)) & 1) + 48; // +48 because we want ascii num;
@@ -438,7 +438,7 @@ void	show_sof(t_sof *sof0)
 			sof0->components[i * 3 + 2]);
 }
 
-void	show_dht(t_dht *dht, uint8_t show_tree)
+void	show_dht(t_dht *dht, uint8 show_tree)
 {
 	if (dht->length == 0)
 		return ;
@@ -483,7 +483,7 @@ void	show_imgdata(t_imgdata *imgdata)
 		}
 		for (int i = 0; i < 3; i++)
 			printf(".\n");
-		for (int i = imgdata->amount - 10; i < imgdata->amount; i++)
+		for (unsigned int i = imgdata->amount - 10; i < imgdata->amount; i++)
 		{
 			printf("%02X\t", imgdata->unprocessed_data[i]);
 			for (int j = 0; j < 8; j++)
@@ -597,13 +597,14 @@ void	*threaded_mcu_math(void	*structelini)
 
 	for (int i = 0; i < tempereloni->per_thread_mcu; i++)
 		new_mcu(tempereloni->mcu + i, tempereloni->dqt);
+	return (NULL);
 }
 
 int16_t	bit_str_to_value(char *bitstr, int len)
 {
-	int16_t	val;
-	uint8_t	sign;
-	int8_t	factor;
+	int16	val;
+	uint8	sign;
+	int8	factor;
 
     val = 0x0000;
     sign = bitstr[0];
@@ -627,13 +628,13 @@ int16_t	bit_str_to_value(char *bitstr, int len)
 
 int16_t	bit_str_to_value_v2(int16_t value, int len)
 {
-	int16_t	val;
-	uint8_t	sign;
-	int8_t	factor;
+	int16	val;
+	uint8	sign;
+	int8	factor;
 
     val = 0x0000;
 	sign = 0x00;
-    if ((value >> len - 1) & 1)
+    if ((value >> (len - 1)) & 1)
 		sign = 0x01;
     factor = sign == 0 ? -1 : 1;
 	/*
@@ -685,7 +686,7 @@ void	print_binary(int num, int n)
 /*
  * This 'curr_bit' means how many:eth bit in the byte youre looking at in 'data';
  */
-uint16_t	get_n_bits(uint8_t *data, uint32_t curr_bit, uint8_t n)
+uint16_t	get_n_bits(uint8 *data, uint32 curr_bit, uint8 n)
 {
 	uint16_t	code;
 
@@ -695,7 +696,7 @@ uint16_t	get_n_bits(uint8_t *data, uint32_t curr_bit, uint8_t n)
 	for (int i = 0; i < n; i++)
 	{
 		printf("%d", data[0]);
-		code |= (data[i / 8] >> (7 - (i % 8))) << n - 1 - i;
+		code |= (data[i / 8] >> (7 - (i % 8))) << (n - 1 - i);
 		printf("i : %d\n", i);
 	}
 	printf("danskanen\n");
@@ -704,13 +705,13 @@ uint16_t	get_n_bits(uint8_t *data, uint32_t curr_bit, uint8_t n)
 
 void	create_mcus_v2(t_mcu *mcu, t_imgdata *imgdata, t_dht *dht, int mcu_amount, t_sof *sof)
 {
-	uint16_t	code = 0;
-	uint32_t	curr_bit = 0;
+	uint16	code = 0;
+	uint32	curr_bit = 0;
 
 	int		count = 0;
 	int		table_index = -1;
 
-	uint8_t	comp_count_amount[3];
+	uint8	comp_count_amount[3];
 
 	for (int i = 0; i < sof->comp_amount; i++)
 	{
@@ -726,14 +727,14 @@ void	create_mcus_v2(t_mcu *mcu, t_imgdata *imgdata, t_dht *dht, int mcu_amount, 
 			while (count < 64)
 			{
 				table_index = count == 0 ? (comp == 0 ? 0 : 2) : (comp == 0 ? 1 : 3);
-				uint8_t	symbol = 0;
+				uint8	symbol = 0;
 				int len = 0;
 
 				// Create the code from the next 16 bits;	
 				code = 0;
 				for (int i = 0; i < 16; i++)
 				{
-					code |= (imgdata->unprocessed_data[curr_bit / 8] >> (7 - (curr_bit % 8))) << 15 - i;
+					code |= (imgdata->unprocessed_data[curr_bit / 8] >> (7 - (curr_bit % 8))) << (15 - i);
 					curr_bit++;
 				}
 				
@@ -760,7 +761,7 @@ void	create_mcus_v2(t_mcu *mcu, t_imgdata *imgdata, t_dht *dht, int mcu_amount, 
 
 					for (int i = 0; i < additional_bit_len; i++)
 					{
-						value |= (imgdata->unprocessed_data[curr_bit / 8] >> (7 - (curr_bit % 8))) << additional_bit_len - 1 - i;
+						value |= (imgdata->unprocessed_data[curr_bit / 8] >> (7 - (curr_bit % 8))) << (additional_bit_len - 1 - i);
 						curr_bit++;
 					}
 					value = bit_str_to_value_v2(value, additional_bit_len);
@@ -833,6 +834,7 @@ void	*threaded_img_creation(void *arg)
 			}
 		}
 	}
+	return (NULL);
 }
 
 void	create_image_from_mcus_v2(t_bimgf *image, t_mcu *mcus)
@@ -924,19 +926,19 @@ typedef struct	s_sos_thread
 	t_imgdata		*imgdata;
 }	t_sos_thread;
 
-void	read_imgdata_v2(uint8_t *content, t_imgdata *data, int32_t byte)
+void	read_imgdata_v2(uint8 *content, t_imgdata *data, int32 byte)
 {
-	uint8_t		bits[8];
-	uint16_t	skipped = 0;
-	int			data_allocated = 0;
+	uint8		bits[8];
+	uint16		skipped = 0;
+	unsigned int	data_allocated = 0;
 
 	data->data = NULL;
 	data->amount = 0;
 	data->bytes_read = 0;
 	data->unprocessed_data = NULL;
 
-	uint8_t	curr_byte;
-	uint8_t	last_byte;
+	uint8	curr_byte;
+	uint8	last_byte;
 
 	last_byte = content[byte];
 	while (1)
@@ -975,15 +977,16 @@ void	read_imgdata_v2(uint8_t *content, t_imgdata *data, int32_t byte)
 void	*sos_thread_func(void *arg)
 {
 	t_sos_thread	*info;
-	uint8_t			*content;
-	int32_t			byte;
+	uint8			*content;
+	int32			byte;
 	t_sos			*sos;
 	
 	info = arg;
 	sos = info->sos;
 	content = info->file_content + info->index;
-	byte = -1;
-	sos->length = content[++byte] << 8 | content[++byte];
+	byte = 0;
+	sos->length = content[byte] << 8 | content[byte + 1];
+	++byte;
 	sos->count = content[++byte];
 	int i = 0;
 	int	p = sos->count * 2;
@@ -999,21 +1002,22 @@ void	*sos_thread_func(void *arg)
 	sos->skip_bytes[2] = content[++byte];
 
 	read_imgdata_v2(content, info->imgdata, ++byte);
+	return (NULL);
 }
 
 typedef struct	s_dht_thread
 {
-	uint8_t		*file_content;
-	int32_t		*index;
+	uint8		*file_content;
+	int32		*index;
 	t_dht		*dht;
-	int8_t		amount;
+	int8		amount;
 }	t_dht_thread;
 
 void	*dht_thread_func(void *arg)
 {
 	t_dht_thread	*info;
-	uint8_t			*content;
-	int32_t			byte;
+	uint8			*content;
+	int32			byte;
 	t_dht			*dht;
 	
 	info = arg;
@@ -1023,9 +1027,9 @@ void	*dht_thread_func(void *arg)
 	{
 		dht = &info->dht[i];
 		content = info->file_content + info->index[i];
-		byte = -1;
-
-		dht->length = content[++byte] << 8 | content[++byte];
+		byte = 0;
+		dht->length = content[byte] << 8 | content[byte + 1];
+		++byte;
 		while (byte + 1 < dht->length)
 		{
 			dht->info = content[++byte];
@@ -1044,21 +1048,22 @@ void	*dht_thread_func(void *arg)
 		}
 		dht->bytes_read = byte + 1;
 	}
+	return (NULL);
 }
 
 typedef struct	s_dqt_thread
 {
-	uint8_t		*file_content;
-	int32_t		*index;
+	uint8		*file_content;
+	int32		*index;
 	t_dqt		*dqt;
-	int8_t		amount;
+	int8		amount;
 }	t_dqt_thread;
 
 void	*dqt_thread_func(void *arg)
 {
 	t_dqt_thread	*info;
-	uint8_t			*content;
-	int32_t			byte;
+	uint8			*content;
+	int32			byte;
 	t_dqt			*dqt;
 	
 	info = arg;
@@ -1068,9 +1073,9 @@ void	*dqt_thread_func(void *arg)
 	{
 		dqt = &info->dqt[i];
 		content = info->file_content + info->index[i];
-		byte = -1;
-
-		dqt->length = content[++byte] << 8 | content[++byte];
+		byte = 0;
+		dqt->length = content[byte] << 8 | content[byte + 1];
+		++byte;
 		dqt->info = content[++byte];
 		if (dqt->info >> 4 == 0) // 8 bit
 		{
@@ -1081,39 +1086,42 @@ void	*dqt_thread_func(void *arg)
 		{
 			LG_WARN("This is untested, might not work correctly.");
 			for (int b = 0; b < 64; b++) // untested;
-				dqt->data[b] = content[++byte] << 8 | content[++byte];
+			{
+				dqt->data[b] = content[byte + 1] << 8 | content[byte + 2];
+				byte += 2;
+			}
 		}
 	}
+	return (NULL);
 }
 
 typedef struct	s_sof_thread
 {
-	uint8_t		*file_content;
-	int32_t		index;
+	uint8		*file_content;
+	int32		index;
 	t_sof		*sof;
 }	t_sof_thread;
 
 void	*sof_thread_func(void *arg)
 {
 	t_sof_thread	*info;
-	uint8_t			*content;
-	int32_t			byte;
+	uint8			*content;
+	int32			byte;
 	t_sof			*sof;
 	
 	info = arg;
 	sof = info->sof;
 	content = info->file_content + info->index;
-	byte = -1;
 
-	sof->length = content[++byte] << 8 | content[++byte];
-
-	sof->precision = content[++byte];
-
-	sof->height = content[++byte] << 8 | content[++byte];
-	sof->width = content[++byte] << 8 | content[++byte];
-
-	sof->comp_amount = content[++byte];
+	byte = 0;
+	sof->length = content[byte] << 8 | content[byte + 1];
+	sof->precision = content[byte + 2];
+	sof->height = content[byte + 3] << 8 | content[byte + 4];
+	sof->width = content[byte + 5] << 8 | content[byte + 6];
+	sof->comp_amount = content[byte + 7];
 	sof->components = malloc(sof->comp_amount * 3);
+	byte += 7;
+
 	for (int i = 0; i < sof->comp_amount; i++)
 	{
 		sof->components[i * 3 + 0] = content[++byte];
@@ -1122,6 +1130,7 @@ void	*sof_thread_func(void *arg)
 	}
 
 	sof->bytes_read = byte;
+	return (NULL);
 }
 
 #include "sys/stat.h"
@@ -1162,7 +1171,7 @@ int	bimgf_load_jpg(t_bimgf *image, const char *file_path)
 	int				dqt_amount = -1;
 
 	// Read the stuff and get the indices;
-	file_content = bimgf_file_content((char *)file_path);
+	file_content = (unsigned char *)bimgf_file_content((char *)file_path);
 	if (!file_content)
 	{
 		LG_WARN("Couldn\'t read file %s.", file_path);

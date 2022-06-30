@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 17:21:38 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/30 12:17:03 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/30 13:26:44 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,7 +85,7 @@ typedef struct s_vox_entity
 	float	up[3];
 	float	velocity[3];
 
-	char	type;	// 'e_entity_types';
+	unsigned char	type;	// 'e_entity_types';
 	char	state;	// 'e_entity_states';
 
 	char	needs_update;

@@ -209,8 +209,8 @@ int	encode_hm_code(t_hm_node **tree, t_hm_code **codes, char *code, char *str)
 	t_hm_node	*root;
 	t_hm_code	*code_arr;
 
-	memset(chars, 0, 128);
-	memset(freqs, 0, 128);
+	memset(chars, 0, sizeof(char) * 128);
+	memset(freqs, 0, sizeof(int) * 128);
 
 	int count = get_hm_frequency(str, chars, freqs);
 
@@ -339,7 +339,7 @@ int	hm_node_add(t_hm_node *tree, t_hm_node *to_add)
  * 'symbol_count' is len of 16;
  * 'symbols' is len of all values in 'symbol_count' counted together;
  */
-t_hm_node	*build_hm_tree(uint8_t *symbol_count, uint8_t *symbols)
+t_hm_node	*build_hm_tree(uint8 *symbol_count, uint8 *symbols)
 {
 	t_hm_node	*tree = new_hm_node(-1, -1, 0);
 	tree->code = ft_strdup("");
@@ -415,9 +415,9 @@ int	get_hm_symbol_index_with_code(char *code, char **codes)
  * this is basically the same as ft_strnequ, but its faster just because we
  * are not checking if s1 / s2 exists;
  */
-int	equalisation(char *s1, char *s2, size_t n)
+int	equalisation(char *s1, char *s2, int n)
 {
-	size_t	i;
+	int	i;
 
 	i = 0;
 	while (i < n)
@@ -440,7 +440,7 @@ int	equalisation(char *s1, char *s2, size_t n)
  * 	if code ends or we encounter a leaf; we compare the leaf to the code until
  * 	we are at the same char as we have checked;
 */
-int	get_hm_symbol_with_code(uint8_t *symbol, char *code, int *len, t_hm_node *tree) 
+int	get_hm_symbol_with_code(uint8 *symbol, char *code, int *len, t_hm_node *tree) 
 {
 	int			i;
 
@@ -455,7 +455,7 @@ int	get_hm_symbol_with_code(uint8_t *symbol, char *code, int *len, t_hm_node *tr
 	if (tree && !tree->left_child && !tree->right_child
 		/*&& equalisation(code, tree->code, i)*/)
 	{
-		*symbol = tree->symbol & 0x00ff; // get last byte of uint16_t
+		*symbol = tree->symbol & 0x00ff; // get last byte of uint16
 		*len = i;
 		return (1);
 	}
@@ -464,7 +464,7 @@ int	get_hm_symbol_with_code(uint8_t *symbol, char *code, int *len, t_hm_node *tr
 	return (0);
 }
 
-int	get_hm_symbol_with_code_v2(uint8_t *symbol, uint16_t code, int *len, t_hm_node *tree) 
+int	get_hm_symbol_with_code_v2(uint8 *symbol, uint16 code, int *len, t_hm_node *tree) 
 {
 	int			i;
 
@@ -479,7 +479,7 @@ int	get_hm_symbol_with_code_v2(uint8_t *symbol, uint16_t code, int *len, t_hm_no
 	if (tree && !tree->left_child && !tree->right_child
 		/*&& equalisation(code, tree->code, i)*/)
 	{
-		*symbol = tree->symbol & 0x00ff; // get last byte of uint16_t
+		*symbol = tree->symbol & 0x00ff; // get last byte of uint16
 		*len = 15 - i;
 		return (1);
 	}
@@ -490,7 +490,7 @@ int	get_hm_symbol_with_code_v2(uint8_t *symbol, uint16_t code, int *len, t_hm_no
 
 void	asdf(void)
 {
-	char	symbol_count[16];
+	uint8	symbol_count[16];
 
 	symbol_count[0] = 0; // number of symbols with code len of 1;
 	symbol_count[1] = 1; // number of symbols with code len of 2;
@@ -514,7 +514,7 @@ void	asdf(void)
 	for (int i = 0; i < 15; i++)
 		total_sym_count += symbol_count[i];
 
-	char	*symbols = malloc(total_sym_count);
+	uint8	*symbols = malloc(total_sym_count);
 	symbols[0] = 'a';
 	symbols[1] = 'b';
 	symbols[2] = 'c';

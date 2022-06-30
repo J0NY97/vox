@@ -7,7 +7,7 @@ void	thread_manager_new(t_thread_manager *manager, unsigned int max_threads)
 	manager->threads = malloc(sizeof(pthread_t) * manager->max_thread_amount);
 	manager->info = malloc(sizeof(t_thread_info) * manager->max_thread_amount);
 	pthread_mutex_init(&manager->mutex, NULL);
-	for (int i = 0; i < manager->max_thread_amount; i++)
+	for (unsigned int i = 0; i < manager->max_thread_amount; i++)
 	{
 		manager->info[i].id = i;
 		manager->info[i].started = 0;
@@ -35,7 +35,7 @@ int	thread_manager_new_thread(t_thread_manager *manager, void *func, void *args)
 {
 	if (manager->thread_amount >= manager->max_thread_amount)
 		return (0);
-	for (int i = 0; i < manager->max_thread_amount; i++)
+	for (unsigned int i = 0; i < manager->max_thread_amount; i++)
 	{
 		if (manager->info[i].started == 0)
 		{
@@ -61,7 +61,7 @@ int	thread_manager_new_thread(t_thread_manager *manager, void *func, void *args)
 */
 void	thread_manager_check_threadiness(t_thread_manager *manager)
 {
-	for (int i = 0; i < manager->max_thread_amount; i++)
+	for (unsigned int i = 0; i < manager->max_thread_amount; i++)
 	{
 		if (manager->info[i].started &&
 			manager->info[i].finished)

@@ -1,4 +1,5 @@
 #include "bmath.h"
+#include "libpf.h"
 
 int	*v3i_new(int *res, int x, int y, int z)
 {

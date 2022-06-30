@@ -26,7 +26,7 @@ void	bitmap_fill(t_bitmap *bmp, Uint32 col)
 		((col & 0x0000FF00) << 8) |
 		((col & 0x000000FF) << 24);
 	pix = (Uint32 *)bmp->pixels;
-	for (int i = 0; i < bmp->pixel_amount; i++)
+	for (unsigned int i = 0; i < bmp->pixel_amount; i++)
 		pix[i] = rgba;
 }
 
@@ -116,21 +116,23 @@ void	bitmap_copy(t_bitmap *bmp, void *pixels)
 
 	dst = (Uint32 *)bmp->pixels;
 	src = (Uint32 *)pixels;
-	for (int i = 0; i < bmp->pixel_amount; i++)
+	for (unsigned int i = 0; i < bmp->pixel_amount; i++)
 		dst[i] = src[i];
 }
 
+/*
 void	bitmap_print(t_bitmap *bmp)
 {
 	Uint32	*pixels;
 
 	pixels = (Uint32 *)bmp->pixels;
-	for (int i = 0; i < bmp->height; i++)
+	for (unsigned int i = 0; i < bmp->height; i++)
 	{
-		for (int j = 0; j < bmp->width; j++)
+		for (unsigned int j = 0; j < bmp->width; j++)
 		{
 			ft_printf("0x%08x ", pixels[i * bmp->width + j]);
 		}
 		ft_printf("\n");
 	}
 }
+*/
