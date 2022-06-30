@@ -1,20 +1,30 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   shader.h                                           :+:      :+:    :+:   */
+/*   ft_putbinary.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/05/18 14:12:22 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/30 11:45:36 by jsalmi           ###   ########.fr       */
+/*   Created: 2022/06/30 10:30:31 by jsalmi            #+#    #+#             */
+/*   Updated: 2022/06/30 10:34:15 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef SHADER_H
-# define SHADER_H
+#include "unistd.h"
 
-void		new_shader(GLuint *shader, const char *vs, const char *fs);
-int			create_shader(GLuint *shader, const char *content, GLenum type);
-void		check_program_errors(GLuint program);
-
-#endif
+void	ft_putbinary(int num, int n)
+{
+    int	d;
+	int	t;
+    
+    t = 0;
+    while (--n >= 0)
+    {
+        d = num >> n;
+        if (d & 1)
+            write(1, "1", 1);
+        else
+            write(1, "0", 1);
+        t++;
+    }
+}

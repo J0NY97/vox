@@ -8,6 +8,11 @@
 #include "ui_manager.h"
 #include "ui.h"
 
+void	errorCallback(int err_nbr, const char *err_str)
+{
+	LG_ERROR("(%d) [%s]", err_nbr, err_str);
+}
+
 void	init(t_shaderpixel *sp)
 {
 	//lg_setFdLevel(LEVEL_DEBUG);
@@ -15,6 +20,7 @@ void	init(t_shaderpixel *sp)
 
 	if (!glfwInit())
 		LG_ERROR("Couldn\'t init glfw.");
+	glfwSetErrorCallback(errorCallback);
 
 #ifdef __APPLE__
 	glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -30,13 +36,6 @@ void	init(t_shaderpixel *sp)
 	sp->win_w = 1280;
 	sp->win_h = 720;
 	sp->win = glfwCreateWindow(sp->win_w, sp->win_h, "MyPixel", NULL, NULL);
-
-	char *buffer;
-	if (!sp->win)
-	{
-		glfwGetError(&buffer);
-		LG_ERROR("Couldn\'t create window. (%s)", buffer);
-	}
 
 	glfwMakeContextCurrent(sp->win);
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -199,9 +198,6 @@ int	main(void)
 	player.camera.far_plane = RENDER_DISTANCE * CHUNK_WIDTH / 2;
 	player.gravity = 0;
 
-
-	GLuint	crosshair_shader;
-	new_crosshair_shader(&crosshair_shader);
 
 	GLuint	mandelbrot_shader;
 	new_shader(&mandelbrot_shader, SHADER_PATH"mandelbrot.vs", SHADER_PATH"mandelbrot.fs");
@@ -696,7 +692,7 @@ int	main(void)
 		if (player.gravity != 0)
 			player_movement_survival(&player, sp.win, fps);
 		if (player.enabled_mouse)
-			player_looking(&player, sp.win, fps);
+			player_looking(&player, sp.win);
 
 /////////////////
 		// Chunk things

@@ -1,4 +1,5 @@
 #include "shaderpixel.h"
+#include "shader.h"
 
 unsigned int	load_cube_map(char **paths, int paths_size)
 {
@@ -129,7 +130,7 @@ t_skybox	*new_skybox(t_skybox *skybox, const char **faces)
 {
 	int	error = glGetError();
 
-	skybox->texture = load_cube_map(faces, 6);
+	skybox->texture = load_cube_map((char **)faces, 6);
 	new_shader(&skybox->shader, SHADER_PATH"skybox.vs", SHADER_PATH"skybox.fs");
 	skybox_vertices(skybox->vertices, &skybox->vertices_size);
 	glGenVertexArrays(1, &skybox->vao);

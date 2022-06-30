@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/20 12:03:17 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/20 14:03:00 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/30 11:40:57 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,9 +40,11 @@ struct s_player
 void		new_player(t_player *player);
 void		player_events(t_player *player, t_key *keys, GLFWwindow *win);
 void		player_movement(t_player *player, GLFWwindow *win, t_fps fps);
+void		player_movement_creative(t_player *player, GLFWwindow *win, t_fps fps);
+void		player_movement_survival(t_player *player, GLFWwindow *win, t_fps fps);
 void		player_apply_velocity(t_player *player);
 void		player_apply_gravity(t_player *player);
-void		player_looking(t_player *player, GLFWwindow *win, t_fps fps);
+void		player_looking(t_player *player, GLFWwindow *win);
 void		player_entity_collision(t_player *player, t_entity *entity);
 int			player_entity_mesh_collision(t_player *player, t_entity *entity);
 void		player_print(t_player *player);

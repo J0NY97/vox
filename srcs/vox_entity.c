@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/18 11:58:23 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/24 12:25:29 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/30 12:16:23 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -155,7 +155,7 @@ void	vox_entity_event(t_vox_entity *entity, t_world *info, t_fps *fps)
 	get_chunk_pos_from_world_pos(chunk_pos, entity->pos);
 	t_chunk *chunk = get_chunk(info, chunk_pos);
 	t_block			*block = NULL;
-	t_block_data	*data;
+	t_block_data	data;
 	if (chunk)
 	{
 		// Velocity
@@ -167,7 +167,7 @@ void	vox_entity_event(t_vox_entity *entity, t_world *info, t_fps *fps)
 		if (block)
 		{
 			data = get_block_data(block);
-			if (data->entity_collision)
+			if (data.entity_collision)
 			{
 				// Forward up
 				v3_add(forward, forward, (float *)g_card_dir[DIR_UP]);
@@ -175,7 +175,7 @@ void	vox_entity_event(t_vox_entity *entity, t_world *info, t_fps *fps)
 				if (block)
 				{
 					data = get_block_data(block);
-					if (data->entity_collision)
+					if (data.entity_collision)
 					{
 						if (entity->draw_terrain_collision)
 							render_block_outline(forward, (float []){0, 255, 0}, info->player->camera.view, info->player->camera.projection);
@@ -198,7 +198,7 @@ void	vox_entity_event(t_vox_entity *entity, t_world *info, t_fps *fps)
 		if (block)
 		{
 			data = get_block_data(block);
-			if (data->entity_collision)
+			if (data.entity_collision)
 				entity->pos[1] = downward[1] + BLOCK_SCALE;
 			else
 				entity->velocity[1] -= gravity;

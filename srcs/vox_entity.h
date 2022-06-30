@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/13 17:21:38 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/22 10:48:35 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/30 12:17:03 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,11 +45,11 @@ enum e_entity_states
 	
 typedef struct s_vox_entity_data
 {
-	char		*name;
-	char		*readable_name;
-	char		type;			// 'e_entity_types';
-	char		*model_path;
-	float		fall_speed;
+	char			*name;
+	char			*readable_name;
+	unsigned char	type;			// 'e_entity_types';
+	char			*model_path;
+	float			fall_speed;
 }		t_vox_entity_data;
 
 static const t_vox_entity_data	g_entity_data[] = {

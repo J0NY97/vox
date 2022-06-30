@@ -44,10 +44,4 @@ float		*triangle_face_normal(float *res, float *n0, float *n1, float *n2);
 
 float		ray_plane_intersect(float *orig, float *dir, float *pos, float *norm);
 
-///////////////////
-//	ELLIPSOID
-///////////////////
-
-int			ellipsoid_collision(float *pos, float *velocity, float *p1, float *p2, float *p3);
-
 #endif

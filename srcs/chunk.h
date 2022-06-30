@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/27 10:06:36 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/24 12:20:25 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/30 12:15:14 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -227,8 +227,8 @@ int			get_chunk_column_to_regen(t_world *info, int *player_chunk, int *out_col_i
 int			get_surrounding_coords(int *res, int x, int z, int r);
 int			get_block_type_at_world_pos(t_world *info, float *world_pos);
 
-t_block_data	*get_block_data(t_block *block);
-t_block_data	*get_block_data_from_type(int type);
+t_block_data	get_block_data(t_block *block);
+t_block_data	get_block_data_from_type(int type);
 
 void		update_chunk_column_light(t_chunk_col *column);
 
@@ -270,6 +270,8 @@ void		tree_gen(t_world *info, t_chunk_col *column);
 
 void		tree_placer(t_world *info, float *world_pos);
 int			water_placer(t_world *info, float *world_pos, int nth_from_source);
+void		water_flow(t_world *info, t_block_event *water);
+int			water_remove(t_world *info, t_block_event *water);
 
 void		event_chunk(t_chunk *chunk);
 
@@ -279,7 +281,7 @@ void		chunk_water_flower(t_world *info, t_chunk *chunk);
 void		chunk_water_remover(t_world *info, t_chunk *chunk);
 
 // TNT
-void		tnt_explosion(t_world *info, t_chunk *chunk, t_block_event *event_block);
+void		tnt_explosion(t_world *info, t_block_event *event_block);
 
 int			is_type_gas(int type);
 int			is_type_solid(int type);

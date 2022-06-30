@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   block.h                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/06/30 12:02:45 by jsalmi            #+#    #+#             */
+/*   Updated: 2022/06/30 12:02:46 by jsalmi           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef BLOCK_H
 # define BLOCK_H
 
@@ -179,6 +191,11 @@ enum e_flora_face
 };
 
 // Every block has a block_data corresponding with its type;
+/*
+ * why 'face_index' is unsigned char:
+ * "-Wchar-subscripts
+ *		Warn if an array subscript has type char. This is a common cause of error, as programmers often forget that this type is signed on some machines. This warning is enabled by -Wall."
+ */
 typedef struct s_block_data
 {
 	char			type; // 'e_block_type', same as array index in 'g_block_data';
@@ -195,7 +212,7 @@ typedef struct s_block_data
 	char			entity_collision; // if player will collide with its body;
 	char			hand_collision; // if you can break the block;
 	char			max_stack_size; // the maximum value of items in one stack in the inventory;
-	char			face_index; // 'e_face_verts', from g_all_faces, the index of the faces to be used;
+	unsigned char	face_index; // 'e_face_verts', from g_all_faces, the index of the faces to be used;
 }	t_block_data;
 
 /*

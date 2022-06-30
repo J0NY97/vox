@@ -297,9 +297,9 @@ void	obj_info(t_obj *obj)
 /*
  * Returns mesh pointer from array of meshes with name;
 */
-t_mesh	*get_mesh(t_mesh *meshes, size_t mesh_amount, char *name)
+t_mesh	*get_mesh(t_mesh *meshes, int mesh_amount, char *name)
 {
-	for (size_t i = 0; i < mesh_amount; i++)
+	for (int i = 0; i < mesh_amount; i++)
 	{
 		LG_DEBUG("Mesh : <%s> == <%s>?\n", meshes[i].name, name);
 		if (ft_strequ(meshes[i].name, name))
@@ -370,7 +370,7 @@ void	print_arr(char **arr)
 void	new_index(t_obj *obj, int v, int vt, int vn)
 {
 	int			ind;
-	size_t		pp;
+	int			pp;
 	t_mesh		*curr_mesh;
 	t_element	*elem;
 
@@ -588,7 +588,7 @@ void	element_builder(t_obj *obj, char **arr)
  * If the mat_file isnt found in direct path, we try with concatting with root path;
 */
 t_material	*material_load(
-			size_t *mat_amount, const char *root_path, const char *mat_file)
+			int *mat_amount, const char *root_path, const char *mat_file)
 {
 	char		*file_content;
 	char		line[256];
@@ -683,9 +683,9 @@ t_material	*material_load(
 }
 
 // Returns the address of the 'material' with 'material->name' == 'to_find';
-t_material	*get_material(t_material *materials, size_t mats, char *to_find)
+t_material	*get_material(t_material *materials, int mats, char *to_find)
 {
-	size_t	i;
+	int	i;
 
 	i = 0;
 	while (i < mats)
@@ -735,7 +735,7 @@ int	vert_same(float *arr, int begin1, float *arr2, int begin2, int amount)
 */
 int	get_index_of(t_obj *obj, int v, int vt, int vn)
 {
-	size_t	i = 0;
+	int		i = 0;
 	int		to_check_count = 0;
 	int		result;
 	t_mesh	*curr_mesh;

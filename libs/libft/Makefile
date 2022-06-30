@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: nneronin <nneronin@student.hive.fi>        +#+  +:+       +#+         #
+#    By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2019/10/18 11:13:47 by nneronin          #+#    #+#              #
-#    Updated: 2021/12/09 13:40:52 by nneronin         ###   ########.fr        #
+#    Updated: 2022/06/30 10:31:36 by jsalmi           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -69,6 +69,7 @@ RAW =	add_to_list.c\
 		ft_nstrstr.c\
 		ft_pow.c\
 		ft_putarr.c\
+		ft_putbinary.c\
 		ft_putchar.c\
 		ft_putchar_fd.c\
 		ft_putendl.c\

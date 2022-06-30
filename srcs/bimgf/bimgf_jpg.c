@@ -666,7 +666,7 @@ void	bimgf_strncpy(char *dest, char *src, size_t n)
 	}
 }
 
-void    print_binary(int num, int n)
+void	print_binary(int num, int n)
 {
     int d, t;
     

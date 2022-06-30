@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/20 12:04:11 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/20 12:04:11 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/30 11:34:56 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -253,7 +253,7 @@ void	player_movement_old_basically_noclip(t_player *player, GLFWwindow *win, t_f
 	}
 }
 
-void	player_looking(t_player *player, GLFWwindow *win, t_fps fps)
+void	player_looking(t_player *player, GLFWwindow *win)
 {
 	float	x_offset;
 	float	y_offset;

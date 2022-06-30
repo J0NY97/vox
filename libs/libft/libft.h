@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/10/18 11:56:18 by nneronin          #+#    #+#             */
-/*   Updated: 2022/05/24 10:22:45 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/30 10:31:25 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,6 +87,7 @@ int					ft_nstrstr(char *str1, char *str2);
 double				ft_pow(double n, int pow);
 long double			ft_long_pow(long double n, int pow);
 void				ft_putarr(char **arr);
+void				ft_putbinary(int num, int n);
 void				ft_putchar(char c);
 void				ft_putchar_fd(char c, int fd);
 void				ft_putendl(char const *s);

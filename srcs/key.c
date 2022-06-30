@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/20 12:06:12 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/20 12:06:18 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/30 12:21:17 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ void	update_all_keys(t_key *keys, t_key *mouse, GLFWwindow *win)
 	int	state;
 
 	// KEY
-	i = -1;
+	i = 31; // apparently there are no keys in 0 - 31;
 	while (++i < GLFW_KEY_LAST)	
 	{
 		state = glfwGetKey(win, i);

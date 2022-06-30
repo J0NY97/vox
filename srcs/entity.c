@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/17 10:42:27 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/19 13:02:34 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/30 11:34:19 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -243,11 +243,6 @@ unsigned int	*create_bb_indices(unsigned int *res)
 	};
 	memcpy(res, indices, sizeof(unsigned int) * 36);
 	return (res);
-}
-
-float	*create_bb_normals(float *res)
-{
-
 }
 
 typedef struct	s_render_info

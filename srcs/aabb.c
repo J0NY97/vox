@@ -6,7 +6,7 @@
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/20 14:01:02 by jsalmi            #+#    #+#             */
-/*   Updated: 2022/06/22 09:48:28 by jsalmi           ###   ########.fr       */
+/*   Updated: 2022/06/30 10:28:46 by jsalmi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,13 +113,13 @@ void	aabb_transform_new(t_aabb *a, float *model)
 		a->vertices[i + 1] = v4[1];
 		a->vertices[i + 2] = v4[2];
 
-		a->min[0] = fmin(a->min[0], a->vertices[i + 0]);
-		a->min[1] = fmin(a->min[1], a->vertices[i + 1]);
-		a->min[2] = fmin(a->min[2], a->vertices[i + 2]);
+		a->min[0] = ft_fmin(a->min[0], a->vertices[i + 0]);
+		a->min[1] = ft_fmin(a->min[1], a->vertices[i + 1]);
+		a->min[2] = ft_fmin(a->min[2], a->vertices[i + 2]);
 
-		a->max[0] = fmax(a->max[0], a->vertices[i + 0]);
-		a->max[1] = fmax(a->max[1], a->vertices[i + 1]);
-		a->max[2] = fmax(a->max[2], a->vertices[i + 2]);
+		a->max[0] = ft_fmax(a->max[0], a->vertices[i + 0]);
+		a->max[1] = ft_fmax(a->max[1], a->vertices[i + 1]);
+		a->max[2] = ft_fmax(a->max[2], a->vertices[i + 2]);
 	}
 }
 
