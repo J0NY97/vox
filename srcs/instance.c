@@ -72,7 +72,11 @@ int	get_block_type(int x, int y, int z, float noise_value)
 		// Cave gen;
 		if (1) // TODO : change to 't_world->generate_caves';
 		{
+			/* USING SIMPLEX NOISE 3D */
+			float cave_noise = simp_noise_3d_octave(x, y, z, 1.0f, 0.07f, 4, 0.5f, 1.0f);
+			/* USING PERLIN NOISE 3D
 			float cave_noise = noise3d_octave(x, y, z, 1.0f, 0.07f, 4, 0.5f, 1.0f);
+			*/
 			if (cave_noise > 0.75f)
 				return (GAS_AIR);
 		}

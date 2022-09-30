@@ -8,6 +8,10 @@
 */
 void	noise_create(t_noise *noise, int w, int h, int x_offset, int y_offset, int seed)
 {
+	static int times_called = -1;
+	times_called += 1;
+	ft_printf("noise create () called  %d\n", times_called);
+
 	float	frequency = 0.01f;
 	int		octaves = 4;
 	float	amplitude = 20.0f;
@@ -22,9 +26,20 @@ void	noise_create(t_noise *noise, int w, int h, int x_offset, int y_offset, int 
 	{
 		for (int y = 0; y < noise->height; y++)
 		{
+			/* USING SIMPLEX 2D */
+			noise->map[x * noise->width + y]
+				= simp_noise_2d_octave(x + x_offset, y + y_offset,
+					amplitude, frequency, octaves, persistence, lacunarity);
+			/* USING PERLIN NOISE 2D
+			noise->map[x * noise->width + y]
+				= noise2d_octave(x + x_offset, y + y_offset,
+					amplitude, frequency, octaves, persistence, lacunarity);
+			*/
+			/* USING PERLIN NOISE 3D
 			noise->map[x * noise->width + y] =
 				noise3d_octave(x + x_offset, seed, y + y_offset,
 					amplitude, frequency, octaves, persistence, lacunarity);
+					*/
 		}
 	}
 }

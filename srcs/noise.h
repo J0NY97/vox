@@ -15,6 +15,7 @@
 
 # include "stdlib.h"
 # include "perlin.h"
+# include "simplex.h"
 
 typedef struct	s_noise
 {

@@ -1,8 +1,8 @@
 #include "shaderpixel.h"
 
-int fasterfloor(float x)
+static int fastfloor(double x)
 {
-	return x < 0 ? (int) x == x ? (int) x : (int) x - 1 : (int) x;
+	return x > 0 ? (int)x : (int)x - 1;
 }
 
 int	g_p[] = {
@@ -63,7 +63,7 @@ float	lerp(float t, float a, float b)
 	return (a + t * (b - a));
 }
 
-// REMOVE THESE WHEN THE NEW STUFF WORKS!!!
+// TODO : REMOVE THESE WHEN THE NEW STUFF WORKS!!!
 float	fade_old(float t)
 {
 	return (t * t * t * (t * (t * 6 - 15) + 10));
@@ -121,35 +121,18 @@ float	perlin_v2(float x, float y, float z)
     return ((lerp_old(y1, y2, w) + 1) / 2);
 }
 
-float	octave_perlin(float x, float y, float z, int octaves, float persistence)
-{
-	float total = 0;
-	float frequency = 1;
-	float amplitude = 1;
-	float maxValue = 0;
-
-	for(int i = 0; i < octaves; i++)
-	{
-		total += perlin_v2(x * frequency, y * frequency, z * frequency) * amplitude;
-		maxValue += amplitude;
-		amplitude *= persistence;
-		frequency *= 2;
-	}
-	return (total / maxValue);
-}
-
 // YOINKKELI KOINKKEL
 float	noise2d(float x, float y)
 {
-	int xi = (int)floor(x) & 255;
-	int yi = (int)floor(y) & 255;
+	int xi = fastfloor(x) & 255;
+	int yi = fastfloor(y) & 255;
 	int g1 = g_p[g_p[xi] + yi];
 	int g2 = g_p[g_p[xi + 1] + yi];
 	int g3 = g_p[g_p[xi] + yi + 1];
 	int g4 = g_p[g_p[xi + 1] + yi + 1];
 
-	float xf = x - (int)floor(x);
-	float yf = y - (int)floor(y);
+	float xf = x - fastfloor(x);
+	float yf = y - fastfloor(y);
 
 	float d1 = grad2d(g1, xf, yf);
 	float d2 = grad2d(g2, xf - 1, yf);
@@ -166,15 +149,35 @@ float	noise2d(float x, float y)
 	return (yInter);
 }
  
+// Noise 2d octave
+float	noise2d_octave(float x, float y, float amplitude, float frequency, int octaves, float persistence, float lacunarity)
+{
+	float	value;
+
+	value = 0;
+	for (int i = 0; i < octaves; i++)
+	{
+		value += amplitude * noise2d(x * frequency, y * frequency);
+		amplitude *= persistence;
+		frequency *= lacunarity;
+	}
+	return (value);
+}
+
 float	noise3d(float x, float y, float z)
 {
-	int	X = (int)floor(x) & 255;
-	int	Y = (int)floor(y) & 255;
-	int	Z = (int)floor(z) & 255;
+	static int times_called = -1;
+	times_called += 1;
+	if (times_called % 100000 == 0)
+		ft_printf("noise3d() times called %d\n", times_called);
 
-	x -= floor(x);                                
-	y -= floor(y);                                
-	z -= floor(z);
+	int	X = fastfloor(x) & 255;
+	int	Y = fastfloor(y) & 255;
+	int	Z = fastfloor(z) & 255;
+
+	x -= fastfloor(x);                                
+	y -= fastfloor(y);                                
+	z -= fastfloor(z);
 
 	float	u = fade(x);
 	float	v = fade(y);

@@ -1,4 +1,5 @@
 #include "shaderpixel.h"
+
 #include "world.h"
 #include "chunk.h"
 #include "vox_entity.h"
@@ -69,111 +70,6 @@ float *nth(float *res, unsigned int *indices, float *vertices, int face_index, i
 	res[2] = vertices[vert + 2];
 	return (res);
 }
-
-/*
-void	scop_stuff(t_shaderpixel *sp)
-{
-	t_player	player;
-	new_player(&player);
-	v3_new(player.camera.pos, 5, 70, 5);
-//	v3_new(player.camera.pos, 16384, 80, 16384);
-	player.camera.pitch = 0;
-	player.camera.yaw = -90;
-	player.camera.viewport_w = sp->win_w;
-	player.camera.viewport_h = sp->win_h;
-
-	player.gravity = 0;
-
-	t_scene	scene;
-	create_scene(&scene);
-	GLuint	shader1;
-	new_shader(&shader1, SHADER_PATH"simple.vs", SHADER_PATH"simple.fs");
-	t_obj		retrotv_obj;
-	obj_load(&retrotv_obj, MODEL_PATH"retrotv/retrotv.obj");
-	t_entity	*retrotv = malloc(sizeof(t_entity));
-	new_entity(retrotv);
-	new_model(&retrotv->model, &retrotv_obj);
-	//v3_new(retrotv->pos, 0, 0, -2.5);
-	v3_new(retrotv->pos, 0, 90, 0);
-//	size_t	retrotv_index = add_entity_to_scene(&scene, retrotv);
-	retrotv->collision_detection_enabled = 0;
-	retrotv->collision_use_precise = 0;
-	retrotv->render_aabb = 0;
-
-	t_obj		dust2_obj;
-//	obj_load(&dust2_obj, MODEL_PATH"de_dust2/de_dust2.obj");
-	obj_load(&dust2_obj, MODEL_PATH"dust2_retry/dust2.obj");
-
-	t_entity	*dust2 = malloc(sizeof(t_entity));
-	new_entity(dust2);
-	new_model(&dust2->model, &dust2_obj);
-//	size_t	dust2_index = add_entity_to_scene(&scene, dust2);
-	dust2->collision_detection_enabled = 0;
-//	dust2->collision_use_precise = 1;
-	dust2->rot_x_angle = -90;
-	dust2->scale_value = 0.005;
-
-	t_obj		display_obj;
-	obj_load(&display_obj, MODEL_PATH"display/display.obj");
-
-	t_entity	*display = malloc(sizeof(t_entity));
-	new_entity(display);
-	new_model(&display->model, &display_obj);
-	size_t display_index = 0;
-//	display_index = add_entity_to_scene(&scene, display);
-	v3_new(display->pos, 1.2, 90, -2.0);
-	display->collision_detection_enabled = 0;
-	display->scale_value = 0.1;
-	display->rot_x_angle = 0;
-	display->rot_y_angle = 90;
-	display->rot_z_angle = 0;
-
-	float		rot_amount = 1;
-	int			toggle_rot_x = 0;
-	int			toggle_rot_y = 0;
-	int			toggle_rot_z = 0;
-
-	if (0)
-	{
-		size_t	entities_collisioned = 0;
-		for (size_t i = 0; i < scene.entities_allocated && entities_collisioned < scene.entity_amount; i++)
-		{
-			if (scene.entities[i] && scene.entities[i]->collision_detection_enabled)
-			{
-				// creates model thingthong
-				aabb_create(&scene.entities[i]->aabb,
-					scene.entities[i]->model.info->mesh.vertices,
-					scene.entities[i]->model.info->mesh.vertex_amount);
-				// create vertices of them
-				aabb_vertify(&scene.entities[i]->aabb);
-				// transform all the vertices
-				aabb_transform_new(&scene.entities[i]->aabb,
-					scene.entities[i]->model_mat);
-
-				aabb_create(&scene.entities[i]->aabb,
-					scene.entities[i]->aabb.vertices, 8);
-
-				if (scene.entities[i]->collision_use_precise)
-					player_entity_mesh_collision(&player, scene.entities[i]);
-				else
-					player_entity_collision(&player, scene.entities[i]);
-				entities_collisioned += 1;
-			}
-		}
-
-		glEnable(GL_DEPTH_TEST);
-		size_t	entities_rendered = 0;
-		for (size_t i = 0; i < scene.entities_allocated && entities_rendered < scene.entity_amount; i++)
-		{
-			if (scene.entities[i])
-			{
-				render_entity(scene.entities[i], &player.camera, &scene.entities[i]->model, shader1);
-				entities_rendered += 1;
-			}
-		}
-	}
-}
-*/
 
 int	main(void)
 {
@@ -705,6 +601,8 @@ int	main(void)
 
 		thread_manager_check_threadiness(&tm);
 
+		int use_multi_thread = false;
+
 		int	tobegen = 0;
 		if (regen_chunks)
 		{
@@ -717,9 +615,14 @@ int	main(void)
 			{
 				world_info.chunk_columns[col_indices[i]].wanted_coord[0] = col_coords[i][0];
 				world_info.chunk_columns[col_indices[i]].wanted_coord[1] = col_coords[i][1];
-				thread_manager_new_thread(&tm, &regen_column_thread, &world_info.chunk_columns[col_indices[i]]);
-//				regenerate_chunk_column(&world_info.chunk_columns[col_indices[i]], col_coords[i], world_info.seed);
+				if (use_multi_thread)
+					thread_manager_new_thread(&tm, &regen_column_thread, &world_info.chunk_columns[col_indices[i]]);
+				else
+					regenerate_chunk_column(&world_info.chunk_columns[col_indices[i]], col_coords[i], world_info.seed);
 			}
+			// If no chunk columns to regen => quit;
+			if (tobegen == 0)
+				exit (0);
 		}
 
 		t_chunk		*neighbors[DIR_AMOUNT];

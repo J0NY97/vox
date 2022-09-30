@@ -1,3 +1,10 @@
+/*
+ *  Author: Jony Salmi
+ *  Create Time: 10.02.2022 15:22:22
+ *  Modified by: Jony Salmi
+ *  Modified time: 30.09.2022 21:24:45
+ */
+
 #ifndef BMATH_H
 # define BMATH_H
 

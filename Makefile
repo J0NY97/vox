@@ -46,6 +46,7 @@ CFILES = \
 	glad/glad.c \
 	ui.c \
 	ui_manager.c \
+	simplex.c \
 #	font_manager.c \
 
 CDIR = srcs
