@@ -86,7 +86,7 @@ else
 LIBS += -lOpenGl32 -lgdi32
 endif
 
-FLAGS = -Wall -Wextra -Wno-unused-variable -MMD -g #-O3
+FLAGS = -Wall -Wextra -Wno-unused-variable -MMD -O3 #-g #-O3
 
 all: $(ODIR) $(NAME)
 

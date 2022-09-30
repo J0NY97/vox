@@ -70,13 +70,17 @@ int	get_block_type(int x, int y, int z, float noise_value)
 			return (BLOCK_BEDROCK);
 
 		// Cave gen;
-		if (1) // TODO : change to 't_world->generate_caves';
+		if (0) // TODO : change to 't_world->generate_caves';
 		{
+			float	cave_noise;
 			/* USING SIMPLEX NOISE 3D */
-			float cave_noise = simp_noise_3d_octave(x, y, z, 1.0f, 0.07f, 4, 0.5f, 1.0f);
+			//cave_noise = simp_noise_3d(x, y, z);
+			cave_noise = simp_noise_3d_octave(x, y, z, 1.0f, 0.07f, 4.0f, 0.5f, 1.0f);
 			/* USING PERLIN NOISE 3D
-			float cave_noise = noise3d_octave(x, y, z, 1.0f, 0.07f, 4, 0.5f, 1.0f);
+			cave_noise = noise3d_octave(x, y, z, 1.0f, 0.07f, 4.0f, 0.5f, 1.0f);
 			*/
+			if (cave_noise != 0)
+				ft_printf("cave noise : %f\n", cave_noise);
 			if (cave_noise > 0.75f)
 				return (GAS_AIR);
 		}
@@ -1831,6 +1835,12 @@ void	tree_gen(t_world *info, t_chunk_col *column)
 		{
 			block_pos[0] = column->world_coordinate[0] + x;
 			block_pos[2] = column->world_coordinate[1] + z;
+			/* USING SIMPLEX NOISE 3D
+			noise_value = simp_noise_3d_octave(block_pos[0], 0, block_pos[2],
+				amp, freq, oct, pers, lac);
+			*/
+			/* USING PERLIN NOISE 3D
+				*/
 			noise_value = noise3d_octave(block_pos[0], 0, block_pos[2],
 				amp, freq, oct, pers, lac);
 

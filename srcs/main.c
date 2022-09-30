@@ -601,7 +601,7 @@ int	main(void)
 
 		thread_manager_check_threadiness(&tm);
 
-		int use_multi_thread = false;
+		int use_multi_thread = true;
 
 		int	tobegen = 0;
 		if (regen_chunks)
@@ -621,7 +621,7 @@ int	main(void)
 					regenerate_chunk_column(&world_info.chunk_columns[col_indices[i]], col_coords[i], world_info.seed);
 			}
 			// If no chunk columns to regen => quit;
-			if (tobegen == 0)
+			if (tobegen == -1)
 				exit (0);
 		}
 

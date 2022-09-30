@@ -2,12 +2,13 @@
  *  Author: Jony Salmi
  *  Create Time: 30.09.2022 20:45:03
  *  Modified by: Jony Salmi
- *  Modified time: 30.09.2022 22:15:57
+ *  Modified time: 30.09.2022 22:36:39
  */
 
 /*
  * Everything yoinked from : 
  * https://weber.itn.liu.se/~stegu/simplexnoise/simplexnoise.pdf
+ * https://weber.itn.liu.se/~stegu/simplexnoise/SimplexNoise.java
 */
 
 static int grad3[24][3] = {

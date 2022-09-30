@@ -8,10 +8,6 @@
 */
 void	noise_create(t_noise *noise, int w, int h, int x_offset, int y_offset, int seed)
 {
-	static int times_called = -1;
-	times_called += 1;
-	ft_printf("noise create () called  %d\n", times_called);
-
 	float	frequency = 0.01f;
 	int		octaves = 4;
 	float	amplitude = 20.0f;
