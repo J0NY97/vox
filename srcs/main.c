@@ -16,7 +16,6 @@ void	errorCallback(int err_nbr, const char *err_str)
 
 void	init(t_shaderpixel *sp)
 {
-	//lg_setFdLevel(LEVEL_DEBUG);
 	lg_setFdLevel(LEVEL_INFO);
 
 	if (!glfwInit())
@@ -50,7 +49,7 @@ void	init(t_shaderpixel *sp)
 
 void	uninit(t_shaderpixel *sp)
 {
-	(void)sp;
+	(void)sp; // TODO : Free everything;
 	glfwTerminate();
 }
 
@@ -471,6 +470,10 @@ int	main(void)
 		if (keys[GLFW_KEY_I].state == BUTTON_PRESS)
 		{
 			world_info.toggle_event = world_info.toggle_event != 1;
+			// TODO : should probably go through all the chunks and force update
+			//	the event blocks; (aka chunk->needs_to_update);
+			// There is a key that sets all chunk->needs_to_update to 1, one
+			//	could convert that to a function and call it in here;
 			if (world_info.toggle_event)
 				LG_INFO("Event => ON.");
 			else
@@ -485,16 +488,6 @@ int	main(void)
 				LG_INFO("attach_entity => ON.");
 			else
 				LG_INFO("attach_entity => OFF.");
-		}
-
-		// Toggle attach to entity;
-		if (keys[GLFW_KEY_Z].state == BUTTON_PRESS)
-		{
-			attach_to_entity = attach_to_entity != 1;
-			if (attach_to_entity)
-				LG_INFO("attach_to_entity => ON.");
-			else
-				LG_INFO("attach_to_entity => OFF.");
 		}
 
 	// Melon controls
