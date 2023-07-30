@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "shaderpixel.h"
+#include "vox.h"
 #include "chunk.h"
 
 // Is BLOCK

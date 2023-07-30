@@ -1,4 +1,4 @@
-#include "shaderpixel.h"
+#include "vox.h"
 
 void	plane_new(t_plane *plane, float *p, float *norm)
 {

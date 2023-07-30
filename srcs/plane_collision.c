@@ -1,4 +1,4 @@
-#include "shaderpixel.h"
+#include "vox.h"
 
 float	ray_plane_intersect(float *orig, float *dir, float *pos, float *norm)
 {

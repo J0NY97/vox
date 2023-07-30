@@ -1,8 +1,7 @@
-#include "shaderpixel.h"
-
+#include "vox.h"
 #include "world.h"
 #include "chunk.h"
-#include "vox_entity.h"
+#include "entity.h"
 #include "shader.h"
 #include "bobj.h"
 #include "enum.h"
@@ -14,7 +13,7 @@ void	errorCallback(int err_nbr, const char *err_str)
 	LG_ERROR("(%d) [%s]", err_nbr, err_str);
 }
 
-void	init(t_shaderpixel *sp)
+void	init(t_vox *vox)
 {
 	lg_setFdLevel(LEVEL_INFO);
 
@@ -33,23 +32,23 @@ void	init(t_shaderpixel *sp)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 #endif
 
-	sp->win_w = 1280;
-	sp->win_h = 720;
-	sp->win = glfwCreateWindow(sp->win_w, sp->win_h, "MyPixel", NULL, NULL);
+	vox->win_w = 1280;
+	vox->win_h = 720;
+	vox->win = glfwCreateWindow(vox->win_w, vox->win_h, "MyPixel", NULL, NULL);
 
-	glfwMakeContextCurrent(sp->win);
+	glfwMakeContextCurrent(vox->win);
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 		LG_ERROR("Couldn\'t load glad.");
-	glViewport(0, 0, sp->win_w, sp->win_h);
-	sp->polygon_mode = GL_FILL;
-	sp->pilpalpol = 0;
+	glViewport(0, 0, vox->win_w, vox->win_h);
+	vox->polygon_mode = GL_FILL;
+	vox->renderMode = 0;
 
 	LG_INFO("Init Done");
 }
 
-void	uninit(t_shaderpixel *sp)
+void	uninit(t_vox *vox)
 {
-	(void)sp; // TODO : Free everything;
+	(void)vox; // TODO : Free everything;
 	glfwTerminate();
 }
 
@@ -72,12 +71,12 @@ float *nth(float *res, unsigned int *indices, float *vertices, int face_index, i
 
 int	main(void)
 {
-	t_shaderpixel	sp;
+	t_vox	vox;
 	t_key			keys[GLFW_KEY_LAST];
 	t_key			mouse[GLFW_MOUSE_BUTTON_LAST];
 	t_fps			fps;
 
-	init(&sp);
+	init(&vox);
 	new_fps(&fps);
 
 	//////////////////
@@ -88,8 +87,8 @@ int	main(void)
 	v3_new(player.camera.pos, 0, 0, 0);
 	player.camera.pitch = 0;
 	player.camera.yaw = -90;
-	player.camera.viewport_w = sp.win_w;
-	player.camera.viewport_h = sp.win_h;
+	player.camera.viewport_w = vox.win_w;
+	player.camera.viewport_h = vox.win_h;
 	player.camera.far_plane = RENDER_DISTANCE * CHUNK_WIDTH / 2;
 	player.gravity = 0;
 
@@ -189,7 +188,7 @@ int	main(void)
 	entities_wanted = ft_min(entities_wanted, MAX_ENTITIES);
 	for (int i = 0; i < entities_wanted; i++)
 	{
-		vox_entity_new(&world_info.entities[i]);
+		entity_new(&world_info.entities[i]);
 		if (i % 2 == 0)
 			world_info.entities[i].type = ENTITY_MELON_GOLEM;
 		else
@@ -203,7 +202,7 @@ int	main(void)
 			player.camera.pos[1] + (y * 4),
 			player.camera.pos[2] + (z * 4)
 			);
-		vox_entity_update(&world_info.entities[i]);
+		entity_update(&world_info.entities[i]);
 		++world_info.entity_amount_total;
 	}
 
@@ -220,16 +219,6 @@ int	main(void)
 	chicken_entity->ai = 0;
 	chicken_entity->draw_aabb = 1;
 	chicken_entity->draw_dir = 1;
-
-
-
-
-	// Creation of hashtable
-	/*
-	world_info.hash_table_size = (int)(world_info.chunks_loaded * 3);
-	world_info.hash_table = malloc(sizeof(t_hash_item) * world_info.hash_table_size);
-	hash_table_clear(world_info.hash_table, world_info.hash_table_size);
-	*/
 
 	// Creation of rendering lists;
 	world_info.meshes_render_indices = malloc(sizeof(int) * CHUNKS_LOADED);
@@ -312,7 +301,7 @@ int	main(void)
 	float	tmp3[3];
 	float	ent_pos2[3];
 
-	while (!glfwWindowShouldClose(sp.win))
+	while (!glfwWindowShouldClose(vox.win))
 	{
 		error = glGetError();
 		if (error)
@@ -322,26 +311,26 @@ int	main(void)
 		if (fps.count % 60 == 0)
 		{
 			ft_b_itoa(fps.fps, fps_str);
-			glfwSetWindowTitle(sp.win, fps_str);
+			glfwSetWindowTitle(vox.win, fps_str);
 		}
 
 		// CHUNK STUFF
 		world_info.sky_light_lvl_prev = world_info.sky_light_lvl;
 
-		update_all_keys(keys, mouse, sp.win);
+		update_all_keys(keys, mouse, vox.win);
 		glfwPollEvents();
 		if (keys[GLFW_KEY_ESCAPE].state == BUTTON_PRESS)
-			glfwSetWindowShouldClose(sp.win, GLFW_TRUE);
+			glfwSetWindowShouldClose(vox.win, GLFW_TRUE);
 		if (keys[GLFW_KEY_X].state == BUTTON_PRESS)
 		{
-			sp.pilpalpol = (sp.pilpalpol + 1) % 3;
-			if (sp.pilpalpol == 0)
-				sp.polygon_mode = GL_FILL;
-			else if (sp.pilpalpol == 1)
-				sp.polygon_mode = GL_LINE;
-			else if (sp.pilpalpol == 2)
-				sp.polygon_mode = GL_POINT;
-			glPolygonMode(GL_FRONT_AND_BACK, sp.polygon_mode);
+			vox.renderMode = (vox.renderMode + 1) % 3;
+			if (vox.renderMode == 0)
+				vox.polygon_mode = GL_FILL;
+			else if (vox.renderMode == 1)
+				vox.polygon_mode = GL_LINE;
+			else if (vox.renderMode == 2)
+				vox.polygon_mode = GL_POINT;
+			glPolygonMode(GL_FRONT_AND_BACK, vox.polygon_mode);
 		}
 
 		if (keys[GLFW_KEY_P].state == BUTTON_PRESS)
@@ -574,14 +563,14 @@ int	main(void)
 		}
 
 		update_fps(&fps);
-		player_events(&player, keys, sp.win);
+		player_events(&player, keys, vox.win);
 
 		if (player.gravity == 0)
-			player_movement_creative(&player, sp.win, fps);
+			player_movement_creative(&player, vox.win, fps);
 		if (player.gravity != 0)
-			player_movement_survival(&player, sp.win, fps);
+			player_movement_survival(&player, vox.win, fps);
 		if (player.enabled_mouse)
-			player_looking(&player, sp.win);
+			player_looking(&player, vox.win);
 
 /////////////////
 		// Chunk things
@@ -954,7 +943,7 @@ if (error)
 			vox_entity_event(curr_ent, &world_info, &fps);
 		if (curr_ent->needs_update)
 		{
-			vox_entity_update(curr_ent);
+			entity_update(curr_ent);
 			curr_ent->needs_update = 0;
 		}
 		model_matrix(model_matrices[(int)curr_ent->type] + amount_to_render[(int)curr_ent->type] * 16,
@@ -1007,7 +996,7 @@ if (error)
 		////// DRAW ////////
 		if (world_info.toggle_ui)
 		{
-			ui_update(&gui, sp.win);
+			ui_update(&gui, vox.win);
 			ui_manager_start(&ui);
 			{
 				char		buffer[256];
@@ -1052,11 +1041,11 @@ if (error)
 
 				ui_draw(&gui);
 			}
-			ui_manager_render(&ui, sp.win_w, sp.win_h);
+			ui_manager_render(&ui, vox.win_w, vox.win_h);
 			ui_manager_end(&ui);
 		}
 
-		glfwSwapBuffers(sp.win);
+		glfwSwapBuffers(vox.win);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 		error = glGetError();
@@ -1064,6 +1053,6 @@ if (error)
 			LG_ERROR("errors in while : %d", error);
 	}
 
-	uninit(&sp);
+	uninit(&vox);
 	return (0);
 }

@@ -1,4 +1,4 @@
-#include "shaderpixel.h"
+#include "vox.h"
 
 void	new_fps(t_fps *fps)
 {

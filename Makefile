@@ -1,7 +1,7 @@
 rwildcard = $(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
 SHELL_NAME = $(shell uname -s)
 
-NAME = sp #shaderpixel
+NAME = a
 CFILES = \
 	main.c \
 	scene.c \

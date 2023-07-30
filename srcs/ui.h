@@ -13,7 +13,7 @@
 #ifndef UI_H
 # define UI_H
 
-# include "shaderpixel.h"
+# include "vox.h"
 # include "bitmap.h"
 # include "ui_manager.h"
 # include "block.h"

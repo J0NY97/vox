@@ -140,4 +140,9 @@ void	model_render(t_model_v2 *model, GLuint shader, float *model_mat, float *vie
 void	model_instance_from_bobj(t_model_v2 *model, t_bobj *bob, int index);
 void	model_instance_render(t_model_v2 *model, GLuint shader, float *model_mat, int model_amount, float *view_mat, float *projection_mat);
 
+void	model_matrix(float *m4_res, float *m4_scale, float *m4_rot, float *m4_trans);
+void	scale_matrix(float *m4_res, float scale);
+void	rotation_matrix(float *m4_res, float *v3_rot);
+void	translation_matrix(float *m4_res, float *v3_pos);
+
 #endif

@@ -1,4 +1,4 @@
-#include "shaderpixel.h"
+#include "vox.h"
 #include "shader.h"
 
 unsigned int	load_cube_map(char **paths, int paths_size)

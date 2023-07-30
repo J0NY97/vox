@@ -71,6 +71,8 @@ static const t_vox_entity_data	g_entity_data[] = {
 
 typedef struct s_vox_entity
 {
+	size_t id;
+
 	int		health; // TODO
 	int		speed;
 
@@ -91,22 +93,37 @@ typedef struct s_vox_entity
 	char	needs_update;
 
 	char	ai;
+
+	char collision_detection_enabled;
+	char collision_use_precise;
+	char collision;
+
+	// Matrices
+	float	model_m4[16]; // NOTE : Not sure if this is needed, we had it in the old entity, but not in this one;
+	float	scale_m4[16];
+	float	rot_m4[16];
+	float	trans_m4[16];
+	t_model *model;
+
 	// Debug
 	char	draw_dir;
 	char	draw_terrain_collision;
 	char	draw_aabb;
-
-	// Matrices
-	float	scale_m4[16];
-	float	rot_m4[16];
-	float	trans_m4[16];
+	t_aabb			aabb;
+	float			aabb_vertices[24];
+	unsigned int	aabb_indices[36];
 }		t_vox_entity;
 
-void	vox_entity_new(t_vox_entity *entity);
-void	vox_entity_update(t_vox_entity *entity);
+void	entity_new(t_vox_entity *entity);
+void	entity_update(t_vox_entity *entity);
 
 void	vox_entity_event(t_vox_entity *entity, t_world *info, t_fps *fps);
 
 void	set_entity_at_world_pos(t_world *info, float *world_pos, int entity_type);
+
+void	entity_print(t_vox_entity *entity);
+void	render_entity(t_vox_entity *entity, t_camera *camera, t_model *model, GLuint shader);
+
+void	new_model_matrix(float *m4_res, float scale, float *v3_rot, float *v3_pos);;
 
 #endif

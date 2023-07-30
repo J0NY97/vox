@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "shaderpixel.h"
+#include "vox.h"
 #include "player.h"
 
 /*
@@ -23,7 +23,7 @@
  * TODO: entity collision mesh, we currently check against the triangles the aabb
  *		is made of;
 */
-void	player_entity_collision(t_player *player, t_entity *entity)
+void	player_entity_collision(t_player *player, t_vox_entity *entity)
 {
 	float p1[V3_SIZE];
 	float p2[V3_SIZE];
@@ -41,23 +41,23 @@ void	player_entity_collision(t_player *player, t_entity *entity)
 	{
 		for (int triangle = 0; triangle < 12; triangle++)
 		{
-			index = entity->bb_indices[triangle * 3 + 0] * 3;
+			index = entity->aabb_indices[triangle * 3 + 0] * 3;
 			v3_new(p1,
-				entity->bb_vertices[index + 0],
-				entity->bb_vertices[index + 1],
-				entity->bb_vertices[index + 2]
+				entity->aabb_vertices[index + 0],
+				entity->aabb_vertices[index + 1],
+				entity->aabb_vertices[index + 2]
 			);
-			index = entity->bb_indices[triangle * 3 + 1] * 3;
+			index = entity->aabb_indices[triangle * 3 + 1] * 3;
 			v3_new(p2,
-				entity->bb_vertices[index + 0],
-				entity->bb_vertices[index + 1],
-				entity->bb_vertices[index + 2]
+				entity->aabb_vertices[index + 0],
+				entity->aabb_vertices[index + 1],
+				entity->aabb_vertices[index + 2]
 			);
-			index = entity->bb_indices[triangle * 3 + 2] * 3;
+			index = entity->aabb_indices[triangle * 3 + 2] * 3;
 			v3_new(p3,
-				entity->bb_vertices[index + 0],
-				entity->bb_vertices[index + 1],
-				entity->bb_vertices[index + 2]
+				entity->aabb_vertices[index + 0],
+				entity->aabb_vertices[index + 1],
+				entity->aabb_vertices[index + 2]
 			);
 
 			if (ray_triangle_intersect(player->camera.pos,
@@ -87,14 +87,14 @@ void	player_entity_collision(t_player *player, t_entity *entity)
 /*
  * Checks collision with player and entity mesh;
 */
-int	player_entity_mesh_collision(t_player *player, t_entity *entity)
+int	player_entity_mesh_collision(t_player *player, t_vox_entity *entity)
 {
 	// Convert player world position to entity local position;
 	//		Get inverse transformation matrix of entity model;
 	float	inverse_trans[M4_SIZE];
 
 	m4_identity(inverse_trans);
-	m4_inverse(inverse_trans, entity->model_mat);
+	m4_inverse(inverse_trans, entity->model_m4);
 
 	//		Apply inverse transformation matrix on player position;
 	float	local_player_pos[V4_SIZE];
@@ -112,13 +112,13 @@ int	player_entity_mesh_collision(t_player *player, t_entity *entity)
 	float	dist;
 
 	entity->collision = 0;
-	for (int i = 0; i < entity->model.info_amount; i++)
+	for (int i = 0; i < entity->model->info_amount; i++)
 	{
-		vertices = entity->model.info[i].mesh.vertices;
-		for (int j = 0; j < entity->model.info[i].mesh.element_amount; j++)
+		vertices = entity->model->info[i].mesh.vertices;
+		for (int j = 0; j < entity->model->info[i].mesh.element_amount; j++)
 		{
-			indices = entity->model.info[i].elem_info[j].element.indices;
-			for (int k = 0; k < entity->model.info[i].elem_info[j].element.index_amount / 3; k++)
+			indices = entity->model->info[i].elem_info[j].element.indices;
+			for (int k = 0; k < entity->model->info[i].elem_info[j].element.index_amount / 3; k++)
 			{
 				int ind = k * 3;
 				v3_new(p1,
@@ -140,9 +140,9 @@ int	player_entity_mesh_collision(t_player *player, t_entity *entity)
 
 				}
 					glDisable(GL_DEPTH_TEST);
-					v4_multiply_m4(p1, p1, entity->model_mat);
-					v4_multiply_m4(p2, p2, entity->model_mat);
-					v4_multiply_m4(p3, p3, entity->model_mat);
+					v4_multiply_m4(p1, p1, entity->model_m4);
+					v4_multiply_m4(p2, p2, entity->model_m4);
+					v4_multiply_m4(p3, p3, entity->model_m4);
 					render_3d_line(p1, p2, (float []){0, 0, 1}, player->camera.view, player->camera.projection);
 					render_3d_line(p1, p3, (float []){0, 0, 1}, player->camera.view, player->camera.projection);
 					render_3d_line(p2, p3, (float []){0, 0, 1}, player->camera.view, player->camera.projection);

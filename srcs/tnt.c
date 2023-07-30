@@ -1,4 +1,4 @@
-#include "shaderpixel.h"
+#include "vox.h"
 #include "chunk.h"
 
 void	explode(t_world *info, float pos[3], float intensity)

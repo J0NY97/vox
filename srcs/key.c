@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "shaderpixel.h"
+#include "vox.h"
 #include "key.h"
 
 void	update_all_keys(t_key *keys, t_key *mouse, GLFWwindow *win)

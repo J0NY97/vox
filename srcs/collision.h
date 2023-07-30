@@ -20,8 +20,6 @@
 
 # define EPSILON 0.00001f
 
-typedef struct	s_entity	t_entity;
-
 ////////////////////////
 //	LINE
 ////////////////////////

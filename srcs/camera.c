@@ -1,4 +1,4 @@
-#include "shaderpixel.h"
+#include "vox.h"
 
 void	new_camera(t_camera *camera)
 {

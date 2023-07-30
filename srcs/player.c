@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "shaderpixel.h"
+#include "vox.h"
 #include "player.h"
 
 void	new_player(t_player *player)

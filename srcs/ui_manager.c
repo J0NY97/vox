@@ -1,4 +1,4 @@
-#include "shaderpixel.h"
+#include "vox.h"
 #include "ui_manager.h"
 
 void	ui_manager_setup_opengl(t_ui_manager *ui)

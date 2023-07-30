@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "shaderpixel.h"
+#include "vox.h"
 
 void	fill_element_info(t_element_info *info, t_element *elem)
 {

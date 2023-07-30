@@ -1,4 +1,4 @@
-#include "shaderpixel.h"
+#include "vox.h"
 
 int	create_shader(GLuint *shader, const char *content, GLenum type)
 {

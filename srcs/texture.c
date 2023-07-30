@@ -1,4 +1,4 @@
-#include "shaderpixel.h"
+#include "vox.h"
 
 /*
  * 'texture' needs to be generated with glGenTextures(); before this func;

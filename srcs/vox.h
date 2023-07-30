@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   shaderpixel.h                                      :+:      :+:    :+:   */
+/*   vox.h                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: jsalmi <jsalmi@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -10,8 +10,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef SHADERPIXEL_H
-# define SHADERPIXEL_H
+#ifndef VOX_H
+# define VOX_H
 
 //# include <ft2build.h>
 //# include FT_FREETYPE_H
@@ -33,6 +33,7 @@
 # include "model.h"
 # include "enum.h"
 # include "fps.h"
+# include "entity.h"
 
 ///////////////////
 //	TEXTURE
@@ -93,51 +94,7 @@ typedef struct s_fractal2d
 void		new_fractal2d(t_fractal2d *fractal);
 void		render_fractal2d(t_fractal2d *fractal, GLuint shader);
 
-///////////////////
-//	ENTITY
-///////////////////
-
-typedef struct	s_entity
-{
-	size_t			id;
-
-	float			pos[V3_SIZE];
-	float			rot_x_angle;
-	float			rot_y_angle;
-	float			rot_z_angle;
-	float			scale_value;
-
-	float			scale_mat[M4_SIZE];
-	float			rot_mat[M4_SIZE];
-	float			trans_mat[M4_SIZE];
-	float			model_mat[M4_SIZE];
-
-	int				render_aabb;
-	int				collision_detection_enabled;
-	int				collision_use_precise;
-	t_aabb			aabb;
-	float			bb_vertices[24];
-	unsigned int	bb_indices[36];
-	int				collision;
-
-	int				show_normal_map;
-
-	t_model			model;
-}	t_entity;
-
-void				new_entity(t_entity *entity);
-void				entity_print(t_entity *entity);
-void				update_entity(t_entity *entity);
-void				render_entity(t_entity *entity, t_camera *camera, t_model *model, GLuint shader);
-
-void				new_model_matrix(float *m4_res, float scale, float *v3_rot, float *v3_pos);;
-
-void				model_matrix(float *m4_res, float *m4_scale, float *m4_rot, float *m4_trans);
-void				scale_matrix(float *m4_res, float scale);
-void				rotation_matrix(float *m4_res, float *v3_rot);
-void				translation_matrix(float *m4_res, float *v3_pos);
-
-///////////////////
+//////////////////
 //	SCENE
 ///////////////////
 
@@ -148,7 +105,7 @@ void				translation_matrix(float *m4_res, float *v3_pos);
 */
 typedef struct	s_scene
 {
-	t_entity	**entities;
+	t_vox_entity	**entities;
 	size_t		entities_allocated;
 	size_t		entity_amount;
 }		t_scene;
@@ -156,22 +113,23 @@ typedef struct	s_scene
 void		create_scene(t_scene *scene);
 void		remove_scene(t_scene *scene);
 void		remove_entity_from_scene_with_index(t_scene *scene, size_t index);
-void		remove_entity_from_scene(t_scene *scene, t_entity *entity);
-size_t		add_entity_to_scene(t_scene *scene, t_entity *entity);
-t_entity	*get_scene_entity(t_scene *scene, size_t index);
+void		remove_entity_from_scene(t_scene *scene, t_vox_entity *entity);
+size_t		add_entity_to_scene(t_scene *scene, t_vox_entity *entity);
+t_vox_entity	*get_scene_entity(t_scene *scene, size_t index);
 
 ///////////////////
-//	SHADERPIXEL
+//	VOX
 ///////////////////
 
-typedef struct	s_shaderpixel
+typedef struct	s_vox
 {
 	GLFWwindow	*win;
 	int			win_w;
 	int			win_h;
 	int			polygon_mode;
-	int			pilpalpol;
-}	t_shaderpixel;
+	/// @brief 0 : GL_FILL, 1 : GL_LINE, 2 : GL_POINT;
+	int			renderMode;
+}	t_vox;
 
 ///////////////////
 //	HELP

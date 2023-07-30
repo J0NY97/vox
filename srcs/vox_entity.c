@@ -10,11 +10,11 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "vox_entity.h"
+#include "entity.h"
 #include "bmath.h"
-#include "shaderpixel.h"
+#include "vox.h"
 
-void	vox_entity_new(t_vox_entity *entity)
+void	entity_new(t_vox_entity *entity)
 {
 	v3_new(entity->pos, 0, 0, 0);
 	v3_new(entity->rot, 0, 0, 0);
@@ -39,7 +39,7 @@ void	vox_entity_new(t_vox_entity *entity)
 /*
  * 
 */
-void	vox_entity_update(t_vox_entity *entity)
+void	entity_update(t_vox_entity *entity)
 {
 	float	rad_yaw;
 	float	rad_pitch;
@@ -71,13 +71,13 @@ void	set_entity_at_world_pos(t_world *info, float *world_pos, int entity_type)
 		return ;
 	}
 	entity = &info->entities[info->entity_amount_total];
-	vox_entity_new(entity);
+	entity_new(entity);
 	entity->type = entity_type;
 	v3_assign(entity->pos, world_pos);
 
 	// TODO : entity->needs_update = 1;
 	// instead of this;
-	vox_entity_update(entity);
+	entity_update(entity);
 
 	++info->entity_amount_total;
 	LG_INFO("Entity (#%d) added at %f %f %f",
