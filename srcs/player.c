@@ -58,7 +58,7 @@ void	player_events(t_player *player, t_key *keys, GLFWwindow *win)
 /*
  * Calculates the wish velocity;
 */
-void	player_movement(t_player *player, GLFWwindow *win, t_fps fps)
+void	player_movement(t_player *player, GLFWwindow *win, t_fps *fps)
 {
 	float	temp0[V3_SIZE];
 	float	temp1[V3_SIZE];
@@ -70,7 +70,7 @@ void	player_movement(t_player *player, GLFWwindow *win, t_fps fps)
 		speed_multiplier = 10.0f;
 	if (glfwGetKey(win, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
 		speed_multiplier = 0.25f;
-	speed = (speed_multiplier * 10.0f) * fps.delta_time;
+	speed = (speed_multiplier * 10.0f) * fps->delta_time;
 
 	v3_new(temp0, 0, 0, 0);
 	if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS)
@@ -98,7 +98,7 @@ void	player_movement(t_player *player, GLFWwindow *win, t_fps fps)
 	player->moving = (player->velocity[0] || player->velocity[1] || player->velocity[2]);
 }
 
-void	player_movement_creative(t_player *player, GLFWwindow *win, t_fps fps)
+void	player_movement_creative(t_player *player, GLFWwindow *win, t_fps *fps)
 {
 	float	temp0[V3_SIZE];
 	float	temp1[V3_SIZE];
@@ -111,7 +111,7 @@ void	player_movement_creative(t_player *player, GLFWwindow *win, t_fps fps)
 		speed_multiplier = 10.0f;
 	if (glfwGetKey(win, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
 		speed_multiplier = 0.25f;
-	speed = (speed_multiplier * 10.0f) * fps.delta_time;
+	speed = (speed_multiplier * 10.0f) * fps->delta_time;
 
 	v3_new(temp0, 0, 0, 0);
 	if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS)
@@ -156,7 +156,7 @@ void	player_movement_creative(t_player *player, GLFWwindow *win, t_fps fps)
 	player->moving = (player->velocity[0] || player->velocity[1] || player->velocity[2]);
 }
 
-void	player_movement_survival(t_player *player, GLFWwindow *win, t_fps fps)
+void	player_movement_survival(t_player *player, GLFWwindow *win, t_fps *fps)
 {
 	float	temp0[V3_SIZE];
 	float	temp1[V3_SIZE];
@@ -169,7 +169,7 @@ void	player_movement_survival(t_player *player, GLFWwindow *win, t_fps fps)
 		speed_multiplier = 10.0f;
 	if (glfwGetKey(win, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
 		speed_multiplier = 0.25f;
-	speed = (speed_multiplier * 10.0f) * fps.delta_time;
+	speed = (speed_multiplier * 10.0f) * fps->delta_time;
 
 	v3_new(temp0, 0, 0, 0);
 	if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS)
@@ -217,7 +217,7 @@ void	player_apply_velocity(t_player *player)
 	player->velocity[2] *= 0.5;
 }
 
-void	player_movement_old_basically_noclip(t_player *player, GLFWwindow *win, t_fps fps)
+void	player_movement_old_basically_noclip(t_player *player, GLFWwindow *win, t_fps *fps)
 {
 	float	temp[V3_SIZE];
 	float	speed_multiplier = 1.0f;
@@ -225,7 +225,7 @@ void	player_movement_old_basically_noclip(t_player *player, GLFWwindow *win, t_f
 
 	if (glfwGetKey(win, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		speed_multiplier = 2.0f;
-	speed = speed_multiplier * fps.delta_time;
+	speed = speed_multiplier * fps->delta_time;
 
 	if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS)
 	{

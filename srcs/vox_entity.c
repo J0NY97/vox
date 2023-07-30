@@ -15,31 +15,6 @@
 #include "vox.h"
 #include "chunk.h"
 
-void	entity_new(t_entity *entity)
-{
-	v3_new(entity->pos, 0, 0, 0);
-	v3_new(entity->rot, 0, 0, 0);
-	v3_new(entity->velocity, 0, 0, 0);
-	entity->scale = 1.0f;
-	entity->type = 0;
-	entity->state = ENTITY_STATE_IDLE;
-	entity->health = 100;
-	entity->speed = 1;
-
-	entity->yaw = 0;
-	entity->pitch = 0;
-
-	// Debug toggles
-	entity->draw_dir = 0;
-	entity->draw_terrain_collision = 0;
-	entity->draw_aabb = 0;
-
-	entity->ai = 1;
-}
-
-/*
- * 
-*/
 void	entity_update(t_entity *entity)
 {
 	float	rad_yaw;
@@ -189,7 +164,7 @@ void	entity_event(t_entity *entity, t_world *info, t_fps *fps)
 
 //////////////////
 
-void	world_update_entity_palette(t_entity_manager *manager)
+void	entity_manager_update_entity_palette(t_entity_manager *manager)
 {
 	memset(manager->entity_palette, 0, sizeof(int) * ENTITY_AMOUNT);
 	for (int i = 0; i < manager->entity_amount; i++)

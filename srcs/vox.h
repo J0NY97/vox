@@ -35,6 +35,7 @@
 # include "fps.h"
 # include "entity.h"
 # include "entity_manager.h"
+# include "key.h"
 
 ///////////////////
 //	TEXTURE
@@ -119,6 +120,21 @@ size_t		add_entity_to_scene(t_scene *scene, t_entity *entity);
 t_entity	*get_scene_entity(t_scene *scene, size_t index);
 
 ///////////////////
+// SETTINGS
+///////////////////
+
+typedef struct s_settings
+{
+	int regen_chunks;	
+	int toggle_ui;
+
+	//DEBUG
+	int attach_entity;
+	int attach_to_entity;
+
+}	t_settings;
+
+///////////////////
 //	VOX
 ///////////////////
 
@@ -130,6 +146,14 @@ typedef struct	s_vox
 	int			polygon_mode;
 	/// @brief 0 : GL_FILL, 1 : GL_LINE, 2 : GL_POINT;
 	int			renderMode;
+
+	t_key	keys[GLFW_KEY_LAST];
+	t_key	mouse[GLFW_MOUSE_BUTTON_LAST];
+
+	t_settings settings;
+
+	t_thread_manager tm;
+	
 }	t_vox;
 
 ///////////////////

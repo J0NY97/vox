@@ -17,16 +17,30 @@ void	entity_init(t_entity *entity)
 {
 	entity->id = 0;
 
-	v3_new(entity->pos, 0.0f, 0.0f, 0.0f);
-	entity->rot[0] = 0.0f;
-	entity->rot[1] = 0.0f;
-	entity->rot[2] = 0.0f;
+	v3_new(entity->pos, 0, 0, 0);
+	v3_new(entity->rot, 0, 0, 0);
+	v3_new(entity->velocity, 0, 0, 0);
 	entity->scale = 1.0f;
 
+	entity->type = 0;
 	entity->collision_detection_enabled = 0;
 	entity->collision_use_precise = 0;
 	entity->collision = 0;
+
 	entity->draw_aabb = 1;
+	entity->state = ENTITY_STATE_IDLE;
+	entity->health = 100;
+	entity->speed = 1;
+
+	entity->yaw = 0;
+	entity->pitch = 0;
+
+	// Debug toggles
+	entity->draw_dir = 0;
+	entity->draw_terrain_collision = 0;
+	entity->draw_aabb = 0;
+
+	entity->ai = 1;
 
 	entity_update(entity);
 }

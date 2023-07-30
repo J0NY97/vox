@@ -54,7 +54,6 @@ typedef struct s_world
 	char		fancy_graphics;
 	char		generate_structures;
 	char		light_calculation;
-	char		toggle_ui;
 	char		toggle_event;
 	char		generate_caves;
 
@@ -67,6 +66,7 @@ typedef struct s_world
 	t_chunk		*chunks;		// size : CHUNKS_LOADED;
 	t_chunk_col	*chunk_columns; // size : RENDER_DISTANCE * RENDER_DISTANCE;
 	GLuint		texture; // the texture is stored here so we dont load a texture per chunk_mesh;
+	int			player_chunk[3];
 
 	/////////////////
 	// ENTITY

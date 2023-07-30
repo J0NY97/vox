@@ -3,8 +3,8 @@
 void entity_manager_init(t_entity_manager *manager)
 {
 	manager->next_id = 0;
-	manager->max_entities = 500;
-	manager->model_mats = malloc(sizeof(float *) * manager->max_entities * 16);
+	manager->max_entities = 11;
+	manager->model_mats = malloc(sizeof(float) * manager->max_entities * 16);
 
 	manager->entity_amount = 0;
 	manager->entities = NULL;
@@ -32,6 +32,8 @@ t_entity *entity_manager_new_entity(t_entity_manager *manager)
 		// if the slot isnt taken, we have found a slot that doesnt have an entity in it yet;
 		if (!manager->slot_taken[i])
 		{
+			// Set slot taken;
+			manager->slot_taken[i] = 1;
 			// Init it;
 			entity_init(&manager->entities[i]);
 			// Set id to it;
@@ -39,6 +41,7 @@ t_entity *entity_manager_new_entity(t_entity_manager *manager)
 			// Increment manager next id;
 			manager->next_id++;
 			// return it;
+			LG_INFO("Entity (%d) created", manager->entities[i].id);
 			return (&manager->entities[i]);
 		}
 	}	
@@ -147,16 +150,29 @@ void entity_manager_draw(t_entity_manager *manager, t_camera *camera)
 				(float []){255, 0, 0}, camera->view, camera->projection);
 		}
 	}
+
+	int total = 0;
 	for (int i = 0; i < ENTITY_AMOUNT; i++)
 	{
 		// We dont have any entities of this type;
 		if (type_to_render[i] == 0)
 			continue ;
 
+		LG_INFO("%d entity models", manager->entity_models[i].meshes_amount);
+		LG_INFO("%d shader", manager->model_instance_shader);
+		LG_INFO("%f model mats", manager->model_mats + type_offset[i]);
+		LG_INFO("%d type to render", type_to_render[i]);
+		LG_INFO("%d camera view ", camera->view[0]);
+		LG_INFO("%d camera proj ", camera->projection[0]);
+
 		model_instance_render(&manager->entity_models[i], manager->model_instance_shader,
 			manager->model_mats + type_offset[i], type_to_render[i],
 			camera->view, camera->projection);
+		
+		total+=type_to_render[i];
 	}
+
+	LG_INFO("%d entities drawn", total);
 }
 
 void	create_entity_at_world_pos(t_entity_manager *manager, float *world_pos, int entity_type)

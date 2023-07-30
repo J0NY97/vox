@@ -19,14 +19,6 @@
 # include "collision.h"
 # include "camera.h"
 
-typedef struct s_player_info
-{
-	float	reach; // how far away player can reach from player position;
-	int		equipped_block;
-	int		equipped_hotbar; // 0 - 8; one of 'hotbar_item_ids' indices;
-	int		hotbar_item_ids[9];
-}	t_player_info;
-
 typedef struct s_chunk		t_chunk;
 
 enum e_mesh_types
