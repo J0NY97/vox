@@ -60,7 +60,7 @@ void	player_entity_collision(t_player *player, t_entity *entity)
 				entity->aabb_vertices[index + 2]
 			);
 
-			if (ray_triangle_intersect(player->camera.pos,
+			if (ray_triangle_intersect(player->camera->pos,
 					v3_normalize(normed, player->velocity),
 					p1, p2, p3, intersect_point, &dist))
 			{
@@ -71,9 +71,9 @@ void	player_entity_collision(t_player *player, t_entity *entity)
 		if (triangle_collision)
 		{
 			float	new_pos[3];
-			v3_add(new_pos, player->camera.pos, player->velocity);
-			if (v3_dist(player->camera.pos, new_pos) >
-				v3_dist(player->camera.pos, intersect_point))
+			v3_add(new_pos, player->camera->pos, player->velocity);
+			if (v3_dist(player->camera->pos, new_pos) >
+				v3_dist(player->camera->pos, intersect_point))
 			{
 				entity->collision = 1;
 				player->colliding = 1;
@@ -99,7 +99,7 @@ int	player_entity_mesh_collision(t_player *player, t_entity *entity)
 	//		Apply inverse transformation matrix on player position;
 	float	local_player_pos[V4_SIZE];
 
-	v3_to_v4(local_player_pos, player->camera.pos);
+	v3_to_v4(local_player_pos, player->camera->pos);
 	v4_multiply_m4(local_player_pos, local_player_pos, inverse_trans);
 
 	// Compare player to all the meshes in entity model;
@@ -133,7 +133,7 @@ int	player_entity_mesh_collision(t_player *player, t_entity *entity)
 					vertices[indices[ind + 2] * 3 + 0],
 					vertices[indices[ind + 2] * 3 + 1],
 					vertices[indices[ind + 2] * 3 + 2]);
-				if (ray_triangle_intersect(local_player_pos, player->camera.front,
+				if (ray_triangle_intersect(local_player_pos, player->camera->front,
 					p3, p2, p1, intersection_p, &dist))
 				{
 					entity->collision = 1;
@@ -143,9 +143,9 @@ int	player_entity_mesh_collision(t_player *player, t_entity *entity)
 					v4_multiply_m4(p1, p1, entity->model_m4);
 					v4_multiply_m4(p2, p2, entity->model_m4);
 					v4_multiply_m4(p3, p3, entity->model_m4);
-					render_3d_line(p1, p2, (float []){0, 0, 1}, player->camera.view, player->camera.projection);
-					render_3d_line(p1, p3, (float []){0, 0, 1}, player->camera.view, player->camera.projection);
-					render_3d_line(p2, p3, (float []){0, 0, 1}, player->camera.view, player->camera.projection);
+					render_3d_line(p1, p2, (float []){0, 0, 1}, player->camera->view, player->camera->projection);
+					render_3d_line(p1, p3, (float []){0, 0, 1}, player->camera->view, player->camera->projection);
+					render_3d_line(p2, p3, (float []){0, 0, 1}, player->camera->view, player->camera->projection);
 					glEnable(GL_DEPTH_TEST);
 			}
 		}

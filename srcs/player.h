@@ -30,7 +30,8 @@ typedef struct s_player_info
 
 struct s_player
 {
-	t_camera	camera;
+	/// @brief Which camera is this player using; (usually gotten from &world.camera)
+	t_camera	*camera;
 
 	float		velocity[V3_SIZE];
 	float		gravity;

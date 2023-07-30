@@ -83,10 +83,9 @@ typedef struct s_world
 
 	t_entity_manager entity_manager;
 
-	// Player
-	t_player	*player;
-
 	float		spawn_point[3];
+
+	t_camera camera; // the main camera in the world;
 
 /*
 	t_hash_item	*hash_table;

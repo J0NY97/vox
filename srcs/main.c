@@ -49,6 +49,8 @@ void	init(t_vox *vox)
 	vox->settings.regen_chunks = 1;
 	vox->settings.toggle_ui = 0;
 
+	thread_manager_new(&vox->tm, 64);
+
 	LG_INFO("Init Done");
 }
 
@@ -109,9 +111,9 @@ void debug_create_entities(t_entity_manager *manager, t_player *player)
 		int		y = (i / w) % w;
 		int		z = i / (w * w);
 		v3_new(entity->pos,
-			player->camera.pos[0] + (x * 4),
-			player->camera.pos[1] + (y * 4),
-			player->camera.pos[2] + (z * 4)
+			player->camera->pos[0] + (x * 4),
+			player->camera->pos[1] + (y * 4),
+			player->camera->pos[2] + (z * 4)
 			);
 		entity_update(entity);
 	}
@@ -141,22 +143,22 @@ void ui_loop(t_vox *vox, t_ui *ui, t_ui_manager *ui_manager)
 		/*
 		// Player Position
 		strcpy(buffer, "Position : ");
-		ft_b_ftoa(player.camera.pos[0], 2, buffer + strlen(buffer));
+		ft_b_ftoa(player.camera->pos[0], 2, buffer + strlen(buffer));
 		strcpy(buffer + strlen(buffer), " / ");
-		ft_b_ftoa(player.camera.pos[1], 2, buffer + strlen(buffer));
+		ft_b_ftoa(player.camera->pos[1], 2, buffer + strlen(buffer));
 		strcpy(buffer + strlen(buffer), " / ");
-		ft_b_ftoa(player.camera.pos[2], 2, buffer + strlen(buffer));
+		ft_b_ftoa(player.camera->pos[2], 2, buffer + strlen(buffer));
 		fm_render_text(&bmp, &ui.font_manager, 0, buffer, 0xff0000ff, 0xffffffff);
 		ui_draw_bitmap(&ui, (float []){120, 10, bmp.width, bmp.height}, &bmp);
 		bitmap_free(&bmp);
 
 		// Player Rotation
 		strcpy(buffer, "Rotation : ");
-		ft_b_ftoa(player.camera.front[0], 2, buffer + strlen(buffer));
+		ft_b_ftoa(player.camera->front[0], 2, buffer + strlen(buffer));
 		strcpy(buffer + strlen(buffer), " / ");
-		ft_b_ftoa(player.camera.front[1], 2, buffer + strlen(buffer));
+		ft_b_ftoa(player.camera->front[1], 2, buffer + strlen(buffer));
 		strcpy(buffer + strlen(buffer), " / ");
-		ft_b_ftoa(player.camera.front[2], 2, buffer + strlen(buffer));
+		ft_b_ftoa(player.camera->front[2], 2, buffer + strlen(buffer));
 		fm_render_text(&bmp, &ui.font_manager, 0, buffer, 0xff0000ff, 0xffffffff);
 		ui_draw_bitmap(&ui, (float []){120, 40, bmp.width, bmp.height}, &bmp);
 		bitmap_free(&bmp);
@@ -221,15 +223,15 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 		player_print(player);
 
 	if (vox->keys[GLFW_KEY_R].state == BUTTON_PRESS)
-		v3_assign(player->camera.pos, world->spawn_point);
+		v3_assign(player->camera->pos, world->spawn_point);
 	if (vox->keys[GLFW_KEY_LEFT].state == BUTTON_PRESS)
-		v3_add(player->camera.pos, player->camera.pos, (float []){-10, 0, 0});
+		v3_add(player->camera->pos, player->camera->pos, (float []){-10, 0, 0});
 	if (vox->keys[GLFW_KEY_RIGHT].state == BUTTON_PRESS)
-		v3_add(player->camera.pos, player->camera.pos, (float []){10, 0, 0});
+		v3_add(player->camera->pos, player->camera->pos, (float []){10, 0, 0});
 	if (vox->keys[GLFW_KEY_UP].state == BUTTON_PRESS)
-		v3_add(player->camera.pos, player->camera.pos, (float []){0, -10, 0});
+		v3_add(player->camera->pos, player->camera->pos, (float []){0, -10, 0});
 	if (vox->keys[GLFW_KEY_DOWN].state == BUTTON_PRESS)
-		v3_add(player->camera.pos, player->camera.pos, (float []){0, 10, 0});
+		v3_add(player->camera->pos, player->camera->pos, (float []){0, 10, 0});
 
 	if (vox->keys[GLFW_KEY_C].state == BUTTON_PRESS)
 	{
@@ -406,15 +408,15 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 	}
 
 	if (vox->settings.attach_entity)
-		v3_new(world->entity_manager.melon_entity->pos, player->camera.pos[0], player->camera.pos[1] - 2, player->camera.pos[2] - 2);
+		v3_new(world->entity_manager.melon_entity->pos, player->camera->pos[0], player->camera->pos[1] - 2, player->camera->pos[2] - 2);
 	else if (vox->settings.attach_to_entity)
 	{
 		float p_pos[3];
 		v3_multiply_f(p_pos, world->entity_manager.melon_entity->front, -2.0f);
 		v3_add(p_pos, p_pos, world->entity_manager.melon_entity->pos);
-		v3_assign(player->camera.pos, p_pos);
-		player->camera.yaw = world->entity_manager.melon_entity->yaw;
-		player->camera.pitch = -world->entity_manager.melon_entity->pitch;
+		v3_assign(player->camera->pos, p_pos);
+		player->camera->yaw = world->entity_manager.melon_entity->yaw;
+		player->camera->pitch = -world->entity_manager.melon_entity->pitch;
 	}
 
 	// Select equipped block;
@@ -462,7 +464,7 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 	if ((int)(fps->curr_time * 100) % 33 == 0)
 		world->game_tick = 1;
 
-	get_chunk_pos_from_world_pos(world->player_chunk, player->camera.pos);
+	get_chunk_pos_from_world_pos(world->player_chunk, player->camera->pos);
 
 	thread_manager_check_threadiness(&vox->tm);
 
@@ -600,12 +602,12 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 	}
 
 	// head
-	//		player_terrain_collision(player.velocity, (float []){player.camera.pos[0], player.camera.pos[1] + 0.25f, player.camera.pos[2]}, player.velocity, &world);
+	//		player_terrain_collision(player.velocity, (float []){player.camera->pos[0], player.camera->pos[1] + 0.25f, player.camera->pos[2]}, player.velocity, &world);
 	// feet
-	//		player_terrain_collision(player.velocity, (float []){player.camera.pos[0], player.camera.pos[1] - 1.0f, player.camera.pos[2]}, player.velocity, &world);
+	//		player_terrain_collision(player.velocity, (float []){player.camera->pos[0], player.camera->pos[1] - 1.0f, player.camera->pos[2]}, player.velocity, &world);
 
 	player_apply_velocity(player);
-	update_camera(&player->camera);
+	update_camera(player->camera);
 
 	// Used for block collision
 	float	intersect_point[16][3]; // Make sure the amount of collisions that happen are less than the amount of stack memory in these 2 arrays;
@@ -631,11 +633,11 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 	// Dont render if the chunk is outside the view fustrum;
 	// Dont render if hasnt been sent to gpu yet;
 	if (world->chunks[nth_chunk].was_updated == 0 &&
-		v3_dist_sqrd(player->camera.pos,
+		v3_dist_sqrd(player->camera->pos,
 			world->chunks[nth_chunk].world_coordinate) <
-		(player->camera.far_plane + CHUNK_SIZE_X) *
-		(player->camera.far_plane + CHUNK_SIZE_X) &&
-		aabb_in_frustum(&world->chunks[nth_chunk].aabb, &player->camera.frustum))
+		(player->camera->far_plane + CHUNK_SIZE_X) *
+		(player->camera->far_plane + CHUNK_SIZE_X) &&
+		aabb_in_frustum(&world->chunks[nth_chunk].aabb, &player->camera->frustum))
 	{
 		world->meshes_render_indices[world->meshes_render_amount] = nth_chunk;
 		++world->meshes_render_amount;
@@ -644,9 +646,9 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 	// Collision Detection
 	if (world->block_collision_enabled)
 	{
-		if (point_aabb_center_distance(player->camera.pos, &world->chunks[nth_chunk].aabb) <= (CHUNK_WIDTH * CHUNK_WIDTH))
+		if (point_aabb_center_distance(player->camera->pos, &world->chunks[nth_chunk].aabb) <= (CHUNK_WIDTH * CHUNK_WIDTH))
 		{
-			show_chunk_borders(&world->chunks[nth_chunk], &player->camera, (float []){1, 0, 0});
+			show_chunk_borders(&world->chunks[nth_chunk], player->camera, (float []){1, 0, 0});
 			// Place Blocking and Removing;
 			// Go through all chunks and check for collision on blocks,
 			// store intersections and indices of the chunk the intersection
@@ -655,7 +657,7 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 			// Collision on solid mesh;
 			if (world->chunks[nth_chunk].blocks_solid_amount > 0)
 			{
-				int collisions_on_chunk = chunk_mesh_collision_v2(player->camera.pos, player->camera.front, &world->chunks[nth_chunk].meshes, BLOCK_MESH, world->chunks[nth_chunk].world_coordinate, player->info.reach, intersect_point + collision_result);
+				int collisions_on_chunk = chunk_mesh_collision_v2(player->camera->pos, player->camera->front, &world->chunks[nth_chunk].meshes, BLOCK_MESH, world->chunks[nth_chunk].world_coordinate, player->info.reach, intersect_point + collision_result);
 				for (int i = 0; i < collisions_on_chunk; i++)
 					intersect_chunk_index[collision_result + i] = nth_chunk;
 				collision_result += collisions_on_chunk;
@@ -679,7 +681,7 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 	float	closest_dist = INFINITY;
 	for (int colli = 0; colli < collision_result; ++colli)
 	{
-		distancione = v3_dist_sqrd(player->camera.pos, intersect_point[colli]);
+		distancione = v3_dist_sqrd(player->camera->pos, intersect_point[colli]);
 		if (distancione < closest_dist)
 		{
 			closest_dist = distancione;
@@ -692,7 +694,7 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 	hovered_block = get_block_from_chunk(&world->chunks[closest_index], closest_point, block_pos, &face);
 	if (hovered_block)
 	{
-		render_block_outline(block_pos, (float []){0, 0, 0}, player->camera.view, player->camera.projection);
+		render_block_outline(block_pos, (float []){0, 0, 0}, player->camera->view, player->camera->projection);
 		get_block_local_pos_from_world_pos(block_local, block_pos);
 	}
 	// Lets summon mob on the hovered_block
@@ -746,14 +748,14 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 
 		rent = &world->entity_manager.entities[i];
 		// Continue if we are not within reach;
-		if (v3_dist_sqrd(player->camera.pos, rent->pos) > player->info.reach * player->info.reach)
+		if (v3_dist_sqrd(player->camera->pos, rent->pos) > player->info.reach * player->info.reach)
 			continue ;
 		v3_add(rent_aabb.min, world->entity_manager.entity_models[(int)rent->type].bound.min, rent->pos);
 		v3_add(rent_aabb.max, world->entity_manager.entity_models[(int)rent->type].bound.max, rent->pos);
-		if (aabb_ray_intersection(&rent_aabb, player->camera.pos, player->camera.front)) //v3_multiply_f(tmp2, player.camera.front, player_info.reach)))
+		if (aabb_ray_intersection(&rent_aabb, player->camera->pos, player->camera->front)) //v3_multiply_f(tmp2, player.camera->front, player_info.reach)))
 		{
 			render_3d_rectangle(rent_aabb.min, rent_aabb.max,
-				(float []){255, 255, 0}, player->camera.view, player->camera.projection);
+				(float []){255, 255, 0}, player->camera->view, player->camera->projection);
 		}
 	}
 	/* END OF PLAYER ENTITY HITBOX COLLISION */
@@ -766,7 +768,7 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_BLEND);
-	render_skybox(skybox, &player->camera);
+	render_skybox(skybox, player->camera);
 
 	error = glGetError();
 	if (error)
@@ -779,7 +781,7 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 	{
 		int render_index = world->meshes_render_indices[r];
 		if (world->chunks[render_index].blocks_solid_amount > 0)
-			render_chunk_mesh(&world->chunks[render_index].meshes, BLOCK_MESH, world->chunks[render_index].world_coordinate, &player->camera);
+			render_chunk_mesh(&world->chunks[render_index].meshes, BLOCK_MESH, world->chunks[render_index].world_coordinate, player->camera);
 	}
 
 	error = glGetError();
@@ -794,7 +796,7 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 	{
 		int render_index = world->meshes_render_indices[r];
 		if (world->chunks[render_index].blocks_fluid_amount > 0)
-			render_chunk_mesh(&world->chunks[render_index].meshes, FLUID_MESH, world->chunks[render_index].world_coordinate, &player->camera);
+			render_chunk_mesh(&world->chunks[render_index].meshes, FLUID_MESH, world->chunks[render_index].world_coordinate, player->camera);
 	}
 
 	/////////////////
@@ -809,7 +811,7 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 	glEnable(GL_DEPTH_TEST);
 
 	entity_manager_update_entity_palette(&world->entity_manager);
-	//entity_manager_draw(&world->entity_manager, &player->camera);
+	//entity_manager_draw(&world->entity_manager, player->camera);
 
 	error = glGetError();
 	if (error)
@@ -821,75 +823,121 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 		LG_ERROR("errors in while : %d", error);
 }
 
+void	world_init(t_world *world)
+{
+	new_camera(&world->camera);
+
+	world->seed = 896868766;
+	world->block_collision_enabled = 0;
+	world->player_collision_enabled = 0;
+	world->fancy_graphics = 0;
+	world->generate_structures = 0;
+	world->light_calculation = 0;
+	world->toggle_event = 0;
+	world->generate_caves = 0;
+	world->sky_light_lvl = 15;
+	world->fog_max_dist = world->camera.far_plane;
+	world->fog_min_dist = world->camera.far_plane - 50;
+	v3_new(world->spawn_point, 5000, 90, 5000);
+
+	entity_manager_init(&world->entity_manager);
+	entity_manager_load_entity_objects(&world->entity_manager);
+
+	// Creation of rendering lists;
+	world->meshes_render_indices = malloc(sizeof(int) * CHUNKS_LOADED);
+	world->meshes_render_amount = 0;
+
+	glGenTextures(1, &world->texture);
+	new_texture(&world->texture, TEXTURE_PATH"version_3_texture_alpha.bmp");
+
+	world->chunks = malloc(sizeof(t_chunk) * CHUNKS_LOADED);
+	world->chunk_columns = malloc(sizeof(t_chunk_col) * CHUNK_COLUMNS);
+
+	int		nth_chunk = 0;
+	int		nth_col = -1;
+	int		nth_col_chunk = 0;
+
+	get_chunk_pos_from_world_pos(world->player_chunk, world->camera.pos);
+
+	LG_INFO("Inits done, lets create some chunks (%d wanted)\n", CHUNKS_LOADED);
+
+	GLuint	cube_shader_v2;
+	new_shader(&cube_shader_v2, SHADER_PATH"block_mesh.vs", SHADER_PATH"block_mesh.fs");
+	for (; nth_chunk < CHUNKS_LOADED; ++nth_chunk)
+	{
+		new_chunk(&world->chunks[nth_chunk], world, nth_chunk);
+		init_chunk_mesh(&world->chunks[nth_chunk].meshes, cube_shader_v2, MESH_TYPE_AMOUNT);
+		world->chunks[nth_chunk].meshes.texture = world->texture;
+		if (nth_chunk % CHUNKS_PER_COLUMN == 0)
+		{
+			nth_col_chunk = 0;
+			++nth_col;
+			world->chunk_columns[nth_col].chunks = malloc(sizeof(t_chunk *) * CHUNKS_PER_COLUMN);
+			world->chunk_columns[nth_col].lights = malloc(sizeof(t_light) * CHUNK_COLUMN_LIGHT_AMOUNT);
+			world->chunk_columns[nth_col].height_map.map = NULL;
+
+			world->chunk_columns[nth_col].coordinate[0] = world->chunks[nth_chunk].coordinate[0];
+			world->chunk_columns[nth_col].coordinate[1] = world->chunks[nth_chunk].coordinate[2];
+			world->chunk_columns[nth_col].world_coordinate[0] = world->chunks[nth_chunk].world_coordinate[0];
+			world->chunk_columns[nth_col].world_coordinate[1] = world->chunks[nth_chunk].world_coordinate[2];
+			world->chunk_columns[nth_col].update_structures = 0;
+			world->chunk_columns[nth_col].being_threaded = 0;
+			world->chunk_columns[nth_col].world = world;
+		}
+		world->chunk_columns[nth_col].chunks[nth_col_chunk] = &world->chunks[nth_chunk];
+		++nth_col_chunk;
+	}
+	ft_printf("Total Chunks created : %d\n", nth_chunk);
+}
+
+void player_init(t_player *player)
+{
+	player->gravity = 0;
+
+	player->info.reach = 5;
+	player->info.equipped_hotbar = 1;
+	player->info.hotbar_item_ids[0] = BLOCK_DIRT;
+	player->info.hotbar_item_ids[1] = BLOCK_STONE;
+	player->info.hotbar_item_ids[2] = BLOCK_ALPHA_TORCH;
+	player->info.hotbar_item_ids[3] = BLOCK_SAND;
+	player->info.hotbar_item_ids[4] = FLORA_GRASS;
+	player->info.hotbar_item_ids[5] = BLOCK_ALPHA_OAK_LEAF;
+	player->info.hotbar_item_ids[6] = BLOCK_ALPHA_CACTUS;
+	player->info.hotbar_item_ids[7] = BLOCK_TNT;
+	player->info.hotbar_item_ids[8] = 0;//FLUID_WATER;
+	player->info.equipped_block = player->info.hotbar_item_ids[player->info.equipped_hotbar];
+}
+
 int	main(void)
 {
 	t_vox	vox;
-	t_fps	fps;
-
 	init(&vox);
+
+	t_fps	fps;
 	new_fps(&fps);
 
-	//////////////////
-	// PLAYER
-	//////////////////
+	t_world	world;
+	world_init(&world);
+
 	t_player	player;
 	new_player(&player);
-	v3_new(player.camera.pos, 0, 0, 0);
-	player.camera.pitch = 0;
-	player.camera.yaw = -90;
-	player.camera.viewport_w = vox.win_w;
-	player.camera.viewport_h = vox.win_h;
-	player.camera.far_plane = RENDER_DISTANCE * CHUNK_WIDTH / 2;
-	player.gravity = 0;
+	player_init(&player);
 
-	player.info.reach = 5;
-	player.info.equipped_hotbar = 1;
-	player.info.hotbar_item_ids[0] = BLOCK_DIRT;
-	player.info.hotbar_item_ids[1] = BLOCK_STONE;
-	player.info.hotbar_item_ids[2] = BLOCK_ALPHA_TORCH;
-	player.info.hotbar_item_ids[3] = BLOCK_SAND;
-	player.info.hotbar_item_ids[4] = FLORA_GRASS;
-	player.info.hotbar_item_ids[5] = BLOCK_ALPHA_OAK_LEAF;
-	player.info.hotbar_item_ids[6] = BLOCK_ALPHA_CACTUS;
-	player.info.hotbar_item_ids[7] = BLOCK_TNT;
-	player.info.hotbar_item_ids[8] = 0;//FLUID_WATER;
-	player.info.equipped_block = player.info.hotbar_item_ids[player.info.equipped_hotbar];
+	player.camera = &world.camera;
+	v3_new(player.camera->pos, 0, 0, 0);
+	player.camera->pitch = 0;
+	player.camera->yaw = -90;
+	player.camera->viewport_w = vox.win_w;
+	player.camera->viewport_h = vox.win_h;
+	player.camera->far_plane = RENDER_DISTANCE * CHUNK_WIDTH / 2;
 
-	//////////////////
-	// SKYBOX
-	//////////////////
+
 	t_skybox	skybox;
 	new_skybox(&skybox, g_mc_skybox);
 
-	//////////////////////////////
-	// Instance testing
-	//////////////////////////////
-	GLuint	cube_shader_v2;
-	new_shader(&cube_shader_v2, SHADER_PATH"block_mesh.vs", SHADER_PATH"block_mesh.fs");
-
-	thread_manager_new(&vox.tm, 64);
-
-	t_world	world;
-
-	world.seed = 896868766;
-	world.block_collision_enabled = 0;
-	world.player_collision_enabled = 0;
-	world.fancy_graphics = 0;
-	world.generate_structures = 0;
-	world.light_calculation = 0;
-	world.toggle_event = 0;
-	world.generate_caves = 0;
-	world.sky_light_lvl = 15;
-	world.fog_max_dist = player.camera.far_plane;
-	world.fog_min_dist = player.camera.far_plane - 50;
-	world.player = &player;
-	v3_new(world.spawn_point, 5000, 90, 5000);
 
 	// set player pos to spawn point;
-	v3_assign(player.camera.pos, world.spawn_point);
-
-	entity_manager_init(&world.entity_manager);
-	entity_manager_load_entity_objects(&world.entity_manager);
+	v3_assign(player.camera->pos, world.spawn_point);
 
 	// Entity Debug;
 	debug_create_entities(&world.entity_manager, &player);
@@ -907,60 +955,15 @@ int	main(void)
 	world.entity_manager.chicken_entity->draw_dir = 1;
 	// END entity debug;
 
-	// Creation of rendering lists;
-	world.meshes_render_indices = malloc(sizeof(int) * CHUNKS_LOADED);
-	world.meshes_render_amount = 0;
-
-	glGenTextures(1, &world.texture);
-	new_texture(&world.texture, TEXTURE_PATH"version_3_texture_alpha.bmp");
-
-	world.chunks = malloc(sizeof(t_chunk) * CHUNKS_LOADED);
-	world.chunk_columns = malloc(sizeof(t_chunk_col) * CHUNK_COLUMNS);
-
-	int		nth_chunk = 0;
-	int		nth_col = -1;
-	int		nth_col_chunk = 0;
-
-	get_chunk_pos_from_world_pos(world.player_chunk, player.camera.pos);
-
-	LG_INFO("Inits done, lets create some chunks (%d wanted)\n", CHUNKS_LOADED);
-	for (; nth_chunk < CHUNKS_LOADED; ++nth_chunk)
-	{
-		new_chunk(&world.chunks[nth_chunk], &world, nth_chunk);
-		init_chunk_mesh(&world.chunks[nth_chunk].meshes, cube_shader_v2, MESH_TYPE_AMOUNT);
-		world.chunks[nth_chunk].meshes.texture = world.texture;
-		if (nth_chunk % CHUNKS_PER_COLUMN == 0)
-		{
-			nth_col_chunk = 0;
-			++nth_col;
-			world.chunk_columns[nth_col].chunks = malloc(sizeof(t_chunk *) * CHUNKS_PER_COLUMN);
-			world.chunk_columns[nth_col].lights = malloc(sizeof(t_light) * CHUNK_COLUMN_LIGHT_AMOUNT);
-			world.chunk_columns[nth_col].height_map.map = NULL;
-
-			world.chunk_columns[nth_col].coordinate[0] = world.chunks[nth_chunk].coordinate[0];
-			world.chunk_columns[nth_col].coordinate[1] = world.chunks[nth_chunk].coordinate[2];
-			world.chunk_columns[nth_col].world_coordinate[0] = world.chunks[nth_chunk].world_coordinate[0];
-			world.chunk_columns[nth_col].world_coordinate[1] = world.chunks[nth_chunk].world_coordinate[2];
-			world.chunk_columns[nth_col].update_structures = 0;
-			world.chunk_columns[nth_col].being_threaded = 0;
-			world.chunk_columns[nth_col].world = &world;
-		}
-		world.chunk_columns[nth_col].chunks[nth_col_chunk] = &world.chunks[nth_chunk];
-		++nth_col_chunk;
-	}
-	ft_printf("Total Chunks created : %d\n", nth_chunk);
-	//////////////////////////////
-	// END Instance testing
-	//////////////////////////////
-
 ////////////////////////////////////////
 	// UI TESTING
 ////////////////////////////////////////
-	t_ui			ui;
-	t_ui_manager	ui_manager;
-
-	ui_manager_init(&ui_manager);
+	t_ui	ui;
 	ui_init(&ui);
+
+	t_ui_manager	ui_manager;
+	ui_manager_init(&ui_manager);
+
 	ui.keys = vox.keys;
 	ui.mouse = vox.mouse;
 	ui.manager = &ui_manager;
@@ -971,25 +974,11 @@ int	main(void)
 	// END UI TESTING
 ///////////////////////////////////////
 
-	int error = glGetError();
-	if (error)
-		LG_ERROR("gl errors before while : %d", error);
-
 	glfwSwapInterval(0);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_LINE_SMOOTH);
 	glClearColor(1, 0, 1, 1);
-
-	float	tmp[3];
-	float	tmp2[3];
-	float	tmp3[3];
-	float	ent_pos2[3];
-
-// Entity DEBUG;
-	vox.settings.attach_entity = 0;
-	vox.settings.attach_to_entity = 0;
-// END ENTITY DEBUG;
 
 	while (!glfwWindowShouldClose(vox.win))
 	{

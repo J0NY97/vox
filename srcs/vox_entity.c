@@ -131,7 +131,7 @@ void	entity_event(t_entity *entity, t_world *info, t_fps *fps)
 					if (data.entity_collision)
 					{
 						if (entity->draw_terrain_collision)
-							render_block_outline(forward, (float []){0, 255, 0}, info->player->camera.view, info->player->camera.projection);
+							render_block_outline(forward, (float []){0, 255, 0}, info->camera.view, info->camera.projection);
 						v3_new(entity->velocity, 0, entity->velocity[1], 0);
 					}
 					else
