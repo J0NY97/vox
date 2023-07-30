@@ -13,8 +13,9 @@
 #include "entity.h"
 #include "bmath.h"
 #include "vox.h"
+#include "chunk.h"
 
-void	entity_new(t_vox_entity *entity)
+void	entity_new(t_entity *entity)
 {
 	v3_new(entity->pos, 0, 0, 0);
 	v3_new(entity->rot, 0, 0, 0);
@@ -39,7 +40,7 @@ void	entity_new(t_vox_entity *entity)
 /*
  * 
 */
-void	entity_update(t_vox_entity *entity)
+void	entity_update(t_entity *entity)
 {
 	float	rad_yaw;
 	float	rad_pitch;
@@ -61,30 +62,7 @@ void	entity_update(t_vox_entity *entity)
 	translation_matrix(entity->trans_m4, entity->pos);
 }
 
-void	set_entity_at_world_pos(t_world *info, float *world_pos, int entity_type)
-{
-	t_vox_entity	*entity;
-
-	if (info->entity_amount_total >= MAX_ENTITIES)
-	{
-		LG_WARN("Max entities (%d) reached.", MAX_ENTITIES);
-		return ;
-	}
-	entity = &info->entities[info->entity_amount_total];
-	entity_new(entity);
-	entity->type = entity_type;
-	v3_assign(entity->pos, world_pos);
-
-	// TODO : entity->needs_update = 1;
-	// instead of this;
-	entity_update(entity);
-
-	++info->entity_amount_total;
-	LG_INFO("Entity (#%d) added at %f %f %f",
-		info->entity_amount_total, entity->pos[0], entity->pos[1], entity->pos[2]);
-}
-
-int	vox_entity_state_idle(t_vox_entity *entity)
+int	vox_entity_state_idle(t_entity *entity)
 {
 	float	rot[3];
 	int		rot_amount;
@@ -105,7 +83,7 @@ int	vox_entity_state_idle(t_vox_entity *entity)
 	return (0);
 }
 
-int	vox_entity_state_wander(t_vox_entity *entity, t_fps *fps)
+int	vox_entity_state_wander(t_entity *entity, t_fps *fps)
 {
 	// While wandering the entity can change direction it walking in;
 	vox_entity_state_idle(entity);
@@ -128,7 +106,7 @@ int	vox_entity_state_wander(t_vox_entity *entity, t_fps *fps)
 	return (1);
 }
 
-void	vox_entity_event(t_vox_entity *entity, t_world *info, t_fps *fps)
+void	entity_event(t_entity *entity, t_world *info, t_fps *fps)
 {
 	int	result;
 	int	change_state;
@@ -211,9 +189,10 @@ void	vox_entity_event(t_vox_entity *entity, t_world *info, t_fps *fps)
 
 //////////////////
 
-void	world_update_entity_palette(t_world *info)
+void	world_update_entity_palette(t_entity_manager *manager)
 {
-	memset(info->entity_palette, 0, sizeof(int) * ENTITY_AMOUNT);
-	for (int i = 0; i < info->entity_amount_total; i++)
-		++info->entity_palette[(int)info->entities[i].type];
+	memset(manager->entity_palette, 0, sizeof(int) * ENTITY_AMOUNT);
+	for (int i = 0; i < manager->entity_amount; i++)
+		if (manager->slot_taken[i])
+			++manager->entity_palette[(int)manager->entities[i].type];
 }

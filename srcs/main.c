@@ -1,7 +1,7 @@
 #include "vox.h"
+#include "entity.h"
 #include "world.h"
 #include "chunk.h"
-#include "entity.h"
 #include "shader.h"
 #include "bobj.h"
 #include "enum.h"
@@ -69,12 +69,52 @@ float *nth(float *res, unsigned int *indices, float *vertices, int face_index, i
 	return (res);
 }
 
+void load_entity_objects(t_entity_manager *manager)
+{
+	manager->entity_palette = malloc(sizeof(int) * ENTITY_AMOUNT);
+	manager->entity_objects = malloc(sizeof(t_bobj) * ENTITY_AMOUNT);
+	manager->entity_models = malloc(sizeof(t_model_v2) * ENTITY_AMOUNT);
+	new_shader(&manager->model_instance_shader, SHADER_PATH"model_instance.vs", SHADER_PATH"model_instance.fs");
+
+	for (int i = 0; i < ENTITY_AMOUNT; i++)
+	{
+		bobj_load(&manager->entity_objects[i], g_entity_data[i].model_path);
+		model_instance_from_bobj(&manager->entity_models[i],
+			&manager->entity_objects[i], 0);
+		model_update(&manager->entity_models[i]);
+	}
+	LG_INFO("All entity models loaded (%d)", ENTITY_AMOUNT);
+}
+
+void debug_create_entities(t_entity_manager *manager, t_player *player)
+{
+	/// Create max_entities amount of entitites infront of the player in a cube;
+	for (int i = 0; i < manager->max_entities; i++)
+	{
+		t_entity *entity = entity_manager_new_entity(manager);
+		if (i % 2 == 0)
+			entity->type = ENTITY_MELON_GOLEM;
+		else
+			entity->type = ENTITY_CHICKEN;
+		int		w = cbrt(manager->max_entities);
+		int		x = i % w;
+		int		y = (i / w) % w;
+		int		z = i / (w * w);
+		v3_new(entity->pos,
+			player->camera.pos[0] + (x * 4),
+			player->camera.pos[1] + (y * 4),
+			player->camera.pos[2] + (z * 4)
+			);
+		entity_update(entity);
+	}
+}
+
 int	main(void)
 {
 	t_vox	vox;
-	t_key			keys[GLFW_KEY_LAST];
-	t_key			mouse[GLFW_MOUSE_BUTTON_LAST];
-	t_fps			fps;
+	t_key	keys[GLFW_KEY_LAST];
+	t_key	mouse[GLFW_MOUSE_BUTTON_LAST];
+	t_fps	fps;
 
 	init(&vox);
 	new_fps(&fps);
@@ -92,28 +132,7 @@ int	main(void)
 	player.camera.far_plane = RENDER_DISTANCE * CHUNK_WIDTH / 2;
 	player.gravity = 0;
 
-
-	GLuint	mandelbrot_shader;
-	new_shader(&mandelbrot_shader, SHADER_PATH"mandelbrot.vs", SHADER_PATH"mandelbrot.fs");
-	t_fractal2d	fractal;
-	new_fractal2d(&fractal);
-
-	t_skybox	skybox;
-	new_skybox(&skybox, g_mc_skybox);
-
-//////////////////////////////
-	// Instance testing
-//////////////////////////////
-	GLuint	cube_shader_v2;
-	new_shader(&cube_shader_v2, SHADER_PATH"block_mesh.vs", SHADER_PATH"block_mesh.fs");
-
-	t_thread_manager	tm;
-	thread_manager_new(&tm, 64);
-
-	int	regen_chunks = 1;
-
 	t_player_info	player_info;
-
 	player_info.reach = 5;
 	player_info.equipped_hotbar = 1;
 	player_info.hotbar_item_ids[0] = BLOCK_DIRT;
@@ -127,10 +146,26 @@ int	main(void)
 	player_info.hotbar_item_ids[8] = 0;//FLUID_WATER;
 	player_info.equipped_block = player_info.hotbar_item_ids[player_info.equipped_hotbar];
 
+	//////////////////
+	// SKYBOX
+	//////////////////
+	t_skybox	skybox;
+	new_skybox(&skybox, g_mc_skybox);
+
+	//////////////////////////////
+	// Instance testing
+	//////////////////////////////
+	GLuint	cube_shader_v2;
+	new_shader(&cube_shader_v2, SHADER_PATH"block_mesh.vs", SHADER_PATH"block_mesh.fs");
+
+	t_thread_manager	tm;
+	thread_manager_new(&tm, 64);
+
+	int	regen_chunks = 1;
+
 	t_world	world_info;
 
 	world_info.seed = 896868766;
-
 	world_info.block_collision_enabled = 0;
 	world_info.player_collision_enabled = 0;
 	world_info.fancy_graphics = 0;
@@ -139,86 +174,38 @@ int	main(void)
 	world_info.toggle_ui = 0;
 	world_info.toggle_event = 0;
 	world_info.generate_caves = 0;
-
 	world_info.sky_light_lvl = 15;
-
 	world_info.fog_max_dist = player.camera.far_plane;
 	world_info.fog_min_dist = player.camera.far_plane - 50;
-
-	world_info.entities = malloc(sizeof(t_vox_entity) * MAX_ENTITIES);
+	/*
+	world_info.entities = malloc(sizeof(t_entity) * MAX_ENTITIES);
 	world_info.entity_palette = malloc(sizeof(int) * ENTITY_AMOUNT);
 	world_info.entity_amount_total = 0;
-
+	*/
 	world_info.player = &player;
-
 	v3_new(world_info.spawn_point, 5000, 90, 5000);
 
 	// set player pos to spawn point;
 	v3_assign(player.camera.pos, world_info.spawn_point);
 
-	////////////////////////////////
-	// MODEL / BOBJ / ENTITY
-	////////////////////////////////
-	world_info.entity_objects = malloc(sizeof(t_bobj) * ENTITY_AMOUNT);
-	world_info.entity_models = malloc(sizeof(t_model_v2) * ENTITY_AMOUNT);
+	entity_manager_init(&world_info.entity_manager);
+	load_entity_objects(&world_info.entity_manager);
 
-	GLuint		model_instance_shader;
-	new_shader(&model_instance_shader, SHADER_PATH"model_instance.vs", SHADER_PATH"model_instance.fs");
-
-	for (int i = 0; i < ENTITY_AMOUNT; i++)
-	{
-		bobj_load(&world_info.entity_objects[i], g_entity_data[i].model_path);
-		model_instance_from_bobj(&world_info.entity_models[i],
-			&world_info.entity_objects[i], 0);
-		model_update(&world_info.entity_models[i]);
-	}
-	LG_INFO("All entity models loaded (%d)", ENTITY_AMOUNT);
-
-	int				attach_entity = 0;
-	int				attach_to_entity = 0;
-
-	// Create entities (DEBUG)
-	int		entities_wanted = 500;
-	float	**model_matrices;
-
-	model_matrices = malloc(sizeof(float *) * ENTITY_AMOUNT);
-	for (int i = 0; i < ENTITY_AMOUNT; i++)
-		model_matrices[i] = malloc(sizeof(float) * (MAX_ENTITIES / ENTITY_AMOUNT) * 16);
-
-	entities_wanted = ft_min(entities_wanted, MAX_ENTITIES);
-	for (int i = 0; i < entities_wanted; i++)
-	{
-		entity_new(&world_info.entities[i]);
-		if (i % 2 == 0)
-			world_info.entities[i].type = ENTITY_MELON_GOLEM;
-		else
-			world_info.entities[i].type = ENTITY_CHICKEN;
-		int		w = cbrt(entities_wanted);
-		int		x = i % w;
-		int		y = (i / w) % w;
-		int		z = i / (w * w);
-		v3_new(world_info.entities[i].pos,
-			player.camera.pos[0] + (x * 4),
-			player.camera.pos[1] + (y * 4),
-			player.camera.pos[2] + (z * 4)
-			);
-		entity_update(&world_info.entities[i]);
-		++world_info.entity_amount_total;
-	}
-
-	t_vox_entity	*melon_entity;
-	melon_entity = &world_info.entities[0];
+	// Entity Debug;
+	debug_create_entities(&world_info.entity_manager, &player);
+	t_entity	*melon_entity;
+	melon_entity = &world_info.entity_manager.entities[0];
 	melon_entity->type = ENTITY_MELON_GOLEM;
 	melon_entity->ai = 0;
 	melon_entity->draw_aabb = 1;
 	melon_entity->draw_dir = 1;
-
-	t_vox_entity	*chicken_entity;
-	chicken_entity = &world_info.entities[1];
+	t_entity	*chicken_entity;
+	chicken_entity = &world_info.entity_manager.entities[1];
 	chicken_entity->type = ENTITY_CHICKEN;
 	chicken_entity->ai = 0;
 	chicken_entity->draw_aabb = 1;
 	chicken_entity->draw_dir = 1;
+	// END entity debug;
 
 	// Creation of rendering lists;
 	world_info.meshes_render_indices = malloc(sizeof(int) * CHUNKS_LOADED);
@@ -263,9 +250,9 @@ int	main(void)
 		++nth_col_chunk;
 	}
 	ft_printf("Total Chunks created : %d\n", nth_chunk);
-//////////////////////////////
+	//////////////////////////////
 	// END Instance testing
-//////////////////////////////
+	//////////////////////////////
 
 ////////////////////////////////////////
 	// UI TESTING
@@ -300,6 +287,11 @@ int	main(void)
 	float	tmp2[3];
 	float	tmp3[3];
 	float	ent_pos2[3];
+
+// Entity DEBUG;
+	int				attach_entity = 0;
+	int				attach_to_entity = 0;
+// END ENTITY DEBUG;
 
 	while (!glfwWindowShouldClose(vox.win))
 	{
@@ -815,7 +807,7 @@ int	main(void)
 			}
 			// Lets summon mob on the hovered_block
 			if (hovered_block && keys[GLFW_KEY_M].state == BUTTON_PRESS)
-				set_entity_at_world_pos(&world_info, v3_add(block_pos, block_pos, (float *)g_card_dir[DIR_UP]), ENTITY_MELON_GOLEM);
+				create_entity_at_world_pos(&world_info.entity_manager, v3_add(block_pos, block_pos, (float *)g_card_dir[DIR_UP]), ENTITY_MELON_GOLEM);
 			else if (hovered_block &&
 				(mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS ||
 				mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS ||
@@ -855,16 +847,19 @@ int	main(void)
 		/* END OF COLLISION */
 
 		/* * * * * START OF PLAYER ENTITY HITBOX COLLISION * * * * */
-		t_vox_entity	*rent;
-		t_aabb			rent_aabb;
-		for (int i = 0; i < world_info.entity_amount_total; i++)
+		t_entity	*rent;
+		t_aabb		rent_aabb;
+		for (int i = 0; i < world_info.entity_manager.entity_amount; i++)
 		{
-			rent = &world_info.entities[i];
+			if (!world_info.entity_manager.slot_taken[i])
+				continue;
+
+			rent = &world_info.entity_manager.entities[i];
 			// Continue if we are not within reach;
 			if (v3_dist_sqrd(player.camera.pos, rent->pos) > player_info.reach * player_info.reach)
 				continue ;
-			v3_add(rent_aabb.min, world_info.entity_models[(int)rent->type].bound.min, rent->pos);
-			v3_add(rent_aabb.max, world_info.entity_models[(int)rent->type].bound.max, rent->pos);
+			v3_add(rent_aabb.min, world_info.entity_manager.entity_models[(int)rent->type].bound.min, rent->pos);
+			v3_add(rent_aabb.max, world_info.entity_manager.entity_models[(int)rent->type].bound.max, rent->pos);
 			if (aabb_ray_intersection(&rent_aabb, player.camera.pos, player.camera.front)) //v3_multiply_f(tmp2, player.camera.front, player_info.reach)))
 			{
 				render_3d_rectangle(rent_aabb.min, rent_aabb.max,
@@ -918,7 +913,7 @@ if (error)
 ////////////////////////
 // Model Rendering Instance
 ////////////////////////
-	world_update_entity_palette(&world_info);
+	world_update_entity_palette(&world_info.entity_manager);
 
 	glDisable(GL_BLEND);
 	glEnable(GL_CULL_FACE);
@@ -926,11 +921,13 @@ if (error)
 	// NOTE : we need the amount of entities of a single type (entity_palette just like block_palette);
 	// Create model matrix array from all the entities of the same type;
 
+	entity_manager_draw(&world_info.entity_manager, &player.camera);
+/*
 	int	amount_to_render[ENTITY_AMOUNT];
 	memset(amount_to_render, 0, sizeof(int) * ENTITY_AMOUNT);
 
-	t_vox_entity	*curr_ent;
-
+// TODO : This should be in the entity manager, entity_manager_draw();
+	t_entity	*curr_ent;
 	for (int i = 0; i < world_info.entity_amount_total; i++)
 	{
 		curr_ent = &world_info.entities[i];
@@ -940,13 +937,13 @@ if (error)
 			player.camera.far_plane * player.camera.far_plane)
 			continue ;
 		if (curr_ent->ai)
-			vox_entity_event(curr_ent, &world_info, &fps);
+			entity_event(curr_ent, &world_info, &fps);
 		if (curr_ent->needs_update)
 		{
 			entity_update(curr_ent);
 			curr_ent->needs_update = 0;
 		}
-		model_matrix(model_matrices[(int)curr_ent->type] + amount_to_render[(int)curr_ent->type] * 16,
+		model_matrix(world_info.entity_manager.model_mats[(int)curr_ent->type] + amount_to_render[(int)curr_ent->type] * 16,
 			curr_ent->scale_m4, curr_ent->rot_m4, curr_ent->trans_m4);
 		++amount_to_render[(int)curr_ent->type];
 
@@ -980,6 +977,7 @@ if (error)
 			model_matrices[i], amount_to_render[i],
 			player.camera.view, player.camera.projection);
 	}
+	*/
 
 	error = glGetError();
 if (error)

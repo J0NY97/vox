@@ -10,18 +10,20 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef VOX_ENTITY_H
-# define VOX_ENTITY_H
+#ifndef ENTITY_H
+# define ENTITY_H
 
 # include "stdlib.h"
 # include "glad.h"
 # include "glfw3.h"
 # include "enum.h"
 # include "model.h"
-# include "chunk.h"
 # include "fps.h"
 
 # define MAX_ENTITIES 1024
+
+typedef struct s_world t_world;
+typedef struct s_camera t_camera;
 
 enum e_entity_types
 {
@@ -69,11 +71,11 @@ static const t_vox_entity_data	g_entity_data[] = {
 	}
 };
 
-typedef struct s_vox_entity
+typedef struct s_entity
 {
-	size_t id;
+	int id;
 
-	int		health; // TODO
+	int		health; // todo
 	int		speed;
 
 	float	pos[3];	// model pos / tbh entity pos aswell
@@ -92,38 +94,38 @@ typedef struct s_vox_entity
 
 	char	needs_update;
 
+	/// @brief TODO : ai shouldnt be in here, ai entities should be their own type; and should get handled by other means;
 	char	ai;
 
 	char collision_detection_enabled;
 	char collision_use_precise;
 	char collision;
 
-	// Matrices
-	float	model_m4[16]; // NOTE : Not sure if this is needed, we had it in the old entity, but not in this one;
+	// matrices
+	float	model_m4[16]; // note : not sure if this is needed, we had it in the old entity, but not in this one;
 	float	scale_m4[16];
 	float	rot_m4[16];
 	float	trans_m4[16];
 	t_model *model;
 
-	// Debug
+	// debug
 	char	draw_dir;
 	char	draw_terrain_collision;
 	char	draw_aabb;
 	t_aabb			aabb;
 	float			aabb_vertices[24];
 	unsigned int	aabb_indices[36];
-}		t_vox_entity;
+}		t_entity;
 
-void	entity_new(t_vox_entity *entity);
-void	entity_update(t_vox_entity *entity);
+void	entity_init(t_entity *entity);
+void	entity_update(t_entity *entity);
+void	entity_event(t_entity *entity, t_world *info, t_fps *fps);
+void	entity_render(t_entity *entity, t_camera *camera, t_model *model, GLuint shader);
 
-void	vox_entity_event(t_vox_entity *entity, t_world *info, t_fps *fps);
 
-void	set_entity_at_world_pos(t_world *info, float *world_pos, int entity_type);
-
-void	entity_print(t_vox_entity *entity);
-void	render_entity(t_vox_entity *entity, t_camera *camera, t_model *model, GLuint shader);
+void	entity_print(t_entity *entity);
 
 void	new_model_matrix(float *m4_res, float scale, float *v3_rot, float *v3_pos);;
+
 
 #endif

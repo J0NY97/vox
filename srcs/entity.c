@@ -13,8 +13,10 @@
 #include "vox.h"
 #include "shader.h"
 
-void	new_entity(t_vox_entity *entity)
+void	entity_init(t_entity *entity)
 {
+	entity->id = 0;
+
 	v3_new(entity->pos, 0.0f, 0.0f, 0.0f);
 	entity->rot[0] = 0.0f;
 	entity->rot[1] = 0.0f;
@@ -26,13 +28,10 @@ void	new_entity(t_vox_entity *entity)
 	entity->collision = 0;
 	entity->draw_aabb = 1;
 
-	//entity->show_normal_map = 0;
-
 	entity_update(entity);
-	LG_INFO("new entity made.");
 }
 
-void	entity_print(t_vox_entity *entity)
+void	entity_print(t_entity *entity)
 {
 	ft_printf("Entity :\n");
 	v3_string("entity.pos : ", entity->pos);
@@ -104,7 +103,7 @@ void	translation_matrix(float *m4_res, float *v3_pos)
 	m4_translate(m4_res, m4_res, v3_pos);
 }
 
-void	render_entity(t_vox_entity *entity, t_camera *camera, t_model *model, GLuint shader)
+void	entity_render(t_entity *entity, t_camera *camera, t_model *model, GLuint shader)
 {
 	int error = glGetError();
 

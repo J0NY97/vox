@@ -6,6 +6,7 @@ CFILES = \
 	main.c \
 	scene.c \
 	entity.c \
+	entity_manager.c \
 	model.c \
 	shader.c \
 	texture.c \

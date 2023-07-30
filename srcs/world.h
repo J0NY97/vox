@@ -14,6 +14,7 @@
 # define WORLD_H
 
 # include "player.h"
+# include "entity_manager.h"
 
 #define CHUNK_WIDTH 32
 #define CHUNK_HEIGHT 32
@@ -41,7 +42,6 @@ static const int g_chunk_column_light_amount = CHUNK_WIDTH * CHUNK_BREADTH;
 
 typedef struct s_chunk		t_chunk;
 typedef struct s_chunk_col	t_chunk_col;
-typedef struct s_vox_entity	t_vox_entity;
 
 typedef struct s_world
 {
@@ -71,13 +71,17 @@ typedef struct s_world
 	/////////////////
 	// ENTITY
 	/////////////////
+	/*
 	int				*entity_palette;		// size : ENTITY_AMOUNT;
 
 	t_bobj			*entity_objects;		// size : ENTITY_AMOUNT;
 	t_model_v2		*entity_models;			// size : ENTITY_AMOUNT;
 
-	t_vox_entity	*entities;
+	t_entity	*entities;
 	int				entity_amount_total;	// all 'entity_amount's added up;
+	*/
+
+	t_entity_manager entity_manager;
 
 	// Player
 	t_player	*player;
@@ -95,6 +99,5 @@ typedef struct s_world
 
 }	t_world;
 
-void	world_update_entity_palette(t_world *info);
 
 #endif

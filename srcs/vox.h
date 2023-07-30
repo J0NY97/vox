@@ -34,6 +34,7 @@
 # include "enum.h"
 # include "fps.h"
 # include "entity.h"
+# include "entity_manager.h"
 
 ///////////////////
 //	TEXTURE
@@ -105,7 +106,7 @@ void		render_fractal2d(t_fractal2d *fractal, GLuint shader);
 */
 typedef struct	s_scene
 {
-	t_vox_entity	**entities;
+	t_entity	**entities;
 	size_t		entities_allocated;
 	size_t		entity_amount;
 }		t_scene;
@@ -113,9 +114,9 @@ typedef struct	s_scene
 void		create_scene(t_scene *scene);
 void		remove_scene(t_scene *scene);
 void		remove_entity_from_scene_with_index(t_scene *scene, size_t index);
-void		remove_entity_from_scene(t_scene *scene, t_vox_entity *entity);
-size_t		add_entity_to_scene(t_scene *scene, t_vox_entity *entity);
-t_vox_entity	*get_scene_entity(t_scene *scene, size_t index);
+void		remove_entity_from_scene(t_scene *scene, t_entity *entity);
+size_t		add_entity_to_scene(t_scene *scene, t_entity *entity);
+t_entity	*get_scene_entity(t_scene *scene, size_t index);
 
 ///////////////////
 //	VOX

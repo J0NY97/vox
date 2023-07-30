@@ -23,7 +23,7 @@ void	remove_scene(t_scene *scene)
 /*
  * Returns index where the entity was placed;
 */
-size_t	add_entity_to_scene(t_scene *scene, t_vox_entity *entity)
+size_t	add_entity_to_scene(t_scene *scene, t_entity *entity)
 {
 	size_t	increase_amount = 5;
 
@@ -35,7 +35,7 @@ size_t	add_entity_to_scene(t_scene *scene, t_vox_entity *entity)
 	{
 		scene->entities_allocated += increase_amount;
 		scene->entities = realloc(scene->entities,
-			scene->entities_allocated * sizeof(t_vox_entity *));
+			scene->entities_allocated * sizeof(t_entity *));
 		for (size_t i = 0; i < increase_amount; i++)
 			scene->entities[scene->entities_allocated - increase_amount + i] = NULL;
 		LG_INFO("Making entities array bigger. (%d to %d)",
@@ -69,7 +69,7 @@ void	remove_entity_from_scene_with_index(t_scene *scene, size_t index)
 	scene->entity_amount -= 1;
 }
 
-void	remove_entity_from_scene(t_scene *scene, t_vox_entity *entity)
+void	remove_entity_from_scene(t_scene *scene, t_entity *entity)
 {
 	size_t	index;
 
@@ -80,7 +80,7 @@ void	remove_entity_from_scene(t_scene *scene, t_vox_entity *entity)
 	remove_entity_from_scene_with_index(scene, index);
 }
 
-t_vox_entity	*get_scene_entity(t_scene *scene, size_t index)
+t_entity	*get_scene_entity(t_scene *scene, size_t index)
 {
 	if (index >= scene->entities_allocated)
 	{

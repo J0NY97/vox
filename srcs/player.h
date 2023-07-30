@@ -18,7 +18,7 @@
 # include "camera.h"
 
 typedef struct	s_player	t_player;
-typedef struct	s_vox_entity	t_vox_entity;
+typedef struct	s_entity	t_entity;
 
 struct s_player
 {
@@ -45,8 +45,8 @@ void		player_movement_survival(t_player *player, GLFWwindow *win, t_fps fps);
 void		player_apply_velocity(t_player *player);
 void		player_apply_gravity(t_player *player);
 void		player_looking(t_player *player, GLFWwindow *win);
-void		player_entity_collision(t_player *player, t_vox_entity *entity);
-int			player_entity_mesh_collision(t_player *player, t_vox_entity *entity);
+void		player_entity_collision(t_player *player, t_entity *entity);
+int			player_entity_mesh_collision(t_player *player, t_entity *entity);
 void		player_print(t_player *player);
 
 #endif

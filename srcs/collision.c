@@ -23,7 +23,7 @@
  * TODO: entity collision mesh, we currently check against the triangles the aabb
  *		is made of;
 */
-void	player_entity_collision(t_player *player, t_vox_entity *entity)
+void	player_entity_collision(t_player *player, t_entity *entity)
 {
 	float p1[V3_SIZE];
 	float p2[V3_SIZE];
@@ -87,7 +87,7 @@ void	player_entity_collision(t_player *player, t_vox_entity *entity)
 /*
  * Checks collision with player and entity mesh;
 */
-int	player_entity_mesh_collision(t_player *player, t_vox_entity *entity)
+int	player_entity_mesh_collision(t_player *player, t_entity *entity)
 {
 	// Convert player world position to entity local position;
 	//		Get inverse transformation matrix of entity model;
