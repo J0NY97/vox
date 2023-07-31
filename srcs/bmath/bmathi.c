@@ -1,6 +1,20 @@
 #include "bmath.h"
 #include "libpf.h"
 
+/// @brief from 'vN' array print 'N' amount;
+/// @param prefix_str 
+/// @param vN 
+/// @param N 
+void vNi_string(char *prefix_str, int *vN, int N)
+{
+	printf("%s { ", prefix_str);
+	for (int i = 0; i < N; i++)
+	 	printf("%d ", vN[i]);
+	printf("}\n");
+}
+
+/// VECTOR 3 ///
+
 int	*v3i_new(int *res, int x, int y, int z)
 {
 	res[0] = x;

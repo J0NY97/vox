@@ -456,9 +456,9 @@ void	model_instance_from_bobj(t_model_v2 *model, t_bobj *bob, int index)
 	t_bobj_object	*bobject;
 	char			tmp[256];
 
-	if (index < 0 || index > bob->objects_amount)
+	if (index < 0 || index >= bob->objects_amount)
 	{
-		LG_WARN("Trying to create model from nonexistant bob (index : %d)", index);
+		LG_WARN("Trying to create model from nonexistant bob (index : %d , object amount : %d)", index, bob->objects_amount);
 		return ;
 	}
 	LG_INFO("Start");
@@ -489,6 +489,7 @@ void	model_instance_from_bobj(t_model_v2 *model, t_bobj *bob, int index)
 
 	model->meshes_amount = bobject->meshes_amount;
 	model->meshes = malloc(sizeof(t_mesh_v2) * model->meshes_amount);
+	LG_INFO("mesh amount : %d", model->meshes_amount);
 	for (int m = 0; m < model->meshes_amount; m++)
 	{
 		mesh_init(&model->meshes[m]);
@@ -517,7 +518,13 @@ void	model_instance_render(t_model_v2 *model, GLuint shader, float *model_mat, i
 
 	if (amount <= 0)
 	{
-		LG_WARN("amount %d", amount);
+		LG_WARN("amount (%d) should be more than 0", amount);
+		return ;
+	}
+
+	if (model == NULL)
+	{
+		LG_WARN("model should be not NULL");
 		return ;
 	}
 

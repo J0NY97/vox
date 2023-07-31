@@ -45,6 +45,28 @@ void	entity_init(t_entity *entity)
 	entity_update(entity);
 }
 
+void	entity_update(t_entity *entity)
+{
+	float	rad_yaw;
+	float	rad_pitch;
+
+	rad_yaw = to_radians(entity->yaw);
+	rad_pitch = to_radians(entity->pitch);
+	v3_new(entity->front, cos(rad_yaw) * cos(rad_pitch),
+		sin(rad_pitch), sin(rad_yaw) * cos(rad_pitch));
+	v3_normalize(entity->front, entity->front);
+
+	v3_add(entity->pos, entity->pos, entity->velocity);
+	v3_new(entity->velocity, 0, 0, 0);
+
+	entity->rot[0] = fmod(entity->pitch, 360);
+	entity->rot[1] = fmod(-entity->yaw, 360);
+
+	scale_matrix(entity->scale_m4, entity->scale);
+	rotation_matrix(entity->rot_m4, entity->rot);
+	translation_matrix(entity->trans_m4, entity->pos);
+}
+
 void	entity_print(t_entity *entity)
 {
 	ft_printf("Entity :\n");
@@ -57,18 +79,6 @@ void	entity_print(t_entity *entity)
 	m4_string("rot_mat :", entity->rot_m4);
 	m4_string("trans_mat :", entity->trans_m4);
 	m4_string("model_mat :", entity->model_m4);
-}
-
-void	new_model_matrix(float *m4_res, float scale, float *v3_rot, float *v3_pos)
-{
-	float	scale_mat[16];
-	float	rot_mat[16];
-	float	trans_mat[16];
-
-	scale_matrix(scale_mat, scale);
-	rotation_matrix(rot_mat, v3_rot);
-	translation_matrix(trans_mat, v3_pos);
-	model_matrix(m4_res, scale_mat, rot_mat, trans_mat);
 }
 
 /*

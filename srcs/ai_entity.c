@@ -15,29 +15,7 @@
 #include "vox.h"
 #include "chunk.h"
 
-void	entity_update(t_entity *entity)
-{
-	float	rad_yaw;
-	float	rad_pitch;
-
-	rad_yaw = to_radians(entity->yaw);
-	rad_pitch = to_radians(entity->pitch);
-	v3_new(entity->front, cos(rad_yaw) * cos(rad_pitch),
-		sin(rad_pitch), sin(rad_yaw) * cos(rad_pitch));
-	v3_normalize(entity->front, entity->front);
-
-	v3_add(entity->pos, entity->pos, entity->velocity);
-	v3_new(entity->velocity, 0, 0, 0);
-
-	entity->rot[0] = fmod(entity->pitch, 360);
-	entity->rot[1] = fmod(-entity->yaw, 360);
-
-	scale_matrix(entity->scale_m4, entity->scale);
-	rotation_matrix(entity->rot_m4, entity->rot);
-	translation_matrix(entity->trans_m4, entity->pos);
-}
-
-int	vox_entity_state_idle(t_entity *entity)
+int	ai_entity_state_idle(t_entity *entity)
 {
 	float	rot[3];
 	int		rot_amount;
@@ -58,10 +36,10 @@ int	vox_entity_state_idle(t_entity *entity)
 	return (0);
 }
 
-int	vox_entity_state_wander(t_entity *entity, t_fps *fps)
+int	ai_entity_state_wander(t_entity *entity, t_fps *fps)
 {
 	// While wandering the entity can change direction it walking in;
-	vox_entity_state_idle(entity);
+	ai_entity_state_idle(entity);
 
 	float	rad_yaw;
 	float	rad_pitch;
@@ -72,16 +50,10 @@ int	vox_entity_state_wander(t_entity *entity, t_fps *fps)
 	v3_normalize(entity->front, entity->front);
 
 	v3_multiply_f(entity->velocity, entity->front, entity->speed * fps->delta_time);
-	/*
-	ft_printf("speed * delta == %d * %f = %f\n", entity->speed, fps->delta_time, entity->speed * fps->delta_time);
-	v3_string("rot : ", entity->rot);
-	v3_string("rot_norm : ", rot_norm);
-	v3_string("velocity : ", entity->velocity);
-	*/
 	return (1);
 }
 
-void	entity_event(t_entity *entity, t_world *info, t_fps *fps)
+void	ai_entity_event(t_entity *entity, t_world *info, t_fps *fps)
 {
 	int	result;
 	int	change_state;
@@ -98,9 +70,9 @@ void	entity_event(t_entity *entity, t_world *info, t_fps *fps)
 			entity->state = ENTITY_STATE_IDLE;
 	}	
 	if (entity->state == ENTITY_STATE_IDLE)
-		result = vox_entity_state_idle(entity);
+		result = ai_entity_state_idle(entity);
 	else if (entity->state == ENTITY_STATE_WANDER)
-		result = vox_entity_state_wander(entity, fps);
+		result = ai_entity_state_wander(entity, fps);
 	
 	// Collision
 	// Check if the entity is inside a loaded chunk;
@@ -160,14 +132,4 @@ void	entity_event(t_entity *entity, t_world *info, t_fps *fps)
 
 	// if any of the functions changed the entity, we need to update it;
 	entity->needs_update = result;
-}
-
-//////////////////
-
-void	entity_manager_update_entity_palette(t_entity_manager *manager)
-{
-	memset(manager->entity_palette, 0, sizeof(int) * ENTITY_AMOUNT);
-	for (int i = 0; i < manager->entity_amount; i++)
-		if (manager->slot_taken[i])
-			++manager->entity_palette[(int)manager->entities[i].type];
 }

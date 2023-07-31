@@ -3,6 +3,8 @@
 
 # include "bmath.h"
 
+void vNi_string(char *str, int *vN, int N);
+
 // VEC3I
 int		*v3i_new(int *res, int x, int y, int z);
 int		*v3i_add(int *res, int *v0, int *v1);

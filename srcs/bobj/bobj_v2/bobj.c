@@ -198,6 +198,7 @@ void	bobj_load(t_bobj *bob, char *file_path)
 	// All object files dont have a 'o' in the file, but they should still;
 	//	work the same;
 	bob->objects = malloc(sizeof(t_bobj_object) * o_amount);
+	bob->objects_amount = o_amount;
 
 	// Then go through the 'file_content' again, starting at 'o_start[i]',
 	//	and start filling the values;

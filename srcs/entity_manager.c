@@ -1,10 +1,12 @@
 #include "entity_manager.h"
+#include "shader.h"
 
 void entity_manager_init(t_entity_manager *manager)
 {
 	manager->next_id = 0;
 	manager->max_entities = 11;
 	manager->model_mats = malloc(sizeof(float) * manager->max_entities * 16);
+	LG_INFO("model mats size : %d (* sizeof(float) ofc...)", manager->max_entities * 16);
 
 	manager->entity_amount = 0;
 	manager->entities = NULL;
@@ -22,18 +24,18 @@ t_entity *entity_manager_new_entity(t_entity_manager *manager)
 	{
 		manager->entities = malloc(sizeof(t_entity) * manager->max_entities);
 		manager->entity_amount = manager->max_entities;
-		manager->slot_taken = malloc(sizeof(char) * manager->entity_amount);
-		memset(manager->slot_taken, 0, sizeof(char) * manager->entity_amount);
+		manager->slot_occupied = malloc(sizeof(char) * manager->entity_amount);
+		memset(manager->slot_occupied, 0, sizeof(char) * manager->entity_amount);
 	}
 
 	// Get the first non slot taken;
 	for (int i = 0; i < manager->entity_amount; i++)
 	{
 		// if the slot isnt taken, we have found a slot that doesnt have an entity in it yet;
-		if (!manager->slot_taken[i])
+		if (!manager->slot_occupied[i])
 		{
 			// Set slot taken;
-			manager->slot_taken[i] = 1;
+			manager->slot_occupied[i] = 1;
 			// Init it;
 			entity_init(&manager->entities[i]);
 			// Set id to it;
@@ -59,7 +61,7 @@ t_entity *entity_manager_get_entity(t_entity_manager *manager, int id)
 	for (int i = 0; i < manager->entity_amount; i++)
 	{
 		// check first if the entity slot has something in it, then check that its the correct id;
-		if (manager->slot_taken[i] && manager->entities[i].id == id)
+		if (manager->slot_occupied[i] && manager->entities[i].id == id)
 			return (&manager->entities[i]);
 	}
 	return (NULL);
@@ -67,24 +69,25 @@ t_entity *entity_manager_get_entity(t_entity_manager *manager, int id)
 
 void entity_manager_draw(t_entity_manager *manager, t_camera *camera)
 {
+	LG_INFO("START");
+
 	// Have an array for all the amounts for how many of the type needs to get rendered (for instance rendering);
 	int type_to_render[ENTITY_AMOUNT];
 	memset(type_to_render, 0, sizeof(int) * ENTITY_AMOUNT);
 	// Decide which entities should get rendered;
 	for (int i = 0; i < manager->entity_amount; i++)
 	{
-		// if the slot isnt taken we can just skip it;
-		if (!manager->slot_taken[i])
+		// if the slot isnt occupied we can just skip it;
+		if (!manager->slot_occupied[i])
 			continue;
 
 		t_entity *entity = &manager->entities[i];
 
-		// Decide if the entity should even be rendered;
-		// TODO : if its too far away, it should probably despawn;
+		// If the entity is outside frustrum, we dont want to render it;
 		if (v3_dist_sqrd(camera->pos, entity->pos) > camera->far_plane * camera->far_plane)
 			continue;
 
-		/*
+		/* TODO : this needs to happen in the ai entity manager; or if the entity has a event function pointer in it;
 		if (entity->ai)
 			entity_event(entity, &world_info, &fps);
 		*/
@@ -99,18 +102,6 @@ void entity_manager_draw(t_entity_manager *manager, t_camera *camera)
 		type_to_render[(int)entity->type]++;
 	}
 
-	int type_offset[ENTITY_AMOUNT];
-	memset(type_offset, 0, sizeof(int) * ENTITY_AMOUNT);
-	// Create offset array;
-	for (int i = 0; i < ENTITY_AMOUNT; i++)
-	{
-		// just skip the first, doesnt need an offset;
-		if (i == 0)
-			continue;
-
-		type_offset[i] = type_to_render[i] + type_to_render[i - 1];
-	}
-
 	float ent_pos2[3];
 	float tmp[3];
 	float tmp2[3];
@@ -118,17 +109,25 @@ void entity_manager_draw(t_entity_manager *manager, t_camera *camera)
 	int type_total[ENTITY_AMOUNT];
 	memset(type_total, 0, sizeof(int) * ENTITY_AMOUNT);
 	// Create model matrices for all entities;
+	// NOTE : The entities dont come in the correct order; (sorted by the type i mean);
 	for (int i = 0; i < manager->entity_amount; i++)
 	{
-		if (!manager->slot_taken[i])
+		if (!manager->slot_occupied[i])
 			continue;
 
 		t_entity *entity = &manager->entities[i];
+
+		// Get offset;
+		int type_offset = 0;
+		if (i > 0)
+			type_offset = type_to_render[(int)entity->type] + type_to_render[(int)entity->type - 1];
+			
 		// Set the model matrix;
-		model_matrix(manager->model_mats + (type_total[(int)entity->type] + type_offset[(int)entity->type]) * 16,
+		model_matrix(manager->model_mats + (type_total[(int)entity->type] + type_offset) * 16,
 			entity->scale_m4, entity->rot_m4, entity->trans_m4);
 		type_total[(int)entity->type]++;
 
+/*
 		// Debug
 		if (entity->draw_dir)
 		{
@@ -149,6 +148,7 @@ void entity_manager_draw(t_entity_manager *manager, t_camera *camera)
 				v3_add(tmp2, entity->pos, manager->entity_models[(int)entity->type].bound.max),
 				(float []){255, 0, 0}, camera->view, camera->projection);
 		}
+		*/
 	}
 
 	int total = 0;
@@ -158,21 +158,29 @@ void entity_manager_draw(t_entity_manager *manager, t_camera *camera)
 		if (type_to_render[i] == 0)
 			continue ;
 
-		LG_INFO("%d entity models", manager->entity_models[i].meshes_amount);
-		LG_INFO("%d shader", manager->model_instance_shader);
-		LG_INFO("%f model mats", manager->model_mats + type_offset[i]);
-		LG_INFO("%d type to render", type_to_render[i]);
-		LG_INFO("%d camera view ", camera->view[0]);
-		LG_INFO("%d camera proj ", camera->projection[0]);
+		// Get offset;
+		int type_offset = 0;
+		if (i > 0)
+			type_offset = type_to_render[i] + type_to_render[i - 1];
 
+		LG_INFO("type_offset : %d", type_offset);
+		LG_INFO("We want to render model mats from %d to %d", type_offset * 16, (type_offset * 16) + 16 * type_to_render[i]);
+		LG_INFO("is this inside the size of 'model_mats' ? %d", manager->max_entities * 16);
+
+		LG_INFO("%d entity model mesh amount", manager->entity_models[i].meshes_amount);
+		LG_INFO("%d shader", manager->model_instance_shader);
+		LG_INFO("type[%d] : %d to render", i, type_to_render[i]);
+		
+		// Instanciated rendering;
 		model_instance_render(&manager->entity_models[i], manager->model_instance_shader,
-			manager->model_mats + type_offset[i], type_to_render[i],
+			manager->model_mats + (type_offset * 16), type_to_render[i],
 			camera->view, camera->projection);
 		
-		total+=type_to_render[i];
+		total += type_to_render[i];
 	}
 
-	LG_INFO("%d entities drawn", total);
+	LG_INFO("%d entities rendered", total);
+	LG_INFO("END");
 }
 
 void	create_entity_at_world_pos(t_entity_manager *manager, float *world_pos, int entity_type)
@@ -185,5 +193,21 @@ void	create_entity_at_world_pos(t_entity_manager *manager, float *world_pos, int
 
 	LG_INFO("Entity (%d) added at %f %f %f",
 		entity->id, entity->pos[0], entity->pos[1], entity->pos[2]);
+}
+
+void entity_manager_load_entity_objects(t_entity_manager *manager)
+{
+	manager->entity_objects = malloc(sizeof(t_bobj) * ENTITY_AMOUNT);
+	manager->entity_models = malloc(sizeof(t_model_v2) * ENTITY_AMOUNT);
+	new_shader(&manager->model_instance_shader, SHADER_PATH"model_instance.vs", SHADER_PATH"model_instance.fs");
+
+	for (int i = 0; i < ENTITY_AMOUNT; i++)
+	{
+		bobj_load(&manager->entity_objects[i], g_entity_data[i].model_path);
+		model_instance_from_bobj(&manager->entity_models[i],
+			&manager->entity_objects[i], 0);
+		model_update(&manager->entity_models[i]);
+	}
+	LG_INFO("All entity models loaded (%d)", ENTITY_AMOUNT);
 }
 

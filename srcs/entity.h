@@ -119,13 +119,8 @@ typedef struct s_entity
 
 void	entity_init(t_entity *entity);
 void	entity_update(t_entity *entity);
-void	entity_event(t_entity *entity, t_world *info, t_fps *fps);
+void	ai_entity_event(t_entity *entity, t_world *info, t_fps *fps);
 void	entity_render(t_entity *entity, t_camera *camera, t_model *model, GLuint shader);
-
-
 void	entity_print(t_entity *entity);
-
-void	new_model_matrix(float *m4_res, float scale, float *v3_rot, float *v3_pos);;
-
 
 #endif

@@ -34,7 +34,7 @@ void	init(t_vox *vox)
 
 	vox->win_w = 1280;
 	vox->win_h = 720;
-	vox->win = glfwCreateWindow(vox->win_w, vox->win_h, "MyPixel", NULL, NULL);
+	vox->win = glfwCreateWindow(vox->win_w, vox->win_h, "vox", NULL, NULL);
 
 	glfwMakeContextCurrent(vox->win);
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -75,23 +75,6 @@ float *nth(float *res, unsigned int *indices, float *vertices, int face_index, i
 	res[1] = vertices[vert + 1];
 	res[2] = vertices[vert + 2];
 	return (res);
-}
-
-void entity_manager_load_entity_objects(t_entity_manager *manager)
-{
-	manager->entity_palette = malloc(sizeof(int) * ENTITY_AMOUNT);
-	manager->entity_objects = malloc(sizeof(t_bobj) * ENTITY_AMOUNT);
-	manager->entity_models = malloc(sizeof(t_model_v2) * ENTITY_AMOUNT);
-	new_shader(&manager->model_instance_shader, SHADER_PATH"model_instance.vs", SHADER_PATH"model_instance.fs");
-
-	for (int i = 0; i < ENTITY_AMOUNT; i++)
-	{
-		bobj_load(&manager->entity_objects[i], g_entity_data[i].model_path);
-		model_instance_from_bobj(&manager->entity_models[i],
-			&manager->entity_objects[i], 0);
-		model_update(&manager->entity_models[i]);
-	}
-	LG_INFO("All entity models loaded (%d)", ENTITY_AMOUNT);
 }
 
 void debug_create_entities(t_entity_manager *manager, t_player *player)
@@ -607,7 +590,7 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 	//		player_terrain_collision(player.velocity, (float []){player.camera->pos[0], player.camera->pos[1] - 1.0f, player.camera->pos[2]}, player.velocity, &world);
 
 	player_apply_velocity(player);
-	update_camera(player->camera);
+	update_camera(&world->camera);
 
 	// Used for block collision
 	float	intersect_point[16][3]; // Make sure the amount of collisions that happen are less than the amount of stack memory in these 2 arrays;
@@ -743,7 +726,7 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 	t_aabb		rent_aabb;
 	for (int i = 0; i < world->entity_manager.entity_amount; i++)
 	{
-		if (!world->entity_manager.slot_taken[i])
+		if (!world->entity_manager.slot_occupied[i])
 			continue;
 
 		rent = &world->entity_manager.entities[i];
@@ -763,7 +746,7 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 
 	error = glGetError();
 	if (error)
-		LG_ERROR("before skybox things. (%d)", error);
+		LG_ERROR("before skybox render. (%d)", error);
 
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
@@ -772,7 +755,7 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 
 	error = glGetError();
 	if (error)
-		LG_ERROR("before solid things. (%d)", error);
+		LG_ERROR("before solid render. (%d)", error);
 	// Render solid meshes;
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
@@ -786,7 +769,7 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 
 	error = glGetError();
 	if (error)
-		LG_ERROR("before fluid things. (%d)", error);
+		LG_ERROR("before fluid render. (%d)", error);
 
 	// Render fluid meshes;
 	glEnable(GL_DEPTH_TEST);
@@ -810,17 +793,11 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 
-	entity_manager_update_entity_palette(&world->entity_manager);
-	//entity_manager_draw(&world->entity_manager, player->camera);
+	entity_manager_draw(&world->entity_manager, &world->camera);
 
 	error = glGetError();
 	if (error)
-		LG_ERROR("Afetr chunk things. (%d)", error);
-
-
-	error = glGetError();
-	if (error)
-		LG_ERROR("errors in while : %d", error);
+		LG_ERROR("Errors in while : %d", error);
 }
 
 void	world_init(t_world *world)
@@ -853,17 +830,18 @@ void	world_init(t_world *world)
 	world->chunks = malloc(sizeof(t_chunk) * CHUNKS_LOADED);
 	world->chunk_columns = malloc(sizeof(t_chunk_col) * CHUNK_COLUMNS);
 
-	int		nth_chunk = 0;
-	int		nth_col = -1;
-	int		nth_col_chunk = 0;
-
+	// Get player chunk;
 	get_chunk_pos_from_world_pos(world->player_chunk, world->camera.pos);
 
 	LG_INFO("Inits done, lets create some chunks (%d wanted)\n", CHUNKS_LOADED);
 
 	GLuint	cube_shader_v2;
 	new_shader(&cube_shader_v2, SHADER_PATH"block_mesh.vs", SHADER_PATH"block_mesh.fs");
-	for (; nth_chunk < CHUNKS_LOADED; ++nth_chunk)
+
+	int	nth_col = -1;
+	int	nth_col_chunk = 0;
+	int	nth_chunk = 0;
+	for (; nth_chunk < CHUNKS_LOADED; nth_chunk++)
 	{
 		new_chunk(&world->chunks[nth_chunk], world, nth_chunk);
 		init_chunk_mesh(&world->chunks[nth_chunk].meshes, cube_shader_v2, MESH_TYPE_AMOUNT);
@@ -871,7 +849,7 @@ void	world_init(t_world *world)
 		if (nth_chunk % CHUNKS_PER_COLUMN == 0)
 		{
 			nth_col_chunk = 0;
-			++nth_col;
+			nth_col++;
 			world->chunk_columns[nth_col].chunks = malloc(sizeof(t_chunk *) * CHUNKS_PER_COLUMN);
 			world->chunk_columns[nth_col].lights = malloc(sizeof(t_light) * CHUNK_COLUMN_LIGHT_AMOUNT);
 			world->chunk_columns[nth_col].height_map.map = NULL;
@@ -885,9 +863,9 @@ void	world_init(t_world *world)
 			world->chunk_columns[nth_col].world = world;
 		}
 		world->chunk_columns[nth_col].chunks[nth_col_chunk] = &world->chunks[nth_chunk];
-		++nth_col_chunk;
+		nth_col_chunk++;
 	}
-	ft_printf("Total Chunks created : %d\n", nth_chunk);
+	LG_INFO("Chunks created : %d\n", nth_chunk);
 }
 
 void player_init(t_player *player)
@@ -949,7 +927,7 @@ int	main(void)
 	world.entity_manager.melon_entity->draw_dir = 1;
 	// Chicken
 	world.entity_manager.chicken_entity = &world.entity_manager.entities[1];//entity_manager_get_entity(&world.entity_manager, 1);
-	world.entity_manager.chicken_entity->type = ENTITY_CHICKEN;
+	world.entity_manager.chicken_entity->type = ENTITY_MELON_GOLEM;//ENTITY_CHICKEN;
 	world.entity_manager.chicken_entity->ai = 0;
 	world.entity_manager.chicken_entity->draw_aabb = 1;
 	world.entity_manager.chicken_entity->draw_dir = 1;
@@ -984,7 +962,7 @@ int	main(void)
 	{
 		update_fps(&fps);
 		game_loop(&vox, &fps, &player, &world, &ui, &skybox);
-		ui_loop(&vox, &ui, &ui_manager);
+//		ui_loop(&vox, &ui, &ui_manager);
 
 		glfwSwapBuffers(vox.win);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);

@@ -72,7 +72,6 @@ typedef struct s_world
 	// ENTITY
 	/////////////////
 	/*
-	int				*entity_palette;		// size : ENTITY_AMOUNT;
 
 	t_bobj			*entity_objects;		// size : ENTITY_AMOUNT;
 	t_model_v2		*entity_models;			// size : ENTITY_AMOUNT;

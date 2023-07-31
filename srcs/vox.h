@@ -125,6 +125,8 @@ t_entity	*get_scene_entity(t_scene *scene, size_t index);
 
 typedef struct s_settings
 {
+	// TODO : Have all these settings in a single variable, we could bitwise;
+
 	int regen_chunks;	
 	int toggle_ui;
 

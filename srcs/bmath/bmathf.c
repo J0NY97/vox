@@ -430,7 +430,10 @@ float	*m4_assign(float *result, float *m0)
 	return (result);
 }
 
-void	m4_string(char *str, float *m)
+/// @brief 
+/// @param str Prefix;
+/// @param m4 matrix aka float[16];
+void	m4_string(char *str, float *m4)
 {
 	int	i;
 
@@ -440,7 +443,7 @@ void	m4_string(char *str, float *m)
 	{
 		if (i % 4 == 0)
 			printf("\n");
-		printf("%f ", m[i]);
+		printf("%f ", m4[i]);
 		i++;
 	}
 	printf("}\n");
