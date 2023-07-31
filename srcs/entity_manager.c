@@ -67,6 +67,9 @@ t_entity *entity_manager_get_entity(t_entity_manager *manager, int id)
 	return (NULL);
 }
 
+/// @brief Draws all the entities that are active;
+/// @param manager 
+/// @param camera 
 void entity_manager_draw(t_entity_manager *manager, t_camera *camera)
 {
 	LG_INFO("START");
@@ -127,7 +130,6 @@ void entity_manager_draw(t_entity_manager *manager, t_camera *camera)
 			entity->scale_m4, entity->rot_m4, entity->trans_m4);
 		type_total[(int)entity->type]++;
 
-/*
 		// Debug
 		if (entity->draw_dir)
 		{
@@ -148,7 +150,6 @@ void entity_manager_draw(t_entity_manager *manager, t_camera *camera)
 				v3_add(tmp2, entity->pos, manager->entity_models[(int)entity->type].bound.max),
 				(float []){255, 0, 0}, camera->view, camera->projection);
 		}
-		*/
 	}
 
 	int total = 0;

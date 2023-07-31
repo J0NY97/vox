@@ -27,6 +27,7 @@ void	init(t_vox *vox)
 	glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #else
+	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
@@ -83,6 +84,9 @@ void debug_create_entities(t_entity_manager *manager, t_player *player)
 	for (int i = 0; i < manager->max_entities; i++)
 	{
 		t_entity *entity = entity_manager_new_entity(manager);
+
+		// set all entities to draw_aabb;
+		entity->draw_aabb = 1;
 		/*
 		if (i % 2 == 0)
 			entity->type = ENTITY_MELON_GOLEM;
@@ -793,7 +797,7 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 
-	entity_manager_draw(&world->entity_manager, &world->camera);
+//	entity_manager_draw(&world->entity_manager, &world->camera);
 
 	error = glGetError();
 	if (error)
