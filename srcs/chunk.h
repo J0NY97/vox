@@ -228,8 +228,8 @@ unsigned long int	get_chunk_hash_key(int *coords);
 
 typedef struct s_regen_args
 {
-	int				*reload_these_chunks;
-	int				*into_these_coords; // [2]
+	int			*reload_these_chunks;
+	int			*into_these_coords; // [2]
 	t_world	*chunk_info;
 }	t_regen_args;
 
