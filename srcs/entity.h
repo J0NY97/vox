@@ -102,10 +102,10 @@ typedef struct s_entity
 	char collision;
 
 	// matrices
-	float	model_m4[16]; // note : not sure if this is needed, we had it in the old entity, but not in this one;
-	float	scale_m4[16];
-	float	rot_m4[16];
-	float	trans_m4[16];
+	float	scale_mat[16];
+	float	rot_mat[16]; // TODO : Quaternion;
+	float	trans_mat[16];
+	float	model_mat[16];
 	t_model *model;
 
 	// debug

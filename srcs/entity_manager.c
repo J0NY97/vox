@@ -4,7 +4,7 @@
 void entity_manager_init(t_entity_manager *manager)
 {
 	manager->next_id = 0;
-	manager->max_entities = 11;
+	manager->max_entities = 256000;
 	manager->model_mats = malloc(sizeof(float) * manager->max_entities * 16);
 	LG_INFO("model mats size : %d (* sizeof(float) ofc...)", manager->max_entities * 16);
 
@@ -43,7 +43,7 @@ t_entity *entity_manager_new_entity(t_entity_manager *manager)
 			// Increment manager next id;
 			manager->next_id++;
 			// return it;
-			LG_INFO("Entity (%d) created", manager->entities[i].id);
+//			LG_INFO("Entity (%d) created", manager->entities[i].id);
 			return (&manager->entities[i]);
 		}
 	}	
@@ -87,14 +87,18 @@ void entity_manager_draw(t_entity_manager *manager, t_camera *camera)
 		t_entity *entity = &manager->entities[i];
 
 		// If the entity is outside frustrum, we dont want to render it;
+		/*
 		if (v3_dist_sqrd(camera->pos, entity->pos) > camera->far_plane * camera->far_plane)
 			continue;
+			*/
 
 		/* TODO : this needs to happen in the ai entity manager; or if the entity has a event function pointer in it;
 		if (entity->ai)
 			entity_event(entity, &world_info, &fps);
 		*/
 
+		// NOTE : The matrices of the entity gets updated in 'entity_update()', so one
+		//	has to have this bool set for it to ever be called;
 		if (entity->needs_update)
 		{
 			entity_update(entity);
@@ -105,9 +109,7 @@ void entity_manager_draw(t_entity_manager *manager, t_camera *camera)
 		type_to_render[(int)entity->type]++;
 	}
 
-	float ent_pos2[3];
-	float tmp[3];
-	float tmp2[3];
+//	vNi_string("typeToRender: ", type_to_render, ENTITY_AMOUNT);
 
 	int type_total[ENTITY_AMOUNT];
 	memset(type_total, 0, sizeof(int) * ENTITY_AMOUNT);
@@ -122,15 +124,28 @@ void entity_manager_draw(t_entity_manager *manager, t_camera *camera)
 
 		// Get offset;
 		int type_offset = 0;
-		if (i > 0)
+		if ((int)entity->type > 0)
 			type_offset = type_to_render[(int)entity->type] + type_to_render[(int)entity->type - 1];
-			
+
+		int final_offset = (type_total[(int)entity->type] + (type_offset * 16)) * 16;
+
+//		printf("final_offset : %d (%d %d)\n", final_offset, type_total[(int)entity->type], type_offset);
+
+		// Copy model matrix of the entity;
+		memcpy(manager->model_mats + final_offset, entity->model_mat, sizeof(float) * 16);
 		// Set the model matrix;
-		model_matrix(manager->model_mats + (type_total[(int)entity->type] + type_offset) * 16,
-			entity->scale_m4, entity->rot_m4, entity->trans_m4);
+		/*
+		model_matrix(manager->model_mats + final_offset,
+			entity->scale_mat, entity->rot_mat, entity->trans_mat);
+			*/
 		type_total[(int)entity->type]++;
 
+//		m4_string("manager->models_mats : ", manager->model_mats + final_offset);
+
 		// Debug
+		float ent_pos2[3];
+		float tmp[3];
+		float tmp2[3];
 		if (entity->draw_dir)
 		{
 			// Front
@@ -142,7 +157,6 @@ void entity_manager_draw(t_entity_manager *manager, t_camera *camera)
 			v3_add(ent_pos2, ent_pos2, entity->pos);
 			render_3d_line(entity->pos, ent_pos2, (float []){255, 0, 0}, camera->view, camera->projection);
 		}
-
 		if (entity->draw_aabb)
 		{
 			render_3d_rectangle(v3_add(tmp, entity->pos,
@@ -164,6 +178,7 @@ void entity_manager_draw(t_entity_manager *manager, t_camera *camera)
 		if (i > 0)
 			type_offset = type_to_render[i] + type_to_render[i - 1];
 
+/*
 		LG_INFO("type_offset : %d", type_offset);
 		LG_INFO("We want to render model mats from %d to %d", type_offset * 16, (type_offset * 16) + 16 * type_to_render[i]);
 		LG_INFO("is this inside the size of 'model_mats' ? %d", manager->max_entities * 16);
@@ -171,6 +186,7 @@ void entity_manager_draw(t_entity_manager *manager, t_camera *camera)
 		LG_INFO("%d entity model mesh amount", manager->entity_models[i].meshes_amount);
 		LG_INFO("%d shader", manager->model_instance_shader);
 		LG_INFO("type[%d] : %d to render", i, type_to_render[i]);
+		*/
 		
 		// Instanciated rendering;
 		model_instance_render(&manager->entity_models[i], manager->model_instance_shader,

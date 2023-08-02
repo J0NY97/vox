@@ -247,7 +247,7 @@ void		update_chunk_mesh(t_chunk_mesh *mesh);
 void		render_chunk_mesh(t_chunk_mesh *mesh, int mesh_type, float *coordinate, t_camera *camera);
 int			chunk_mesh_collision_v2(float *orig, float *dir, t_chunk_mesh *mesh, int mesh_type, float *world_coords, float reach, float intersect_point[16][3]);
 
-// This is used in the terrain collision; rename when you come it better;
+// This is used in the terrain collision; rename when you come up with better;
 int			chunk_mesh_collision_v56(float *orig, float *dir, t_chunk *chunk, float reach, float intersect_points[16][3], float intersect_normals[16][3]);
 // a
 

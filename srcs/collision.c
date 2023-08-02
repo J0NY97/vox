@@ -94,7 +94,7 @@ int	player_entity_mesh_collision(t_player *player, t_entity *entity)
 	float	inverse_trans[M4_SIZE];
 
 	m4_identity(inverse_trans);
-	m4_inverse(inverse_trans, entity->model_m4);
+	m4_inverse(inverse_trans, entity->model_mat);
 
 	//		Apply inverse transformation matrix on player position;
 	float	local_player_pos[V4_SIZE];
@@ -140,9 +140,9 @@ int	player_entity_mesh_collision(t_player *player, t_entity *entity)
 
 				}
 					glDisable(GL_DEPTH_TEST);
-					v4_multiply_m4(p1, p1, entity->model_m4);
-					v4_multiply_m4(p2, p2, entity->model_m4);
-					v4_multiply_m4(p3, p3, entity->model_m4);
+					v4_multiply_m4(p1, p1, entity->model_mat);
+					v4_multiply_m4(p2, p2, entity->model_mat);
+					v4_multiply_m4(p3, p3, entity->model_mat);
 					render_3d_line(p1, p2, (float []){0, 0, 1}, player->camera->view, player->camera->projection);
 					render_3d_line(p1, p3, (float []){0, 0, 1}, player->camera->view, player->camera->projection);
 					render_3d_line(p2, p3, (float []){0, 0, 1}, player->camera->view, player->camera->projection);

@@ -78,15 +78,14 @@ float *nth(float *res, unsigned int *indices, float *vertices, int face_index, i
 	return (res);
 }
 
-void debug_create_entities(t_entity_manager *manager, t_player *player)
+void debug_create_entities(t_entity_manager *manager, float *pos_v3, int amount_to_create)
 {
 	/// Create max_entities amount of entitites infront of the player in a cube;
-	for (int i = 0; i < manager->max_entities; i++)
+	for (int i = 0; i < amount_to_create && i < manager->max_entities; i++)
 	{
 		t_entity *entity = entity_manager_new_entity(manager);
-
 		// set all entities to draw_aabb;
-		entity->draw_aabb = 1;
+//		entity->draw_aabb = 1;
 		/*
 		if (i % 2 == 0)
 			entity->type = ENTITY_MELON_GOLEM;
@@ -97,14 +96,8 @@ void debug_create_entities(t_entity_manager *manager, t_player *player)
 		int		x = i % w;
 		int		y = (i / w) % w;
 		int		z = i / (w * w);
-		v3_new(entity->pos,
-			player->camera->pos[0] + (x * 4),
-			player->camera->pos[1] + (y * 4),
-			player->camera->pos[2] + (z * 4)
-			);
-		entity_update(entity);
+		v3_new(entity->pos, pos_v3[0] + (x * 4), pos_v3[1] + (y * 4), pos_v3[2] + (z * 4) );
 	}
-
 	LG_INFO("Created %d entities for debugging purposes", manager->max_entities);
 }
 
@@ -797,7 +790,7 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 
-//	entity_manager_draw(&world->entity_manager, &world->camera);
+	entity_manager_draw(&world->entity_manager, &world->camera);
 
 	error = glGetError();
 	if (error)
@@ -906,7 +899,7 @@ int	main(void)
 	player_init(&player);
 
 	player.camera = &world.camera;
-	v3_new(player.camera->pos, 0, 0, 0);
+	v3_new(player.camera->pos, 0, 0, 0); //
 	player.camera->pitch = 0;
 	player.camera->yaw = -90;
 	player.camera->viewport_w = vox.win_w;
@@ -922,7 +915,7 @@ int	main(void)
 	v3_assign(player.camera->pos, world.spawn_point);
 
 	// Entity Debug;
-	debug_create_entities(&world.entity_manager, &player);
+	debug_create_entities(&world.entity_manager, player.camera->pos, world.entity_manager.max_entities);
 	// Melon
 	world.entity_manager.melon_entity = &world.entity_manager.entities[0];//entity_manager_get_entity(&world.entity_manager, 0);
 	world.entity_manager.melon_entity->type = ENTITY_MELON_GOLEM;
@@ -931,7 +924,7 @@ int	main(void)
 	world.entity_manager.melon_entity->draw_dir = 1;
 	// Chicken
 	world.entity_manager.chicken_entity = &world.entity_manager.entities[1];//entity_manager_get_entity(&world.entity_manager, 1);
-	world.entity_manager.chicken_entity->type = ENTITY_MELON_GOLEM;//ENTITY_CHICKEN;
+	world.entity_manager.chicken_entity->type = ENTITY_MELON_GOLEM;/*ENTITY_CHICKEN;*/
 	world.entity_manager.chicken_entity->ai = 0;
 	world.entity_manager.chicken_entity->draw_aabb = 1;
 	world.entity_manager.chicken_entity->draw_dir = 1;

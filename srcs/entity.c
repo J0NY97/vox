@@ -42,7 +42,7 @@ void	entity_init(t_entity *entity)
 
 	entity->ai = 1;
 
-	entity_update(entity);
+	entity->needs_update = 1;
 }
 
 void	entity_update(t_entity *entity)
@@ -62,23 +62,22 @@ void	entity_update(t_entity *entity)
 	entity->rot[0] = fmod(entity->pitch, 360);
 	entity->rot[1] = fmod(-entity->yaw, 360);
 
-	scale_matrix(entity->scale_m4, entity->scale);
-	rotation_matrix(entity->rot_m4, entity->rot);
-	translation_matrix(entity->trans_m4, entity->pos);
+	scale_matrix(entity->scale_mat, entity->scale);
+	rotation_matrix(entity->rot_mat, entity->rot);
+	translation_matrix(entity->trans_mat, entity->pos);
+
+	model_matrix(entity->model_mat, entity->scale_mat, entity->rot_mat, entity->trans_mat);
 }
 
 void	entity_print(t_entity *entity)
 {
 	ft_printf("Entity :\n");
 	v3_string("entity.pos : ", entity->pos);
-	ft_printf("entity.rot_x_angle : %f\n", entity->rot[0]);
-	ft_printf("entity.rot_y_angle : %f\n", entity->rot[1]);
-	ft_printf("entity.rot_z_angle : %f\n", entity->rot[2]);
+	v3_string("entity.rot : ", entity->rot);
 
-	m4_string("scale_mat :", entity->scale_m4);
-	m4_string("rot_mat :", entity->rot_m4);
-	m4_string("trans_mat :", entity->trans_m4);
-	m4_string("model_mat :", entity->model_m4);
+	m4_string("scale_mat :", entity->scale_mat);
+	m4_string("rot_mat :", entity->rot_mat);
+	m4_string("trans_mat :", entity->trans_mat);
 }
 
 /*
@@ -134,10 +133,10 @@ void	entity_render(t_entity *entity, t_camera *camera, t_model *model, GLuint sh
 	entity_update(entity);
 
 	glUseProgram(shader);
-	glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, &entity->model_m4[0]);
-	glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, GL_FALSE, &camera->view[0]);
-	glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, GL_FALSE, &camera->projection[0]);
-	glUniform3fv(glGetUniformLocation(shader, "aViewPos"), 3, &camera->pos[0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, entity->model_mat);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, GL_FALSE, camera->view);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, GL_FALSE, camera->projection);
+	glUniform3fv(glGetUniformLocation(shader, "aViewPos"), 3, camera->pos);
 
 //	if (vec3_distance(camera->pos, entity->pos) <= 5.0f)
 	if (entity->collision)

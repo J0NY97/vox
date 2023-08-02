@@ -8,12 +8,12 @@ int	mod(int a, int b)
     return (r < 0 ? r + b : r);
 }
 
-float	*v3_new(float *src, float x, float y, float z)
+float	*v3_new(float *dst, float x, float y, float z)
 {
-	src[0] = x;
-	src[1] = y;
-	src[2] = z;
-	return (src);
+	dst[0] = x;
+	dst[1] = y;
+	dst[2] = z;
+	return (dst);
 }
 
 float	*v3_assign(float *dest, float *src)
