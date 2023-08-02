@@ -915,7 +915,7 @@ int	main(void)
 	v3_assign(player.camera->pos, world.spawn_point);
 
 	// Entity Debug;
-	debug_create_entities(&world.entity_manager, player.camera->pos, 10);
+	debug_create_entities(&world.entity_manager, player.camera->pos, 65000);
 	// Melon
 	world.entity_manager.melon_entity = &world.entity_manager.entities[0];//entity_manager_get_entity(&world.entity_manager, 0);
 	world.entity_manager.melon_entity->type = ENTITY_MELON_GOLEM;
