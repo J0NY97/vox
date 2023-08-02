@@ -940,7 +940,7 @@ int	main(void)
 	v3_assign(player.camera->pos, world.spawn_point);
 
 	// Entity Debug;
-	debug_create_entities(&world.entity_manager, player.camera->pos, 65000);
+	debug_create_entities(&world.entity_manager, player.camera->pos, 10);
 	// Melon
 	world.entity_manager.melon_entity = &world.entity_manager.entities[0];//entity_manager_get_entity(&world.entity_manager, 0);
 	world.entity_manager.melon_entity->type = ENTITY_MELON_GOLEM;
@@ -985,7 +985,7 @@ int	main(void)
 	{
 		update_fps(&fps);
 		game_loop(&vox, &fps, &player, &world, &ui, &skybox);
-//		ui_loop(&vox, &ui, &ui_manager);
+		ui_loop(&vox, &ui, &ui_manager);
 
 		glfwSwapBuffers(vox.win);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
