@@ -48,7 +48,7 @@ t_entity *entity_manager_new_entity(t_entity_manager *manager)
 		}
 	}	
 
-	LG_WARN("Should really never come here");
+	LG_WARN("I think we're at max capacity");
 	return (NULL);
 }
 
@@ -181,6 +181,12 @@ void entity_manager_draw(t_entity_manager *manager, t_camera *camera)
 void	create_entity_at_world_pos(t_entity_manager *manager, float *world_pos, int entity_type)
 {
 	t_entity *entity = entity_manager_new_entity(manager); 
+
+	if (!entity)
+	{
+		LG_WARN("New entity couldnt get created.");
+		return;
+	}
 	entity->type = entity_type;
 	v3_assign(entity->pos, world_pos);
 

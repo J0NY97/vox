@@ -45,10 +45,11 @@ void	init(t_vox *vox)
 	vox->renderMode = 0;
 
 	// Settings INIT
-	vox->settings.attach_entity = 0;
-	vox->settings.attach_to_entity = 0;
 	vox->settings.regen_chunks = 1;
 	vox->settings.toggle_ui = 0;
+	vox->settings.entity_hitbox_enabled = 0;
+	vox->settings.attach_entity = 0;
+	vox->settings.attach_to_entity = 0;
 
 	thread_manager_new(&vox->tm, 64);
 
@@ -165,24 +166,8 @@ void ui_loop(t_vox *vox, t_ui *ui, t_ui_manager *ui_manager)
 	
 }
 
-void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *gui, t_skybox *skybox)
+void input_loop(t_vox *vox, t_world *world, t_player *player, t_ui *gui, t_fps *fps)
 {
-	int error = glGetError();
-	if (error)
-		LG_ERROR("errors in start of while : %d", error);
-
-	glCullFace(GL_BACK);
-
-	char fps_str[10];
-	if (fps->count % 60 == 0)
-	{
-		ft_b_itoa(fps->fps, fps_str);
-		glfwSetWindowTitle(vox->win, fps_str);
-	}
-
-	// CHUNK STUFF
-	world->sky_light_lvl_prev = world->sky_light_lvl;
-
 	update_all_keys(vox->keys, vox->mouse, vox->win);
 	glfwPollEvents();
 	if (vox->keys[GLFW_KEY_ESCAPE].state == BUTTON_PRESS)
@@ -273,6 +258,16 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 		// TESTING ///
 	}
 
+	// Enable hitbox for entities;
+	if (vox->keys[GLFW_KEY_O].state == BUTTON_PRESS)
+	{
+		vox->settings.entity_hitbox_enabled = !vox->settings.entity_hitbox_enabled;
+		if (vox->settings.entity_hitbox_enabled)
+			LG_INFO("Entity Hitbox Enabled");
+		else
+			LG_INFO("Entity Hitbox Disabled");
+	}
+
 	// Force update all chunks
 	if (vox->keys[GLFW_KEY_T].state == BUTTON_PRESS)
 	{
@@ -346,57 +341,60 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 	}
 
 	// Melon controls
-	if (vox->keys[GLFW_KEY_KP_4].state == BUTTON_HOLD)
+	if (world->entity_manager.melon_entity)
 	{
-		world->entity_manager.melon_entity->yaw -= 0.1f;
-	}
-	if (vox->keys[GLFW_KEY_KP_6].state == BUTTON_HOLD)
-	{
-		world->entity_manager.melon_entity->yaw += 0.1f;
-	}
-	if (vox->keys[GLFW_KEY_KP_0].state == BUTTON_HOLD)
-	{
-		float speed = world->entity_manager.melon_entity->speed;
-		if (vox->keys[GLFW_KEY_LEFT_SHIFT].state == BUTTON_HOLD)
-			speed *= 10;
-		v3_multiply_f(world->entity_manager.melon_entity->velocity, world->entity_manager.melon_entity->front, speed * fps->delta_time);
-	}
-	if (vox->keys[GLFW_KEY_P].state == BUTTON_PRESS)
-	{
-		ft_printf("Euler : %d %d\n", world->entity_manager.melon_entity->yaw, world->entity_manager.melon_entity->pitch);
-		ft_printf("Front : %.2f %.2f %.2f\n", world->entity_manager.melon_entity->front[0], world->entity_manager.melon_entity->front[1], world->entity_manager.melon_entity->front[2]);
-	}
-	if (vox->keys[GLFW_KEY_KP_5].state == BUTTON_PRESS)
-	{
-		world->entity_manager.melon_entity->ai = world->entity_manager.melon_entity->ai != 1;
-		world->entity_manager.chicken_entity->ai = world->entity_manager.chicken_entity->ai != 1;
-		if (world->entity_manager.melon_entity->ai)
-			LG_INFO("entity->ai => ON.");
-		else
-			LG_INFO("entity->ai => OFF.");
-	}
-	if (vox->keys[GLFW_KEY_KP_7].state == BUTTON_PRESS)
-	{
-		world->entity_manager.melon_entity->draw_aabb = world->entity_manager.melon_entity->draw_aabb != 1;
-		world->entity_manager.melon_entity->draw_dir = world->entity_manager.melon_entity->draw_aabb;
-		world->entity_manager.chicken_entity->draw_aabb = world->entity_manager.chicken_entity->draw_aabb != 1;
-		world->entity_manager.chicken_entity->draw_dir = world->entity_manager.chicken_entity->draw_aabb;
-		if (world->entity_manager.melon_entity->draw_aabb)
-			LG_INFO("entity->draw_aabb => ON.");
-		else
-			LG_INFO("entity->draw_aabb => OFF.");
-	}
+		if (vox->keys[GLFW_KEY_KP_4].state == BUTTON_HOLD)
+		{
+			world->entity_manager.melon_entity->yaw -= 0.1f;
+		}
+		if (vox->keys[GLFW_KEY_KP_6].state == BUTTON_HOLD)
+		{
+			world->entity_manager.melon_entity->yaw += 0.1f;
+		}
+		if (vox->keys[GLFW_KEY_KP_0].state == BUTTON_HOLD)
+		{
+			float speed = world->entity_manager.melon_entity->speed;
+			if (vox->keys[GLFW_KEY_LEFT_SHIFT].state == BUTTON_HOLD)
+				speed *= 10;
+			v3_multiply_f(world->entity_manager.melon_entity->velocity, world->entity_manager.melon_entity->front, speed * fps->delta_time);
+		}
+		if (vox->keys[GLFW_KEY_P].state == BUTTON_PRESS)
+		{
+			ft_printf("Euler : %d %d\n", world->entity_manager.melon_entity->yaw, world->entity_manager.melon_entity->pitch);
+			ft_printf("Front : %.2f %.2f %.2f\n", world->entity_manager.melon_entity->front[0], world->entity_manager.melon_entity->front[1], world->entity_manager.melon_entity->front[2]);
+		}
+		if (vox->keys[GLFW_KEY_KP_5].state == BUTTON_PRESS)
+		{
+			world->entity_manager.melon_entity->ai = world->entity_manager.melon_entity->ai != 1;
+			world->entity_manager.chicken_entity->ai = world->entity_manager.chicken_entity->ai != 1;
+			if (world->entity_manager.melon_entity->ai)
+				LG_INFO("entity->ai => ON.");
+			else
+				LG_INFO("entity->ai => OFF.");
+		}
+		if (vox->keys[GLFW_KEY_KP_7].state == BUTTON_PRESS)
+		{
+			world->entity_manager.melon_entity->draw_aabb = world->entity_manager.melon_entity->draw_aabb != 1;
+			world->entity_manager.melon_entity->draw_dir = world->entity_manager.melon_entity->draw_aabb;
+			world->entity_manager.chicken_entity->draw_aabb = world->entity_manager.chicken_entity->draw_aabb != 1;
+			world->entity_manager.chicken_entity->draw_dir = world->entity_manager.chicken_entity->draw_aabb;
+			if (world->entity_manager.melon_entity->draw_aabb)
+				LG_INFO("entity->draw_aabb => ON.");
+			else
+				LG_INFO("entity->draw_aabb => OFF.");
+		}
 
-	if (vox->settings.attach_entity)
-		v3_new(world->entity_manager.melon_entity->pos, player->camera->pos[0], player->camera->pos[1] - 2, player->camera->pos[2] - 2);
-	else if (vox->settings.attach_to_entity)
-	{
-		float p_pos[3];
-		v3_multiply_f(p_pos, world->entity_manager.melon_entity->front, -2.0f);
-		v3_add(p_pos, p_pos, world->entity_manager.melon_entity->pos);
-		v3_assign(player->camera->pos, p_pos);
-		player->camera->yaw = world->entity_manager.melon_entity->yaw;
-		player->camera->pitch = -world->entity_manager.melon_entity->pitch;
+		if (vox->settings.attach_entity)
+			v3_new(world->entity_manager.melon_entity->pos, player->camera->pos[0], player->camera->pos[1] - 2, player->camera->pos[2] - 2);
+		else if (vox->settings.attach_to_entity)
+		{
+			float p_pos[3];
+			v3_multiply_f(p_pos, world->entity_manager.melon_entity->front, -2.0f);
+			v3_add(p_pos, p_pos, world->entity_manager.melon_entity->pos);
+			v3_assign(player->camera->pos, p_pos);
+			player->camera->yaw = world->entity_manager.melon_entity->yaw;
+			player->camera->pitch = -world->entity_manager.melon_entity->pitch;
+		}
 	}
 
 	// Select equipped block;
@@ -428,7 +426,31 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 		LG_INFO("Sky Light Level : %d", world->sky_light_lvl);
 	}
 
-	player_events(player, vox->keys, vox->win);
+}
+
+void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *gui, t_skybox *skybox)
+{
+	int error = glGetError();
+	if (error)
+		LG_ERROR("errors in start of while : %d", error);
+
+	glCullFace(GL_BACK);
+
+	char fps_str[10];
+	if (fps->count % 60 == 0)
+	{
+		ft_b_itoa(fps->fps, fps_str);
+		glfwSetWindowTitle(vox->win, fps_str);
+	}
+
+	// CHUNK STUFF
+	world->sky_light_lvl_prev = world->sky_light_lvl;
+
+	// Input
+	input_loop(vox, world, player, gui, fps);
+
+	// Player Input?
+	player_event(player, vox->keys, vox->win);
 
 	if (player->gravity == 0)
 		player_movement_creative(player, vox->win, fps);
@@ -479,67 +501,67 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 
 	for (int col = 0; col < CHUNK_COLUMNS; col++)
 	{
-	column = &world->chunk_columns[col];
-	if (column->being_threaded)
-		continue ;
-	col_chunks = column->chunks;
+		column = &world->chunk_columns[col];
+		if (column->being_threaded)
+			continue ;
+		col_chunks = column->chunks;
 
-	column->chunk_needs_update = 0;
+		column->chunk_needs_update = 0;
 
-	if (world->generate_structures && column->update_structures)
-	{
-		tree_gen(world, column);
-		column->update_structures = 0;
-	}
-
-	// Check if a chunk in the column needs an update;
-	for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
-	{
-		if (col_chunks[ent]->needs_to_update)
+		if (world->generate_structures && column->update_structures)
 		{
-			update_chunk_block_palette(col_chunks[ent]);
-			column->chunk_needs_update = 1;
+			tree_gen(world, column);
+			column->update_structures = 0;
 		}
-	}
 
-	// Light calculation;
-	if (world->light_calculation &&
-		(column->chunk_needs_update ||
-		world->sky_light_lvl != world->sky_light_lvl_prev))
-		update_chunk_column_light(column);
-	// Other Chunk updates;
-	for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
-	{
-		neighbors_found = 0;
-
-		// We only need to update the chunks if a chunk has been regenerated
-		if ((col_chunks[ent]->needs_to_update ||
-			(world->generate_structures && column->update_structures)))
+		// Check if a chunk in the column needs an update;
+		for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
 		{
-			// Get all neighbors for this chunk;
-			for (int dir = DIR_NORTH, i = 0; dir < DIR_AMOUNT; ++dir, ++i)
+			if (col_chunks[ent]->needs_to_update)
 			{
-				neighbors[i] = get_adjacent_chunk(world, col_chunks[ent], (float *)g_card_dir[dir]);
-				++neighbors_found;
+				update_chunk_block_palette(col_chunks[ent]);
+				column->chunk_needs_update = 1;
 			}
 		}
 
-		if (col_chunks[ent]->needs_to_update)
+		// Light calculation;
+		if (world->light_calculation &&
+			(column->chunk_needs_update ||
+			world->sky_light_lvl != world->sky_light_lvl_prev))
+			update_chunk_column_light(column);
+		// Other Chunk updates;
+		for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
 		{
-			update_chunk(col_chunks[ent]);
-			if (world->toggle_event)
-				update_chunk_event_blocks(col_chunks[ent]);
-			// Set needs to update to all 6 neighbors of the chunk;
-			for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
-				if (neighbors[i])
-					neighbors[i]->secondary_update = 1;
+			neighbors_found = 0;
+
+			// We only need to update the chunks if a chunk has been regenerated
+			if ((col_chunks[ent]->needs_to_update ||
+				(world->generate_structures && column->update_structures)))
+			{
+				// Get all neighbors for this chunk;
+				for (int dir = DIR_NORTH, i = 0; dir < DIR_AMOUNT; ++dir, ++i)
+				{
+					neighbors[i] = get_adjacent_chunk(world, col_chunks[ent], (float *)g_card_dir[dir]);
+					++neighbors_found;
+				}
+			}
+
+			if (col_chunks[ent]->needs_to_update)
+			{
+				update_chunk(col_chunks[ent]);
+				if (world->toggle_event)
+					update_chunk_event_blocks(col_chunks[ent]);
+				// Set needs to update to all 6 neighbors of the chunk;
+				for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
+					if (neighbors[i])
+						neighbors[i]->secondary_update = 1;
+			}
+
+			col_chunks[ent]->needs_to_update = 0;
+
+			if (world->toggle_event && world->game_tick)
+				event_chunk(col_chunks[ent]);
 		}
-
-		col_chunks[ent]->needs_to_update = 0;
-
-		if (world->toggle_event && world->game_tick)
-			event_chunk(col_chunks[ent]);
-	}
 	}
 
 	// Secondary updater;
@@ -605,45 +627,45 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 
 	for (; nth_chunk < CHUNKS_LOADED; ++nth_chunk)
 	{
-	if (!world->chunks[nth_chunk].has_visible_blocks)
-		continue ;
+		if (!world->chunks[nth_chunk].has_visible_blocks)
+			continue ;
 
-	// Decide if we want to render the chunk or not;
-	// Dont render chunk if the chunk is further away than the farplane of the camear;
-	// Dont render if the chunk is outside the view fustrum;
-	// Dont render if hasnt been sent to gpu yet;
-	if (world->chunks[nth_chunk].was_updated == 0 &&
-		v3_dist_sqrd(player->camera->pos,
-			world->chunks[nth_chunk].world_coordinate) <
-		(player->camera->far_plane + CHUNK_SIZE_X) *
-		(player->camera->far_plane + CHUNK_SIZE_X) &&
-		aabb_in_frustum(&world->chunks[nth_chunk].aabb, &player->camera->frustum))
-	{
-		world->meshes_render_indices[world->meshes_render_amount] = nth_chunk;
-		++world->meshes_render_amount;
-	}
-
-	// Collision Detection
-	if (world->block_collision_enabled)
-	{
-		if (point_aabb_center_distance(player->camera->pos, &world->chunks[nth_chunk].aabb) <= (CHUNK_WIDTH * CHUNK_WIDTH))
+		// Decide if we want to render the chunk or not;
+		// Dont render chunk if the chunk is further away than the farplane of the camear;
+		// Dont render if the chunk is outside the view fustrum;
+		// Dont render if hasnt been sent to gpu yet;
+		if (world->chunks[nth_chunk].was_updated == 0 &&
+			v3_dist_sqrd(player->camera->pos,
+				world->chunks[nth_chunk].world_coordinate) <
+			(player->camera->far_plane + CHUNK_SIZE_X) *
+			(player->camera->far_plane + CHUNK_SIZE_X) &&
+			aabb_in_frustum(&world->chunks[nth_chunk].aabb, &player->camera->frustum))
 		{
-			show_chunk_borders(&world->chunks[nth_chunk], player->camera, (float []){1, 0, 0});
-			// Place Blocking and Removing;
-			// Go through all chunks and check for collision on blocks,
-			// store intersections and indices of the chunk the intersection
-			// is in;
+			world->meshes_render_indices[world->meshes_render_amount] = nth_chunk;
+			++world->meshes_render_amount;
+		}
 
-			// Collision on solid mesh;
-			if (world->chunks[nth_chunk].blocks_solid_amount > 0)
+		// Collision Detection
+		if (world->block_collision_enabled)
+		{
+			if (point_aabb_center_distance(player->camera->pos, &world->chunks[nth_chunk].aabb) <= (CHUNK_WIDTH * CHUNK_WIDTH))
 			{
-				int collisions_on_chunk = chunk_mesh_collision_v2(player->camera->pos, player->camera->front, &world->chunks[nth_chunk].meshes, BLOCK_MESH, world->chunks[nth_chunk].world_coordinate, player->info.reach, intersect_point + collision_result);
-				for (int i = 0; i < collisions_on_chunk; i++)
-					intersect_chunk_index[collision_result + i] = nth_chunk;
-				collision_result += collisions_on_chunk;
+				show_chunk_borders(&world->chunks[nth_chunk], player->camera, (float []){1, 0, 0});
+				// Place Blocking and Removing;
+				// Go through all chunks and check for collision on blocks,
+				// store intersections and indices of the chunk the intersection
+				// is in;
+
+				// Collision on solid mesh;
+				if (world->chunks[nth_chunk].blocks_solid_amount > 0)
+				{
+					int collisions_on_chunk = chunk_mesh_collision_v2(player->camera->pos, player->camera->front, &world->chunks[nth_chunk].meshes, BLOCK_MESH, world->chunks[nth_chunk].world_coordinate, player->info.reach, intersect_point + collision_result);
+					for (int i = 0; i < collisions_on_chunk; i++)
+						intersect_chunk_index[collision_result + i] = nth_chunk;
+					collision_result += collisions_on_chunk;
+				}
 			}
 		}
-	}
 	}
 
 	/* * * * * START OF COLLISION * * * * */
@@ -657,85 +679,88 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 	int		face = -1; // -1 is no face; which face has been hovered on the block;
 	if (collision_result > 0)
 	{
-	float	distancione = -1;
-	float	closest_dist = INFINITY;
-	for (int colli = 0; colli < collision_result; ++colli)
-	{
-		distancione = v3_dist_sqrd(player->camera->pos, intersect_point[colli]);
-		if (distancione < closest_dist)
+		float	distancione = -1;
+		float	closest_dist = INFINITY;
+		for (int colli = 0; colli < collision_result; ++colli)
 		{
-			closest_dist = distancione;
-			v3_assign(closest_point, intersect_point[colli]);
-			closest_index = intersect_chunk_index[colli];
-		}
-	}
-
-	t_block *hovered_block = NULL;
-	hovered_block = get_block_from_chunk(&world->chunks[closest_index], closest_point, block_pos, &face);
-	if (hovered_block)
-	{
-		render_block_outline(block_pos, (float []){0, 0, 0}, player->camera->view, player->camera->projection);
-		get_block_local_pos_from_world_pos(block_local, block_pos);
-	}
-	// Lets summon mob on the hovered_block
-	if (hovered_block && vox->keys[GLFW_KEY_M].state == BUTTON_PRESS)
-		create_entity_at_world_pos(&world->entity_manager, v3_add(block_pos, block_pos, (float *)g_card_dir[DIR_UP]), ENTITY_MELON_GOLEM);
-	else if (hovered_block &&
-		(vox->mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS ||
-		vox->mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS ||
-		vox->mouse[GLFW_MOUSE_BUTTON_MIDDLE].state == BUTTON_PRESS))
-	{
-		if (vox->mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS)
-			set_block_at_world_pos(world, block_pos, GAS_AIR);
-		else if (vox->mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS)
-		{
-			float	block_world[3];
-			v3_add(block_world, block_pos, (float *)g_card_dir[face]);
-			// Check if block or item equipped;
-			LG_INFO("Place Item at %f %f %f", block_world[0], block_world[1], block_world[2]);
-			if (!is_type_item(player->info.equipped_block))
-				set_block_at_world_pos(world, block_world, player->info.equipped_block);
-			else if (is_type_item(player->info.equipped_block))
+			distancione = v3_dist_sqrd(player->camera->pos, intersect_point[colli]);
+			if (distancione < closest_dist)
 			{
-				ft_printf("Using : %s\n", g_item_data[player->info.equipped_block - ITEM_FIRST - 1].name);
-				if (player->info.equipped_block == ITEM_TREE_PLACER)
-					tree_placer(world, block_world);
+				closest_dist = distancione;
+				v3_assign(closest_point, intersect_point[colli]);
+				closest_index = intersect_chunk_index[colli];
 			}
-			else
-				LG_WARN("We dont allow the placing of that type of block.");
 		}
-		else if (vox->mouse[GLFW_MOUSE_BUTTON_MIDDLE].state == BUTTON_PRESS)
-		{
-			block_print(hovered_block);
-			v3i_string("Local Coordinates : ", block_local);
-			v3_string("World Coordinates : ", block_pos);
-			t_chunk *temp_chunk = get_chunk_from_world_pos(world, block_pos);
-			v3i_string("Chunk Coordinates : ", temp_chunk->coordinate);
-			v3_string("Chunk World Coordinates : ", temp_chunk->world_coordinate);
 
+		t_block *hovered_block = NULL;
+		hovered_block = get_block_from_chunk(&world->chunks[closest_index], closest_point, block_pos, &face);
+		if (hovered_block)
+		{
+			render_block_outline(block_pos, (float []){0, 0, 0}, player->camera->view, player->camera->projection);
+			get_block_local_pos_from_world_pos(block_local, block_pos);
 		}
-	}
+		// Lets summon mob on the hovered_block
+		if (hovered_block && vox->keys[GLFW_KEY_M].state == BUTTON_PRESS)
+			create_entity_at_world_pos(&world->entity_manager, v3_add(block_pos, block_pos, (float *)g_card_dir[DIR_UP]), ENTITY_MELON_GOLEM);
+		else if (hovered_block &&
+			(vox->mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS ||
+			vox->mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS ||
+			vox->mouse[GLFW_MOUSE_BUTTON_MIDDLE].state == BUTTON_PRESS))
+		{
+			if (vox->mouse[GLFW_MOUSE_BUTTON_LEFT].state == BUTTON_PRESS)
+				set_block_at_world_pos(world, block_pos, GAS_AIR);
+			else if (vox->mouse[GLFW_MOUSE_BUTTON_RIGHT].state == BUTTON_PRESS)
+			{
+				float	block_world[3];
+				v3_add(block_world, block_pos, (float *)g_card_dir[face]);
+				// Check if block or item equipped;
+				LG_INFO("Place Item at %f %f %f", block_world[0], block_world[1], block_world[2]);
+				if (!is_type_item(player->info.equipped_block))
+					set_block_at_world_pos(world, block_world, player->info.equipped_block);
+				else if (is_type_item(player->info.equipped_block))
+				{
+					ft_printf("Using : %s\n", g_item_data[player->info.equipped_block - ITEM_FIRST - 1].name);
+					if (player->info.equipped_block == ITEM_TREE_PLACER)
+						tree_placer(world, block_world);
+				}
+				else
+					LG_WARN("We dont allow the placing of that type of block.");
+			}
+			else if (vox->mouse[GLFW_MOUSE_BUTTON_MIDDLE].state == BUTTON_PRESS)
+			{
+				block_print(hovered_block);
+				v3i_string("Local Coordinates : ", block_local);
+				v3_string("World Coordinates : ", block_pos);
+				t_chunk *temp_chunk = get_chunk_from_world_pos(world, block_pos);
+				v3i_string("Chunk Coordinates : ", temp_chunk->coordinate);
+				v3_string("Chunk World Coordinates : ", temp_chunk->world_coordinate);
+
+			}
+		}
 	}
 	/* END OF COLLISION */
 
 	/* * * * * START OF PLAYER ENTITY HITBOX COLLISION * * * * */
-	t_entity	*rent;
-	t_aabb		rent_aabb;
-	for (int i = 0; i < world->entity_manager.entity_amount; i++)
+	if (vox->settings.entity_hitbox_enabled)
 	{
-		if (!world->entity_manager.slot_occupied[i])
-			continue;
-
-		rent = &world->entity_manager.entities[i];
-		// Continue if we are not within reach;
-		if (v3_dist_sqrd(player->camera->pos, rent->pos) > player->info.reach * player->info.reach)
-			continue ;
-		v3_add(rent_aabb.min, world->entity_manager.entity_models[(int)rent->type].bound.min, rent->pos);
-		v3_add(rent_aabb.max, world->entity_manager.entity_models[(int)rent->type].bound.max, rent->pos);
-		if (aabb_ray_intersection(&rent_aabb, player->camera->pos, player->camera->front)) //v3_multiply_f(tmp2, player.camera->front, player_info.reach)))
+		t_entity	*rent;
+		t_aabb		rent_aabb;
+		for (int i = 0; i < world->entity_manager.entity_amount; i++)
 		{
-			render_3d_rectangle(rent_aabb.min, rent_aabb.max,
-				(float []){255, 255, 0}, player->camera->view, player->camera->projection);
+			if (!world->entity_manager.slot_occupied[i])
+				continue;
+
+			rent = &world->entity_manager.entities[i];
+			// Continue if we are not within reach;
+			if (v3_dist_sqrd(player->camera->pos, rent->pos) > player->info.reach * player->info.reach)
+				continue ;
+			v3_add(rent_aabb.min, world->entity_manager.entity_models[(int)rent->type].bound.min, rent->pos);
+			v3_add(rent_aabb.max, world->entity_manager.entity_models[(int)rent->type].bound.max, rent->pos);
+			if (aabb_ray_intersection(&rent_aabb, player->camera->pos, player->camera->front)) //v3_multiply_f(tmp2, player.camera->front, player_info.reach)))
+			{
+				render_3d_rectangle(rent_aabb.min, rent_aabb.max,
+					(float []){255, 255, 0}, player->camera->view, player->camera->projection);
+			}
 		}
 	}
 	/* END OF PLAYER ENTITY HITBOX COLLISION */
@@ -924,7 +949,8 @@ int	main(void)
 	world.entity_manager.melon_entity->draw_dir = 1;
 	// Chicken
 	world.entity_manager.chicken_entity = &world.entity_manager.entities[1];//entity_manager_get_entity(&world.entity_manager, 1);
-	world.entity_manager.chicken_entity->type = ENTITY_MELON_GOLEM;/*ENTITY_CHICKEN;*/
+	//world.entity_manager.chicken_entity->type = ENTITY_MELON_GOLEM;
+	world.entity_manager.chicken_entity->type = ENTITY_CHICKEN;
 	world.entity_manager.chicken_entity->ai = 0;
 	world.entity_manager.chicken_entity->draw_aabb = 1;
 	world.entity_manager.chicken_entity->draw_dir = 1;

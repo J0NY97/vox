@@ -49,7 +49,7 @@ struct s_player
 };
 
 void		new_player(t_player *player);
-void		player_events(t_player *player, t_key *keys, GLFWwindow *win);
+void		player_event(t_player *player, t_key *keys, GLFWwindow *win);
 void		player_movement(t_player *player, GLFWwindow *win, t_fps *fps);
 void		player_movement_creative(t_player *player, GLFWwindow *win, t_fps *fps);
 void		player_movement_survival(t_player *player, GLFWwindow *win, t_fps *fps);

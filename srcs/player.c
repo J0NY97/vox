@@ -25,7 +25,7 @@ void	new_player(t_player *player)
 	player->moving = 0;
 }
 
-void	player_events(t_player *player, t_key *keys, GLFWwindow *win)
+void	player_event(t_player *player, t_key *keys, GLFWwindow *win)
 {
 	if (keys[GLFW_KEY_E].state == BUTTON_PRESS)
 	{
