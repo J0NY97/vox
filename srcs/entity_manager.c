@@ -4,7 +4,7 @@
 void entity_manager_init(t_entity_manager *manager)
 {
 	manager->next_id = 0;
-	manager->max_entities = 256000;
+	manager->max_entities = 65535;
 	manager->model_mats = malloc(sizeof(float) * manager->max_entities * 16);
 	LG_INFO("model mats size : %d (* sizeof(float) ofc...)", manager->max_entities * 16);
 
