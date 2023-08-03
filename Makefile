@@ -4,6 +4,7 @@ SHELL_NAME = $(shell uname -s)
 NAME = a
 CFILES = \
 	main.c \
+	world_generation.c \
 	scene.c \
 	entity.c \
 	entity_manager.c \
@@ -23,7 +24,6 @@ CFILES = \
 	crosshair.c \
 	skybox.c \
 	instance.c \
-	perlin.c \
 	frustum.c \
 	thread.c \
 	help.c \
@@ -32,7 +32,6 @@ CFILES = \
 	tnt.c \
 	bitmap.c \
 	save.c \
-	noise.c \
 	ai_entity.c \
 	bimgf/bimgf_bmp.c \
 	bimgf/bimgf_help.c \
@@ -45,9 +44,11 @@ CFILES = \
 	bobj/bobj_v2/bobj.c \
 	bobj/bobj_print.c \
 	glad/glad.c \
+	noise/simplex.c \
+	noise/perlin.c \
+	noise/noise.c \
 	ui.c \
 	ui_manager.c \
-	simplex.c \
 #	font_manager.c \
 
 CDIR = srcs
@@ -62,14 +63,15 @@ INCS = \
 	-I$(LIB_DIR)/libft \
 	-I$(LIB_DIR)/libpf \
 	-I$(LIB_DIR)/liblg \
+	-I$(LIB_DIR)/GLFW \
 	-I$(CDIR)/ \
 	-I$(CDIR)/bobj \
 	-I$(CDIR)/bobj/bobj_v2 \
 	-I$(CDIR)/bmath \
 	-I$(CDIR)/bimgf \
+	-I$(CDIR)/noise \
 	-I$(CDIR)/glad \
 	-I$(CDIR)/KHR \
-	-I$(LIB_DIR)/GLFW \
 	#-I$(LIB_DIR)/freetype/include \
 
 LIB_DIRS = \
@@ -100,6 +102,7 @@ $(ODIR):
 	@mkdir -p $@/bobj
 	@mkdir -p $@/bobj/bobj_v2
 	@mkdir -p $@/glad
+	@mkdir -p $@/noise
 
 $(ODIR)/%.o: $(CDIR)/%.c
 	@gcc -c $< -o $@ $(INCS) $(FLAGS)

@@ -1,4 +1,4 @@
-#include "vox.h"
+#include "stdio.h"
 
 static int fastfloor(double x)
 {
@@ -63,64 +63,6 @@ float	lerp(float t, float a, float b)
 	return (a + t * (b - a));
 }
 
-// TODO : REMOVE THESE WHEN THE NEW STUFF WORKS!!!
-float	fade_old(float t)
-{
-	return (t * t * t * (t * (t * 6 - 15) + 10));
-}
-float	lerp_old(float a, float b, float x)
-{
-	return (a + x * (b - a));
-}
-float	grad_old(int hash, float x, float y, float z)
-{
-    int h = hash & 15;
-    double u = h < 8 ? x : y;
-    double v;
-
-    if (h < 4)
-        v = y;
-    else if (h == 12 || h == 14)
-        v = x;
-    else
-        v = z;
-    return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
-}
-float	perlin_v2(float x, float y, float z)
-{
-    int xi = (int)x & 255;
-    int yi = (int)y & 255;
-    int zi = (int)z & 255;
-    float xf = x - (int)x;
-    float yf = y - (int)y;
-    float zf = z - (int)z;
-
-	double u = fade_old(xf);
-    double v = fade_old(yf);
-    double w = fade_old(zf);
-
-	int aaa, aba, aab, abb, baa, bba, bab, bbb;
-    aaa = g_p[g_p[g_p[    xi ]+    yi ]+    zi ];
-    aba = g_p[g_p[g_p[    xi ]+ yi + 1]+    zi ];
-    aab = g_p[g_p[g_p[    xi ]+    yi ]+ zi + 1];
-    abb = g_p[g_p[g_p[    xi ]+ yi + 1]+ zi + 1];
-    baa = g_p[g_p[g_p[ xi + 1]+    yi ]+    zi ];
-    bba = g_p[g_p[g_p[ xi + 1]+ yi + 1]+    zi ];
-    bab = g_p[g_p[g_p[ xi + 1]+    yi ]+ zi + 1];
-    bbb = g_p[g_p[g_p[ xi + 1]+ yi + 1]+ zi + 1];
-
-	float x1, x2, y1, y2;
-    x1 = lerp_old(grad_old(aaa, xf, yf, zf), grad_old(baa, xf - 1, yf, zf), u);
-    x2 = lerp_old(grad_old(aba, xf, yf - 1, zf), grad_old(bba, xf - 1, yf - 1, zf), u);
-    y1 = lerp_old(x1, x2, v);
-
-    x1 = lerp_old(grad_old(aab, xf, yf, zf - 1), grad_old(bab, xf - 1, yf, zf - 1), u);
-    x2 = lerp_old(grad_old(abb, xf, yf - 1, zf - 1), grad_old(bbb, xf - 1, yf - 1, zf - 1), u);
-    y2 = lerp_old(x1, x2, v);
-
-    return ((lerp_old(y1, y2, w) + 1) / 2);
-}
-
 // YOINKKELI KOINKKEL
 float	noise2d(float x, float y)
 {
@@ -169,7 +111,7 @@ float	noise3d(float x, float y, float z)
 	static int times_called = -1;
 	times_called += 1;
 	if (times_called % 100000 == 0)
-		ft_printf("noise3d() times called %d\n", times_called);
+		printf("noise3d() times called %d\n", times_called);
 
 	int	X = fastfloor(x) & 255;
 	int	Y = fastfloor(y) & 255;

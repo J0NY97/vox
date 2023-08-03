@@ -61,7 +61,7 @@ int	get_block_type(int x, int y, int z, float noise_value)
 			float	cave_noise;
 			/* USING SIMPLEX NOISE 3D */
 			//cave_noise = simp_noise_3d(x, y, z);
-			cave_noise = simp_noise_3d_octave(x, y, z, 1.0f, 0.07f, 4.0f, 0.5f, 1.0f);
+			cave_noise = simplex_noise_3d_octave(x, y, z, 1.0f, 0.07f, 4.0f, 0.5f, 1.0f);
 			/* USING PERLIN NOISE 3D
 			cave_noise = noise3d_octave(x, y, z, 1.0f, 0.07f, 4.0f, 0.5f, 1.0f);
 			*/
@@ -835,8 +835,21 @@ void	regen_column_thread(void *args)
 void	regenerate_chunk_column(t_chunk_col *column, int coord[2], int seed)
 {
 	// Create a height map for the chunk column;
+	/*
 	noise_create(&column->height_map, CHUNK_WIDTH, CHUNK_HEIGHT,
 		coord[0] * CHUNK_SIZE_X, coord[1] * CHUNK_SIZE_Z, seed);
+		*/
+	t_noise_settings noising;
+	noise_settings_default(&noising);
+	noising.width = CHUNK_WIDTH;
+	noising.height = CHUNK_HEIGHT;
+	noising.x_offset = coord[0] * CHUNK_SIZE_X;
+	noising.y_offset = coord[1] * CHUNK_SIZE_Y;
+	noising.seed = seed;
+
+	noising.octaves = 4;
+
+	noise_create_from_settings(&column->height_map, &noising);
 
 	// Generate the column of chunks;
 	for (int i = 0; i < CHUNKS_PER_COLUMN; i++) // if is the chunk's y coordinate in the column;

@@ -13,7 +13,6 @@
 #ifndef WORLD_H
 # define WORLD_H
 
-# include "player.h"
 # include "entity_manager.h"
 
 // WORLD Settings
@@ -98,5 +97,9 @@ typedef struct s_world
 
 }	t_world;
 
+
+void chunk_generation(t_vox *vox, t_world *world);
+void chunk_update(t_world *world);
+void decide_which_chunks_to_render(t_world *world);
 
 #endif

@@ -2,7 +2,7 @@
  *  Author: Jony Salmi
  *  Create Time: 30.09.2022 20:45:03
  *  Modified by: Jony Salmi
- *  Modified time: 30.09.2022 22:36:39
+ *  Modified time: 03.08.2023 13:13:38
  */
 
 /*
@@ -96,7 +96,7 @@ static float dot3d(int g[], float x, float y, float z)
 	return g[0] * x + g[1] * y + g[2] * z;
 }
 
-float simp_noise_2d(float xin, float yin)
+float simplex_noise_2d(float xin, float yin)
 {
 	float n0, n1, n2;
 	float s = (xin + yin) * F2;
@@ -116,8 +116,8 @@ float simp_noise_2d(float xin, float yin)
 	}
 	else
 	{
-		i1=0;
-		j1=1;
+		i1 = 0;
+		j1 = 1;
 	}
 
 	float x1 = x0 - i1 + G2;
@@ -131,43 +131,51 @@ float simp_noise_2d(float xin, float yin)
 	int gi1 = perm_mod_12[ii + i1 + perm[jj + j1]];
 	int gi2 = perm_mod_12[ii + 1 + perm[jj + 1]];
 
-	float t0 = 0.5 - x0*x0-y0*y0;
-	if(t0<0) n0 = 0.0;
-	else {
-	t0 *= t0;
-	n0 = t0 * t0 * dot2d(grad3[gi0], x0, y0); // (x,y) of grad3 used for 2D gradient
+	float t0 = 0.5 - x0 * x0 - y0 * y0;
+	if(t0 < 0)
+		n0 = 0.0;
+	else
+	{
+		t0 *= t0;
+		n0 = t0 * t0 * dot2d(grad3[gi0], x0, y0); // (x,y) of grad3 used for 2D gradient
 	}
-	float t1 = 0.5 - x1*x1-y1*y1;
-	if(t1<0) n1 = 0.0;
-	else {
-	t1 *= t1;
-	n1 = t1 * t1 * dot2d(grad3[gi1], x1, y1);
+
+	float t1 = 0.5 - x1 * x1 - y1 * y1;
+	if(t1 < 0)
+		n1 = 0.0;
+	else
+	{
+		t1 *= t1;
+		n1 = t1 * t1 * dot2d(grad3[gi1], x1, y1);
 	}
-	float t2 = 0.5 - x2*x2-y2*y2;
-	if(t2<0) n2 = 0.0;
-	else {
-	t2 *= t2;
-	n2 = t2 * t2 * dot2d(grad3[gi2], x2, y2);
+
+	float t2 = 0.5 - x2 * x2 - y2 * y2;
+	if(t2 < 0)
+		n2 = 0.0;
+	else
+	{
+		t2 *= t2;
+		n2 = t2 * t2 * dot2d(grad3[gi2], x2, y2);
 	}
 
 	return 70.0 * (n0 + n1 + n2);
 }
 
-float	simp_noise_2d_octave(float xin, float zhao, float amplitude, float frequency, int octaves, float persistence, float lacunarity)
+float	simplex_noise_2d_octave(float xin, float zhao, float amplitude, float frequency, int octaves, float persistence, float lacunarity)
 {
 	float	value;
 
 	value = 0;
 	for (int i = 0; i < octaves; i++)
 	{
-		value += amplitude * simp_noise_2d(xin * frequency, zhao * frequency);
+		value += amplitude * simplex_noise_2d(xin * frequency, zhao * frequency);
 		amplitude *= persistence;
 		frequency *= lacunarity;
 	}
 	return (value);
 }
 
-float	simp_noise_3d(float xin, float yin, float zin)
+float	simplex_noise_3d(float xin, float yin, float zin)
 {
 	float n0, n1, n2, n3;
 	float s = (xin+yin+zin)*F3;
@@ -275,14 +283,14 @@ float	simp_noise_3d(float xin, float yin, float zin)
 	return 32.0*(n0 + n1 + n2 + n3);
 }
 
-float	simp_noise_3d_octave(float x, float y, float z, float amplitude, float frequency, int octaves, float persistence, float lacunarity)
+float	simplex_noise_3d_octave(float x, float y, float z, float amplitude, float frequency, int octaves, float persistence, float lacunarity)
 {
 	float	value;
 
 	value = 0;
 	for (int i = 0; i < octaves; i++)
 	{
-		value += amplitude * simp_noise_3d(x * frequency, y * frequency, z * frequency);
+		value += amplitude * simplex_noise_3d(x * frequency, y * frequency, z * frequency);
 		amplitude *= persistence;
 		frequency *= lacunarity;
 	}

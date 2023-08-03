@@ -459,123 +459,33 @@ void game(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *gui, t
 	if (player->enabled_mouse)
 		player_looking(player, vox->win);
 
-	/////////////////
-	// Chunk things
-	/////////////////
+	// World game tick
 	world->game_tick = 0;
 	if ((int)(fps->curr_time * 100) % 33 == 0)
 		world->game_tick = 1;
 
+	//
 	get_chunk_pos_from_world_pos(world->player_chunk, player->camera->pos);
 
-	int use_multi_thread = true;
-	if (use_multi_thread)
-		thread_manager_check_threadiness(&vox->tm);
+	//// CHUNK REGENERATION ////
+	chunk_generation(vox, world);
 
-	if (vox->settings.regen_chunks)
-	{
-		int	max_regen_amount = RENDER_DISTANCE;
-		int	col_indices[max_regen_amount];
-		int	col_coords[max_regen_amount][2];
-		int	start_coord[2];
-		int tobegen = get_chunk_column_to_regen(world, world->player_chunk, col_indices, col_coords, max_regen_amount);
-		for (int i = 0; i < tobegen && i < max_regen_amount; i++)
-		{
-			world->chunk_columns[col_indices[i]].wanted_coord[0] = col_coords[i][0];
-			world->chunk_columns[col_indices[i]].wanted_coord[1] = col_coords[i][1];
-			if (use_multi_thread)
-				thread_manager_new_thread(&vox->tm, &regen_column_thread, &world->chunk_columns[col_indices[i]]);
-			else
-				regenerate_chunk_column(&world->chunk_columns[col_indices[i]], col_coords[i], world->seed);
-		}
-		// If no chunk columns to regen => quit;
-		if (tobegen == -1)
-			exit (0);
-	}
-
-	t_chunk		*neighbors[DIR_AMOUNT];
-	t_chunk		**col_chunks;
-	t_chunk_col	*column;
-	int			neighbors_found;
-
-	for (int col = 0; col < CHUNK_COLUMNS; col++)
-	{
-		column = &world->chunk_columns[col];
-		if (column->being_threaded)
-			continue ;
-		col_chunks = column->chunks;
-
-		column->chunk_needs_update = 0;
-
-		if (world->generate_structures && column->update_structures)
-		{
-			tree_gen(world, column);
-			column->update_structures = 0;
-		}
-
-		// Check if a chunk in the column needs an update;
-		for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
-		{
-			if (col_chunks[ent]->needs_to_update)
-			{
-				update_chunk_block_palette(col_chunks[ent]);
-				column->chunk_needs_update = 1;
-			}
-		}
-
-		// Light calculation;
-		if (world->light_calculation &&
-			(column->chunk_needs_update ||
-			world->sky_light_lvl != world->sky_light_lvl_prev))
-			update_chunk_column_light(column);
-		// Other Chunk updates;
-		for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
-		{
-			neighbors_found = 0;
-
-			// We only need to update the chunks if a chunk has been regenerated
-			if ((col_chunks[ent]->needs_to_update ||
-				(world->generate_structures && column->update_structures)))
-			{
-				// Get all neighbors for this chunk;
-				for (int dir = DIR_NORTH, i = 0; dir < DIR_AMOUNT; ++dir, ++i)
-				{
-					neighbors[i] = get_adjacent_chunk(world, col_chunks[ent], (float *)g_card_dir[dir]);
-					++neighbors_found;
-				}
-			}
-
-			if (col_chunks[ent]->needs_to_update)
-			{
-				update_chunk(col_chunks[ent]);
-				if (world->toggle_event)
-					update_chunk_event_blocks(col_chunks[ent]);
-				// Set needs to update to all 6 neighbors of the chunk;
-				for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
-					if (neighbors[i])
-						neighbors[i]->secondary_update = 1;
-			}
-
-			col_chunks[ent]->needs_to_update = 0;
-
-			if (world->toggle_event && world->game_tick)
-				event_chunk(col_chunks[ent]);
-		}
-	}
+	//// CHUNK UPDATES ////
+	chunk_update(world);
 
 	// Secondary updater;
 	// We dont want to immediately update the chunks that other chunks want
 	//	updated, because they might update themselves;
 	// So if theres still chunks that needs updating after we've gone through
 	// 	the chunks once, we update them here;
-	//	if (tobegen == 0)
-	{
 	for (int col = 0; col < CHUNK_COLUMNS; col++)
 	{
-		column = &world->chunk_columns[col];
+		t_chunk_col *column = &world->chunk_columns[col];
+
 		if (column->being_threaded)
 			continue ;
-		col_chunks = column->chunks;
+
+		t_chunk **col_chunks = column->chunks;
 
 		for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
 		{
@@ -598,9 +508,6 @@ void game(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *gui, t
 			}
 		}
 	}
-	// REMOVE DEBUG
-	//exit(0);
-	}
 
 	// head
 	//		player_terrain_collision(player.velocity, (float []){player.camera->pos[0], player.camera->pos[1] + 0.25f, player.camera->pos[2]}, player.velocity, &world);
@@ -615,36 +522,16 @@ void game(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *gui, t
 	int		intersect_chunk_index[16]; // correspond with the index in 'intersect_point';
 	int		collision_result = 0; // will be the amount of collisions that has happened;
 
-	int nth_chunk = 0;
-
+	// Chunk Collision Detection (MINING)
+	// And hovered block highlight, and chunk aabb highlight;
 	glDisable(GL_BLEND);
 	glDisable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST); // note to self, if we disable depth_test. we dont write to it either, which means the next thing checking int the depth tester wont see what you have not written there.... aka the skybox in this case
 
-	// Reset the rendering amount to 0;
-	world->meshes_render_amount = 0;
-
-	for (; nth_chunk < CHUNKS_LOADED; ++nth_chunk)
+	for (int nth_chunk = 0; nth_chunk < CHUNKS_LOADED; ++nth_chunk)
 	{
 		if (!world->chunks[nth_chunk].has_visible_blocks)
 			continue ;
-
-		// Decide if we want to render the chunk or not;
-		// Dont render chunk if the chunk is further away than the farplane of the camear;
-		// Dont render if the chunk is outside the view fustrum;
-		// Dont render if hasnt been sent to gpu yet;
-		if (world->chunks[nth_chunk].was_updated == 0 &&
-			v3_dist_sqrd(player->camera->pos,
-				world->chunks[nth_chunk].world_coordinate) <
-			(player->camera->far_plane + CHUNK_SIZE_X) *
-			(player->camera->far_plane + CHUNK_SIZE_X) &&
-			aabb_in_frustum(&world->chunks[nth_chunk].aabb, &player->camera->frustum))
-		{
-			world->meshes_render_indices[world->meshes_render_amount] = nth_chunk;
-			++world->meshes_render_amount;
-		}
-
-		// Collision Detection
 		if (world->block_collision_enabled)
 		{
 			if (point_aabb_center_distance(player->camera->pos, &world->chunks[nth_chunk].aabb) <= (CHUNK_WIDTH * CHUNK_WIDTH))
@@ -764,20 +651,16 @@ void game(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *gui, t
 	}
 	/* END OF PLAYER ENTITY HITBOX COLLISION */
 
-
-	error = glGetError();
-	if (error)
-		LG_ERROR("before skybox render. (%d)", error);
-
+	/// SKY BOX RENDER
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_BLEND);
 	render_skybox(skybox, player->camera);
 
-	error = glGetError();
-	if (error)
-		LG_ERROR("before solid render. (%d)", error);
-	// Render solid meshes;
+	//// CHUNK RENDERING ////
+	decide_which_chunks_to_render(world);
+
+	// Solid mesh;
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
 	glEnable(GL_CULL_FACE);
@@ -785,14 +668,11 @@ void game(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *gui, t
 	{
 		int render_index = world->meshes_render_indices[r];
 		if (world->chunks[render_index].blocks_solid_amount > 0)
-			render_chunk_mesh(&world->chunks[render_index].meshes, BLOCK_MESH, world->chunks[render_index].world_coordinate, player->camera);
+			render_chunk_mesh(&world->chunks[render_index].meshes, BLOCK_MESH,
+				world->chunks[render_index].world_coordinate, player->camera);
 	}
 
-	error = glGetError();
-	if (error)
-		LG_ERROR("before fluid render. (%d)", error);
-
-	// Render fluid meshes;
+	// Fluid meshes;
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	glDisable(GL_CULL_FACE);
@@ -800,25 +680,16 @@ void game(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *gui, t
 	{
 		int render_index = world->meshes_render_indices[r];
 		if (world->chunks[render_index].blocks_fluid_amount > 0)
-			render_chunk_mesh(&world->chunks[render_index].meshes, FLUID_MESH, world->chunks[render_index].world_coordinate, player->camera);
+			render_chunk_mesh(&world->chunks[render_index].meshes, FLUID_MESH,
+				world->chunks[render_index].world_coordinate, player->camera);
 	}
 
-	/////////////////
-	// END Chunk things
-	/////////////////
-	////////////////////////
-	// Model Rendering Instance
-	////////////////////////
-
+	// Entity Rendering
 	glDisable(GL_BLEND);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 
 	entity_manager_draw(&world->entity_manager, &world->camera);
-
-	error = glGetError();
-	if (error)
-		LG_ERROR("Errors in while : %d", error);
 }
 
 void camera_settings_init(t_camera *camera, float win_w, float win_h)

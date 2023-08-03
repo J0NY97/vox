@@ -36,14 +36,18 @@ void noise_create_from_settings(t_noise *noise, t_noise_settings *settings)
 		{
 			/* USING SIMPLEX 2D */
 			/*
-			noise->map[x * noise->width + y]
-				= simp_noise_2d_octave(x + x_offset, y + y_offset,
-					amplitude, frequency, octaves, persistence, lacunarity);
 					*/
+			noise->map[x * noise->width + y] = simplex_noise_2d_octave(
+					x + settings->x_offset, y + settings->y_offset,
+					settings->amplitude, settings->frequency,
+					settings->octaves, settings->persistence,
+					settings->lacunarity);
 			/* USING PERLIN NOISE 2D */
+			/*
 			noise->map[x * noise->width + y]
 				= noise2d_octave(x + settings->x_offset, y + settings->y_offset,
 					settings->amplitude, settings->frequency, settings->octaves, settings->persistence, settings->lacunarity);
+					*/
 			/* USING PERLIN NOISE 3D
 			noise->map[x * noise->width + y] =
 				noise3d_octave(x + x_offset, seed, y + y_offset,
@@ -51,6 +55,23 @@ void noise_create_from_settings(t_noise *noise, t_noise_settings *settings)
 					*/
 		}
 	}
+}
+
+void noise_settings_default(t_noise_settings *settings)
+{
+	// These settings kind have to be set manually..;
+	settings->width = 0;
+	settings->height = 0;
+	settings->x_offset = 0;
+	settings->y_offset = 0;
+	settings->seed = 0;
+
+	// ..but not these;
+	settings->frequency = 0.01f;
+	settings->octaves = 4;
+	settings->amplitude = 20.0f;
+	settings->persistence = 0.5f;
+	settings->lacunarity = 2.0f;
 }
 
 /// @brief Allocates the needed stuff;

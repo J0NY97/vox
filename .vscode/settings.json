@@ -1,6 +1,8 @@
 {
 	"files.associations": {
 		"chunk.h": "c",
-		"vox.h": "c"
+		"vox.h": "c",
+		"world.h": "c",
+		"entity.h": "c"
 	}
 }

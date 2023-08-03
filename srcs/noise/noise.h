@@ -44,6 +44,7 @@ typedef struct	s_noise
 void	noise_new(t_noise *noise, int w, int h);
 void	noise_create(t_noise *noise, int w, int h, int x_offset, int y_offset, int seed);
 void	noise_create_from_settings(t_noise *noise, t_noise_settings *settings);
+void	noise_settings_default(t_noise_settings *settings);
 void	noise_free(t_noise *noise);
 
 float	noise_get_value(t_noise *noise, int x, int y);

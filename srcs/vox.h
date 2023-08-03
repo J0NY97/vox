@@ -18,6 +18,7 @@
 
 # include "limits.h"
 # include "pthread.h"
+# include "assert.h"
 # include "libft.h"
 # include "libpf.h"
 # include "liblg.h"
@@ -36,6 +37,7 @@
 # include "entity.h"
 # include "entity_manager.h"
 # include "key.h"
+# include "player.h"
 
 ///////////////////
 //	TEXTURE
