@@ -822,10 +822,17 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 		LG_ERROR("Errors in while : %d", error);
 }
 
+void camera_settings_init(t_camera *camera, float win_w, float win_h)
+{
+	camera->pitch = 0;
+	camera->yaw = -90;
+	camera->viewport_w = win_w;
+	camera->viewport_h = win_h;
+	camera->far_plane = CAMERA_FAR_PLANE;
+}
+
 void	world_init(t_world *world)
 {
-	new_camera(&world->camera);
-
 	world->seed = 896868766;
 	world->block_collision_enabled = 0;
 	world->player_collision_enabled = 0;
@@ -835,10 +842,14 @@ void	world_init(t_world *world)
 	world->toggle_event = 0;
 	world->generate_caves = 0;
 	world->sky_light_lvl = 15;
-	world->fog_max_dist = world->camera.far_plane;
-	world->fog_min_dist = world->camera.far_plane - 50;
+	
+	// Set spawn point;
 	v3_new(world->spawn_point, 5000, 90, 5000);
 
+	// Create camera;
+	new_camera(&world->camera);
+
+	// Create entity manager;
 	entity_manager_init(&world->entity_manager);
 	entity_manager_load_entity_objects(&world->entity_manager);
 
@@ -919,22 +930,17 @@ int	main(void)
 	t_world	world;
 	world_init(&world);
 
+	camera_settings_init(&world.camera, vox.win_w, vox.win_h);
+
+	// Player
 	t_player	player;
 	new_player(&player);
 	player_init(&player);
-
 	player.camera = &world.camera;
-	v3_new(player.camera->pos, 0, 0, 0); //
-	player.camera->pitch = 0;
-	player.camera->yaw = -90;
-	player.camera->viewport_w = vox.win_w;
-	player.camera->viewport_h = vox.win_h;
-	player.camera->far_plane = RENDER_DISTANCE * CHUNK_WIDTH / 2;
 
-
+	// Skybox
 	t_skybox	skybox;
 	new_skybox(&skybox, g_mc_skybox);
-
 
 	// set player pos to spawn point;
 	v3_assign(player.camera->pos, world.spawn_point);

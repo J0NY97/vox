@@ -60,8 +60,8 @@ void	new_chunk(t_chunk *chunk, t_world *info, int nth)
 */
 int	get_block_type(int x, int y, int z, float noise_value)
 {
-	int		base_terrain_height = 64;
-	int		base_sea_height = 63;
+	int		base_terrain_height = CHUNK_COLUMN_HEIGHT / 2; // The base terrain height should be in the middle of the chunk column;
+	int		base_sea_height = base_terrain_height - 1;
 	int		surface_y = base_terrain_height + noise_value;
 
 	if (y < surface_y) // solid blocks
