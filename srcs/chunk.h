@@ -147,7 +147,7 @@ typedef struct s_chunk_args
 
 struct	s_chunk
 {
-	t_world	*info;
+	t_world	*world;
 	int				coordinate[V3_SIZE];
 	float			world_coordinate[V3_SIZE];
 

@@ -15,13 +15,9 @@
 #include "world.h"
 
 // Basically everything needed for minecraft : https://www.redblobgames.com/maps/terrain-from-noise/
-void	new_chunk(t_chunk *chunk, t_world *info, int nth)
+void	new_chunk(t_chunk *chunk, t_world *world, int nth)
 {
-	int error = glGetError();
-	if (error)
-		LG_ERROR("Before (%d)", error);
-
-	chunk->info = info;
+	chunk->world = world;
 
 	chunk->needs_to_update = 0;
 	chunk->secondary_update = 0;
@@ -41,16 +37,6 @@ void	new_chunk(t_chunk *chunk, t_world *info, int nth)
 		chunk->coordinate[i] = INT_MAX - (nth * 10);
 		chunk->world_coordinate[i] = INT_MAX - (nth * 10);
 	}
-
-/*
-	unsigned long int key = get_chunk_hash_key(chunk->coordinate);
-	if (!hash_item_insert(info->hash_table, info->hash_table_size, key, nth))
-		LG_WARN("Chunk data couldnt be inserted.");
-		*/
-
-	error = glGetError();
-	if (error)
-		LG_ERROR("(%d)", error);
 }
 
 /*
@@ -350,7 +336,7 @@ void	add_block_to_correct_mesh(t_chunk *chunk, t_block *block, int *local_pos, i
 		float	block_world[3];
 
 		get_block_world_pos(block_world, chunk->world_coordinate, local_pos);
-		flowing_water_verts(verts, dir, block, block_world, chunk->info);
+		flowing_water_verts(verts, dir, block, block_world, chunk->world);
 		add_to_chunk_mesh(&chunk->meshes, FLUID_MESH, local_pos, verts, data.texture[0], light);
 		++chunk->blocks_fluid_amount;
 	}
@@ -464,7 +450,7 @@ void	update_chunk_border_visible_blocks(t_chunk *chunk)
 	// Get all neighbors of current chunk;
 	t_chunk *neighbors[6];
 	for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
-		neighbors[i] = get_adjacent_chunk(chunk->info, chunk, (float *)g_card_dir[dir]);
+		neighbors[i] = get_adjacent_chunk(chunk->world, chunk, (float *)g_card_dir[dir]);
 
 	for (int y = 0; y < CHUNK_HEIGHT; y++)
 	{
@@ -574,7 +560,6 @@ int	get_chunk_column_to_regen(t_world *info, int *player_chunk, int *out_col_ind
 	int	start_coord[2];
 	int	reload_amount = 0;
 	int	chunk_amount = 0;
-	int	found;
 	t_chunk_col *column = NULL;
 
 	start_coord[0] = player_chunk[0] - (RENDER_DISTANCE / 2);
@@ -589,7 +574,7 @@ int	get_chunk_column_to_regen(t_world *info, int *player_chunk, int *out_col_ind
 			{
 				out_col_coords[reload_amount][0] = x;
 				out_col_coords[reload_amount][1] = z;
-				++reload_amount;
+				reload_amount++;
 				if (reload_amount >= max_get)
 					break;
 			}
@@ -607,7 +592,7 @@ int	get_chunk_column_to_regen(t_world *info, int *player_chunk, int *out_col_ind
 			info->chunk_columns[i].coordinate[1] >= start_coord[1] + RENDER_DISTANCE)
 		{
 			out_col_indices[chunk_amount] = i;
-			++chunk_amount;
+			chunk_amount++;
 			if (chunk_amount >= max_get)
 				break;
 		}
@@ -828,11 +813,11 @@ void	event_chunk(t_chunk *chunk)
 		// Water block events;
 		if (should_we_update_water && is_water(chunk->event_blocks[j].block))
 		{
-			water_flow(chunk->info, &chunk->event_blocks[j]);
-			water_remove(chunk->info, &chunk->event_blocks[j]);
+			water_flow(chunk->world, &chunk->event_blocks[j]);
+			water_remove(chunk->world, &chunk->event_blocks[j]);
 		}
 		else if (chunk->event_blocks[j].block->type == BLOCK_TNT)
-			tnt_explosion(chunk->info, &chunk->event_blocks[j]);
+			tnt_explosion(chunk->world, &chunk->event_blocks[j]);
 		chunk->event_blocks[j].statique = 1;
 	}
 }
@@ -849,10 +834,14 @@ void	regen_column_thread(void *args)
 
 void	regenerate_chunk_column(t_chunk_col *column, int coord[2], int seed)
 {
+	// Create a height map for the chunk column;
 	noise_create(&column->height_map, CHUNK_WIDTH, CHUNK_HEIGHT,
 		coord[0] * CHUNK_SIZE_X, coord[1] * CHUNK_SIZE_Z, seed);
-	for (int i = 0; i < CHUNKS_PER_COLUMN; i++)
+
+	// Generate the column of chunks;
+	for (int i = 0; i < CHUNKS_PER_COLUMN; i++) // if is the chunk's y coordinate in the column;
 		generate_chunk(column->chunks[i], (int []){coord[0], i, coord[1]}, &column->height_map);
+
 	column->coordinate[0] = column->chunks[0]->coordinate[0];
 	column->coordinate[1] = column->chunks[0]->coordinate[2];
 	column->world_coordinate[0] = column->chunks[0]->world_coordinate[0];
@@ -965,7 +954,8 @@ void	init_chunk_mesh(t_chunk_mesh *mesh, GLuint shader, int amount)
 	if (error)
 		LG_ERROR("BEFORE (%d)", error);
 
-	mesh->vertices_allocated = 162576;
+	// NOTE : Dont worry about these sizes, they are made bigger if needed; (add_to_chunk_mesh);
+	mesh->vertices_allocated = 162576; 
 	mesh->vertices = malloc(sizeof(float) * mesh->vertices_allocated);
 	mesh->vertices_amount = 0;
 
@@ -1129,19 +1119,22 @@ void	update_chunk_mesh(t_chunk_mesh *mesh)
 */
 void	add_to_chunk_mesh(t_chunk_mesh *mesh, int mesh_type, int *coord, float *face_vertices, int texture_id, int light)
 {
+	// How many more blocks do we allocate to the mesh;
+	int realloc_size_add = 2048;
+
 	// Vertices and Texture
 	if (mesh->vertices_allocated < mesh->vertices_amount + 12)
 	{
-		mesh->vertices_allocated += 2048;
+		mesh->vertices_allocated += realloc_size_add;
 		mesh->vertices = realloc(mesh->vertices, sizeof(float) * mesh->vertices_allocated);
-		LG_WARN("Reallocating Vertices from %d to %d", mesh->vertices_allocated - 2048, mesh->vertices_allocated);
+		LG_WARN("Reallocating Vertices from %d to %d", mesh->vertices_allocated - realloc_size_add, mesh->vertices_allocated);
 	}
 
 	if (mesh->texture_ids_allocated < mesh->texture_id_amount + 4)
 	{
-		mesh->texture_ids_allocated += 2048;
+		mesh->texture_ids_allocated += realloc_size_add;
 		mesh->texture_ids = realloc(mesh->texture_ids, sizeof(int) * mesh->texture_ids_allocated);
-		LG_WARN("Reallocating Texture Ids from %d to %d", mesh->texture_ids_allocated - 2048, mesh->texture_ids_allocated);
+		LG_WARN("Reallocating Texture Ids from %d to %d", mesh->texture_ids_allocated - realloc_size_add, mesh->texture_ids_allocated);
 	}
 
 	int ind = 0;
@@ -1163,9 +1156,9 @@ void	add_to_chunk_mesh(t_chunk_mesh *mesh, int mesh_type, int *coord, float *fac
 	// Indices
 	if (mesh->indices_allocated[mesh_type] < mesh->indices_amount[mesh_type] + 6)
 	{
-		mesh->indices_allocated[mesh_type] += 2048;
+		mesh->indices_allocated[mesh_type] += realloc_size_add;
 		mesh->indices[mesh_type] = realloc(mesh->indices[mesh_type], sizeof(unsigned int) * mesh->indices_allocated[mesh_type]);
-		LG_WARN("Reallocating Indices from %d to %d", mesh->indices_allocated[mesh_type] - 2048, mesh->indices_allocated[mesh_type]);
+		LG_WARN("Reallocating Indices from %d to %d", mesh->indices_allocated[mesh_type] - realloc_size_add, mesh->indices_allocated[mesh_type]);
 	}
 
 	mesh->indices[mesh_type][mesh->indices_amount[mesh_type] + 0] = mesh->index_amount;
@@ -1983,7 +1976,7 @@ void	update_chunk_column_light_1(t_chunk_col *column)
 	int	skylight;
 	float world[3];
 	int local[3];
-	skylight = column->chunks[0]->info->sky_light_lvl;
+	skylight = column->chunks[0]->world->sky_light_lvl;
 	for (int i = 0; i < CHUNK_COLUMN_LIGHT_AMOUNT; i++)
 	{
 		emit_sky_light(column, column->lights[i].chunk_index, column->lights[i].local, skylight);
@@ -2026,7 +2019,7 @@ void	update_chunk_column_light_2(t_chunk_col *column)
 
 		t_chunk *neighbors[4];
 		for (int dir = DIR_NORTH, i = 0; dir <= DIR_WEST; ++dir, ++i)
-			neighbors[i] = get_adjacent_chunk(chunk->info, chunk, (float *)g_card_dir[dir]);
+			neighbors[i] = get_adjacent_chunk(chunk->world, chunk, (float *)g_card_dir[dir]);
 
 		t_block	*block;
 		t_block	*adj_block;

@@ -166,7 +166,7 @@ void ui_loop(t_vox *vox, t_ui *ui, t_ui_manager *ui_manager)
 	
 }
 
-void input_loop(t_vox *vox, t_world *world, t_player *player, t_ui *gui, t_fps *fps)
+void input_handle(t_vox *vox, t_world *world, t_player *player, t_ui *gui, t_fps *fps)
 {
 	update_all_keys(vox->keys, vox->mouse, vox->win);
 	glfwPollEvents();
@@ -428,17 +428,17 @@ void input_loop(t_vox *vox, t_world *world, t_player *player, t_ui *gui, t_fps *
 
 }
 
-void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *gui, t_skybox *skybox)
+void game(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *gui, t_skybox *skybox)
 {
 	int error = glGetError();
 	if (error)
-		LG_ERROR("errors in start of while : %d", error);
+		LG_ERROR("errors in start of game() : %d", error);
 
 	glCullFace(GL_BACK);
 
-	char fps_str[10];
 	if (fps->count % 60 == 0)
 	{
+		char fps_str[16];
 		ft_b_itoa(fps->fps, fps_str);
 		glfwSetWindowTitle(vox->win, fps_str);
 	}
@@ -447,7 +447,7 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 	world->sky_light_lvl_prev = world->sky_light_lvl;
 
 	// Input
-	input_loop(vox, world, player, gui, fps);
+	input_handle(vox, world, player, gui, fps);
 
 	// Player Input?
 	player_event(player, vox->keys, vox->win);
@@ -468,19 +468,18 @@ void game_loop(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *g
 
 	get_chunk_pos_from_world_pos(world->player_chunk, player->camera->pos);
 
-	thread_manager_check_threadiness(&vox->tm);
-
 	int use_multi_thread = true;
+	if (use_multi_thread)
+		thread_manager_check_threadiness(&vox->tm);
 
-	int	tobegen = 0;
 	if (vox->settings.regen_chunks)
 	{
-		int	max_get = RENDER_DISTANCE;
-		int	col_indices[max_get];
-		int	col_coords[max_get][2];
+		int	max_regen_amount = RENDER_DISTANCE;
+		int	col_indices[max_regen_amount];
+		int	col_coords[max_regen_amount][2];
 		int	start_coord[2];
-		tobegen = get_chunk_column_to_regen(world, world->player_chunk, col_indices, col_coords, max_get);
-		for (int i = 0; i < tobegen && i < max_get; i++)
+		int tobegen = get_chunk_column_to_regen(world, world->player_chunk, col_indices, col_coords, max_regen_amount);
+		for (int i = 0; i < tobegen && i < max_regen_amount; i++)
 		{
 			world->chunk_columns[col_indices[i]].wanted_coord[0] = col_coords[i][0];
 			world->chunk_columns[col_indices[i]].wanted_coord[1] = col_coords[i][1];
@@ -990,7 +989,7 @@ int	main(void)
 	while (!glfwWindowShouldClose(vox.win))
 	{
 		update_fps(&fps);
-		game_loop(&vox, &fps, &player, &world, &ui, &skybox);
+		game(&vox, &fps, &player, &world, &ui, &skybox);
 		ui_loop(&vox, &ui, &ui_manager);
 
 		glfwSwapBuffers(vox.win);
