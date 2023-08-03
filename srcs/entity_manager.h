@@ -32,7 +32,7 @@ typedef struct s_entity_manager
 
 }	t_entity_manager;
 
-void		entity_manager_init(t_entity_manager *manager);
+void		entity_manager_init(t_entity_manager *manager, int max_entities);
 t_entity	*entity_manager_new_entity(t_entity_manager *manager);
 t_entity	*entity_manager_get_entity(t_entity_manager *manager, int id);
 void		entity_manager_draw(t_entity_manager *manager, t_camera *camera);

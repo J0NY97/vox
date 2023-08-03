@@ -102,7 +102,7 @@ void debug_create_entities(t_entity_manager *manager, float *pos_v3, int amount_
 	LG_INFO("Created %d entities for debugging purposes", manager->max_entities);
 }
 
-void ui_loop(t_vox *vox, t_ui *ui, t_ui_manager *ui_manager)
+void gui_update(t_vox *vox, t_ui *ui, t_ui_manager *ui_manager)
 {
 	glEnable(GL_BLEND);
 	glDisable(GL_CULL_FACE);
@@ -428,7 +428,7 @@ void input_handle(t_vox *vox, t_world *world, t_player *player, t_ui *gui, t_fps
 
 }
 
-void game(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *gui, t_skybox *skybox)
+void game_update(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui *gui, t_skybox *skybox)
 {
 	int error = glGetError();
 	if (error)
@@ -720,7 +720,7 @@ void	world_init(t_world *world)
 	new_camera(&world->camera);
 
 	// Create entity manager;
-	entity_manager_init(&world->entity_manager);
+	entity_manager_init(&world->entity_manager, 10);
 	entity_manager_load_entity_objects(&world->entity_manager);
 
 	// Creation of rendering lists;
@@ -816,7 +816,7 @@ int	main(void)
 	v3_assign(player.camera->pos, world.spawn_point);
 
 	// Entity Debug;
-	debug_create_entities(&world.entity_manager, player.camera->pos, 10);
+	debug_create_entities(&world.entity_manager, player.camera->pos, world.entity_manager.max_entities);
 	// Melon
 	world.entity_manager.melon_entity = &world.entity_manager.entities[0];//entity_manager_get_entity(&world.entity_manager, 0);
 	world.entity_manager.melon_entity->type = ENTITY_MELON_GOLEM;
@@ -825,8 +825,8 @@ int	main(void)
 	world.entity_manager.melon_entity->draw_dir = 1;
 	// Chicken
 	world.entity_manager.chicken_entity = &world.entity_manager.entities[1];//entity_manager_get_entity(&world.entity_manager, 1);
-	//world.entity_manager.chicken_entity->type = ENTITY_MELON_GOLEM;
-	world.entity_manager.chicken_entity->type = ENTITY_CHICKEN;
+	world.entity_manager.chicken_entity->type = ENTITY_MELON_GOLEM;
+	//world.entity_manager.chicken_entity->type = ENTITY_CHICKEN;
 	world.entity_manager.chicken_entity->ai = 0;
 	world.entity_manager.chicken_entity->draw_aabb = 1;
 	world.entity_manager.chicken_entity->draw_dir = 1;
@@ -860,8 +860,8 @@ int	main(void)
 	while (!glfwWindowShouldClose(vox.win))
 	{
 		update_fps(&fps);
-		game(&vox, &fps, &player, &world, &ui, &skybox);
-		ui_loop(&vox, &ui, &ui_manager);
+		game_update(&vox, &fps, &player, &world, &ui, &skybox);
+		gui_update(&vox, &ui, &ui_manager);
 
 		glfwSwapBuffers(vox.win);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);

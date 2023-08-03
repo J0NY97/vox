@@ -1,10 +1,10 @@
 #include "entity_manager.h"
 #include "shader.h"
 
-void entity_manager_init(t_entity_manager *manager)
+void entity_manager_init(t_entity_manager *manager, int max_entities)
 {
 	manager->next_id = 0;
-	manager->max_entities = 65535;
+	manager->max_entities = max_entities;
 	manager->model_mats = malloc(sizeof(float) * manager->max_entities * 16);
 	LG_INFO("model mats size : %d (* sizeof(float) ofc...)", manager->max_entities * 16);
 
