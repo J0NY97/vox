@@ -720,7 +720,7 @@ void	world_init(t_world *world)
 	new_camera(&world->camera);
 
 	// Create entity manager;
-	entity_manager_init(&world->entity_manager, 10);
+	entity_manager_init(&world->entity_manager, 2);
 	entity_manager_load_entity_objects(&world->entity_manager);
 
 	// Creation of rendering lists;

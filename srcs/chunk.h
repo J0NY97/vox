@@ -252,7 +252,11 @@ int			chunk_mesh_collision_v56(float *orig, float *dir, t_chunk *chunk, float re
 // a
 
 t_block		*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, int *face);
+t_block		*get_block_from_chunk_local(t_chunk *chunk, int *local_pos);
 void		render_block_outline(float *pos, float *color, float *view, float *projection);
+
+void		update_block_visibility(t_chunk *chunk, int *block_pos);
+void		update_block_visibility_v2(t_chunk *chunk, int *block_pos, int _cardDir);
 
 t_block		*set_block_at_world_pos(t_world *info, float *world_pos, int block_type);
 
