@@ -1,4 +1,5 @@
 #include "thread.h"
+#include "time.h"
 
 void	thread_manager_new(t_thread_manager *manager, unsigned int max_threads)
 {
@@ -61,6 +62,9 @@ int	thread_manager_new_thread(t_thread_manager *manager, void *func, void *args)
 */
 void	thread_manager_check_threadiness(t_thread_manager *manager)
 {
+//	time_t _startTime = clock();
+	int _maxThreadsReadyPerFrame = 64;
+	int _threadsReady = 0;
 	for (unsigned int i = 0; i < manager->max_thread_amount; i++)
 	{
 		if (manager->info[i].started &&
@@ -70,10 +74,17 @@ void	thread_manager_check_threadiness(t_thread_manager *manager)
 				LG_ERROR("Couldnt join thread. (ID : %d)", manager->info[i].id);
 			manager->info[i].started = 0;
 			manager->info[i].finished = 0;
-			--manager->thread_amount;
-		//	LG_INFO("Thread Joined. (ID : %d)", manager->info[i].id);
-		//	LG_INFO("Threads Left : %d", manager->thread_amount);
-		//	return ; // maximum one per frame
+			manager->thread_amount--;
+			_threadsReady++;
 		}
+		if (_threadsReady >= _maxThreadsReadyPerFrame)
+			break;
 	}
+	/* Takes avg. 0.001 with 20 threads
+	if (_threadsReady > 0)
+	{
+		LG_INFO("%d Threads were ready this frame", _threadsReady);
+		LG_INFO("Time taken : %f", (float)(clock() - _startTime) / CLOCKS_PER_SEC);
+	}
+	*/
 }

@@ -307,15 +307,15 @@ t_block	*get_block_in_dir(t_chunk *chunk, t_chunk *neighbor, int *local_pos, int
  * 'chunk' : the chunk in which the block recides; (and mesh);
  * 'adjacent' : the adjacent block in the direction of the face of 'block';
  * 'local_pos' : the local pos of the 'block' in 'chunk';
- * 'dir' : aka face, of the 'block' we want to add to 'chunk->meshes';
+ * 'faceDir' : e_card_dir : aka face, of the 'block' we want to add to 'chunk->meshes';
 */
-void	add_block_to_correct_mesh(t_chunk *chunk, t_block *block, int *local_pos, int dir)
+void	add_block_face_to_chunk_mesh(t_chunk *chunk, t_block *block, int *local_pos, int faceDir)
 {
 	t_block_data	data;
 	int				light;
 
 	data = get_block_data(block);
-	light = (int)(ft_pow(0.9f, 15 - ft_clamp(block->light_lvl, 0, 15)) * 100.0f) * (g_face_light[dir] / 100.0f);
+	light = (int)(ft_pow(0.9f, 15 - ft_clamp(block->light_lvl, 0, 15)) * 100.0f) * (g_face_light[faceDir] / 100.0f);
 
 	// TODO : rework on the fluid vertex creator;
 	if (is_fluid(block))
@@ -324,62 +324,17 @@ void	add_block_to_correct_mesh(t_chunk *chunk, t_block *block, int *local_pos, i
 		float	block_world[3];
 
 		get_block_world_pos(block_world, chunk->world_coordinate, local_pos);
-		flowing_water_verts(verts, dir, block, block_world, chunk->world);
+		flowing_water_verts(verts, faceDir, block, block_world, chunk->world);
 		add_to_chunk_mesh(&chunk->meshes, FLUID_MESH, local_pos, verts, data.texture[0], light);
-		++chunk->blocks_fluid_amount;
+		chunk->blocks_fluid_amount++;
 	}
 	else
 	{
-		add_to_chunk_mesh(&chunk->meshes, BLOCK_MESH, local_pos, (float *)g_all_faces[data.face_index][dir], data.texture[dir], light);
-		++chunk->blocks_solid_amount;
+		add_to_chunk_mesh(&chunk->meshes, BLOCK_MESH, local_pos, (float *)g_all_faces[data.face_index][faceDir], data.texture[faceDir], light);
+		chunk->blocks_solid_amount++;
 	}
 }
 
-/*
- * 'dirs' : array of e_card_dir, only check the faces in the direction of these; last should be -1;
- *
- * Returns if a face was added;
- *
- * NOTE: wherever we are calling this we have to do 'if (helper_pelper(...)) chunk->has_visible_blocks = 1;';
- * TODO : make return 'chunk->blocks[index].visible_faces';
-*/
-int	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos, int index)
-{
-	t_block			*adj;
-	t_block			*block;
-	t_block_data	adj_data;
-	t_block_data	block_data;
-	int				face_was_added;
-
-	face_was_added = 0;
-	block = &chunk->blocks[index];
-	if (is_gas(block)) // <-- very important, im not sure what happens if we are trying to render an air block;
-		return (0);
-	adj = NULL;
-
-	for (int dir = 0; dirs[dir] != -1; dir++)
-	{
-		adj = get_block_in_dir(chunk, neighbors[dirs[dir]], pos, dirs[dir]);
-		// If there is no block in this direction, just skip it;
-		if (!adj)
-			continue ;
-		// Don't add face to mesh if the face is already in it;
-		if (chunk->blocks[index].visible_faces & g_visible_faces[dirs[dir]])
-			continue ;
-		adj_data = get_block_data(adj);
-		block_data = get_block_data(block);
-		// Always add face if it's next to a gas block;
-		// Otherwise it's up to the block type settings;
-		if (adj_data.force_see_through || block_data.force_through_see ||
-			(adj_data.see_through && block_data.through_see))
-		{
-			add_block_to_correct_mesh(chunk, block, pos, dirs[dir]);
-			chunk->blocks[index].visible_faces |= g_visible_faces[dirs[dir]];
-			face_was_added = 1;
-		}
-	}
-	return (face_was_added);
-}
 /*
 	chunk : the chunk we are checking in;
 	neighbor : the neighbor chunk we are checking for;
@@ -387,7 +342,7 @@ int	helper_pelper(t_chunk *chunk, t_chunk **neighbors, int *dirs, int *pos, int 
 	own_index : the index of the block we are checking in 'chunk' not 'neighbor';
 	_direction (e_card_dir) : the direction of the face of the checking block;
 */
-void	helper_pelper_v2(t_chunk *chunk, int *block_pos, t_chunk *neighbor, int *neighbor_block_pos, int _direction)
+void	update_border_block_visibility(t_chunk *chunk, int *block_pos, t_chunk *neighbor, int *neighbor_block_pos, int _direction)
 {
 	int _blockIndex = get_block_index(block_pos[0], block_pos[1], block_pos[2]);
 	t_block *block = &chunk->blocks[_blockIndex];
@@ -412,50 +367,9 @@ void	helper_pelper_v2(t_chunk *chunk, int *block_pos, t_chunk *neighbor, int *ne
 	if (neighbor_data.force_see_through || block_data.force_through_see ||
 		(neighbor_data.see_through && block_data.through_see))
 	{
-		add_block_to_correct_mesh(chunk, block, block_pos, _direction);
+		add_block_face_to_chunk_mesh(chunk, block, block_pos, _direction);
 		chunk->blocks[_blockIndex].visible_faces |= g_visible_faces[_direction];
 		chunk->has_visible_blocks = 1;
-	}
-}
-
-
-/*
- * For each block in chunk, check all its adjacent blocks,
- *	if touching air, add that face to the chunk's mesh.
- *
- * This func resets the mesh before doing anything;
- *
- * NOTE: 'update_chunk_block_palette()' needs to get ran before this;
-*/
-void	get_blocks_visible(t_chunk *chunk)
-{
-	int	index;
-
-	chunk->has_visible_blocks = 0;
-
-	chunk->blocks_solid_amount = 0;
-	chunk->blocks_flora_amount = 0;
-	chunk->blocks_fluid_amount = 0;
-	chunk->blocks_solid_alpha_amount = 0;
-
-	if (!chunk->has_blocks || !chunk->block_palette[GAS_AIR])
-		return ;
-
-	// First check all the blocks inside the chunk, all face directions;
-	for (int y = 0; y < CHUNK_HEIGHT; y++)
-	{
-		for (int x = 0; x < CHUNK_WIDTH; x++)
-		{
-			for (int z = 0; z < CHUNK_BREADTH; z++)
-			{
-				// Reset the visible faces;
-				index = get_block_index(x, y, z);
-				chunk->blocks[index].visible_faces = 0;
-
-				// Update the visible faces;
-				update_block_visibility(chunk, (int[]){x, y, z});
-			}
-		}
 	}
 }
 
@@ -467,7 +381,7 @@ void	get_blocks_visible(t_chunk *chunk)
  * Every block check its direction of travel and the other block we are checking against
  * 	checks the reverse direction; (example block1 check NORTH, neighborblock1 checks SOUTH);
 */
-void get_blocks_visible_v2(t_chunk *chunk)
+void get_blocks_visible(t_chunk *chunk)
 {
 	chunk->has_visible_blocks = 0;
 	chunk->blocks_solid_amount = 0;
@@ -479,10 +393,10 @@ void get_blocks_visible_v2(t_chunk *chunk)
 		return ;
 	
 	// Reset the visible faces;
-	// TODO : This should be done in the 'update_block_visibility_v2()' at some point;
+	// TODO : This should be done in the 'update_block_visibility()' at some point;
 	for (int i = 0; i < chunk->block_amount; i++)
 		chunk->blocks[i].visible_faces = 0;
-	
+
 	// First check all the blocks inside the chunk, all face directions;
 	for (int y = 0; y < CHUNK_HEIGHT; y++)
 	{
@@ -491,9 +405,9 @@ void get_blocks_visible_v2(t_chunk *chunk)
 			for (int z = 0; z < CHUNK_BREADTH; z++)
 			{
 				// Update the visible faces;
-				update_block_visibility_v2(chunk, (int[]){x, y, z}, DIR_NORTH);
-				update_block_visibility_v2(chunk, (int[]){x, y, z}, DIR_EAST);
-				update_block_visibility_v2(chunk, (int[]){x, y, z}, DIR_UP);
+				update_block_visibility(chunk, (int[]){x, y, z}, DIR_NORTH);
+				update_block_visibility(chunk, (int[]){x, y, z}, DIR_EAST);
+				update_block_visibility(chunk, (int[]){x, y, z}, DIR_UP);
 			}
 		}
 	}
@@ -512,57 +426,6 @@ bool coordinates_inside_chunk(int *pos)
 }
 
 /*
- Only checks the directions where we are checking the same chunk;
- NOTE : We do not care about the chunk border faces yet!;
-
- 'chunk' : the chunk which the block is inside;
- 'block_pos' : the local position of the block inside the 'chunk';
-*/
-void update_block_visibility(t_chunk *chunk, int *block_pos)
-{
-	int _blockIndex = get_block_index(block_pos[0], block_pos[1], block_pos[2]);
-	t_block *block = &chunk->blocks[_blockIndex];
-	if (is_gas(block)) // <-- very important, im not sure what happens if we are trying to render an air block;
-		return ;
-
-	int neighbor_block_pos[3];
-	/// Go through all the g_card_dir from DIR_NORTH to DIR_DOWN;
-	// '_i' is the direction
-	for (int _i = 0; _i < 6; _i++)
-	{
-		// Don't add face to mesh if the face is already in it;
-		if (chunk->blocks[_blockIndex].visible_faces & g_visible_faces[_i]) 
-			return;
-
-		// add the direction to the block_pos to get the neighbor block;
-		v3i_add(neighbor_block_pos, block_pos, (int*)g_card_dir_int[_i]);
-
-		// Check that the coordinates arent outside the chunk;
-		if (!coordinates_inside_chunk(neighbor_block_pos))
-			continue;
-
-		// Get the actual block;
-		t_block *neighbor_block = get_block_from_chunk_local(chunk, neighbor_block_pos);
-		if (!neighbor_block)
-			return;
-
-		// Get data for the specified blocks;
-		t_block_data neighbor_data = get_block_data(neighbor_block);
-		t_block_data block_data = get_block_data(block);
-
-		// Always add face if it's next to a gas block;
-		// Otherwise it's up to the block type settings;
-		if (neighbor_data.force_see_through || block_data.force_through_see ||
-			(neighbor_data.see_through && block_data.through_see))
-		{
-			add_block_to_correct_mesh(chunk, block, block_pos, _i);
-			chunk->blocks[_blockIndex].visible_faces |= g_visible_faces[_i];
-			chunk->has_visible_blocks = 1;
-		}
-	}
-}
-
-/*
  Only checks the direction given for block in 'block_pos',
   but reverse direction for neighbor block in that direction;
  NOTE : We do not care about the chunk border faces yet!;
@@ -571,16 +434,21 @@ void update_block_visibility(t_chunk *chunk, int *block_pos)
  'block_pos' : v3 : the local position of the block inside the 'chunk';
  '_cardDir' : e_card_dir;
 */
-void update_block_visibility_v2(t_chunk *chunk, int *block_pos, int _cardDir)
+void update_block_visibility(t_chunk *chunk, int *block_pos, int _cardDir)
 {
 	int _blockIndex = get_block_index(block_pos[0], block_pos[1], block_pos[2]);
 	t_block *block = &chunk->blocks[_blockIndex];
 
 	int neighbor_block_pos[3];
 	// Don't add face to mesh if the face is already in it;
-	// NOTE / TODO : Check if this ever happens, this means we are checking duplicately?
-	if (chunk->blocks[_blockIndex].visible_faces & g_visible_faces[_cardDir]) 
+	/*
+	if (block->visible_faces & g_visible_faces[_cardDir]) 
+	{
+		// NOTE : We never come here;
+		LG_ERROR("Checking block's visible face more than once");
 		return;
+	}
+	*/
 
 	// add the direction to the block_pos to get the neighbor block;
 	v3i_add(neighbor_block_pos, block_pos, (int*)g_card_dir_int[_cardDir]);
@@ -595,28 +463,32 @@ void update_block_visibility_v2(t_chunk *chunk, int *block_pos, int _cardDir)
 		return;
 
 	// Get data for the specified blocks;
+	// NOTE : This is faster than the version below; (40% faster);
+	t_block_data *blockData = (t_block_data*)g_block_data;
+	t_block_data neighbor_data = blockData[neighbor_block->type];
+	t_block_data block_data = blockData[block->type];
+	/*
 	t_block_data neighbor_data = get_block_data(neighbor_block);
 	t_block_data block_data = get_block_data(block);
-	// If block is gas, we should set the neighbor face visible, but this face not visible
-	if (is_type_gas(block_data.type))
+	*/
+
+	if ((neighbor_data.force_see_through ||
+		block_data.force_through_see ||
+		(neighbor_data.see_through && block_data.through_see)) &&
+		!is_type_gas(block_data.type))
 	{
-		// NOTE : The reverse of the direction is 'dir + 1'; (check e_card_dir);
-		neighbor_block->visible_faces |= g_visible_faces[_cardDir + 1];
-		block->visible_faces |= ~g_visible_faces[_cardDir];
-		return ;
+		add_block_face_to_chunk_mesh(chunk, block, block_pos, _cardDir);
+		block->visible_faces |= g_visible_faces[_cardDir];
+		chunk->has_visible_blocks = 1;
 	}
 
-	// Always add face if it's next to a gas block;
-	// Otherwise it's up to the block type settings;
-	if (neighbor_data.force_see_through || block_data.force_through_see ||
-		(neighbor_data.see_through && block_data.through_see))
+	if ((block_data.force_see_through ||
+		neighbor_data.force_through_see ||
+		(block_data.see_through && neighbor_data.through_see)) &&
+		!is_type_gas(neighbor_data.type))
 	{
+		add_block_face_to_chunk_mesh(chunk, neighbor_block, neighbor_block_pos, _cardDir + 1);
 		neighbor_block->visible_faces |= g_visible_faces[_cardDir + 1];
-		add_block_to_correct_mesh(chunk, neighbor_block, neighbor_block_pos, _cardDir + 1);
-
-		block->visible_faces |= g_visible_faces[_cardDir];
-		add_block_to_correct_mesh(chunk, block, block_pos, _cardDir);
-
 		chunk->has_visible_blocks = 1;
 	}
 }
@@ -649,9 +521,9 @@ void	update_chunk_border_visible_blocks(t_chunk *chunk)
 					chunk->has_visible_blocks = 1;
 					*/
 			if (neighbors[DIR_NORTH])
-				helper_pelper_v2(chunk, (int[]){x, y, 0}, neighbors[DIR_NORTH], (int[]){x, y, CHUNK_BREADTH - 1}, DIR_NORTH);
+				update_border_block_visibility(chunk, (int[]){x, y, 0}, neighbors[DIR_NORTH], (int[]){x, y, CHUNK_BREADTH - 1}, DIR_NORTH);
 			if (neighbors[DIR_SOUTH])
-				helper_pelper_v2(chunk, (int[]){x, y, CHUNK_BREADTH - 1}, neighbors[DIR_SOUTH], (int[]){x, y, 0}, DIR_SOUTH);
+				update_border_block_visibility(chunk, (int[]){x, y, CHUNK_BREADTH - 1}, neighbors[DIR_SOUTH], (int[]){x, y, 0}, DIR_SOUTH);
 		}
 		// left && right
 		for (int z = 0; z < CHUNK_BREADTH; z++)
@@ -665,9 +537,9 @@ void	update_chunk_border_visible_blocks(t_chunk *chunk)
 					chunk->has_visible_blocks = 1;
 					*/
 			if (neighbors[DIR_WEST])
-				helper_pelper_v2(chunk, (int[]){0, y, z}, neighbors[DIR_WEST], (int[]){CHUNK_WIDTH - 1, y, z}, DIR_WEST);
+				update_border_block_visibility(chunk, (int[]){0, y, z}, neighbors[DIR_WEST], (int[]){CHUNK_WIDTH - 1, y, z}, DIR_WEST);
 			if (neighbors[DIR_EAST])
-				helper_pelper_v2(chunk, (int[]){CHUNK_WIDTH - 1, y, z}, neighbors[DIR_EAST], (int[]){0, y, z}, DIR_EAST);
+				update_border_block_visibility(chunk, (int[]){CHUNK_WIDTH - 1, y, z}, neighbors[DIR_EAST], (int[]){0, y, z}, DIR_EAST);
 		}
 	}
 	// down && up
@@ -684,9 +556,9 @@ void	update_chunk_border_visible_blocks(t_chunk *chunk)
 					chunk->has_visible_blocks = 1;
 					*/
 			if (neighbors[DIR_DOWN])
-				helper_pelper_v2(chunk, (int[]){x, 0, z}, neighbors[DIR_DOWN], (int[]){x, CHUNK_HEIGHT - 1, z}, DIR_DOWN);
+				update_border_block_visibility(chunk, (int[]){x, 0, z}, neighbors[DIR_DOWN], (int[]){x, CHUNK_HEIGHT - 1, z}, DIR_DOWN);
 			if (neighbors[DIR_UP])
-				helper_pelper_v2(chunk, (int[]){x, CHUNK_HEIGHT - 1, z}, neighbors[DIR_UP], (int[]){x, 0, z}, DIR_UP);
+				update_border_block_visibility(chunk, (int[]){x, CHUNK_HEIGHT - 1, z}, neighbors[DIR_UP], (int[]){x, 0, z}, DIR_UP);
 		}
 	}
 }
@@ -2323,7 +2195,7 @@ void	block_print(t_block *block)
 	ft_printf("\tLight Level : %d\n", block->light_lvl);
 	ft_printf("\tVisible Faces : ");
 	ft_putbinary(block->visible_faces, 8);
-	ft_printf("[NORTH, EAST, SOUTH, WEST, UP, DOWN] (last 2 bits are not used)\n");
+	ft_printf(" [NORTH, SOUTH, EAST, WEST, UP, DOWN] (last 2 bits are not used)\n");
 	ft_printf("Data :\n");
 	ft_printf("\tLight Emit : %d\n", data.light_emit);
 }

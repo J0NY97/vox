@@ -3,9 +3,8 @@
 
 void chunk_generation(t_vox *vox, t_world *world)
 {
-	int use_multi_thread = true;
-	if (use_multi_thread)
-		thread_manager_check_threadiness(&vox->tm);
+	bool _useMultiThread = true;
+	thread_manager_check_threadiness(&vox->tm);
 
 	if (vox->settings.regen_chunks)
 	{
@@ -18,7 +17,7 @@ void chunk_generation(t_vox *vox, t_world *world)
 		{
 			world->chunk_columns[col_indices[i]].wanted_coord[0] = col_coords[i][0];
 			world->chunk_columns[col_indices[i]].wanted_coord[1] = col_coords[i][1];
-			if (use_multi_thread)
+			if (_useMultiThread)
 				thread_manager_new_thread(&vox->tm, &regen_column_thread, &world->chunk_columns[col_indices[i]]);
 			else
 				regenerate_chunk_column(&world->chunk_columns[col_indices[i]], col_coords[i], world->seed);
@@ -30,10 +29,13 @@ void chunk_generation(t_vox *vox, t_world *world)
 
 void chunk_update(t_world *world)
 {
+	time_t _startTime = clock();
 	t_chunk		*neighbors[DIR_AMOUNT];
 	t_chunk		**col_chunks;
 	t_chunk_col	*column;
 	int			neighbors_found;
+
+	int			_chunksUpdated = 0;
 
 	for (int col = 0; col < CHUNK_COLUMNS; col++)
 	{
@@ -41,7 +43,7 @@ void chunk_update(t_world *world)
 
 		if (column->being_threaded)
 			continue ;
-
+		
 		col_chunks = column->chunks;
 		column->chunk_needs_update = 0;
 
@@ -87,6 +89,7 @@ void chunk_update(t_world *world)
 			if (col_chunks[ent]->needs_to_update)
 			{
 				update_chunk(col_chunks[ent]);
+				_chunksUpdated++;
 				if (world->toggle_event)
 					update_chunk_event_blocks(col_chunks[ent]);
 				// Set needs to update to all 6 neighbors of the chunk;
@@ -100,6 +103,11 @@ void chunk_update(t_world *world)
 			if (world->toggle_event && world->game_tick)
 				event_chunk(col_chunks[ent]);
 		}
+	}
+	if (_chunksUpdated > 0)
+	{
+		LG_INFO("%d chunks updated", _chunksUpdated);
+		LG_INFO("Time taken : %f", (float)(clock() - _startTime) / CLOCKS_PER_SEC);
 	}
 }
 
