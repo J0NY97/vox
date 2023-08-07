@@ -690,8 +690,16 @@ void game_update(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui 
 		for (int j = 0; j < CHUNKS_PER_COLUMN; j++)
 		{
 			t_chunk *chunk = column->chunks[j];
-			if (chunk->has_visible_blocks && chunk->blocks_solid_amount > 0)
-				render_chunk_mesh(&chunk->meshes, BLOCK_MESH, chunk->world_coordinate, player->camera);
+
+			// If the chunk has no visible block,
+			//	OR chunk has no solid blocks,
+			//	OR we haven uploaded the mesh to the gpu yet;
+			if (!chunk->has_visible_blocks ||
+				chunk->blocks_solid_amount <= 0 ||
+				chunk->was_updated)
+				continue;
+
+			render_chunk_mesh(&chunk->meshes, BLOCK_MESH, chunk->world_coordinate, player->camera);
 		}
 	}
 
@@ -719,8 +727,12 @@ void game_update(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui 
 		for (int j = 0; j < CHUNKS_PER_COLUMN; j++)
 		{
 			t_chunk *chunk = column->chunks[j];
-			if (chunk->blocks_fluid_amount > 0)
-				render_chunk_mesh(&chunk->meshes, FLUID_MESH, chunk->world_coordinate, player->camera);
+			if (!chunk->has_visible_blocks ||
+				chunk->blocks_fluid_amount <= 0 ||
+				chunk->was_updated)
+				continue;
+
+			render_chunk_mesh(&chunk->meshes, FLUID_MESH, chunk->world_coordinate, player->camera);
 		}
 	}
 

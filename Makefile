@@ -89,7 +89,7 @@ else
 LIBS += -lOpenGl32 -lgdi32
 endif
 
-FLAGS = -Wall -Wextra -Wno-unused-variable -MMD -O3 #-g #-O3
+FLAGS = -Wall -Wextra -Wno-unused-variable -MMD -g #-O3
 
 all: $(ODIR) $(NAME)
 
@@ -109,7 +109,7 @@ $(ODIR)/%.o: $(CDIR)/%.c
 	@printf $(YELLOW)"Compiling $<\n"$(RESET)
 
 $(NAME): $(OBJ)
-	@gcc -o $(NAME) $(OBJ) $(INCS) $(LIB_DIRS) $(LIBS) #-fsanitize=address
+	@gcc -o $(NAME) $(OBJ) $(INCS) $(LIB_DIRS) $(LIBS)
 	@echo "$(NAME) was successfully created."
 
 clean:
