@@ -255,7 +255,7 @@ t_block		*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, i
 t_block		*get_block_from_chunk_local(t_chunk *chunk, int *local_pos);
 void		render_block_outline(float *pos, float *color, float *view, float *projection);
 
-void		update_block_visibility(t_chunk *chunk, int *block_pos, int _cardDir);
+void		update_block_face_visibility(t_chunk *chunk, int *block_pos, int _cardDir);
 void		update_block_visibility_v3(t_chunk *chunk, int *block_pos, int _cardDir, int (*cardinalDirs)[3], t_block_data *blockDatas);
 
 t_block		*set_block_at_world_pos(t_world *info, float *world_pos, int block_type);

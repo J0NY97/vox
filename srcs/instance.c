@@ -374,6 +374,8 @@ void	update_border_block_visibility(t_chunk *chunk, int *block_pos, t_chunk *nei
 }
 
 /*
+ Check every block inside (not border) the chunk which face is visible;
+
  * Instead of every block checking checking all its directions;
  * This one goes NORTH to SOUTH;
  * WEST to EAST;
@@ -381,7 +383,7 @@ void	update_border_block_visibility(t_chunk *chunk, int *block_pos, t_chunk *nei
  * Every block check its direction of travel and the other block we are checking against
  * 	checks the reverse direction; (example block1 check NORTH, neighborblock1 checks SOUTH);
 */
-void get_blocks_visible(t_chunk *chunk)
+void update_block_visibility_inside(t_chunk *chunk)
 {
 	chunk->has_visible_blocks = 0;
 	chunk->blocks_solid_amount = 0;
@@ -390,13 +392,18 @@ void get_blocks_visible(t_chunk *chunk)
 	chunk->blocks_solid_alpha_amount = 0;
 
 	if (!chunk->has_blocks || !chunk->block_palette[GAS_AIR])
+	{
+		LG_INFO("Chunk has no blocks OR no air blocks");
 		return ;
+	}
 	
 	// Reset the visible faces;
-	// TODO : This should be done in the 'update_block_visibility()' at some point;
+	// TODO : This should be done in the 'update_block_face_visibility()' at some point;
 	for (int i = 0; i < chunk->block_amount; i++)
 		chunk->blocks[i].visible_faces = 0;
 
+	// TODO : One could change this loop to go through all the blocks and find a gas block,
+	//		when ones found, we can udpate the visible faces of the neighboring blocks in all directions;
 	// First check all the blocks inside the chunk, all face directions;
 	for (int y = 0; y < CHUNK_HEIGHT; y++)
 	{
@@ -405,9 +412,9 @@ void get_blocks_visible(t_chunk *chunk)
 			for (int z = 0; z < CHUNK_BREADTH; z++)
 			{
 				// Update the visible faces;
-				update_block_visibility(chunk, (int[]){x, y, z}, DIR_NORTH);
-				update_block_visibility(chunk, (int[]){x, y, z}, DIR_EAST);
-				update_block_visibility(chunk, (int[]){x, y, z}, DIR_UP);
+				update_block_face_visibility(chunk, (int[]){x, y, z}, DIR_NORTH);
+				update_block_face_visibility(chunk, (int[]){x, y, z}, DIR_EAST);
+				update_block_face_visibility(chunk, (int[]){x, y, z}, DIR_UP);
 			}
 		}
 	}
@@ -434,7 +441,7 @@ bool coordinates_inside_chunk(int *pos)
  'block_pos' : v3 : the local position of the block inside the 'chunk';
  '_cardDir' : e_card_dir;
 */
-void update_block_visibility(t_chunk *chunk, int *block_pos, int _cardDir)
+void update_block_face_visibility(t_chunk *chunk, int *block_pos, int _cardDir)
 {
 	int _blockIndex = get_block_index(block_pos[0], block_pos[1], block_pos[2]);
 	t_block *block = &chunk->blocks[_blockIndex];
@@ -767,17 +774,14 @@ int	get_chunk_water_amount(t_chunk *chunk)
 */
 void	update_chunk_block_palette(t_chunk *chunk)
 {
-	/*
-	static int count = 0;
-
-	count++;
-	if (count % 100 == 0)
-		ft_printf("count : %d\n", count);
-		*/
+	// reset block palette;
 	memset(chunk->block_palette, 0, sizeof(int) * BLOCK_TYPE_AMOUNT);
+
 	for (int i = 0; i < chunk->block_amount; i++)
 	{
 		chunk->block_palette[chunk->blocks[i].type] += 1;
+
+		// Reset the light level;
 		// TODO : Remove this when we have a better place for it;
 		chunk->blocks[i].light_lvl = 15;
 	}
@@ -1004,7 +1008,7 @@ void	update_chunk_visible_blocks(t_chunk *chunk)
 {
 	reset_chunk_mesh(&chunk->meshes);
 
-	get_blocks_visible(chunk);
+	update_block_visibility_inside(chunk);
 
 /*
 	{ // DEBUG
