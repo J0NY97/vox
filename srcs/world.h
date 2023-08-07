@@ -16,9 +16,9 @@
 # include "entity_manager.h"
 
 // WORLD Settings
-#define CHUNK_WIDTH 64
-#define CHUNK_HEIGHT 64
-#define CHUNK_BREADTH 64
+#define CHUNK_WIDTH 32
+#define CHUNK_HEIGHT 32
+#define CHUNK_BREADTH 32
 #define CHUNK_COLUMN_HEIGHT 64 // How many blocks high is a chunk column;
 static const int g_chunks_per_column = CHUNK_COLUMN_HEIGHT / CHUNK_HEIGHT;
 #define CHUNKS_PER_COLUMN g_chunks_per_column
@@ -102,6 +102,8 @@ void chunk_generation(t_vox *vox, t_world *world);
 void update_chunk_columns(t_vox *vox, t_world *world);
 void update_chunk_column(t_chunk_column *column);
 void *update_column_thread(void *args);
+void *update_column_thread_start(void *args);
+void *update_column_thread_end(void *args);
 void decide_which_chunks_to_render(t_world *world);
 
 #endif

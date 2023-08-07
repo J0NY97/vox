@@ -32,7 +32,7 @@ void	*thread_func(void *info_pointer)
 /*
  * Returns 0 if couldnt add thread; else 1;
 */
-int	thread_manager_new_thread(t_thread_manager *manager, void *func, void *args)
+int	thread_manager_new_thread(t_thread_manager *manager, void *func, void *args, void (*startFunc)(void*), void *endFunc)
 {
 	if (manager->thread_amount >= manager->max_thread_amount)
 		return (0);
@@ -40,10 +40,14 @@ int	thread_manager_new_thread(t_thread_manager *manager, void *func, void *args)
 	{
 		if (manager->info[i].started == 0)
 		{
+			manager->info[i].startFunc = startFunc;
+			manager->info[i].endFunc = endFunc;
 			manager->info[i].func = func;
 			manager->info[i].args = args;
 			manager->info[i].finished = 0;
 			manager->info[i].started = 1;
+			if (startFunc)
+				startFunc(args);
 			if (pthread_create(&manager->threads[i], NULL, thread_func, &manager->info[i]))
 				LG_ERROR("Couldnt create thread. (ID : %d)", manager->info[i].id);
 			//LG_INFO("New Thread Created (ID : %d (%d))", manager->info[i].id, manager->thread_amount);
@@ -52,6 +56,16 @@ int	thread_manager_new_thread(t_thread_manager *manager, void *func, void *args)
 		}
 	}
 	return (0);
+}
+
+int	create_new_detached_thread(void *func, void *args)
+{
+	pthread_t thread;
+
+	if (pthread_create(&thread, NULL, func, args))
+		LG_ERROR("Couldnt create thread.");
+	pthread_detach(thread);
+	return (1);
 }
 
 /*
@@ -71,6 +85,8 @@ void	thread_manager_check_threadiness(t_thread_manager *manager)
 		{
 			if (pthread_join(manager->threads[i], NULL))
 				LG_ERROR("Couldnt join thread. (ID : %d)", manager->info[i].id);
+			if (manager->info[i].endFunc)
+				manager->info[i].endFunc(manager->info[i].args);
 			manager->info[i].started = 0;
 			manager->info[i].finished = 0;
 			manager->thread_amount--;

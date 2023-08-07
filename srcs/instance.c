@@ -994,15 +994,31 @@ void	event_chunk(t_chunk *chunk)
 	}
 }
 
-void *regen_column_thread(void *args)
+void *regen_column_thread_start(void *args)
 {
 	t_chunk_column	*column;	
 
 	column = args;
 	column->regeneration_threaded = 1;
-	regenerate_chunk_column(column, column->wanted_coord, column->world->seed);
-	column->regeneration_threaded = 0;
+	return (NULL);
+}
+void *regen_column_thread(void *args)
+{
+	t_chunk_column	*column;	
 
+	column = args;
+//	column->regeneration_threaded = 1;
+	regenerate_chunk_column(column, column->wanted_coord, column->world->seed);
+//	column->regeneration_threaded = 0;
+
+	return (NULL);
+}
+void *regen_column_thread_end(void *args)
+{
+	t_chunk_column	*column;	
+
+	column = args;
+	column->regeneration_threaded = 0;
 	return (NULL);
 }
 

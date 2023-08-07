@@ -490,6 +490,7 @@ void game_update(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui 
 
 		t_chunk **col_chunks = column->chunks;
 
+		// Update the chunk border block face visibility;
 		for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
 		{
 			if (col_chunks[ent]->secondary_update)
@@ -499,6 +500,8 @@ void game_update(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui 
 				update_chunk_border_visible_blocks(col_chunks[ent]);
 			}
 		}
+		/*
+		*/
 
 		// Send chunk mesh to GPU if it was updated;
 		for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
@@ -687,7 +690,7 @@ void game_update(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui 
 		for (int j = 0; j < CHUNKS_PER_COLUMN; j++)
 		{
 			t_chunk *chunk = column->chunks[j];
-			if (chunk->blocks_solid_amount > 0)
+			if (chunk->has_visible_blocks && chunk->blocks_solid_amount > 0)
 				render_chunk_mesh(&chunk->meshes, BLOCK_MESH, chunk->world_coordinate, player->camera);
 		}
 	}

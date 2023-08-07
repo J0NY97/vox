@@ -22,7 +22,7 @@ void chunk_generation(t_vox *vox, t_world *world)
 			if (column->regeneration_threaded || column->update_threaded)
 				continue;
 			if (_useMultiThread)
-				thread_manager_new_thread(&vox->tm_gen, regen_column_thread, column);
+				thread_manager_new_thread(&vox->tm_gen, regen_column_thread, column, regen_column_thread_start, regen_column_thread_end);
 			else
 				regenerate_chunk_column(column, col_coords[i], world->seed);
 		}
@@ -35,7 +35,7 @@ void update_chunk_columns(t_vox *vox, t_world *world)
 {
 //	time_t _startTime = clock();
 	t_chunk_column	*column;
-	bool _useMultiThread = false;
+	bool _useMultiThread = true;
 	thread_manager_check_threadiness(&vox->tm_update);
 
 //	int			_chunksUpdated = 0;
@@ -63,7 +63,7 @@ void update_chunk_columns(t_vox *vox, t_world *world)
 			continue;
 		
 		if (_useMultiThread)
-			thread_manager_new_thread(&vox->tm_update, update_column_thread, column);
+			thread_manager_new_thread(&vox->tm_update, update_column_thread, column, update_column_thread_start, update_column_thread_end);
 		else
 			update_chunk_column(column);
 	}
@@ -104,35 +104,37 @@ void update_chunk_column(t_chunk_column *column)
 	*/
 
 	// Other Chunk updates;
-	//t_chunk	*neighbors[DIR_AMOUNT];
+	/*
+	*/
+	t_chunk	*neighbors[DIR_AMOUNT];
 	for (int chunkIndex = 0; chunkIndex < CHUNKS_PER_COLUMN; chunkIndex++)
 	{
 		/*
+		*/
 		int neighbors_found = 0;
 
 		// We only need to update the chunks if a chunk has been regenerated
-		if ((chunksInColumn[ent]->needs_to_update ||
+		if ((chunksInColumn[chunkIndex]->needs_to_update ||
 			(world->generate_structures && column->update_structures)))
 		{
 			// Get all neighbors for this chunk;
-			for (int dir = DIR_NORTH, i = 0; dir < DIR_AMOUNT; ++dir, ++i)
+			for (int dir = DIR_NORTH, i = 0; dir < DIR_AMOUNT; dir++, i++)
 			{
-				neighbors[i] = get_adjacent_chunk(world, chunksInColumn[ent], (float *)g_card_dir[dir]);
-				++neighbors_found;
+				neighbors[i] = get_adjacent_chunk(world, chunksInColumn[chunkIndex], (float *)g_card_dir[dir]);
+				neighbors_found++;
 			}
 		}
-		*/
 
 		if (chunksInColumn[chunkIndex]->needs_to_update)
 		{
 			update_chunk(chunksInColumn[chunkIndex]);
-			/*
 			if (world->toggle_event)
-				update_chunk_event_blocks(chunksInColumn[ent]);
+				update_chunk_event_blocks(chunksInColumn[chunkIndex]);
 			// Set needs to update to all 6 neighbors of the chunk;
-			for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
+			for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; dir++, i++)
 				if (neighbors[i])
 					neighbors[i]->secondary_update = 1;
+			/*
 					*/
 		}
 
@@ -145,15 +147,30 @@ void update_chunk_column(t_chunk_column *column)
 	}
 }
 
-void *update_column_thread(void *args)
+void *update_column_thread_start(void *args)
 {
 	t_chunk_column *column;
 	
 	column = args;
 	column->update_threaded = 1;
+	return (NULL);
+}
+void *update_column_thread(void *args)
+{
+	t_chunk_column *column;
+	
+	column = args;
+//	column->update_threaded = 1;
 	update_chunk_column(column);
+//	column->update_threaded = 0;
+	return (NULL);
+}
+void *update_column_thread_end(void *args)
+{
+	t_chunk_column *column;
+	
+	column = args;
 	column->update_threaded = 0;
-
 	return (NULL);
 }
 

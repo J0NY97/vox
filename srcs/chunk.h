@@ -236,6 +236,8 @@ typedef struct s_regen_args
 }	t_regen_args;
 
 void		*regen_column_thread(void *args);
+void		*regen_column_thread_start(void *args);
+void		*regen_column_thread_end(void *args);
 int			regenerate_chunks(int *these, int coord[2], t_world *info);
 int			regenerate_chunks_threading(int *these, int coord[2], t_world *info);
 void		regenerate_chunk_column(t_chunk_column *column, int coord[2], int seed);
