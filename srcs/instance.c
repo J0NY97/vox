@@ -142,7 +142,7 @@ t_chunk	*get_adjacent_chunk(t_world *info, t_chunk *from, float *dir)
 	from_coord[0] = from->coordinate[0] + (int)dir[0];
 	from_coord[1] = from->coordinate[1] + (int)dir[1];
 	from_coord[2] = from->coordinate[2] + (int)dir[2];
-	for (int i = 0; i < CHUNK_COLUMNS; i++)
+	for (int i = 0; i < CHUNK_COLUMN_AMOUNT; i++)
 	{
 		if (info->chunk_columns[i].coordinate[0] == from_coord[0] &&
 			info->chunk_columns[i].coordinate[1] == from_coord[2])
@@ -163,7 +163,7 @@ t_chunk	*get_adjacent_chunk(t_world *info, t_chunk *from, float *dir)
 */
 t_chunk	*get_chunk(t_world *info, int *pos)
 {
-	t_chunk_col	*column;
+	t_chunk_column	*column;
 
 	column = get_chunk_column(info, (int []){pos[0], pos[2]});
 	if (column)
@@ -175,7 +175,7 @@ t_chunk	*get_chunk(t_world *info, int *pos)
  * make sure the chunk is a part of this column, otherwise it will return the
  *	the wrong chunk at the same y you wanted;
 */
-t_chunk	*get_chunk_from_column(t_chunk_col *col, int y)
+t_chunk	*get_chunk_from_column(t_chunk_column *col, int y)
 {
 	for (int i = 0; i < CHUNKS_PER_COLUMN; i++)
 		if (col->chunks[i]->coordinate[1] == y)
@@ -186,9 +186,9 @@ t_chunk	*get_chunk_from_column(t_chunk_col *col, int y)
 /*
  * 'pos_v2' : x / z;
 */
-t_chunk_col	*get_chunk_column(t_world *info, int *pos_v2)
+t_chunk_column	*get_chunk_column(t_world *info, int *pos_v2)
 {
-	for (int i = 0; i < CHUNK_COLUMNS; i++)
+	for (int i = 0; i < CHUNK_COLUMN_AMOUNT; i++)
 	{
 		if (info->chunk_columns[i].coordinate[0] == pos_v2[0] &&
 			info->chunk_columns[i].coordinate[1] == pos_v2[1])
@@ -419,6 +419,98 @@ void update_block_visibility_inside(t_chunk *chunk)
 		}
 	}
 }
+void update_block_visibility_inside_v2(t_chunk *chunk)
+{
+	int blockSkipped = 0;
+
+	chunk->has_visible_blocks = 0;
+	chunk->blocks_solid_amount = 0;
+	chunk->blocks_flora_amount = 0;
+	chunk->blocks_fluid_amount = 0;
+	chunk->blocks_solid_alpha_amount = 0;
+
+	if (!chunk->has_blocks || !chunk->has_see_through_blocks)
+		return ;
+	
+	// Reset the visible faces;
+	// TODO : This should be done in the 'update_block_face_visibility()' at some point;
+	for (int i = 0; i < chunk->block_amount; i++)
+		chunk->blocks[i].visible_faces = 0;
+
+	// Go through all the blocks and find a see through block,
+	//	when found => we update the visible faces of the neighboring blocks in all directions;
+	t_block_data *blockDatas = (t_block_data*)g_block_data;
+	t_block_data blockData;
+	for (int i = 0; i < chunk->block_amount; i++)
+	{
+		blockData = blockDatas[chunk->blocks[i].type];
+		if (blockData.force_see_through || blockData.see_through)
+			update_surrounding_block_face_visibility(chunk, i);
+	}
+}
+
+/*
+ 'blockIndex' : index of chunk->blocks, of which block is the see through one,
+		(NOTE: This should be 100% a block that should be seen through);
+*/
+void update_surrounding_block_face_visibility(t_chunk *chunk, int _blockIndex)
+{
+	t_block *block = &chunk->blocks[_blockIndex];
+
+	// Get the local position for the 'blockIndex' block;
+	int _blockPos[3];
+	get_block_local_pos_from_index(_blockPos, _blockIndex);
+
+	// Go through all directions and update the neighboring blocks in that direction;
+	int _neighborBlockPos[3];
+	for (int _dir = 0; _dir < 6; _dir++)
+	{
+		// add the direction to the block_pos to get the neighbor block;
+		v3i_add(_neighborBlockPos, _blockPos, (int*)g_card_dir_int[_dir]);
+
+		// Check that the coordinates arent outside the chunk;
+		if (!coordinates_inside_chunk(_neighborBlockPos))
+			continue;
+
+		// Get the actual block;
+		t_block *neighbor_block = get_block_from_chunk_local(chunk, _neighborBlockPos);
+		if (!neighbor_block)
+			continue;
+
+		// Get data for the specified blocks;
+		// NOTE : This is faster than the version below; (40% faster);
+		t_block_data *blockData = (t_block_data*)g_block_data;
+		t_block_data neighbor_data = blockData[neighbor_block->type];
+		t_block_data block_data = blockData[block->type];
+		/*
+		t_block_data neighbor_data = get_block_data(neighbor_block);
+		t_block_data block_data = get_block_data(block);
+		*/
+
+		if ((block_data.force_see_through ||
+			neighbor_data.force_through_see ||
+			(block_data.see_through && neighbor_data.through_see)) &&
+			!is_type_gas(neighbor_data.type))
+		{
+			int _oppositeDirection = DIR_NORTH;
+			switch (_dir)
+			{
+				case DIR_NORTH:
+				case DIR_EAST:
+				case DIR_UP:
+					_oppositeDirection = _dir + 1;
+					break;
+				case DIR_SOUTH:
+				case DIR_WEST:
+				case DIR_DOWN:
+					_oppositeDirection = _dir - 1;
+			}
+			add_block_face_to_chunk_mesh(chunk, neighbor_block, _neighborBlockPos, _oppositeDirection);
+			neighbor_block->visible_faces |= g_visible_faces[_oppositeDirection];
+			chunk->has_visible_blocks = 1;
+		}
+	}
+}
 
 /*
  'pos' : v3 : the local coordinates of a block;
@@ -639,7 +731,7 @@ int	get_chunk_column_to_regen(t_world *info, int *player_chunk, int *out_col_ind
 	int	start_coord[2];
 	int	reload_amount = 0;
 	int	chunk_amount = 0;
-	t_chunk_col *column = NULL;
+	t_chunk_column *column = NULL;
 
 	start_coord[0] = player_chunk[0] - (RENDER_DISTANCE / 2);
 	start_coord[1] = player_chunk[2] - (RENDER_DISTANCE / 2);
@@ -777,6 +869,7 @@ void	update_chunk_block_palette(t_chunk *chunk)
 	// reset block palette;
 	memset(chunk->block_palette, 0, sizeof(int) * BLOCK_TYPE_AMOUNT);
 
+	t_block_data *blockDatas = (t_block_data*)g_block_data;
 	for (int i = 0; i < chunk->block_amount; i++)
 	{
 		chunk->block_palette[chunk->blocks[i].type] += 1;
@@ -784,6 +877,9 @@ void	update_chunk_block_palette(t_chunk *chunk)
 		// Reset the light level;
 		// TODO : Remove this when we have a better place for it;
 		chunk->blocks[i].light_lvl = 15;
+
+		if (blockDatas[chunk->blocks[i].type].see_through)
+			chunk->has_see_through_blocks = 1;
 	}
 
 	// Check if we have less than maximum blocks of air blocks,
@@ -898,17 +994,19 @@ void	event_chunk(t_chunk *chunk)
 	}
 }
 
-void	regen_column_thread(void *args)
+void *regen_column_thread(void *args)
 {
-	t_chunk_col	*column;	
+	t_chunk_column	*column;	
 
 	column = args;
-	column->being_threaded = 1;
+	column->regeneration_threaded = 1;
 	regenerate_chunk_column(column, column->wanted_coord, column->world->seed);
-	column->being_threaded = 0;
+	column->regeneration_threaded = 0;
+
+	return (NULL);
 }
 
-void	regenerate_chunk_column(t_chunk_col *column, int coord[2], int seed)
+void	regenerate_chunk_column(t_chunk_column *column, int coord[2], int seed)
 {
 	// Create a height map for the chunk column;
 	/*
@@ -1008,7 +1106,8 @@ void	update_chunk_visible_blocks(t_chunk *chunk)
 {
 	reset_chunk_mesh(&chunk->meshes);
 
-	update_block_visibility_inside(chunk);
+	//update_block_visibility_inside(chunk);
+	update_block_visibility_inside_v2(chunk);
 
 /*
 	{ // DEBUG
@@ -1752,7 +1851,7 @@ void	flora_placer(t_world *info, int type, float *world_pos)
 */
 t_chunk *get_highest_chunk(t_world *info, int x, int z)
 {
-	for (int i = 0; i < CHUNK_COLUMNS; i++)
+	for (int i = 0; i < CHUNK_COLUMN_AMOUNT; i++)
 	{
 		if (info->chunk_columns[i].coordinate[0] == x &&
 			info->chunk_columns[i].coordinate[1] == z)
@@ -1778,7 +1877,7 @@ t_chunk *get_highest_chunk_with_block(t_world *info, t_block **out_block, float 
 
 	get_chunk_pos_from_world_pos(chunk_local, (float []){world_x, 0, world_z});
 	// first find the highets chunk with blocks;
-	for (int i = 0; i < CHUNK_COLUMNS; i++)
+	for (int i = 0; i < CHUNK_COLUMN_AMOUNT; i++)
 	{
 		if (info->chunk_columns[i].coordinate[0] == chunk_local[0] &&
 			info->chunk_columns[i].coordinate[1] == chunk_local[2])
@@ -1888,7 +1987,7 @@ float	get_highest_point_of_type(t_world *info, float x, float z, int type)
  *
  * 'x' & 'z' : the world coordinates of the block;
 */
-float	get_highest_block_in_column(t_chunk_col *column, t_block **out_highest_block, float x, float z)
+float	get_highest_block_in_column(t_chunk_column *column, t_block **out_highest_block, float x, float z)
 {
 	int	local[3];
 	int	index;
@@ -1910,7 +2009,7 @@ float	get_highest_block_in_column(t_chunk_col *column, t_block **out_highest_blo
 	return (-1);
 }
 
-void	tree_gen(t_world *info, t_chunk_col *column)
+void	tree_gen(t_world *info, t_chunk_column *column)
 {
 	float	amp = 1.0f;
 	float	freq = 0.70f;
@@ -1961,7 +2060,7 @@ void	tree_gen(t_world *info, t_chunk_col *column)
 /*
  * recrusion
 */
-void	emit_sky_light(t_chunk_col *column, int chunk_index, int *coord, int light)
+void	emit_sky_light(t_chunk_column *column, int chunk_index, int *coord, int light)
 {
 	t_chunk			*chunk;
 	t_block			*block;
@@ -2021,7 +2120,7 @@ void	emit_sky_light(t_chunk_col *column, int chunk_index, int *coord, int light)
 /*
  * Find height map for sky light emitters;
 */
-void	update_chunk_column_light_0(t_chunk_col *column)
+void	update_chunk_column_light_0(t_chunk_column *column)
 {
 	int	light_index;
 	int	block_index;
@@ -2072,7 +2171,7 @@ void	update_chunk_column_light_0(t_chunk_col *column)
 /*
  * Start emitting from the sky light emitters;
 */
-void	update_chunk_column_light_1(t_chunk_col *column)
+void	update_chunk_column_light_1(t_chunk_column *column)
 {
 	int	skylight;
 	float world[3];
@@ -2107,7 +2206,7 @@ void	update_chunk_column_light_1(t_chunk_col *column)
 	}
 }
 
-void	update_chunk_column_light_2(t_chunk_col *column)
+void	update_chunk_column_light_2(t_chunk_column *column)
 {
 	t_block	*blocks;
 	t_chunk	*chunk;
@@ -2178,13 +2277,13 @@ void	update_chunk_column_light_2(t_chunk_col *column)
 /*
  * We only want to do this once per column of chunks;
 */
-void	update_chunk_column_light(t_chunk_col *column)
+void	update_chunk_column_light(t_chunk_column *column)
 {
 	update_chunk_column_light_0(column);
 	update_chunk_column_light_1(column);
 }
 
-void	update_chunk_column_border_light(t_chunk_col *column)
+void	update_chunk_column_border_light(t_chunk_column *column)
 {
 	update_chunk_column_light_2(column);
 }

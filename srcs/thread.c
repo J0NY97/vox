@@ -44,11 +44,10 @@ int	thread_manager_new_thread(t_thread_manager *manager, void *func, void *args)
 			manager->info[i].args = args;
 			manager->info[i].finished = 0;
 			manager->info[i].started = 1;
-			if (pthread_create(&manager->threads[i],
-				NULL, thread_func, &manager->info[i]))
+			if (pthread_create(&manager->threads[i], NULL, thread_func, &manager->info[i]))
 				LG_ERROR("Couldnt create thread. (ID : %d)", manager->info[i].id);
-			//LG_INFO("New Thread Created (ID : %d)", manager->info[i].id);
-			++manager->thread_amount;
+			//LG_INFO("New Thread Created (ID : %d (%d))", manager->info[i].id, manager->thread_amount);
+			manager->thread_amount++;
 			return (1);
 		}
 	}

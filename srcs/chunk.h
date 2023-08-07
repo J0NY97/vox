@@ -106,7 +106,7 @@ typedef struct s_chunk_col
 {
 	int		coordinate[2];
 	float	world_coordinate[2];
-	t_chunk	**chunks;
+	t_chunk	**chunks; // Size : CHUNKS_PER_COLUMN;
 
 	// Some bools
 	char	update_structures;
@@ -118,8 +118,9 @@ typedef struct s_chunk_col
 
 	t_world	*world;
 	int		wanted_coord[2];
-	char	being_threaded;
-}	t_chunk_col;
+	char	regeneration_threaded;
+	char	update_threaded;
+}	t_chunk_column;
 
 typedef struct s_block_info
 {
@@ -163,9 +164,10 @@ struct	s_chunk
 
 	int				light_emitters; // NOT USED YET
 
-	int				has_blocks; // 1/0 whether the chunk has other than air blocks;
-	int				has_visible_blocks; // 1 / 0 whether chunk has visible blocks;
-	int				update_water;
+	bool			has_blocks; // 1/0 whether the chunk has other than air blocks;
+	bool			has_see_through_blocks; // 1 / 0 : whether the chunk has see through / force see through blocks;
+	bool			has_visible_blocks; // 1 / 0 whether chunk has visible blocks;
+	bool			update_water;
 
 	int				blocks_solid_amount; // amount of blocks in this mesh;
 	int				blocks_fluid_amount; // amount of blocks in this mesh;
@@ -202,8 +204,8 @@ void		render_aabb(t_aabb *a, t_camera *camera, float *col);
 int			*get_chunk_pos_from_world_pos(int *res, float *world_coords);
 float		*get_block_world_pos(float *res, float *chunk_world_pos, int *block_local_pos);
 t_chunk		*get_chunk(t_world *info, int *pos);
-t_chunk		*get_chunk_from_column(t_chunk_col *col, int y);
-t_chunk_col	*get_chunk_column(t_world *info, int *pos_v2);
+t_chunk		*get_chunk_from_column(t_chunk_column *col, int y);
+t_chunk_column	*get_chunk_column(t_world *info, int *pos_v2);
 t_chunk		*get_chunk_from_world_pos(t_world *info, float *pos);
 t_chunk		*get_adjacent_chunk(t_world *info, t_chunk *from, float *dir);
 int			*get_block_local_pos_from_world_pos(int *res, float *world);
@@ -222,7 +224,7 @@ int			get_block_type_at_world_pos(t_world *info, float *world_pos);
 t_block_data	get_block_data(t_block *block);
 t_block_data	get_block_data_from_type(int type);
 
-void		update_chunk_column_light(t_chunk_col *column);
+void		update_chunk_column_light(t_chunk_column *column);
 
 unsigned long int	get_chunk_hash_key(int *coords);
 
@@ -233,10 +235,10 @@ typedef struct s_regen_args
 	t_world	*chunk_info;
 }	t_regen_args;
 
-void		regen_column_thread(void *args);
+void		*regen_column_thread(void *args);
 int			regenerate_chunks(int *these, int coord[2], t_world *info);
 int			regenerate_chunks_threading(int *these, int coord[2], t_world *info);
-void		regenerate_chunk_column(t_chunk_col *column, int coord[2], int seed);
+void		regenerate_chunk_column(t_chunk_column *column, int coord[2], int seed);
 
 void		update_chunk(t_chunk *chunk);
 
@@ -255,14 +257,16 @@ t_block		*get_block_from_chunk(t_chunk *chunk, float *point, float *block_pos, i
 t_block		*get_block_from_chunk_local(t_chunk *chunk, int *local_pos);
 void		render_block_outline(float *pos, float *color, float *view, float *projection);
 
+bool		coordinates_inside_chunk(int *pos);
 void		update_block_face_visibility(t_chunk *chunk, int *block_pos, int _cardDir);
 void		update_block_visibility_v3(t_chunk *chunk, int *block_pos, int _cardDir, int (*cardinalDirs)[3], t_block_data *blockDatas);
+void		update_surrounding_block_face_visibility(t_chunk *chunk, int _blockIndex);
 
 t_block		*set_block_at_world_pos(t_world *info, float *world_pos, int block_type);
 
 void		player_terrain_collision(float *res, float *pos, float *velocity, t_world *info);
 
-void		tree_gen(t_world *info, t_chunk_col *column);
+void		tree_gen(t_world *info, t_chunk_column *column);
 
 void		tree_placer(t_world *info, float *world_pos);
 int			water_placer(t_world *info, float *world_pos, int nth_from_source);

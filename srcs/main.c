@@ -51,7 +51,10 @@ void	init(t_vox *vox)
 	vox->settings.attach_entity = 0;
 	vox->settings.attach_to_entity = 0;
 
-	thread_manager_new(&vox->tm, 64);
+	// TODO : Only have 1 thread manager, add all the threading to the one,
+	//		in the main loop have 'check_threadiness()';
+	thread_manager_new(&vox->tm_gen, 64);
+	thread_manager_new(&vox->tm_update, 64);
 
 	LG_INFO("Init Done");
 }
@@ -471,18 +474,18 @@ void game_update(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui 
 	chunk_generation(vox, world);
 
 	//// CHUNK UPDATES ////
-	chunk_update(world);
+	update_chunk_columns(vox, world);
 
 	// Secondary updater;
 	// We dont want to immediately update the chunks that other chunks want
 	//	updated, because they might update themselves;
 	// So if theres still chunks that needs updating after we've gone through
 	// 	the chunks once, we update them here;
-	for (int col = 0; col < CHUNK_COLUMNS; col++)
+	for (int col = 0; col < CHUNK_COLUMN_AMOUNT; col++)
 	{
-		t_chunk_col *column = &world->chunk_columns[col];
+		t_chunk_column *column = &world->chunk_columns[col];
 
-		if (column->being_threaded)
+		if (column->regeneration_threaded || column->update_threaded)
 			continue ;
 
 		t_chunk **col_chunks = column->chunks;
@@ -658,12 +661,13 @@ void game_update(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui 
 	render_skybox(skybox, player->camera);
 
 	//// CHUNK RENDERING ////
-	decide_which_chunks_to_render(world);
+	//decide_which_chunks_to_render(world);
 
 	// Solid mesh;
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
 	glEnable(GL_CULL_FACE);
+	/* Render every chunk 
 	for (int r = 0; r < world->meshes_render_amount; r++)
 	{
 		int render_index = world->meshes_render_indices[r];
@@ -671,17 +675,50 @@ void game_update(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui 
 			render_chunk_mesh(&world->chunks[render_index].meshes, BLOCK_MESH,
 				world->chunks[render_index].world_coordinate, player->camera);
 	}
+	*/
+	// Render every chunk from column;	
+	for (int i = 0; i < CHUNK_COLUMN_AMOUNT; i++)
+	{
+		t_chunk_column *column = &world->chunk_columns[i];
+
+		if (column->regeneration_threaded || column->update_threaded)
+			continue;
+
+		for (int j = 0; j < CHUNKS_PER_COLUMN; j++)
+		{
+			t_chunk *chunk = column->chunks[j];
+			if (chunk->blocks_solid_amount > 0)
+				render_chunk_mesh(&chunk->meshes, BLOCK_MESH, chunk->world_coordinate, player->camera);
+		}
+	}
+
 
 	// Fluid meshes;
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	glDisable(GL_CULL_FACE);
+	/*
 	for (int r = 0; r < world->meshes_render_amount; r++)
 	{
 		int render_index = world->meshes_render_indices[r];
 		if (world->chunks[render_index].blocks_fluid_amount > 0)
 			render_chunk_mesh(&world->chunks[render_index].meshes, FLUID_MESH,
 				world->chunks[render_index].world_coordinate, player->camera);
+	}
+	*/
+	for (int i = 0; i < CHUNK_COLUMN_AMOUNT; i++)
+	{
+		t_chunk_column *column = &world->chunk_columns[i];
+
+		if (column->regeneration_threaded || column->update_threaded)
+			continue;
+
+		for (int j = 0; j < CHUNKS_PER_COLUMN; j++)
+		{
+			t_chunk *chunk = column->chunks[j];
+			if (chunk->blocks_fluid_amount > 0)
+				render_chunk_mesh(&chunk->meshes, FLUID_MESH, chunk->world_coordinate, player->camera);
+		}
 	}
 
 	// Entity Rendering
@@ -731,7 +768,7 @@ void	world_init(t_world *world)
 	new_texture(&world->texture, TEXTURE_PATH"version_3_texture_alpha.bmp");
 
 	world->chunks = malloc(sizeof(t_chunk) * CHUNKS_LOADED);
-	world->chunk_columns = malloc(sizeof(t_chunk_col) * CHUNK_COLUMNS);
+	world->chunk_columns = malloc(sizeof(t_chunk_column) * CHUNK_COLUMN_AMOUNT);
 
 	// Get player chunk;
 	get_chunk_pos_from_world_pos(world->player_chunk, world->camera.pos);
@@ -762,7 +799,8 @@ void	world_init(t_world *world)
 			world->chunk_columns[nth_col].world_coordinate[0] = world->chunks[nth_chunk].world_coordinate[0];
 			world->chunk_columns[nth_col].world_coordinate[1] = world->chunks[nth_chunk].world_coordinate[2];
 			world->chunk_columns[nth_col].update_structures = 0;
-			world->chunk_columns[nth_col].being_threaded = 0;
+			world->chunk_columns[nth_col].regeneration_threaded = 0;
+			world->chunk_columns[nth_col].update_threaded = 0;
 			world->chunk_columns[nth_col].world = world;
 		}
 		world->chunk_columns[nth_col].chunks[nth_col_chunk] = &world->chunks[nth_chunk];

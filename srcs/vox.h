@@ -158,7 +158,8 @@ typedef struct	s_vox
 
 	t_settings settings;
 
-	t_thread_manager tm;
+	t_thread_manager tm_gen;
+	t_thread_manager tm_update;
 	
 }	t_vox;
 

@@ -16,9 +16,9 @@
 # include "entity_manager.h"
 
 // WORLD Settings
-#define CHUNK_WIDTH 32
-#define CHUNK_HEIGHT 32
-#define CHUNK_BREADTH 32
+#define CHUNK_WIDTH 64
+#define CHUNK_HEIGHT 64
+#define CHUNK_BREADTH 64
 #define CHUNK_COLUMN_HEIGHT 64 // How many blocks high is a chunk column;
 static const int g_chunks_per_column = CHUNK_COLUMN_HEIGHT / CHUNK_HEIGHT;
 #define CHUNKS_PER_COLUMN g_chunks_per_column
@@ -37,14 +37,14 @@ static const int g_render_distance = (320 / CHUNK_WIDTH) * 2; // We want to rend
 static const int g_chunks_loaded = CHUNKS_PER_COLUMN * RENDER_DISTANCE * RENDER_DISTANCE;
 #define CHUNKS_LOADED g_chunks_loaded
 static const int g_chunk_columns = RENDER_DISTANCE * RENDER_DISTANCE;
-#define CHUNK_COLUMNS g_chunk_columns
+#define CHUNK_COLUMN_AMOUNT g_chunk_columns
 static const int g_chunk_column_light_amount = CHUNK_WIDTH * CHUNK_BREADTH;
 #define CHUNK_COLUMN_LIGHT_AMOUNT g_chunk_column_light_amount
 // CAMERA settings
 #define CAMERA_FAR_PLANE RENDER_DISTANCE * CHUNK_WIDTH / 2
 
 typedef struct s_chunk		t_chunk;
-typedef struct s_chunk_col	t_chunk_col;
+typedef struct s_chunk_col	t_chunk_column;
 
 typedef struct s_world
 {
@@ -64,7 +64,7 @@ typedef struct s_world
 	int			sky_light_lvl_prev; // previous frame light lvl; (used to decide if the sky light has changed or not);
 
 	t_chunk		*chunks;		// size : CHUNKS_LOADED;
-	t_chunk_col	*chunk_columns; // size : RENDER_DISTANCE * RENDER_DISTANCE;
+	t_chunk_column	*chunk_columns; // size : RENDER_DISTANCE * RENDER_DISTANCE;
 	GLuint		texture; // the texture is stored here so we dont load a texture per chunk_mesh;
 	int			player_chunk[3];
 
@@ -99,7 +99,9 @@ typedef struct s_world
 
 
 void chunk_generation(t_vox *vox, t_world *world);
-void chunk_update(t_world *world);
+void update_chunk_columns(t_vox *vox, t_world *world);
+void update_chunk_column(t_chunk_column *column);
+void *update_column_thread(void *args);
 void decide_which_chunks_to_render(t_world *world);
 
 #endif

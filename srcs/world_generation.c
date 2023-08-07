@@ -4,7 +4,7 @@
 void chunk_generation(t_vox *vox, t_world *world)
 {
 	bool _useMultiThread = true;
-	thread_manager_check_threadiness(&vox->tm);
+	thread_manager_check_threadiness(&vox->tm_gen);
 
 	if (vox->settings.regen_chunks)
 	{
@@ -13,102 +13,148 @@ void chunk_generation(t_vox *vox, t_world *world)
 		int	col_coords[max_regen_amount][2];
 		int	start_coord[2];
 		int tobegen = get_chunk_column_to_regen(world, world->player_chunk, col_indices, col_coords, max_regen_amount);
+		t_chunk_column *column;
 		for (int i = 0; i < tobegen && i < max_regen_amount; i++)
 		{
 			world->chunk_columns[col_indices[i]].wanted_coord[0] = col_coords[i][0];
 			world->chunk_columns[col_indices[i]].wanted_coord[1] = col_coords[i][1];
+			column = &world->chunk_columns[col_indices[i]];
+			if (column->regeneration_threaded || column->update_threaded)
+				continue;
 			if (_useMultiThread)
-				thread_manager_new_thread(&vox->tm, &regen_column_thread, &world->chunk_columns[col_indices[i]]);
+				thread_manager_new_thread(&vox->tm_gen, regen_column_thread, column);
 			else
-				regenerate_chunk_column(&world->chunk_columns[col_indices[i]], col_coords[i], world->seed);
+				regenerate_chunk_column(column, col_coords[i], world->seed);
 		}
 
 		assert(tobegen != -1);
 	}
 }
 
-void chunk_update(t_world *world)
+void update_chunk_columns(t_vox *vox, t_world *world)
 {
-	time_t _startTime = clock();
-	t_chunk		*neighbors[DIR_AMOUNT];
-	t_chunk		**col_chunks;
-	t_chunk_col	*column;
-	int			neighbors_found;
+//	time_t _startTime = clock();
+	t_chunk_column	*column;
+	bool _useMultiThread = false;
+	thread_manager_check_threadiness(&vox->tm_update);
 
-	int			_chunksUpdated = 0;
+//	int			_chunksUpdated = 0;
 
-	for (int col = 0; col < CHUNK_COLUMNS; col++)
+	for (int col = 0; col < CHUNK_COLUMN_AMOUNT; col++)
 	{
 		column = &world->chunk_columns[col];
 
-		if (column->being_threaded)
+		if (column->regeneration_threaded || column->update_threaded)
 			continue ;
-		
-		col_chunks = column->chunks;
-		column->chunk_needs_update = 0;
 
-		if (world->generate_structures && column->update_structures)
-		{
-			tree_gen(world, column);
-			column->update_structures = 0;
-		}
-
+		t_chunk **chunksInColumn = column->chunks;
 		// Check if a chunk in the column needs an update;
-		for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
+		for (int chunkIndex = 0; chunkIndex < CHUNKS_PER_COLUMN; chunkIndex++)
 		{
-			if (col_chunks[ent]->needs_to_update)
+			if (chunksInColumn[chunkIndex]->needs_to_update)
 			{
-				update_chunk_block_palette(col_chunks[ent]);
+				update_chunk_block_palette(chunksInColumn[chunkIndex]);
 				column->chunk_needs_update = 1;
 			}
 		}
 
-		// Light calculation;
-		if (world->light_calculation &&
-			(column->chunk_needs_update ||
-			world->sky_light_lvl != world->sky_light_lvl_prev))
-			update_chunk_column_light(column);
-
-		// Other Chunk updates;
-		for (int ent = 0; ent < CHUNKS_PER_COLUMN; ++ent)
-		{
-			neighbors_found = 0;
-
-			// We only need to update the chunks if a chunk has been regenerated
-			if ((col_chunks[ent]->needs_to_update ||
-				(world->generate_structures && column->update_structures)))
-			{
-				// Get all neighbors for this chunk;
-				for (int dir = DIR_NORTH, i = 0; dir < DIR_AMOUNT; ++dir, ++i)
-				{
-					neighbors[i] = get_adjacent_chunk(world, col_chunks[ent], (float *)g_card_dir[dir]);
-					++neighbors_found;
-				}
-			}
-
-			if (col_chunks[ent]->needs_to_update)
-			{
-				update_chunk(col_chunks[ent]);
-				_chunksUpdated++;
-				if (world->toggle_event)
-					update_chunk_event_blocks(col_chunks[ent]);
-				// Set needs to update to all 6 neighbors of the chunk;
-				for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
-					if (neighbors[i])
-						neighbors[i]->secondary_update = 1;
-			}
-
-			col_chunks[ent]->needs_to_update = 0;
-
-			if (world->toggle_event && world->game_tick)
-				event_chunk(col_chunks[ent]);
-		}
+		// If the chunk doesnt need update, we can gtfo;
+		if (!column->chunk_needs_update)
+			continue;
+		
+		if (_useMultiThread)
+			thread_manager_new_thread(&vox->tm_update, update_column_thread, column);
+		else
+			update_chunk_column(column);
 	}
+	/*
 	if (_chunksUpdated > 0)
 	{
+		time_t endTime = clock(); // We want to take the time before we print, for the actual code time;
 		LG_INFO("%d chunks updated", _chunksUpdated);
-		LG_INFO("Time taken : %f", (float)(clock() - _startTime) / CLOCKS_PER_SEC);
+		LG_INFO("Time taken : %f", (float)(endTime - _startTime) / CLOCKS_PER_SEC);
 	}
+	*/
+}
+
+void update_chunk_column(t_chunk_column *column)
+{
+	t_world *world = column->world;
+	t_chunk **chunksInColumn = column->chunks;
+
+	column->chunk_needs_update = 0;
+
+	// NOTE : this might break when threaded, dont know what happens if threaded
+	//	columns try to add blocks to other columns. Maybe the tree gen should be
+	//	outside threading;
+	/*
+	if (world->generate_structures && column->update_structures)
+	{
+		tree_gen(world, column);
+		column->update_structures = 0;
+	}
+	*/
+
+	// Light calculation;
+	/* NOTE : Here we might have the same problems as with structure generation;
+	if (world->light_calculation &&
+		(column->chunk_needs_update ||
+		world->sky_light_lvl != world->sky_light_lvl_prev))
+		update_chunk_column_light(column);
+	*/
+
+	// Other Chunk updates;
+	//t_chunk	*neighbors[DIR_AMOUNT];
+	for (int chunkIndex = 0; chunkIndex < CHUNKS_PER_COLUMN; chunkIndex++)
+	{
+		/*
+		int neighbors_found = 0;
+
+		// We only need to update the chunks if a chunk has been regenerated
+		if ((chunksInColumn[ent]->needs_to_update ||
+			(world->generate_structures && column->update_structures)))
+		{
+			// Get all neighbors for this chunk;
+			for (int dir = DIR_NORTH, i = 0; dir < DIR_AMOUNT; ++dir, ++i)
+			{
+				neighbors[i] = get_adjacent_chunk(world, chunksInColumn[ent], (float *)g_card_dir[dir]);
+				++neighbors_found;
+			}
+		}
+		*/
+
+		if (chunksInColumn[chunkIndex]->needs_to_update)
+		{
+			update_chunk(chunksInColumn[chunkIndex]);
+			/*
+			if (world->toggle_event)
+				update_chunk_event_blocks(chunksInColumn[ent]);
+			// Set needs to update to all 6 neighbors of the chunk;
+			for (int dir = DIR_NORTH, i = 0; dir <= DIR_DOWN; ++dir, ++i)
+				if (neighbors[i])
+					neighbors[i]->secondary_update = 1;
+					*/
+		}
+
+		chunksInColumn[chunkIndex]->needs_to_update = 0;
+
+		/*
+		if (world->toggle_event && world->game_tick)
+			event_chunk(chunksInColumn[ent]);
+		*/
+	}
+}
+
+void *update_column_thread(void *args)
+{
+	t_chunk_column *column;
+	
+	column = args;
+	column->update_threaded = 1;
+	update_chunk_column(column);
+	column->update_threaded = 0;
+
+	return (NULL);
 }
 
 void decide_which_chunks_to_render(t_world *world)
