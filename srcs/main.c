@@ -45,7 +45,8 @@ void	init(t_vox *vox)
 	vox->renderMode = 0;
 
 	// Settings INIT
-	vox->settings.regen_chunks = 1;
+	vox->settings.chunk_generation = 1;
+	vox->settings.cave_generation = 0;
 	vox->settings.toggle_ui = 0;
 	vox->settings.entity_hitbox_enabled = 0;
 	vox->settings.attach_entity = 0;
@@ -233,32 +234,24 @@ void input_handle(t_vox *vox, t_world *world, t_player *player, t_ui *gui, t_fps
 		}
 	}
 
+	// Generate Chunks Toggle
 	if (vox->keys[GLFW_KEY_G].state == BUTTON_PRESS)
 	{
-		vox->settings.regen_chunks = vox->settings.regen_chunks != 1;
-		if (vox->settings.regen_chunks)
+		vox->settings.chunk_generation = vox->settings.chunk_generation != 1;
+		if (vox->settings.chunk_generation)
 			LG_INFO("Regeneration of chunks turned ON.");
 		else
 			LG_INFO("Regeneration of chunks turned OFF.");
+	}
 
-		// TESTING ///
-		int	most_vertices = 0;
-		int	most_textures = 0;
-		int	most_indices = 0;
-		for (int j = 0; j < CHUNKS_LOADED; j++)
-		{
-			if (world->chunks[j].meshes.vertices_allocated > most_vertices)
-				most_vertices = world->chunks[j].meshes.vertices_allocated;
-			if (world->chunks[j].meshes.texture_ids_allocated > most_textures)
-				most_textures = world->chunks[j].meshes.texture_ids_allocated;
-			for (int m = 0; m < world->chunks[j].meshes.amount; m++)
-				if (world->chunks[j].meshes.indices_allocated[m] > most_indices)
-					most_indices = world->chunks[j].meshes.indices_allocated[m];
-		}
-		LG_INFO("Most vertices : %d", most_vertices);
-		LG_INFO("Most texture ids : %d", most_textures);
-		LG_INFO("Most indices : %d", most_indices);
-		// TESTING ///
+	// Generate Caves Toggle
+	if (vox->keys[GLFW_KEY_H].state == BUTTON_PRESS)
+	{
+		vox->settings.cave_generation = vox->settings.cave_generation != 1;
+		if (vox->settings.cave_generation)
+			LG_INFO("Regeneration of caves turned ON.");
+		else
+			LG_INFO("Regeneration of caves turned OFF.");
 	}
 
 	// Enable hitbox for entities;

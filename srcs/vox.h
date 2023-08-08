@@ -129,7 +129,8 @@ typedef struct s_settings
 {
 	// TODO : Have all these settings in a single variable, we could bitwise;
 
-	char regen_chunks;	
+	char chunk_generation;	
+	char cave_generation;
 	char toggle_ui;
 
 	char entity_hitbox_enabled;

@@ -9,9 +9,9 @@ typedef struct s_thread_info
 	unsigned int	id;
 	unsigned int	started;
 	unsigned int	finished;
-	void			(*startFunc)(void*); // Which function gets called just before thread is created;
-	void			(*func)(void *);
-	void			(*endFunc)(void*); // Which function gets called just after thread is joined;
+	void			*(*startFunc)(void*); // Which function gets called just before thread is created;
+	void			*(*func)(void *);
+	void			*(*endFunc)(void*); // Which function gets called just after thread is joined;
 	void			*args;
 }	t_thread_info;
 
@@ -25,8 +25,8 @@ typedef struct s_thread_manager
 }	t_thread_manager;
 
 void	thread_manager_new(t_thread_manager *manager, unsigned int max_threads);
-int		thread_manager_new_thread(t_thread_manager *manager, void *func, void *args, void (*startFunc)(void*), void *endFunc);
-void	thread_manager_check_threadiness(t_thread_manager *manager);
+int		thread_manager_new_thread(t_thread_manager *manager, void *func, void *args, void *(*startFunc)(void*), void *(*endFunc)(void*));
+void	tm_check_threadiness(t_thread_manager *manager);
 int		create_new_detached_thread(void *func, void *args);
 
 #endif

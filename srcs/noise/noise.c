@@ -1,39 +1,27 @@
 #include "noise.h"
-
-/*
- * TODO : take in noise settings, for frequency, octaves, amplitude osv....
- * TODO : seed should be given in the settings aswell;
- *  
- * NOTE : make 'noise->map = NULL';
-*/
-void	noise_create(t_noise *noise, int w, int h, int x_offset, int y_offset, int seed)
-{
-	t_noise_settings settings;
-
-	settings.width = w;
-	settings.height = h;
-	settings.x_offset = x_offset;
-	settings.y_offset = y_offset;
-
-	settings.seed = seed;
-
-	settings.frequency = 0.01f;
-	settings.octaves = 4;
-	settings.amplitude = 20.0f;
-	settings.persistence = 0.5f;
-	settings.lacunarity = 2.0f;
-
-	noise_create_from_settings(noise, &settings);
-}
+#include "fastnoise.h"
 
 void noise_create_from_settings(t_noise *noise, t_noise_settings *settings)
 {
+	fnl_state fnlState;
+	fnlState.seed = 1337;
+    fnlState.frequency = 0.01f;
+    fnlState.octaves = 4;
+    fnlState.lacunarity = 1.0f;
+    fnlState.gain = 10.0f;
+    fnlState.weighted_strength = 2.5f;
+
 	if (!noise->map)
 		noise_new(noise, settings->width, settings->height);
 	for (int x = 0; x < noise->width; x++)
 	{
 		for (int y = 0; y < noise->height; y++)
 		{
+			/* USING FAST NOISE 2D */
+			/*
+			noise->map[x * noise->width + y] = fnlGetNoise2D_Octave(&fnlState,
+					x + settings->x_offset, y + settings->y_offset);
+					*/
 			/* USING SIMPLEX 2D */
 			/*
 					*/

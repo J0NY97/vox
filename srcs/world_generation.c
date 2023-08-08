@@ -4,9 +4,9 @@
 void chunk_generation(t_vox *vox, t_world *world)
 {
 	bool _useMultiThread = true;
-	thread_manager_check_threadiness(&vox->tm_gen);
+	tm_check_threadiness(&vox->tm_gen);
 
-	if (vox->settings.regen_chunks)
+	if (vox->settings.chunk_generation)
 	{
 		int	max_regen_amount = RENDER_DISTANCE;
 		int	col_indices[max_regen_amount];
@@ -36,9 +36,9 @@ void update_chunk_columns(t_vox *vox, t_world *world)
 //	time_t _startTime = clock();
 	t_chunk_column	*column;
 	bool _useMultiThread = true;
-	thread_manager_check_threadiness(&vox->tm_update);
+	tm_check_threadiness(&vox->tm_update);
 
-//	int			_chunksUpdated = 0;
+//	int	_chunksUpdated = 0;
 
 	for (int col = 0; col < CHUNK_COLUMN_AMOUNT; col++)
 	{

@@ -47,6 +47,7 @@ CFILES = \
 	noise/simplex.c \
 	noise/perlin.c \
 	noise/noise.c \
+	noise/fastnoise.c \
 	ui.c \
 	ui_manager.c \
 #	font_manager.c \

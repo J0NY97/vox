@@ -1,6 +1,7 @@
 #include "vox.h"
 #include "chunk.h"
 #include "world.h"
+#include "fastnoise.h"
 
 // Basically everything needed for minecraft : https://www.redblobgames.com/maps/terrain-from-noise/
 void	new_chunk(t_chunk *chunk, t_world *world, int nth)
@@ -43,18 +44,27 @@ int	get_block_type(int x, int y, int z, float noise_value)
 		if (y == 0)
 			return (BLOCK_BEDROCK);
 
+		// TODO : Move this elsewhere;
 		// Cave gen;
-		if (0) // TODO : change to 't_world->generate_caves';
+		if (0)
 		{
 			float	cave_noise;
 			/* USING SIMPLEX NOISE 3D */
-			//cave_noise = simp_noise_3d(x, y, z);
-			cave_noise = simplex_noise_3d_octave(x, y, z, 1.0f, 0.07f, 4.0f, 0.5f, 1.0f);
+			//cave_noise = simplex_noise_3d((float)x / 2.33f, (float)y / 123.43f, (float)z * 0.123f);
+			//cave_noise = simplex_noise_3d_octave(x, y, z, 1.0f, 0.07f, 4, 0.5f, 1.0f);
 			/* USING PERLIN NOISE 3D
-			cave_noise = noise3d_octave(x, y, z, 1.0f, 0.07f, 4.0f, 0.5f, 1.0f);
 			*/
+			/*
+			cave_noise = noise3d_octave(x, y, z, 1.0f, 0.07f, 4, 0.5f, 1.0f);
+			*/
+			cave_noise = fnlGetNoise3D(
+				&(fnl_state){.gain = 2.0f, .frequency = 0.07f, .octaves = 4,
+						.weighted_strength = 1.5f, .lacunarity = 1.0f},
+				x, y, z);
+			/*
 			if (cave_noise != 0)
 				ft_printf("cave noise : %f\n", cave_noise);
+				*/
 			if (cave_noise > 0.75f)
 				return (GAS_AIR);
 		}
@@ -1025,10 +1035,6 @@ void *regen_column_thread_end(void *args)
 void	regenerate_chunk_column(t_chunk_column *column, int coord[2], int seed)
 {
 	// Create a height map for the chunk column;
-	/*
-	noise_create(&column->height_map, CHUNK_WIDTH, CHUNK_HEIGHT,
-		coord[0] * CHUNK_SIZE_X, coord[1] * CHUNK_SIZE_Z, seed);
-		*/
 	t_noise_settings noising;
 	noise_settings_default(&noising);
 	noising.width = CHUNK_WIDTH;
@@ -1152,20 +1158,21 @@ void	reset_chunk_mesh(t_chunk_mesh *mesh)
 */
 void	init_chunk_mesh(t_chunk_mesh *mesh, GLuint shader, int amount)
 {
-	GLuint	vbo[2];
 	int		error;
 	error = glGetError();
 	if (error)
 		LG_ERROR("BEFORE (%d)", error);
 
 	// NOTE : Dont worry about these sizes, they are made bigger if needed; (add_to_chunk_mesh);
-	mesh->vertices_allocated = 162576; 
+	mesh->vertices_allocated = CHUNK_WIDTH * CHUNK_HEIGHT * 4 * 3 * 2 * amount;  // w * h * (sideCount - 1) * vertsPerFace * facesPerSide * amountOfMeshes; 
 	mesh->vertices = malloc(sizeof(float) * mesh->vertices_allocated);
 	mesh->vertices_amount = 0;
 
-	mesh->texture_ids_allocated = 54536;
+	mesh->texture_ids_allocated = mesh->vertices_allocated / 3;
 	mesh->texture_ids = malloc(sizeof(int) * mesh->texture_ids_allocated);
 	mesh->texture_id_amount = 0;
+
+	LG_INFO("Vertices : %d, Textures IDs : %d", mesh->vertices_allocated, mesh->texture_ids_allocated);
 
 	mesh->amount = amount;
 	mesh->indices = malloc(sizeof(unsigned int *) * mesh->amount);
@@ -1185,6 +1192,7 @@ void	init_chunk_mesh(t_chunk_mesh *mesh, GLuint shader, int amount)
 	glEnableVertexAttribArray(0); // pos
 	glEnableVertexAttribArray(1); // tex
 
+	GLuint	vbo[2];
 	glGenBuffers(2, vbo);
 	mesh->vbo_pos = vbo[0];
 	mesh->vbo_texture_ids = vbo[1];

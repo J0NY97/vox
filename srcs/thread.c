@@ -32,7 +32,7 @@ void	*thread_func(void *info_pointer)
 /*
  * Returns 0 if couldnt add thread; else 1;
 */
-int	thread_manager_new_thread(t_thread_manager *manager, void *func, void *args, void (*startFunc)(void*), void *endFunc)
+int	thread_manager_new_thread(t_thread_manager *manager, void *func, void *args, void *(*startFunc)(void*), void *(*endFunc)(void*))
 {
 	if (manager->thread_amount >= manager->max_thread_amount)
 		return (0);
@@ -73,7 +73,7 @@ int	create_new_detached_thread(void *func, void *args)
  *
  * This should be called before anything in the args are being used;
 */
-void	thread_manager_check_threadiness(t_thread_manager *manager)
+void	tm_check_threadiness(t_thread_manager *manager)
 {
 //	time_t _startTime = clock();
 	int _maxThreadsReadyPerFrame = 64;
