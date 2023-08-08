@@ -87,12 +87,12 @@ void update_chunk_column(t_chunk_column *column)
 	// NOTE : this might break when threaded, dont know what happens if threaded
 	//	columns try to add blocks to other columns. Maybe the tree gen should be
 	//	outside threading;
-	/*
 	if (world->generate_structures && column->update_structures)
 	{
 		tree_gen(world, column);
 		column->update_structures = 0;
 	}
+	/*
 	*/
 
 	// Light calculation;

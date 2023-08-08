@@ -2035,10 +2035,18 @@ float	get_highest_block_in_column(t_chunk_column *column, t_block **out_highest_
 
 void	tree_gen(t_world *info, t_chunk_column *column)
 {
+	/*
 	float	amp = 1.0f;
 	float	freq = 0.70f;
 	int		oct = 4;
 	float	pers = 0.01f;
+	float	lac = 2.0f;
+	float	noise_value = 0.0f;
+	*/
+	float	amp = 0.75f;
+	float	freq = 0.5f;
+	int		oct = 2;
+	float	pers = 0.5f;
 	float	lac = 2.0f;
 	float	noise_value = 0.0f;
 
@@ -2053,13 +2061,13 @@ void	tree_gen(t_world *info, t_chunk_column *column)
 			block_pos[0] = column->world_coordinate[0] + x;
 			block_pos[2] = column->world_coordinate[1] + z;
 			/* USING SIMPLEX NOISE 3D
-			noise_value = simp_noise_3d_octave(block_pos[0], 0, block_pos[2],
-				amp, freq, oct, pers, lac);
 			*/
+			noise_value = simplex_noise_2d_octave(block_pos[0], block_pos[2],
+				amp, freq, oct, pers, lac);
 			/* USING PERLIN NOISE 3D
-				*/
 			noise_value = noise3d_octave(block_pos[0], 0, block_pos[2],
 				amp, freq, oct, pers, lac);
+				*/
 
 			if (noise_value < 0.25)
 				continue ;
