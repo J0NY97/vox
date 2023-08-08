@@ -208,7 +208,7 @@ t_chunk		*get_chunk_from_column(t_chunk_column *col, int y);
 t_chunk_column	*get_chunk_column(t_world *info, int *pos_v2);
 t_chunk		*get_chunk_from_world_pos(t_world *info, float *pos);
 t_chunk		*get_adjacent_chunk(t_world *info, t_chunk *from, float *dir);
-int			*get_block_local_pos_from_world_pos(int *res, float *world);
+int			*block_world_to_local_pos(int *res, float *world);
 int			*get_block_local_pos_from_index(int *res, int index);
 t_block		*get_block(t_world *info, float *coords);
 int			get_block_index(int x, int y, int z);

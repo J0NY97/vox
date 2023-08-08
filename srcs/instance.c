@@ -223,7 +223,7 @@ int	get_block_index(int x, int y, int z)
 	return ((x * CHUNK_WIDTH * CHUNK_BREADTH) + (z * CHUNK_HEIGHT) + y);
 }
 
-int	*get_block_local_pos_from_world_pos(int *res, float *world)
+int	*block_world_to_local_pos(int *res, float *world)
 {
 	res[0] = mod(world[0], CHUNK_WIDTH);
 	res[1] = mod(world[1], CHUNK_HEIGHT);
@@ -273,7 +273,7 @@ t_block	*get_block(t_world *info, float *coords)
 	if (chunk)
 	{
 		int	local_pos[3];
-		get_block_local_pos_from_world_pos(local_pos, coords);
+		block_world_to_local_pos(local_pos, coords);
 		int index = get_block_index(local_pos[0], local_pos[1], local_pos[2]);
 		return (&chunk->blocks[index]);
 	}
@@ -1705,7 +1705,7 @@ t_block	*set_block_at_world_pos(t_world *info, float *world_pos, int block_type)
 	chunk = get_chunk(info, chunk_pos);
 	if (!chunk)
 		return (NULL);
-	get_block_local_pos_from_world_pos(block_local, world_pos);
+	block_world_to_local_pos(block_local, world_pos);
 	index = get_block_index(block_local[0], block_local[1], block_local[2]);
 	if (chunk->blocks[index].type == block_type)
 		return (NULL);
@@ -1725,7 +1725,7 @@ void	set_block_at_world_pos_if_empty(t_world *info, float *world_pos, int block_
 	chunk = get_chunk(info, chunk_pos);
 	if (!chunk)
 		return ;
-	get_block_local_pos_from_world_pos(block_local, world_pos);
+	block_world_to_local_pos(block_local, world_pos);
 	index = get_block_index(block_local[0], block_local[1], block_local[2]);
 	if (!is_gas(&chunk->blocks[index]))
 		return ;
@@ -1746,7 +1746,7 @@ int	get_block_type_at_world_pos(t_world *info, float *world_pos)
 	chunk = get_chunk(info, chunk_pos);
 	if (!chunk)
 		return (-1);
-	get_block_local_pos_from_world_pos(block_local, under_block);
+	block_world_to_local_pos(block_local, under_block);
 	index = get_block_index(block_local[0], block_local[1], block_local[2]);
 	return (chunk->blocks[index].type);
 }
@@ -1839,10 +1839,10 @@ void	tree_placer(t_world *info, float *world_pos)
 {
 	int	type;
 
-	// We have to check that the block we are placing the tree on is dirt block;
 	type = get_block_type_at_world_pos(info, world_pos);
 	if (!is_type_gas(type))
 		return ;
+	// We have to check that the block we are placing the tree on is dirt block;
 	type = get_block_type_at_world_pos(info,
 		(float []){world_pos[0], world_pos[1] - 1.0f, world_pos[2]});
 	if (type == BLOCK_DIRT || type == BLOCK_DIRT_GRASS)
@@ -1911,7 +1911,7 @@ t_chunk *get_highest_chunk_with_block(t_world *info, t_block **out_block, float 
 				if (!info->chunk_columns[i].chunks[j]->has_blocks)
 					continue ;
 				// Then loop from highest y to lowest y and double check if it has a world_x / world_z a block;
-				get_block_local_pos_from_world_pos(block_local, (float []){world_x, 0, world_z});
+				block_world_to_local_pos(block_local, (float []){world_x, 0, world_z});
 				for (int y = CHUNK_HEIGHT - 1; y >= 0; y--)
 				{
 					int ind = get_block_index(block_local[0], y, block_local[2]);
@@ -1962,7 +1962,7 @@ float	get_highest_block_in_chunk(t_chunk *chunk, t_block **out_block, float x, f
 
 	for (int y = CHUNK_HEIGHT - 1; y >= 0; y--)
 	{
-		get_block_local_pos_from_world_pos(local_pos,
+		block_world_to_local_pos(local_pos,
 			(float []){x, y + chunk->world_coordinate[1], z});
 		index = get_block_index(local_pos[0], local_pos[1], local_pos[2]);
 		if (!is_type_gas(chunk->blocks[index].type))
@@ -2016,16 +2016,19 @@ float	get_highest_block_in_column(t_chunk_column *column, t_block **out_highest_
 	int	local[3];
 	int	index;
 
-	get_block_local_pos_from_world_pos(local, (float []){x, 0, z});
+	block_world_to_local_pos(local, (float []){x, 0, z});
 	for (int i = CHUNKS_PER_COLUMN - 1; i >= 0; i--)
 	{
 		for (int y = CHUNK_HEIGHT - 1; y >= 0; y--)
 		{
+			t_chunk *chunk = column->chunks[i];
+			if (!chunk->has_blocks)
+				continue;
 			index = get_block_index(local[0], y, local[2]);
-			if (!is_gas(&column->chunks[i]->blocks[index]))
+			if (!is_gas(&chunk->blocks[index]))
 			{
-				*out_highest_block = &column->chunks[i]->blocks[index];
-				return (column->chunks[i]->world_coordinate[1] + y);
+				*out_highest_block = &chunk->blocks[index];
+				return (chunk->world_coordinate[1] + y);
 			}
 		}
 	}

@@ -582,7 +582,7 @@ void game_update(t_vox *vox, t_fps *fps, t_player *player, t_world *world, t_ui 
 		if (hovered_block)
 		{
 			render_block_outline(block_pos, (float []){0, 0, 0}, player->camera->view, player->camera->projection);
-			get_block_local_pos_from_world_pos(block_local, block_pos);
+			block_world_to_local_pos(block_local, block_pos);
 		}
 		// Lets summon mob on the hovered_block
 		if (hovered_block && vox->keys[GLFW_KEY_M].state == BUTTON_PRESS)
