@@ -1172,8 +1172,6 @@ void	init_chunk_mesh(t_chunk_mesh *mesh, GLuint shader, int amount)
 	mesh->texture_ids = malloc(sizeof(int) * mesh->texture_ids_allocated);
 	mesh->texture_id_amount = 0;
 
-	LG_INFO("Vertices : %d, Textures IDs : %d", mesh->vertices_allocated, mesh->texture_ids_allocated);
-
 	mesh->amount = amount;
 	mesh->indices = malloc(sizeof(unsigned int *) * mesh->amount);
 	mesh->indices_allocated = malloc(sizeof(int) * mesh->amount);

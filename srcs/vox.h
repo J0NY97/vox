@@ -127,12 +127,9 @@ t_entity	*get_scene_entity(t_scene *scene, size_t index);
 
 typedef struct s_settings
 {
-	// TODO : Have all these settings in a single variable, we could bitwise;
-
 	char chunk_generation;	
 	char cave_generation;
 	char toggle_ui;
-
 	char entity_hitbox_enabled;
 
 	//DEBUG

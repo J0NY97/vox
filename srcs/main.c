@@ -13,6 +13,16 @@ void	errorCallback(int err_nbr, const char *err_str)
 	LG_ERROR("(%d) [%s]", err_nbr, err_str);
 }
 
+void settings_init(t_settings *settings)
+{
+	settings->chunk_generation = 1;
+	settings->cave_generation = 0;
+	settings->toggle_ui = 0;
+	settings->entity_hitbox_enabled = 0;
+	settings->attach_entity = 0;
+	settings->attach_to_entity = 0;
+}
+
 void	init(t_vox *vox)
 {
 	lg_setFdLevel(LEVEL_INFO);
@@ -21,16 +31,13 @@ void	init(t_vox *vox)
 		LG_ERROR("Couldn\'t init glfw.");
 	glfwSetErrorCallback(errorCallback);
 
-#ifdef __APPLE__
-	glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 0);
-	glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-	glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#else
-	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+#ifdef __APPLE__
+	glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
 	vox->win_w = 1280;
@@ -44,13 +51,7 @@ void	init(t_vox *vox)
 	vox->polygon_mode = GL_FILL;
 	vox->renderMode = 0;
 
-	// Settings INIT
-	vox->settings.chunk_generation = 1;
-	vox->settings.cave_generation = 0;
-	vox->settings.toggle_ui = 0;
-	vox->settings.entity_hitbox_enabled = 0;
-	vox->settings.attach_entity = 0;
-	vox->settings.attach_to_entity = 0;
+	settings_init(&vox->settings);
 
 	// TODO : Only have 1 thread manager, add all the threading to the one,
 	//		in the main loop have 'check_threadiness()';
